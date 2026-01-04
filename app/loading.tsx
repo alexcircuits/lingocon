@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Languages } from "lucide-react"
 
 export default function Loading() {
@@ -26,7 +26,7 @@ export default function Loading() {
           <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
             <Languages className="h-8 w-8 text-primary" />
           </div>
-          
+
           {/* Glow effect */}
           <motion.div
             animate={{
@@ -41,7 +41,7 @@ export default function Loading() {
             className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl -z-10"
           />
         </motion.div>
-        
+
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <motion.div

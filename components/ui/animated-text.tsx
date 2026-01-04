@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { motion, useInView, useAnimation } from "framer-motion"
+import { motion, useInView, useAnimation } from "motion/react"
 import { cn } from "@/lib/utils"
 
 interface TextGenerateEffectProps {

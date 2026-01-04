@@ -9,7 +9,7 @@ import { Calendar, User, FileText, BookOpen, Languages, ArrowRight, Flag } from 
 import { FavoriteButton } from "@/components/favorite-button"
 import { formatDate } from "@/lib/utils"
 import type { Language, User as UserType } from "@prisma/client"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { AnimatedCard } from "@/components/ui/animated-card"
 
 interface LanguageCardProps {

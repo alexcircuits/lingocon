@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ArrowRight, Languages, BookOpen, FileText, Newspaper, BookMarked } from "lucide-react"
