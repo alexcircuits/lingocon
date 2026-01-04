@@ -14,7 +14,7 @@ export const createTextSchema = z.object({
       "Slug must be lowercase with hyphens only (e.g., my-book-title)"
     ),
   content: z.string().min(1, "Content is required"),
-  coverImage: z.string().url().optional().nullable(),
+  coverImage: z.string().optional().nullable(),
   paradigmId: z.string().optional().nullable(),
   languageId: z.string().min(1, "Language is required"),
 })
@@ -36,7 +36,7 @@ export const updateTextSchema = z.object({
     )
     .optional(),
   content: z.string().min(1, "Content is required").optional(),
-  coverImage: z.string().url().optional().nullable(),
+  coverImage: z.string().optional().nullable(),
   paradigmId: z.string().optional().nullable(),
 })
 

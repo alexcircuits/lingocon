@@ -35,7 +35,7 @@ export const updateArticleSchema = z.object({
     )
     .optional(),
   content: z.any().optional(),
-  coverImage: z.string().url().optional().nullable().or(z.literal("")),
+  coverImage: z.string().optional().nullable().or(z.literal("")),
   paradigmId: z.string().optional().nullable(),
 })
 

@@ -17,7 +17,7 @@ export const updateLanguageSchema = z.object({
   name: z.string().min(1, "Name is required").max(100).optional(),
   description: z.string().max(1000).optional(),
   visibility: z.enum(["PRIVATE", "UNLISTED", "PUBLIC"]).optional(),
-  flagUrl: z.string().url().optional().nullable(),
+  flagUrl: z.string().optional().nullable(),
   discordUrl: z.string().url().optional().nullable().or(z.literal("")),
   telegramUrl: z.string().url().optional().nullable().or(z.literal("")),
   websiteUrl: z.string().url().optional().nullable().or(z.literal("")),
