@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
+import { join } from "path"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 
 export async function GET(request: NextRequest) {
@@ -81,10 +82,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Language not found" }, { status: 404 })
     }
 
+    // Resolve flag path to absolute disk path if it's a relative upload URL
+    let flatPath = language.flagUrl
+    if (flatPath && flatPath.startsWith("/uploads/")) {
+      flatPath = join(process.cwd(), "public", flatPath)
+    }
+
     // Generate PDF
     const pdfDocument = React.createElement(LanguagePDFDocument, {
       language,
-      flagUrl: language.flagUrl,
+      flagUrl: flatPath,
       scriptSymbols: language.scriptSymbols,
       grammarPages: language.grammarPages,
       dictionaryEntries: language.dictionaryEntries,
