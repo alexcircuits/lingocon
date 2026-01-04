@@ -24,6 +24,11 @@ npx prisma migrate deploy
 echo "🏗️ Building application..."
 npm run build
 
+# Ensure uploads directory exists and has correct permissions
+echo "📁 Setting up uploads directory..."
+mkdir -p public/uploads
+chmod -R 755 public/uploads
+
 # Reload the application with PM2 (Zero Downtime)
 echo "🔄 Reloading application..."
 pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
