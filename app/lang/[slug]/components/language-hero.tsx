@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Language } from "@prisma/client"
 import Image from "next/image"
 import Link from "next/link"
@@ -19,8 +20,12 @@ interface LanguageHeroProps {
 }
 
 export function LanguageHero({ language, isFavorite }: LanguageHeroProps) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-    const shareUrl = `${siteUrl}/lang/${language.slug}`
+    const [shareUrl, setShareUrl] = useState("")
+
+    useEffect(() => {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+        setShareUrl(`${siteUrl}/lang/${language.slug}`)
+    }, [language.slug])
 
     return (
         <div className="relative w-full overflow-hidden rounded-3xl border border-border/40 bg-background/50 shadow-2xl">
