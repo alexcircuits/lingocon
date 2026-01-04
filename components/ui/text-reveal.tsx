@@ -42,7 +42,7 @@ export function TextReveal({ text, className, delay = 0 }: TextRevealProps) {
 
     return (
         <motion.div
-            style={{ display: "block" }}
+            style={{ display: "inline" }}
             variants={container}
             initial="hidden"
             animate="visible"

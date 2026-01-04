@@ -176,7 +176,7 @@ export default async function Home() {
             v1.0 Public Beta
           </Badge>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight mb-8 leading-[1.1] text-foreground">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight mb-8 leading-[0.9] text-foreground">
             <TextReveal text="Create living languages" />
             <br />
             <span className="italic relative inline-block">
