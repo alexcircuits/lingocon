@@ -272,7 +272,10 @@ export default async function Home() {
           }
         >
           {/* Mock Studio UI */}
-          <div className="w-full h-full bg-background rounded-2xl overflow-hidden flex flex-col items-start justify-start relative shadow-inner">
+          <Link
+            href={isAuthenticated ? "/dashboard" : "/login"}
+            className="w-full h-full bg-background rounded-2xl overflow-hidden flex flex-col items-start justify-start relative shadow-inner group/tablet cursor-pointer transition-all duration-500 hover:ring-1 hover:ring-primary/20"
+          >
             {/* Header */}
             <div className="w-full h-12 border-b border-border/10 bg-muted/20 flex items-center px-4 gap-2">
               <div className="w-3 h-3 rounded-full bg-red-400/80" />
@@ -301,10 +304,13 @@ export default async function Home() {
             </div>
 
             {/* Overlay Text */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] opacity-0 hover:opacity-100 transition-opacity duration-500">
-              <span className="text-white text-lg font-mono">Run Studio Preview</span>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] opacity-0 group-hover/tablet:opacity-100 transition-opacity duration-500">
+              <div className="bg-background/90 text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 transform translate-y-4 group-hover/tablet:translate-y-0 transition-transform duration-500 font-medium">
+                {isAuthenticated ? "Open Studio Dashboard" : "Sign In to Start Building"}
+                <ArrowRight className="h-4 w-4" />
+              </div>
             </div>
-          </div>
+          </Link>
         </ContainerScroll>
       </section>
 
