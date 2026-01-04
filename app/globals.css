@@ -123,6 +123,9 @@
 
   html {
     scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -137,6 +140,9 @@
     font-family: 'Instrument Serif', Georgia, serif;
     font-weight: 400;
     letter-spacing: -0.02em;
+    /* Prevent Chrome subpixel rendering blur during transitions */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   /* Monospace for technical elements */
@@ -149,9 +155,18 @@
 
 @layer utilities {
 
+  /* Prevent text blurring during animations */
+  .transform-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
   /* Text gradient - coral to teal */
   .text-gradient {
     @apply bg-clip-text text-transparent;
+    -webkit-background-clip: text;
     background-image: linear-gradient(135deg,
         hsl(var(--accent)),
         hsl(var(--primary)));
