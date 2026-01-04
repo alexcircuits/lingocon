@@ -77,15 +77,17 @@ export function GrammarEditor({
 
     startTransition(async () => {
       if (page) {
-        // Update existing page
-        const result = await updateGrammarPage({
-          id: page.id,
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
+          id: String(page.id),
           title,
           slug,
           content,
-          imageUrl: imageUrl || null,
           languageId,
-        })
+          imageUrl: imageUrl || undefined,
+        }))
+
+        const result = await updateGrammarPage(sterilizedData)
 
         if (result.error) {
           setError(result.error)
@@ -95,15 +97,17 @@ export function GrammarEditor({
           router.refresh()
         }
       } else {
-        // Create new page
-        const result = await createGrammarPage({
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
           title,
           slug,
           content,
-          imageUrl: imageUrl || null,
           order,
           languageId,
-        })
+          imageUrl: imageUrl || undefined,
+        }))
+
+        const result = await createGrammarPage(sterilizedData)
 
         if (result.error) {
           setError(result.error)

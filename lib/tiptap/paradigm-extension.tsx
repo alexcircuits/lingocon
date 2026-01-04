@@ -22,6 +22,9 @@ export const Paradigm = Node.create<ParadigmOptions>({
   },
 
   group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
 
   content: "",
 
@@ -33,13 +36,20 @@ export const Paradigm = Node.create<ParadigmOptions>({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
     return [
       "div",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         "data-type": "paradigm",
+        class: "paradigm-placeholder my-4 p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors",
       }),
-      0,
+      [
+        "div",
+        { class: "flex items-center gap-2 text-primary font-semibold" },
+        ["span", { class: "p-2 bg-primary/10 rounded" }, "Table"],
+        ["span", {}, node.attrs.paradigmName || "Paradigm Table"],
+      ],
+      ["div", { class: "text-[10px] text-muted-foreground mt-1" }, "(Embedded Paradigm)"],
     ]
   },
 
@@ -76,12 +86,12 @@ export const Paradigm = Node.create<ParadigmOptions>({
     return {
       setParadigm:
         (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          })
-        },
+          ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs: options,
+            })
+          },
     }
   },
 })

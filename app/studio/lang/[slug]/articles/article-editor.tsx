@@ -82,11 +82,14 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
 
     startTransition(async () => {
       if (article) {
-        const result = await updateArticle(article.id, {
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
-          content,
+          content: content,
           coverImage: coverImage || undefined,
-        })
+        }))
+
+        const result = await updateArticle(String(article.id), sterilizedData)
 
         if (result.error) {
           setError(result.error)
@@ -96,12 +99,14 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
           router.refresh()
         }
       } else {
-        const result = await createArticle({
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
-          content,
-          coverImage: coverImage || undefined,
+          content: content,
           languageId,
-        })
+          coverImage: coverImage || undefined,
+        }))
+        const result = await createArticle(sterilizedData)
 
         if (result.error) {
           setError(result.error)

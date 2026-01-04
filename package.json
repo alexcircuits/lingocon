@@ -36,6 +36,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.3.2",
     "@tabler/icons-react": "^3.36.0",
+    "@tailwindcss/typography": "^0.5.19",
     "@tiptap/pm": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",

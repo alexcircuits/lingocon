@@ -22,6 +22,9 @@ export const IGT = Node.create<IGTOptions>({
   },
 
   group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
 
   content: "",
 
@@ -33,13 +36,24 @@ export const IGT = Node.create<IGTOptions>({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
     return [
       "div",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         "data-type": "igt",
+        class: "igt-placeholder my-4 p-4 border-2 border-dashed border-accent/30 rounded-lg bg-accent/5 cursor-pointer hover:border-accent/50 transition-colors",
       }),
-      0,
+      [
+        "div",
+        { class: "flex items-center gap-2 mb-2" },
+        ["span", { class: "text-[10px] font-bold uppercase tracking-wider bg-accent/20 text-accent px-1.5 py-0.5 rounded" }, "IGT Block"],
+        ["span", { class: "text-sm font-medium" }, node.attrs.sentence || "(empty sentence)"],
+      ],
+      [
+        "div",
+        { class: "text-xs text-muted-foreground italic pl-4 border-l-2 border-accent/20" },
+        node.attrs.gloss || "(no gloss provided)"
+      ],
     ]
   },
 
@@ -88,12 +102,21 @@ export const IGT = Node.create<IGTOptions>({
     return {
       setIGT:
         (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          })
-        },
+          ({ editor, commands }) => {
+            // If a specific sentence wasn't provided, try to use the selected text
+            const { from, to } = editor.state.selection
+            const selectedText = editor.state.doc.textBetween(from, to, " ")
+
+            const attrs = {
+              ...options,
+              sentence: options.sentence || selectedText || "",
+            }
+
+            return commands.insertContent({
+              type: this.name,
+              attrs,
+            })
+          },
     }
   },
 })

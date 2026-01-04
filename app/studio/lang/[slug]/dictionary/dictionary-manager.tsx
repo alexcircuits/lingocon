@@ -122,11 +122,20 @@ export function DictionaryManager({
   }, [updateUrl, initialQuery])
 
   const handleCreate = async (data: any) => {
-    const result = await createDictionaryEntry({
-      ...data,
-      relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
+    // Use JSON.parse(JSON.stringify()) to ensure a strictly plain object for the Server Action
+    // Using undefined ensures JSON.stringify omits the key, which Zod expects for optional fields
+    const sterilizedData = JSON.parse(JSON.stringify({
+      lemma: String(data.lemma),
+      gloss: String(data.gloss),
       languageId,
-    })
+      ipa: data.ipa || undefined,
+      partOfSpeech: data.partOfSpeech || undefined,
+      etymology: data.etymology || undefined,
+      notes: data.notes || undefined,
+      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : undefined,
+    }))
+
+    const result = await createDictionaryEntry(sterilizedData)
 
     if (result.error) {
       toast.error(result.error, {
@@ -154,12 +163,20 @@ export function DictionaryManager({
   const handleUpdate = async (data: any) => {
     if (!editingEntry) return
 
-    const result = await updateDictionaryEntry({
-      id: editingEntry.id,
-      ...data,
-      relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
+    // Use JSON.parse(JSON.stringify()) to ensure a strictly plain object for the Server Action
+    const sterilizedData = JSON.parse(JSON.stringify({
+      id: String(editingEntry.id),
+      lemma: String(data.lemma),
+      gloss: String(data.gloss),
       languageId,
-    })
+      ipa: data.ipa || undefined,
+      partOfSpeech: data.partOfSpeech || undefined,
+      etymology: data.etymology || undefined,
+      notes: data.notes || undefined,
+      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : undefined,
+    }))
+
+    const result = await updateDictionaryEntry(sterilizedData)
 
     if (result.error) {
       toast.error(result.error, {

@@ -117,12 +117,15 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
       // const plainText = JSON.stringify(formData.content)
 
       if (text) {
-        const result = await updateText(text.id, {
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
-          content: formData.content, // Pass JSON directly (updateText must support it)
+          content: formData.content,
           coverImage: coverImage || undefined,
-          paradigmId,
-        })
+          paradigmId: paradigmId || undefined,
+        }))
+
+        const result = await updateText(String(text.id), sterilizedData)
 
         if (result.error) {
           setError(result.error)
@@ -132,14 +135,16 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           router.refresh()
         }
       } else {
-        const result = await createText({
+        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
           type: "OTHER",
           content: formData.content,
-          coverImage: coverImage || undefined,
-          paradigmId,
           languageId,
-        })
+          coverImage: coverImage || undefined,
+          paradigmId: paradigmId || undefined,
+        }))
+        const result = await createText(sterilizedData)
 
         if (result.error) {
           setError(result.error)

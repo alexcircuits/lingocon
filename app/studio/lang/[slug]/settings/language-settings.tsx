@@ -64,16 +64,19 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
     setError(null)
 
     startTransition(async () => {
-      const result = await updateLanguage({
-        id: language.id,
-        name: formData.name,
-        description: formData.description,
+      // Construct a strictly plain object for the Server Action
+      const updateData = {
+        id: String(language.id),
+        name: String(formData.name),
         visibility: formData.visibility,
-        flagUrl: formData.flagUrl || null,
-        discordUrl: formData.discordUrl || null,
-        telegramUrl: formData.telegramUrl || null,
-        websiteUrl: formData.websiteUrl || null,
-      })
+        ...(formData.description ? { description: formData.description } : {}),
+        ...(formData.flagUrl ? { flagUrl: formData.flagUrl } : {}),
+        ...(formData.discordUrl ? { discordUrl: formData.discordUrl } : {}),
+        ...(formData.telegramUrl ? { telegramUrl: formData.telegramUrl } : {}),
+        ...(formData.websiteUrl ? { websiteUrl: formData.websiteUrl } : {}),
+      }
+
+      const result = await updateLanguage(updateData)
 
       if (result.error) {
         setError(result.error)
@@ -214,7 +217,7 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
                 type="url"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="telegramUrl" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />

@@ -112,11 +112,19 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
 
     startTransition(async () => {
       const maxOrder = symbols.length > 0 ? Math.max(...symbols.map((s) => s.order)) : -1
-      const result = await createScriptSymbol({
-        ...formData,
+      // Use JSON.parse(JSON.stringify()) to ensure a strictly plain object for the Server Action
+      // Using undefined ensures JSON.stringify omits the key, which Zod expects for optional fields
+      const sterilizedData = JSON.parse(JSON.stringify({
+        symbol: String(formData.symbol),
         order: maxOrder + 1,
         languageId,
-      })
+        capitalSymbol: formData.capitalSymbol || undefined,
+        ipa: formData.ipa || undefined,
+        latin: formData.latin || undefined,
+        name: formData.name || undefined,
+      }))
+
+      const result = await createScriptSymbol(sterilizedData)
 
       if (result.error) {
         setError(result.error)
@@ -150,12 +158,19 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
     if (!editingSymbol) return
 
     startTransition(async () => {
-      const result = await updateScriptSymbol({
-        id: editingSymbol.id,
-        ...formData,
+      // Use JSON.parse(JSON.stringify()) to ensure a strictly plain object for the Server Action
+      const sterilizedData = JSON.parse(JSON.stringify({
+        id: String(editingSymbol.id),
+        symbol: String(formData.symbol),
         order: editingSymbol.order,
         languageId,
-      })
+        capitalSymbol: formData.capitalSymbol || undefined,
+        ipa: formData.ipa || undefined,
+        latin: formData.latin || undefined,
+        name: formData.name || undefined,
+      }))
+
+      const result = await updateScriptSymbol(sterilizedData)
 
       if (result.error) {
         setError(result.error)
