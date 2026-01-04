@@ -179,8 +179,8 @@ export default async function Home() {
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight mb-8 leading-[1.1] text-foreground">
             <TextReveal text="Create living languages" />
             <br />
-            <span className="text-gradient italic relative inline-block">
-              <span className="relative z-10">with structure</span>
+            <span className="italic relative inline-block">
+              <span className="text-gradient relative z-10">with structure</span>
               <svg className="absolute w-full h-3 -bottom-1 left-0 text-accent opacity-40" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <line x1="0" y1="5" x2="100" y2="5" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
               </svg>
