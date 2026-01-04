@@ -53,17 +53,17 @@ export function DictionaryManager({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  
+
   const [showLatin, setShowLatin] = useState(false)
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set())
-  
+
   // Dialog States
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
-  
+
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -101,14 +101,17 @@ export function DictionaryManager({
 
   // URL Updates
   const updateUrl = (newPage: number, newQuery: string) => {
-    const params = new URLSearchParams(searchParams)
-    if (newPage > 1) params.set("page", newPage.toString())
-    else params.delete("page")
-    
-    if (newQuery) params.set("q", newQuery)
-    else params.delete("q")
-    
-    router.push(`${pathname}?${params.toString()}`)
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams)
+      if (newPage > 1) params.set("page", newPage.toString())
+      else params.delete("page")
+
+      if (newQuery) params.set("q", newQuery)
+      else params.delete("q")
+
+      const newUrl = `${pathname}?${params.toString()}`
+      router.push(newUrl)
+    })
   }
 
   const handleSearch = (query: string) => {
@@ -205,14 +208,14 @@ export function DictionaryManager({
         })
         setIsDeleteOpen(false)
         setDeletingId(null)
-        
+
         // Remove from selection if selected
         if (selectedEntries.has(deletingId)) {
           const newSelected = new Set(selectedEntries)
           newSelected.delete(deletingId)
           setSelectedEntries(newSelected)
         }
-        
+
         router.refresh()
       }
     })
@@ -267,13 +270,13 @@ export function DictionaryManager({
         <div className="flex-1 w-full">
           <DictionarySearch onSearch={handleSearch} defaultValue={initialQuery} />
         </div>
-        
+
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <TransliterationToggle
             onToggle={setShowLatin}
             defaultShowLatin={showLatin}
           />
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -287,7 +290,7 @@ export function DictionaryManager({
           >
             <Download className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -302,7 +305,7 @@ export function DictionaryManager({
             content="Use Cmd+N to quickly add a new entry. Cmd+/ shows all keyboard shortcuts."
             shortcut="⌘N"
           />
-          
+
           {selectedEntries.size > 0 && (
             <Button
               variant="outline"
@@ -314,7 +317,7 @@ export function DictionaryManager({
               <Edit className="h-4 w-4" />
             </Button>
           )}
-          
+
           <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Entry</span>
@@ -380,7 +383,7 @@ export function DictionaryManager({
               isPending={isPending}
             />
           </div>
-          
+
           {/* Mobile Cards */}
           <div className="md:hidden">
             <DictionaryTableMobile

@@ -236,3 +236,49 @@ export async function reorderScriptSymbols(
   }
 }
 
+export async function saveAlphabetOrder(
+  symbolIds: string[],
+  languageId: string
+) {
+  const userId = await getUserId()
+
+  if (!userId) {
+    return {
+      error: "Unauthorized",
+    }
+  }
+
+  try {
+    // Verify edit permission
+    const canEdit = await canEditLanguage(languageId, userId)
+    if (!canEdit) {
+      return {
+        error: "Unauthorized - You don't have permission to edit this language",
+      }
+    }
+
+    // Update all symbols in a transaction
+    await prisma.$transaction(
+      symbolIds.map((id, index) =>
+        prisma.scriptSymbol.update({
+          where: { id },
+          data: { order: index },
+        })
+      )
+    )
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        error: error.message,
+      }
+    }
+    return {
+      error: "Failed to save alphabet order",
+    }
+  }
+}
+

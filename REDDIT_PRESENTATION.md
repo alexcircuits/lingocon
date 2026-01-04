@@ -1,6 +1,6 @@
 # Reddit Post: Introducing LingoCon – The Professional Toolkit for Language Construction
 
-**Title Suggestion**: [Showcase] LingoCon: A Modern, All-in-One Platform for Conlangers (IDE for Languages)
+**Title**: [Showcase] LingoCon: A Modern, All-in-One Platform for Conlangers (IDE for Languages)
 
 ---
 
@@ -13,41 +13,37 @@ As conlangers ourselves, we were tired of the constant context-switching between
 ## What is LingoCon?
 LingoCon is a comprehensive web platform we designed to help you build, document, and share your constructed languages using professional-grade tools. Our goal wasn't just to provide another "wall of text" editor, but to create a system that understands the *structure* of a language so you can focus on the creative worldbuilding.
 
-### What We’ve Built So Far:
-*   **Structured Phonology**: Define your script and alphabet with full IPA mapping and our built-in IPA keyboards.
-*   **Grammar Wiki**: A rich-text editor (TipTap-based) we’ve optimized specifically for conlanging, supporting interlinear glossing and complex linguistic formatting.
-*   **Smart Lexicon**: A robust dictionary system with deep support for parts of speech, etymology, and custom metadata.
-*   **Paradigm Tables**: Dynamic morphology tables for conjugation and declension. We’ve made it easy to define your rows/columns and fill the slots without touching a single line of HTML.
-*   **Premium Aesthetics**: We built this using Next.js 14 and modern UI libraries (Aceternity, Hero UI) because we believe conlanging tools should feel as premium as the languages they document.
-*   **Export Ready**: High-quality PDF and CSV exports are built-in, so your documentation is always ready for offline use or publication.
+### Core Features:
 
-## Team's Screenshot Guide (The "Wow" Factor)
-When presenting LingoCon, we recommend these 6 captures to showcase its full range:
+*   **🔊 Instant Phonology & Pronunciation**: Define your script and alphabet with full IPA mapping. Use our built-in IPA keyboards and **instantly hear your sounds** with our IPA-to-speech engine. No more wondering how your language actually sounds—just click and listen.
+*   **📝 Professional Grammar Wiki**: A rich-text editor (TipTap-based) optimized specifically for conlanging. It supports native **Interlinear Glossed Text (IGT)** and complex linguistic formatting without the headache of manual spacing.
+*   **📖 Smart Lexicon (Dictionary)**: A robust dictionary system with deep support for parts of speech, etymology, custom tags, and searchable glosses.
+*   **📊 Dynamic Paradigm Tables**: Define morphology tables for conjugation and declension with ease. Our table builder handles the layout for you—just define your rows and columns and fill in the slots.
+*   **💎 Premium Aesthetics**: Built with Next.js 14 and modern UI libraries (Aceternity, Hero UI). We believe conlanging tools should look as high-end as the languages they document.
+*   **📄 Export Ready**: High-quality **PDF and CSV exports** are built-in, so your documentation is always ready for offline use, sharing, or publication.
 
-1.  **The Landing Page (Above the Fold)**: Showcases our clean design philosophy and the "Create living languages" text reveal.
-2.  **The Studio Dashboard (Bento Grid)**: The central hub of a language (check out "Danskisk") showing our live statistics and quick-access cards.
-3.  **Phonology Editor**: Highlights our custom IPA keyboard and clean alphabet management.
-4.  **Dictionary View**: A look at the structured lexicon with custom tags and searchable glosses.
-5.  **Paradigm Table**: Shows how our system organizes complex morphology into readable, professional tables.
-6.  **Grammar Editor**: Provides a look at our rich-text capabilities, specifically interlinear glossing.
+## 📸 Screenshots & Showcase
+In the comments, I'll post a link to a full gallery, but here are the highlights you should look out for:
 
-## Our Tech Stack
+1.  **The Studio Dashboard**: A central hub showing live statistics and a beautiful "bento grid" layout of your language's progress.
+2.  **Phonology Editor**: Our custom IPA keyboard and the "Listen" feature that brings your phonology to life.
+3.  **Dictionary Interface**: The clean, searchable lexicon view.
+4.  **Paradigm Table Builder**: Morphology organization made simple.
+5.  **Grammar Editor**: A look at the structured formatting and IGT support.
+
+## Technical Details
 We built this with a focus on speed and reliability:
 - **Framework**: Next.js 14 (App Router)
 - **Database**: PostgreSQL with Prisma ORM
 - **Auth**: NextAuth.js
-- **Styling**: Tailwind CSS & Motion (Framer)
-- **Architecture**: Modern Server Components for instant loading
+- **Styling**: Tailwind CSS & Framer Motion
 
-## Join the Beta & Get in Touch!
-We are currently in Public Beta and we're looking for your feedback to help steer our roadmap.
+## Join the Beta!
+We are currently in **Public Beta** and we're looking for your feedback to help steer our roadmap. We want to build the features *you* need.
 
-*   **Propose Features & Ideas**: [hello@noirsystems.com](mailto:hello@noirsystems.com)
-*   **Technical Support**: [support@noirsystems.com](mailto:support@noirsystems.com)
-*   **Contact Our Lead Directly (Alex)**: [alexc@noirsystems.com](mailto:alexc@noirsystems.com)
+*   **Visit the site**: **[lingocon.com](https://lingocon.com)**
+*   **Get in touch**: [hello@noirsystems.com](mailto:hello@noirsystems.com)
 
-We can't wait to see what you create with it.
-
-Check us out at: **[lingocon.com](https://lingocon.com)**
+We can't wait to see what you create with it!
 
 — The LingoCon Team

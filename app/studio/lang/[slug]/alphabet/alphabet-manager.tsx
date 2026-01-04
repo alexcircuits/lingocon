@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -8,7 +8,26 @@ import {
   updateScriptSymbol,
   deleteScriptSymbol,
   reorderScriptSymbols,
+  saveAlphabetOrder,
 } from "@/app/actions/script-symbol"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -61,6 +80,22 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync state with props when RSC refreshes
+  useEffect(() => {
+    setSymbols(initialSymbols)
+  }, [initialSymbols])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Removed showLatin toggle - now always showing both native and latin together
   const [formData, setFormData] = useState({
@@ -150,15 +185,50 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
   }
 
   const handleReorder = async (symbolId: string, direction: "up" | "down") => {
+    const currentIndex = symbols.findIndex((s) => s.id === symbolId)
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
+
+    if (newIndex < 0 || newIndex >= symbols.length) return
+
+    // Optimistic update
+    const newSymbols = arrayMove(symbols, currentIndex, newIndex)
+    setSymbols(newSymbols)
+
     startTransition(async () => {
-      const result = await reorderScriptSymbols(symbolId, languageId, direction)
+      const result = await saveAlphabetOrder(newSymbols.map(s => s.id), languageId)
 
       if (result.error) {
         setError(result.error)
+        toast.error(result.error)
+        setSymbols(initialSymbols) // Rollback
       } else {
         router.refresh()
       }
     })
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = symbols.findIndex((s) => s.id === active.id)
+      const newIndex = symbols.findIndex((s) => s.id === over.id)
+
+      const newSymbols = arrayMove(symbols, oldIndex, newIndex)
+      setSymbols(newSymbols)
+
+      startTransition(async () => {
+        const result = await saveAlphabetOrder(newSymbols.map(s => s.id), languageId)
+
+        if (result.error) {
+          setError(result.error)
+          toast.error(result.error)
+          setSymbols(initialSymbols) // Rollback
+        } else {
+          router.refresh()
+        }
+      })
+    }
   }
 
   return (
@@ -294,80 +364,31 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
           }}
         />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {symbols.map((symbol, index) => (
-            <Card key={symbol.id} className="relative group hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px]">
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(symbol)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleReorder(symbol.id, "up")}
-                        disabled={index === 0 || isPending}
-                      >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Move Left
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleReorder(symbol.id, "down")}
-                        disabled={index === symbols.length - 1 || isPending}
-                      >
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        Move Right
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => handleDelete(symbol.id)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="text-4xl font-serif font-medium mb-2 flex items-center justify-center gap-1">
-                  {symbol.capitalSymbol ? (
-                    <>
-                      <span>{symbol.capitalSymbol}</span>
-                      <span>{symbol.symbol}</span>
-                    </>
-                  ) : (
-                    <span>{symbol.symbol}</span>
-                  )}
-                  {symbol.latin && symbol.latin !== symbol.symbol && (
-                    <>
-                      <span className="text-muted-foreground/30 mx-1">/</span>
-                      <span className="text-2xl text-muted-foreground">{symbol.latin}</span>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                  {symbol.ipa && (
-                    <Badge variant="secondary" className="font-mono text-xs">
-                      /{symbol.ipa}/
-                    </Badge>
-                  )}
-                  {symbol.name && (
-                    <span className="text-xs text-muted-foreground text-center">
-                      {symbol.name}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={symbols.map((s) => s.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {symbols.map((symbol, index) => (
+                <SortableSymbol
+                  key={symbol.id}
+                  symbol={symbol}
+                  index={index}
+                  totalCount={symbols.length}
+                  isPending={isPending}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onReorder={handleReorder}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -475,5 +496,126 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+interface SortableSymbolProps {
+  symbol: ScriptSymbol
+  index: number
+  totalCount: number
+  isPending: boolean
+  onEdit: (symbol: ScriptSymbol) => void
+  onDelete: (id: string) => void
+  onReorder: (id: string, direction: "up" | "down") => void
+}
+
+function SortableSymbol({
+  symbol,
+  index,
+  totalCount,
+  isPending,
+  onEdit,
+  onDelete,
+  onReorder,
+}: SortableSymbolProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: symbol.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "relative group hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing",
+        isDragging && "shadow-xl"
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px]">
+        <div
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking menu
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(symbol)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onReorder(symbol.id, "up")}
+                disabled={index === 0 || isPending}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Move Left
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onReorder(symbol.id, "down")}
+                disabled={index === totalCount - 1 || isPending}
+              >
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Move Right
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onDelete(symbol.id)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="text-4xl font-serif font-medium mb-2 flex items-center justify-center gap-1">
+          {symbol.capitalSymbol ? (
+            <>
+              <span>{symbol.capitalSymbol}</span>
+              <span>{symbol.symbol}</span>
+            </>
+          ) : (
+            <span>{symbol.symbol}</span>
+          )}
+          {symbol.latin && symbol.latin !== symbol.symbol && (
+            <>
+              <span className="text-muted-foreground/30 mx-1">/</span>
+              <span className="text-2xl text-muted-foreground">{symbol.latin}</span>
+            </>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center gap-1 text-center">
+          {symbol.ipa && (
+            <Badge variant="secondary" className="font-mono text-xs">
+              /{symbol.ipa}/
+            </Badge>
+          )}
+          {symbol.name && (
+            <span className="text-xs text-muted-foreground">
+              {symbol.name}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
