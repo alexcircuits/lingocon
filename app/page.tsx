@@ -336,7 +336,7 @@ export default async function Home() {
       </section>
 
       {/* Community Voices */}
-      <section className="py-24 bg-background border-b border-border/40 overflow-hidden">
+      {/* <section className="py-24 bg-background border-b border-border/40 overflow-hidden">
         <div className="container mx-auto px-4 mb-12 text-center">
           <h2 className="text-3xl md:text-5xl font-serif mb-6">Loved by Conlangers</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -344,7 +344,7 @@ export default async function Home() {
           </p>
         </div>
         <InfiniteMovingCards items={testimonials} direction="right" speed="slow" />
-      </section>
+      </section> */}
 
       {/* Featured Languages */}
       {featuredLanguages.length > 0 && (
