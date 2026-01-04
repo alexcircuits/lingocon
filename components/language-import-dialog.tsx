@@ -67,7 +67,7 @@ export function LanguageImportDialog() {
                 <DialogHeader>
                     <DialogTitle>Import Language</DialogTitle>
                     <DialogDescription>
-                        Upload a JSON file containing your language data. The file should match the Sindarin.json format.
+                        Upload a JSON file containing your language data.
                         <br /><br />
                         Having trouble? Send your JSON file to <a href="mailto:support@noirsystems.com" className="text-primary hover:underline">support@noirsystems.com</a> and we will help you import it.
                     </DialogDescription>
