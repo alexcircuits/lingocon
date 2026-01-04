@@ -341,7 +341,7 @@ export function DictionaryManager({
             description="Start building your lexicon by adding your first word."
             action={{
               label: "Add Entry",
-              href: "#", // Handled by onClick below
+              onClick: () => setIsAddOpen(true),
             }}
           />
         )
@@ -417,6 +417,7 @@ export function DictionaryManager({
         onSubmit={handleCreate}
         isPending={isPending}
         mode="create"
+        symbols={symbols}
       />
 
       <DictionaryEntryDialog
@@ -426,6 +427,7 @@ export function DictionaryManager({
         initialData={editingEntry}
         isPending={isPending}
         mode="edit"
+        symbols={symbols}
       />
 
       <DeleteConfirmDialog

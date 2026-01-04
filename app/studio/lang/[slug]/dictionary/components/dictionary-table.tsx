@@ -140,6 +140,18 @@ export function DictionaryTable({
                       {entry.etymology}
                     </span>
                   )}
+                  {Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(entry.relatedWords as string[]).map((word) => (
+                        <span
+                          key={word}
+                          className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border/50"
+                        >
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>{entry.gloss}</TableCell>
                 <TableCell className="font-mono text-sm">

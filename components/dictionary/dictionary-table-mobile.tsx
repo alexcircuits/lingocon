@@ -53,9 +53,8 @@ export function DictionaryTableMobile({
         return (
           <Card
             key={entry.id}
-            className={`border transition-all ${
-              isSelected ? "border-primary bg-primary/5" : "border-border/60"
-            }`}
+            className={`border transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border/60"
+              }`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
@@ -127,6 +126,18 @@ export function DictionaryTableMobile({
                     <p className="text-xs text-muted-foreground line-clamp-2">
                       {entry.notes}
                     </p>
+                  </div>
+                )}
+                {Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(entry.relatedWords as string[]).map((word) => (
+                      <span
+                        key={word}
+                        className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border/50"
+                      >
+                        {word}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

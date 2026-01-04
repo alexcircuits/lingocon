@@ -93,7 +93,7 @@ function validateIPA(ipa: string): { valid: boolean; warning?: string } {
 // This uses ipa-reader.com's approach via a proxy
 // Note: ipa-reader.com may not have a public API, so this is a placeholder
 // that can be adapted to use AWS Polly or another service
-async function synthesizeIPA(ipa: string): Promise<{ audioUrl?: string; error?: string }> {
+async function synthesizeIPA(ipa: string, speed: string = "slow"): Promise<{ audioUrl?: string; error?: string }> {
   try {
     // Remove slashes if present
     const cleanedIPA = ipa.replace(/^\/|\/$/g, "").trim()
@@ -115,7 +115,7 @@ async function synthesizeIPA(ipa: string): Promise<{ audioUrl?: string; error?: 
       },
     })
 
-    const ssmlText = `<speak><phoneme alphabet="ipa" ph="${cleanedIPA}"></phoneme></speak>`
+    const ssmlText = `<speak><prosody rate="${speed}"><phoneme alphabet="ipa" ph="${cleanedIPA}">${cleanedIPA}</phoneme></prosody></speak>`
     const command = new SynthesizeSpeechCommand({
       Text: ssmlText,
       TextType: "ssml",
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { ipa } = body
+    const { ipa, speed = "slow" } = body
 
     // Validate input
     if (!ipa) {
@@ -181,11 +181,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sanitize input (remove any potentially dangerous characters)
-    const sanitizedIPA = ipa.replace(/[<>{}[\]\\|]/g, "").trim()
+    // Sanitize input
+    let sanitizedIPA = ipa.replace(/[<>{}[\]\\|]/g, "").trim()
+
+    // Improve audibility for short/consonantal IPA by padding with schwa if needed
+    // Only if it's a single or very short IPA string that might be just a consonant
+    if (sanitizedIPA.length <= 2 && !/[aeiouyøæɑɔɛɪʊə]/.test(sanitizedIPA)) {
+      sanitizedIPA = `ə${sanitizedIPA}ə`
+    }
 
     // Synthesize audio
-    const result = await synthesizeIPA(sanitizedIPA)
+    const result = await synthesizeIPA(sanitizedIPA, speed)
 
     if (result.error) {
       return NextResponse.json(

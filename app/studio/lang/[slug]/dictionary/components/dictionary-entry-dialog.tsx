@@ -14,13 +14,14 @@ import { IPAInput } from "@/components/ui/ipa-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ContextualHelp } from "@/components/contextual-help"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
-import type { DictionaryEntry } from "@prisma/client"
+import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
   open: boolean
@@ -29,6 +30,7 @@ interface DictionaryEntryDialogProps {
   initialData?: DictionaryEntry | null
   isPending?: boolean
   mode: "create" | "edit"
+  symbols: ScriptSymbol[]
 }
 
 export function DictionaryEntryDialog({
@@ -38,6 +40,7 @@ export function DictionaryEntryDialog({
   initialData,
   isPending,
   mode,
+  symbols,
 }: DictionaryEntryDialogProps) {
   const [formData, setFormData] = useState({
     lemma: "",
@@ -99,6 +102,53 @@ export function DictionaryEntryDialog({
     handleChange(field, value, formData)
   }
 
+  const suggestIpa = () => {
+    if (!formData.lemma || !symbols || symbols.length === 0) return
+
+    // Create a map of native symbols to IPA
+    const ipaMap = new Map<string, string>()
+    symbols.forEach((s) => {
+      if (s.symbol && s.ipa) {
+        ipaMap.set(s.symbol, s.ipa)
+        if (s.capitalSymbol) {
+          ipaMap.set(s.capitalSymbol, s.ipa)
+        }
+      }
+    })
+
+    // Transliterate character by character, keeping unrecognized chars as is
+    const suggested = formData.lemma
+      .split("")
+      .map((char) => ipaMap.get(char) || char)
+      .join("")
+
+    handleFieldChange("ipa", suggested)
+    toast.success("IPA suggested based on alphabet")
+  }
+
+  const [relatedInput, setRelatedInput] = useState("")
+
+  const handleAddRelated = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault()
+      const word = relatedInput.trim().replace(/,$/, "")
+      if (word && !formData.relatedWords.includes(word)) {
+        setFormData((prev) => ({
+          ...prev,
+          relatedWords: [...prev.relatedWords, word],
+        }))
+        setRelatedInput("")
+      }
+    }
+  }
+
+  const removeRelated = (word: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      relatedWords: prev.relatedWords.filter((w) => w !== word),
+    }))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -123,63 +173,70 @@ export function DictionaryEntryDialog({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="lemma">Lemma *</Label>
-                <Input
-                  id="lemma"
-                  value={formData.lemma}
-                  onChange={(e) => handleFieldChange("lemma", e.target.value)}
-                  onBlur={() => handleBlur("lemma")}
-                  placeholder="word"
-                  required
-                  disabled={isPending}
-                  maxLength={200}
-                  className={cn(
-                    errors.lemma && touched.lemma && "border-destructive focus-visible:ring-destructive"
-                  )}
-                />
-                {errors.lemma && touched.lemma && (
-                  <div className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>{errors.lemma}</span>
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="lemma">Lemma *</Label>
+              <Input
+                id="lemma"
+                value={formData.lemma}
+                onChange={(e) => handleFieldChange("lemma", e.target.value)}
+                onBlur={() => handleBlur("lemma")}
+                placeholder="word"
+                required
+                disabled={isPending}
+                maxLength={200}
+                className={cn(
+                  errors.lemma && touched.lemma && "border-destructive focus-visible:ring-destructive"
                 )}
-                <div className="text-xs text-muted-foreground text-right">
-                  {formData.lemma.length}/200
+              />
+              {errors.lemma && touched.lemma && (
+                <div className="flex items-center gap-1 text-sm text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>{errors.lemma}</span>
                 </div>
-              </div>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="gloss">Gloss *</Label>
-                <Input
-                  id="gloss"
-                  value={formData.gloss}
-                  onChange={(e) => handleFieldChange("gloss", e.target.value)}
-                  onBlur={() => handleBlur("gloss")}
-                  placeholder="translation"
-                  required
-                  disabled={isPending}
-                  maxLength={500}
-                  className={cn(
-                    errors.gloss && touched.gloss && "border-destructive focus-visible:ring-destructive"
-                  )}
-                />
-                {errors.gloss && touched.gloss && (
-                  <div className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>{errors.gloss}</span>
-                  </div>
+            <div className="space-y-2">
+              <Label htmlFor="gloss">Gloss *</Label>
+              <Textarea
+                id="gloss"
+                value={formData.gloss}
+                onChange={(e) => handleFieldChange("gloss", e.target.value)}
+                onBlur={() => handleBlur("gloss")}
+                placeholder="translation"
+                required
+                disabled={isPending}
+                rows={2}
+                maxLength={500}
+                className={cn(
+                  "min-h-[80px]",
+                  errors.gloss && touched.gloss && "border-destructive focus-visible:ring-destructive"
                 )}
-                <div className="text-xs text-muted-foreground text-right">
-                  {formData.gloss.length}/500
+              />
+              {errors.gloss && touched.gloss && (
+                <div className="flex items-center gap-1 text-sm text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>{errors.gloss}</span>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ipa">IPA</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="ipa">IPA</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs gap-1 text-muted-foreground hover:text-primary"
+                    onClick={suggestIpa}
+                    disabled={!formData.lemma || !symbols || symbols.length === 0}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Suggest
+                  </Button>
+                </div>
                 <IPAInput
                   id="ipa"
                   value={formData.ipa}
@@ -192,15 +249,6 @@ export function DictionaryEntryDialog({
                     errors.ipa && touched.ipa && "border-destructive focus-visible:ring-destructive"
                   )}
                 />
-                {errors.ipa && touched.ipa && (
-                  <div className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>{errors.ipa}</span>
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground text-right">
-                  {formData.ipa.length}/100
-                </div>
               </div>
 
               <div className="space-y-2">
@@ -209,7 +257,7 @@ export function DictionaryEntryDialog({
                   id="pos"
                   value={formData.partOfSpeech}
                   onChange={(e) => handleFieldChange("partOfSpeech", e.target.value)}
-                  onBlur={() => handleBlur("partOfSpeech")}
+                  onBlur={() => handleBlur("pos")}
                   placeholder="noun, verb, adj..."
                   disabled={isPending}
                   maxLength={50}
@@ -217,15 +265,6 @@ export function DictionaryEntryDialog({
                     errors.partOfSpeech && touched.partOfSpeech && "border-destructive focus-visible:ring-destructive"
                   )}
                 />
-                {errors.partOfSpeech && touched.partOfSpeech && (
-                  <div className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>{errors.partOfSpeech}</span>
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground text-right">
-                  {formData.partOfSpeech.length}/50
-                </div>
               </div>
             </div>
 
@@ -244,15 +283,38 @@ export function DictionaryEntryDialog({
                   errors.etymology && touched.etymology && "border-destructive focus-visible:ring-destructive"
                 )}
               />
-              {errors.etymology && touched.etymology && (
-                <div className="flex items-center gap-1 text-sm text-destructive">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  <span>{errors.etymology}</span>
-                </div>
-              )}
-              <div className="text-xs text-muted-foreground text-right">
-                {formData.etymology.length}/1000
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="related">Related Words</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.relatedWords.map((word) => (
+                  <div
+                    key={word}
+                    className="flex items-center gap-1 bg-primary/10 text-primary-foreground px-2 py-1 rounded-md text-sm border border-primary/20"
+                  >
+                    <span>{word}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeRelated(word)}
+                      className="hover:text-destructive transition-colors"
+                    >
+                      <AlertCircle className="h-3 w-3 rotate-45" />
+                    </button>
+                  </div>
+                ))}
               </div>
+              <Input
+                id="related"
+                value={relatedInput}
+                onChange={(e) => setRelatedInput(e.target.value)}
+                onKeyDown={handleAddRelated}
+                placeholder="Type word and press Enter or comma..."
+                disabled={isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Link related words, antonyms, or synonyms.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -270,15 +332,6 @@ export function DictionaryEntryDialog({
                   errors.notes && touched.notes && "border-destructive focus-visible:ring-destructive"
                 )}
               />
-              {errors.notes && touched.notes && (
-                <div className="flex items-center gap-1 text-sm text-destructive">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  <span>{errors.notes}</span>
-                </div>
-              )}
-              <div className="text-xs text-muted-foreground text-right">
-                {formData.notes.length}/2000
-              </div>
             </div>
           </div>
 
@@ -306,4 +359,3 @@ export function DictionaryEntryDialog({
     </Dialog>
   )
 }
-
