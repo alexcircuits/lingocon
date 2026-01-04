@@ -1,0 +1,361 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth models
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  languages Language[]
+  collaborations LanguageCollaborator[]
+  activities Activity[]
+  favorites Favorite[]
+  followers Follow[] @relation("UserFollowers")
+  following Follow[] @relation("UserFollowing")
+  articles  Article[]
+  texts     Text[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type             String
+  provider         String
+  providerAccountId String
+  refresh_token    String? @db.Text
+  access_token     String? @db.Text
+  expires_at       Int?
+  token_type       String?
+  scope            String?
+  id_token         String? @db.Text
+  session_state    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Domain models
+model Language {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  flagUrl     String?  // URL to flag image
+  visibility  Visibility @default(PRIVATE)
+  metadata    Json?    // Typology and wizard data (wordOrder, morphologicalTendency, etc.)
+  
+  // Social & Community Links
+  discordUrl  String?
+  telegramUrl String?
+  websiteUrl  String?
+
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  scriptSymbols   ScriptSymbol[]
+  grammarPages    GrammarPage[]
+  dictionaryEntries DictionaryEntry[]
+  paradigms       Paradigm[]
+  collaborators   LanguageCollaborator[]
+  activities      Activity[]
+  favorites       Favorite[]
+  articles        Article[]
+  texts           Text[]
+
+  @@index([ownerId])
+  @@index([slug])
+  @@map("languages")
+}
+
+enum Visibility {
+  PRIVATE
+  UNLISTED
+  PUBLIC
+}
+
+enum CollaboratorRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model ScriptSymbol {
+  id          String   @id @default(cuid())
+  symbol      String   // Lowercase/normal form
+  capitalSymbol String? // Uppercase/capital form (optional)
+  ipa         String?  // International Phonetic Alphabet
+  latin       String?  // Latin transliteration equivalent
+  name        String?  // Optional name/description
+  order       Int      @default(0)
+  languageId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@index([languageId])
+  @@index([languageId, order])
+  @@map("script_symbols")
+}
+
+model GrammarPage {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  content     Json     // Rich text content (TipTap/BlockNote JSON)
+  imageUrl    String?  // URL to cover/feature image
+  order       Int      @default(0)
+  paradigmId String?  // Optional link to paradigm table
+  languageId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
+
+  @@unique([languageId, slug])
+  @@index([languageId])
+  @@index([languageId, order])
+  @@index([paradigmId])
+  @@map("grammar_pages")
+}
+
+model DictionaryEntry {
+  id          String   @id @default(cuid())
+  lemma       String   // Dictionary form / headword
+  gloss       String   // Translation/definition
+  ipa         String?  // Pronunciation
+  partOfSpeech String? // e.g., "noun", "verb", "adj"
+  etymology   String?  @db.Text // Word origin/etymology
+  relatedWords Json?   // Array of related word IDs: ["id1", "id2"]
+  notes       String?  @db.Text
+  paradigmId  String?  // Optional link to paradigm table
+  languageId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
+
+  @@index([languageId])
+  @@index([languageId, lemma])
+  @@index([paradigmId])
+  @@map("dictionary_entries")
+}
+
+model Paradigm {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "First Declension", "Present Tense"
+  slots       Json     // Table structure: { rows: [...], columns: [...] }
+  notes       String?  @db.Text
+  languageId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  dictionaryEntries DictionaryEntry[]
+  grammarPages GrammarPage[]
+  articles Article[]
+  texts Text[]
+
+  @@index([languageId])
+  @@map("paradigms")
+}
+
+model LanguageCollaborator {
+  id         String           @id @default(cuid())
+  languageId String
+  userId     String
+  role       CollaboratorRole @default(VIEWER)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([languageId, userId])
+  @@index([languageId])
+  @@index([userId])
+  @@map("language_collaborators")
+}
+
+enum ActivityType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+enum ActivityEntityType {
+  LANGUAGE
+  SCRIPT_SYMBOL
+  GRAMMAR_PAGE
+  DICTIONARY_ENTRY
+  PARADIGM
+  COLLABORATOR
+  ARTICLE
+  TEXT
+}
+
+// Articles/News for a language
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  excerpt     String?  @db.Text // Short summary
+  content     Json     // Rich text content (TipTap/BlockNote JSON)
+  coverImage  String?  // URL to cover image
+  published   Boolean  @default(false)
+  paradigmId String?  // Optional link to paradigm table
+  languageId  String
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
+
+  @@unique([languageId, slug])
+  @@index([languageId])
+  @@index([authorId])
+  @@index([languageId, published])
+  @@index([publishedAt])
+  @@index([paradigmId])
+  @@map("articles")
+}
+
+enum TextType {
+  BOOK
+  SHORT_STORY
+  POEM
+  SONG
+  DIALOGUE
+  ESSAY
+  TRANSLATION
+  OTHER
+}
+
+// Books and other texts in a language
+model Text {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  description String?  @db.Text
+  type        TextType @default(OTHER)
+  content     Json?    // Rich text content for inline texts
+  fileUrl     String?  // URL to uploaded file (PDF, etc.)
+  fileName    String?  // Original file name
+  fileSize    Int?     // File size in bytes
+  coverImage  String?  // URL to cover image
+  published   Boolean  @default(false)
+  paradigmId String?  // Optional link to paradigm table
+  languageId  String
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
+
+  @@unique([languageId, slug])
+  @@index([languageId])
+  @@index([authorId])
+  @@index([languageId, type])
+  @@index([paradigmId])
+  @@map("texts")
+}
+
+model Activity {
+  id          String            @id @default(cuid())
+  type        ActivityType
+  entityType  ActivityEntityType
+  entityId    String
+  languageId  String
+  userId      String
+  description String?           @db.Text
+  metadata    Json?             // Additional context (e.g., field changes)
+  createdAt   DateTime          @default(now())
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([languageId])
+  @@index([userId])
+  @@index([languageId, createdAt])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  languageId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, languageId])
+  @@index([userId])
+  @@index([languageId])
+  @@map("favorites")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // User who follows
+  followingId String   // User being followed
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}

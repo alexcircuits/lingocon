@@ -1,0 +1,51 @@
+"use server"
+
+import { ZodError } from "zod"
+import { prisma } from "@/lib/prisma"
+import { getUserId } from "@/lib/auth-helpers"
+import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
+import { revalidatePath } from "next/cache"
+
+export async function updateUser(input: UpdateUserInput) {
+    const userId = await getUserId()
+
+    if (!userId) {
+        return {
+            error: "Unauthorized",
+        }
+    }
+
+    try {
+        const validated = updateUserSchema.parse(input)
+
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                name: validated.name,
+                image: validated.image || null,
+            },
+        })
+
+        revalidatePath(`/users/${userId}`)
+        revalidatePath("/settings")
+
+        return {
+            success: true,
+            data: updated,
+        }
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return {
+                error: error.issues[0]?.message || "Validation failed",
+            }
+        }
+        if (error instanceof Error) {
+            return {
+                error: error.message,
+            }
+        }
+        return {
+            error: "Failed to update profile",
+        }
+    }
+}

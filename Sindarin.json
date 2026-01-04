@@ -1,0 +1,1114 @@
+{
+  "version": "1.3",
+  "name": "Sindarin",
+  "author": "Ambar-Eldaron (Dictionnaire complet)",
+  "description": "Langue elfique classique (Sindarin). Dictionnaire Sindarin–Français complet avec IPA et phonologie.",
+  "lexicon": [
+    {
+      "id": "sd0001",
+      "word": "a",
+      "ipa": "a",
+      "pos": "Interjection",
+      "definition": "O!",
+      "etymology": ""
+    },
+    {
+      "id": "sd0002",
+      "word": "a",
+      "ipa": "a",
+      "pos": "Conjunction",
+      "definition": "et",
+      "etymology": ""
+    },
+    {
+      "id": "sd0003",
+      "word": "ab",
+      "ipa": "ab",
+      "pos": "Preposition/Prefix",
+      "definition": "après",
+      "etymology": ""
+    },
+    {
+      "id": "sd0004",
+      "word": "ablad",
+      "ipa": "ˈa.blad",
+      "pos": "Noun",
+      "definition": "refus, interdiction",
+      "etymology": ""
+    },
+    {
+      "id": "sd0005",
+      "word": "Abonnen",
+      "ipa": "a.ˈbɔn.ːen",
+      "pos": "Noun",
+      "definition": "Après-nés",
+      "etymology": ""
+    },
+    {
+      "id": "sd0006",
+      "word": "achad",
+      "ipa": "ˈa.χad",
+      "pos": "Noun",
+      "definition": "nuque",
+      "etymology": ""
+    },
+    {
+      "id": "sd0007",
+      "word": "acharn",
+      "ipa": "a.ˈχarn",
+      "pos": "Noun",
+      "definition": "vengeance",
+      "etymology": ""
+    },
+    {
+      "id": "sd0008",
+      "word": "achas",
+      "ipa": "ˈa.χas",
+      "pos": "Noun",
+      "definition": "peur",
+      "etymology": ""
+    },
+    {
+      "id": "sd0009",
+      "word": "ad",
+      "ipa": "ad",
+      "pos": "Preposition",
+      "definition": "contre",
+      "etymology": ""
+    },
+    {
+      "id": "sd0010",
+      "word": "ada",
+      "ipa": "ˈa.da",
+      "pos": "Noun",
+      "definition": "papa",
+      "etymology": ""
+    },
+    {
+      "id": "sd0011",
+      "word": "adab",
+      "ipa": "a.ˈdab",
+      "pos": "Noun",
+      "definition": "maison, bâtiment",
+      "etymology": ""
+    },
+    {
+      "id": "sd0012",
+      "word": "adan",
+      "ipa": "ˈa.dan",
+      "pos": "Noun",
+      "definition": "Homme",
+      "etymology": ""
+    },
+    {
+      "id": "sd0013",
+      "word": "adanadar",
+      "ipa": "a.da.na.ˈdar",
+      "pos": "Noun",
+      "definition": "Père des Hommes",
+      "etymology": ""
+    },
+    {
+      "id": "sd0014",
+      "word": "adaneth",
+      "ipa": "a.da.ˈneθ",
+      "pos": "Noun",
+      "definition": "femme (mortelle)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0015",
+      "word": "adar",
+      "ipa": "ˈa.dar",
+      "pos": "Noun",
+      "definition": "père",
+      "etymology": "ATAR"
+    },
+    {
+      "id": "sd0016",
+      "word": "adel",
+      "ipa": "a.ˈdel",
+      "pos": "Adverb/Preposition",
+      "definition": "derrière",
+      "etymology": ""
+    },
+    {
+      "id": "sd0017",
+      "word": "adertha",
+      "ipa": "a.ˈder.θa",
+      "pos": "Verb",
+      "definition": "réunir, associer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0018",
+      "word": "aderthad",
+      "ipa": "a.ˈder.θad",
+      "pos": "Noun",
+      "definition": "réunion, association",
+      "etymology": ""
+    },
+    {
+      "id": "sd0019",
+      "word": "adlann",
+      "ipa": "ad.ˈlan",
+      "pos": "Adjective",
+      "definition": "chute, déclin",
+      "etymology": ""
+    },
+    {
+      "id": "sd0020",
+      "word": "adlanna",
+      "ipa": "ad.ˈlan.a",
+      "pos": "Verb",
+      "definition": "pencher, incliner",
+      "etymology": ""
+    },
+    {
+      "id": "sd0021",
+      "word": "adlant",
+      "ipa": "ad.ˈlant",
+      "pos": "Adjective",
+      "definition": "pentu, oblique",
+      "etymology": ""
+    },
+    {
+      "id": "sd0022",
+      "word": "adleitha",
+      "ipa": "ad.ˈleɪ.θa",
+      "pos": "Verb",
+      "definition": "libérer, relâcher",
+      "etymology": ""
+    },
+    {
+      "id": "sd0023",
+      "word": "adlod",
+      "ipa": "ad.ˈloːd",
+      "pos": "Adjective",
+      "definition": "pentu, penché",
+      "etymology": ""
+    },
+    {
+      "id": "sd0024",
+      "word": "aduial",
+      "ipa": "a.ˈdui.al",
+      "pos": "Noun",
+      "definition": "crépuscule",
+      "etymology": ""
+    },
+    {
+      "id": "sd0025",
+      "word": "ae",
+      "ipa": "ae̯",
+      "pos": "Conjunction",
+      "definition": "quand",
+      "etymology": ""
+    },
+    {
+      "id": "sd0026",
+      "word": "aear",
+      "ipa": "ˈae̯.ar",
+      "pos": "Noun",
+      "definition": "mer, océan",
+      "etymology": ""
+    },
+    {
+      "id": "sd0027",
+      "word": "aearon",
+      "ipa": "ae̯.a.ˈron",
+      "pos": "Noun",
+      "definition": "océan",
+      "etymology": ""
+    },
+    {
+      "id": "sd0028",
+      "word": "aeg",
+      "ipa": "aeg",
+      "pos": "Noun/Adjective",
+      "definition": "pic (montagne), tranchant, pointu",
+      "etymology": ""
+    },
+    {
+      "id": "sd0029",
+      "word": "aegas",
+      "ipa": "ˈae̯.gas",
+      "pos": "Noun",
+      "definition": "sommet de montagne",
+      "etymology": ""
+    },
+    {
+      "id": "sd0030",
+      "word": "aeglir",
+      "ipa": "ˈae̯g.lir",
+      "pos": "Noun",
+      "definition": "chaîne de montagnes",
+      "etymology": ""
+    },
+    {
+      "id": "sd0031",
+      "word": "aeglos",
+      "ipa": "ˈae̯g.los",
+      "pos": "Noun",
+      "definition": "glaçon, buisson de neige (plante)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0032",
+      "word": "ael",
+      "ipa": "ˈae̯l",
+      "pos": "Noun",
+      "definition": "lac",
+      "etymology": ""
+    },
+    {
+      "id": "sd0033",
+      "word": "aer",
+      "ipa": "ˈae̯r",
+      "pos": "Noun",
+      "definition": "mer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0034",
+      "word": "aerlinn",
+      "ipa": "ˈae̯r.lin",
+      "pos": "Noun",
+      "definition": "chant sacré, chant de la mer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0035",
+      "word": "aeruil",
+      "ipa": "ae̯.ˈru.il",
+      "pos": "Noun",
+      "definition": "algue",
+      "etymology": ""
+    },
+    {
+      "id": "sd0036",
+      "word": "aes",
+      "ipa": "ˈae̯s",
+      "pos": "Noun",
+      "definition": "repas préparé, viande",
+      "etymology": ""
+    },
+    {
+      "id": "sd0037",
+      "word": "aew",
+      "ipa": "ˈae̯w",
+      "pos": "Noun",
+      "definition": "oiseau (petit)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0038",
+      "word": "agar",
+      "ipa": "ˈa.gar",
+      "pos": "Noun",
+      "definition": "gloire, brillance",
+      "etymology": ""
+    },
+    {
+      "id": "sd0039",
+      "word": "agarwaen",
+      "ipa": "a.gar.ˈwae̯n",
+      "pos": "Adjective",
+      "definition": "taché de sang",
+      "etymology": ""
+    },
+    {
+      "id": "sd0040",
+      "word": "aglar",
+      "ipa": "ˈag.lar",
+      "pos": "Noun",
+      "definition": "brillance, gloire",
+      "etymology": ""
+    },
+    {
+      "id": "sd0041",
+      "word": "aglareb",
+      "ipa": "ag.la.ˈreb",
+      "pos": "Adjective",
+      "definition": "glorieux",
+      "etymology": ""
+    },
+    {
+      "id": "sd0042",
+      "word": "aglonn",
+      "ipa": "ag.ˈlon",
+      "pos": "Noun",
+      "definition": "défilé, col",
+      "etymology": ""
+    },
+    {
+      "id": "sd0043",
+      "word": "agor",
+      "ipa": "ˈa.gor",
+      "pos": "Adjective",
+      "definition": "étroit",
+      "etymology": ""
+    },
+    {
+      "id": "sd0044",
+      "word": "ah",
+      "ipa": "aː",
+      "pos": "Conjunction",
+      "definition": "et (devant une voyelle)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0045",
+      "word": "ai",
+      "ipa": "aː",
+      "pos": "Interjection",
+      "definition": "salut!",
+      "etymology": ""
+    },
+    {
+      "id": "sd0046",
+      "word": "aiglos",
+      "ipa": "ˈaɪg.los",
+      "pos": "Noun",
+      "definition": "buisson de neige",
+      "etymology": ""
+    },
+    {
+      "id": "sd0047",
+      "word": "aith",
+      "ipa": "ˈaɪ.θ",
+      "pos": "Noun",
+      "definition": "fer de lance",
+      "etymology": ""
+    },
+    {
+      "id": "sd0048",
+      "word": "alae",
+      "ipa": "a.ˈlae̯",
+      "pos": "Interjection",
+      "definition": "ah!",
+      "etymology": ""
+    },
+    {
+      "id": "sd0049",
+      "word": "alag",
+      "ipa": "ˈa.lag",
+      "pos": "Adjective",
+      "definition": "impétueux, sauvage",
+      "etymology": ""
+    },
+    {
+      "id": "sd0050",
+      "word": "alagos",
+      "ipa": "a.ˈla.gos",
+      "pos": "Noun",
+      "definition": "tempête de vent",
+      "etymology": ""
+    },
+    {
+      "id": "sd0051",
+      "word": "alfirin",
+      "ipa": "al.ˈfi.rin",
+      "pos": "Noun",
+      "definition": "nom d'une fleur, immortel",
+      "etymology": ""
+    },
+    {
+      "id": "sd0052",
+      "word": "alph",
+      "ipa": "alɸ",
+      "pos": "Noun",
+      "definition": "cygne",
+      "etymology": ""
+    },
+    {
+      "id": "sd0053",
+      "word": "amarth",
+      "ipa": "ˈa.marθ",
+      "pos": "Noun",
+      "definition": "destin, fatalité",
+      "etymology": "MBARAT"
+    },
+    {
+      "id": "sd0054",
+      "word": "amarthan",
+      "ipa": "a.mar.ˈθan",
+      "pos": "Adjective",
+      "definition": "maudit, malchanceux",
+      "etymology": ""
+    },
+    {
+      "id": "sd0055",
+      "word": "amath",
+      "ipa": "a.ˈmaθ",
+      "pos": "Noun",
+      "definition": "muraille",
+      "etymology": ""
+    },
+    {
+      "id": "sd0056",
+      "word": "ambenn",
+      "ipa": "am.ˈben",
+      "pos": "Adverb",
+      "definition": "en montant",
+      "etymology": ""
+    },
+    {
+      "id": "sd0057",
+      "word": "amdir",
+      "ipa": "ˈam.dir",
+      "pos": "Noun",
+      "definition": "espérance (fondée)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0058",
+      "word": "amloth",
+      "ipa": "ˈam.loθ",
+      "pos": "Noun",
+      "definition": "fleur fixée au sommet d'un casque",
+      "etymology": ""
+    },
+    {
+      "id": "sd0059",
+      "word": "amlug",
+      "ipa": "ˈam.lug",
+      "pos": "Noun",
+      "definition": "serpent",
+      "etymology": ""
+    },
+    {
+      "id": "sd0060",
+      "word": "amman",
+      "ipa": "ˈam.an",
+      "pos": "Adverb",
+      "definition": "pourquoi?",
+      "etymology": ""
+    },
+    {
+      "id": "sd0061",
+      "word": "ammen",
+      "ipa": "ˈam.en",
+      "pos": "Pronoun",
+      "definition": "nous",
+      "etymology": ""
+    },
+    {
+      "id": "sd0062",
+      "word": "amon",
+      "ipa": "ˈa.mon",
+      "pos": "Noun",
+      "definition": "montagne, colline",
+      "etymology": ""
+    },
+    {
+      "id": "sd0063",
+      "word": "amrún",
+      "ipa": "am.ˈrun",
+      "pos": "Noun",
+      "definition": "Est, Orient",
+      "etymology": ""
+    },
+    {
+      "id": "sd0064",
+      "word": "an",
+      "ipa": "an",
+      "pos": "Preposition/Prefix",
+      "definition": "pour, afin que",
+      "etymology": ""
+    },
+    {
+      "id": "sd0065",
+      "word": "anann",
+      "ipa": "a.ˈnan",
+      "pos": "Adverb",
+      "definition": "longtemps",
+      "etymology": ""
+    },
+    {
+      "id": "sd0066",
+      "word": "anc",
+      "ipa": "aŋk",
+      "pos": "Noun",
+      "definition": "mâchoire, rangée de dents",
+      "etymology": ""
+    },
+    {
+      "id": "sd0067",
+      "word": "and",
+      "ipa": "and",
+      "pos": "Noun/Adjective",
+      "definition": "porte, long",
+      "etymology": ""
+    },
+    {
+      "id": "sd0068",
+      "word": "andaith",
+      "ipa": "an.ˈdaɪ.θ",
+      "pos": "Noun",
+      "definition": "marque d'allongement (écriture)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0069",
+      "word": "andrann",
+      "ipa": "an.ˈdran",
+      "pos": "Noun",
+      "definition": "âge, cycle",
+      "etymology": ""
+    },
+    {
+      "id": "sd0070",
+      "word": "andrath",
+      "ipa": "an.ˈdraθ",
+      "pos": "Noun",
+      "definition": "montée, passage haut",
+      "etymology": ""
+    },
+    {
+      "id": "sd0071",
+      "word": "Anfang",
+      "ipa": "ˈan.faŋ",
+      "pos": "Noun",
+      "definition": "Longue-Barbe (tribu de Nains)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0072",
+      "word": "anfangrim",
+      "ipa": "an.ˈfaŋ.rim",
+      "pos": "Noun",
+      "definition": "Longues-Barbes (peuple)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0073",
+      "word": "ang",
+      "ipa": "aŋ",
+      "pos": "Noun",
+      "definition": "fer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0074",
+      "word": "angerthas",
+      "ipa": "aŋ.ˈger.θas",
+      "pos": "Noun",
+      "definition": "runes",
+      "etymology": ""
+    },
+    {
+      "id": "sd0075",
+      "word": "anglenna",
+      "ipa": "aŋ.ˈlen.a",
+      "pos": "Verb",
+      "definition": "s'approcher de",
+      "etymology": ""
+    },
+    {
+      "id": "sd0076",
+      "word": "angol",
+      "ipa": "ˈa.ŋol",
+      "pos": "Noun",
+      "definition": "connaissance, magie",
+      "etymology": ""
+    },
+    {
+      "id": "sd0077",
+      "word": "angos",
+      "ipa": "ˈa.ŋos",
+      "pos": "Noun",
+      "definition": "horreur",
+      "etymology": ""
+    },
+    {
+      "id": "sd0078",
+      "word": "angren",
+      "ipa": "ˈaŋ.gren",
+      "pos": "Adjective",
+      "definition": "de fer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0079",
+      "word": "angwedh",
+      "ipa": "aŋ.ˈwed",
+      "pos": "Noun",
+      "definition": "chaîne, lien de fer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0080",
+      "word": "anim",
+      "ipa": "ˈa.nim",
+      "pos": "Pronoun",
+      "definition": "pour moi",
+      "etymology": ""
+    },
+    {
+      "id": "sd0081",
+      "word": "aníra",
+      "ipa": "a.ˈni.ra",
+      "pos": "Verb",
+      "definition": "désirer",
+      "etymology": ""
+    },
+    {
+      "id": "sd0082",
+      "word": "ank",
+      "ipa": "aŋk",
+      "pos": "Noun",
+      "definition": "mâchoire",
+      "etymology": ""
+    },
+    {
+      "id": "sd0083",
+      "word": "anna",
+      "ipa": "ˈan.a",
+      "pos": "Verb",
+      "definition": "donner",
+      "etymology": ""
+    },
+    {
+      "id": "sd0084",
+      "word": "annabon",
+      "ipa": "an.a.ˈbon",
+      "pos": "Noun",
+      "definition": "éléphant",
+      "etymology": ""
+    },
+    {
+      "id": "sd0085",
+      "word": "anneth",
+      "ipa": "ˈan.eθ",
+      "pos": "Noun",
+      "definition": "don",
+      "etymology": ""
+    },
+    {
+      "id": "sd0086",
+      "word": "annon",
+      "ipa": "ˈan.on",
+      "pos": "Noun",
+      "definition": "porte (grande)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0087",
+      "word": "annûn",
+      "ipa": "ˈan.un",
+      "pos": "Noun",
+      "definition": "Ouest, Soleil couchant",
+      "etymology": ""
+    },
+    {
+      "id": "sd0088",
+      "word": "Annúnaid",
+      "ipa": "an.ˈnu.naid",
+      "pos": "Noun",
+      "definition": "langue commune (Westron)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0089",
+      "word": "anor",
+      "ipa": "ˈa.nor",
+      "pos": "Noun",
+      "definition": "Soleil",
+      "etymology": ""
+    },
+    {
+      "id": "sd0090",
+      "word": "ant",
+      "ipa": "ant",
+      "pos": "Noun",
+      "definition": "cadeau",
+      "etymology": ""
+    },
+    {
+      "id": "sd0091",
+      "word": "anu",
+      "ipa": "ˈa.nu",
+      "pos": "Adjective",
+      "definition": "mâle",
+      "etymology": ""
+    },
+    {
+      "id": "sd0092",
+      "word": "anwar",
+      "ipa": "ˈan.war",
+      "pos": "Noun",
+      "definition": "respect, vénération",
+      "etymology": ""
+    },
+    {
+      "id": "sd0093",
+      "word": "aphada",
+      "ipa": "a.ˈpha.da",
+      "pos": "Verb",
+      "definition": "suivre",
+      "etymology": ""
+    },
+    {
+      "id": "sd0094",
+      "word": "aphadon",
+      "ipa": "a.ˈpha.don",
+      "pos": "Noun",
+      "definition": "Suivants (Hommes)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0095",
+      "word": "aphadrim",
+      "ipa": "a.ˈpha.drim",
+      "pos": "Noun",
+      "definition": "les Suivants (Hommes)",
+      "etymology": ""
+    },
+    {
+      "id": "sd0096",
+      "word": "ar",
+      "ipa": "ar",
+      "pos": "Conjunction",
+      "definition": "et",
+      "etymology": ""
+    },
+    {
+      "id": "sd0097",
+      "word": "arad",
+      "ipa": "ˈa.rad",
+      "pos": "Noun",
+      "definition": "jour",
+      "etymology": ""
+    },
+    {
+      "id": "sd0098",
+      "word": "araf",
+      "ipa": "ˈa.raf",
+      "pos": "Noun",
+      "definition": "loup",
+      "etymology": ""
+    },
+    {
+      "id": "sd0099",
+      "word": "aran",
+      "ipa": "ˈa.ran",
+      "pos": "Noun",
+      "definition": "Roi, Seigneur",
+      "etymology": "ARAN"
+    },
+    {
+      "id": "sd0100",
+      "word": "aranarth",
+      "ipa": "a.ra.ˈnarθ",
+      "pos": "Noun",
+      "definition": "royaume",
+      "etymology": ""
+    }
+  ],
+  "grammar": "Langue à mutations consonantiques. Ordre fréquent VSO. Pluriel par i-affection. Mutation initiale selon le contexte grammatical.",
+  "morphology": {
+    "dimensions": [],
+    "paradigms": []
+  },
+  "phonology": {
+    "name": "Sindarin Classique",
+    "syllableStructure": "(C)V(C)",
+    "description": "Phonologie reconstruite à partir des écrits de Tolkien",
+    "consonants": [
+      {
+        "symbol": "p",
+        "place": "bilabial",
+        "manner": "plosive",
+        "voiced": false,
+        "examples": [
+          "pâd",
+          "post"
+        ]
+      },
+      {
+        "symbol": "b",
+        "place": "bilabial",
+        "manner": "plosive",
+        "voiced": true,
+        "examples": [
+          "barad",
+          "bad"
+        ]
+      },
+      {
+        "symbol": "t",
+        "place": "alveolar",
+        "manner": "plosive",
+        "voiced": false,
+        "examples": [
+          "tâd",
+          "tol"
+        ]
+      },
+      {
+        "symbol": "d",
+        "place": "alveolar",
+        "manner": "plosive",
+        "voiced": true,
+        "examples": [
+          "dag",
+          "dûn"
+        ]
+      },
+      {
+        "symbol": "k",
+        "place": "velar",
+        "manner": "plosive",
+        "voiced": false,
+        "examples": [
+          "car",
+          "caen"
+        ]
+      },
+      {
+        "symbol": "g",
+        "place": "velar",
+        "manner": "plosive",
+        "voiced": true,
+        "examples": [
+          "galadh",
+          "galad"
+        ]
+      },
+      {
+        "symbol": "m",
+        "place": "bilabial",
+        "manner": "nasal",
+        "voiced": true,
+        "examples": [
+          "mîr",
+          "mal"
+        ]
+      },
+      {
+        "symbol": "n",
+        "place": "alveolar",
+        "manner": "nasal",
+        "voiced": true,
+        "examples": [
+          "nîn",
+          "nar"
+        ]
+      },
+      {
+        "symbol": "ŋ",
+        "place": "velar",
+        "manner": "nasal",
+        "voiced": true,
+        "examples": [
+          "ang",
+          "ungol"
+        ]
+      },
+      {
+        "symbol": "f",
+        "place": "labiodental",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          "faen",
+          "fael"
+        ]
+      },
+      {
+        "symbol": "v",
+        "place": "labiodental",
+        "manner": "fricative",
+        "voiced": true,
+        "examples": [
+          "valar"
+        ]
+      },
+      {
+        "symbol": "θ",
+        "place": "dental",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          "rath",
+          "math"
+        ]
+      },
+      {
+        "symbol": "ð",
+        "place": "dental",
+        "manner": "fricative",
+        "voiced": true,
+        "examples": [
+          ""
+        ]
+      },
+      {
+        "symbol": "s",
+        "place": "alveolar",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          "sail",
+          "sûl"
+        ]
+      },
+      {
+        "symbol": "z",
+        "place": "alveolar",
+        "manner": "fricative",
+        "voiced": true,
+        "examples": [
+          ""
+        ]
+      },
+      {
+        "symbol": "ʃ",
+        "place": "postalveolar",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          ""
+        ]
+      },
+      {
+        "symbol": "χ",
+        "place": "velar",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          "achad",
+          "achar"
+        ]
+      },
+      {
+        "symbol": "h",
+        "place": "glottal",
+        "manner": "fricative",
+        "voiced": false,
+        "examples": [
+          "hîr",
+          "hall"
+        ]
+      },
+      {
+        "symbol": "l",
+        "place": "alveolar",
+        "manner": "lateral-approximant",
+        "voiced": true,
+        "examples": [
+          "lind",
+          "lûth"
+        ]
+      },
+      {
+        "symbol": "r",
+        "place": "alveolar",
+        "manner": "approximant",
+        "voiced": true,
+        "examples": [
+          "rain",
+          "rûn"
+        ]
+      },
+      {
+        "symbol": "j",
+        "place": "palatal",
+        "manner": "approximant",
+        "voiced": true,
+        "examples": [
+          ""
+        ]
+      },
+      {
+        "symbol": "w",
+        "place": "labial-velar",
+        "manner": "approximant",
+        "voiced": true,
+        "examples": [
+          ""
+        ]
+      }
+    ],
+    "vowels": [
+      {
+        "symbol": "a",
+        "height": "open",
+        "backness": "central",
+        "rounded": false,
+        "examples": [
+          "adar",
+          "aran",
+          "alag"
+        ]
+      },
+      {
+        "symbol": "e",
+        "height": "close-mid",
+        "backness": "front",
+        "rounded": false,
+        "examples": [
+          "edhel",
+          "eryn"
+        ]
+      },
+      {
+        "symbol": "i",
+        "height": "close",
+        "backness": "front",
+        "rounded": false,
+        "examples": [
+          "iâ",
+          "iel"
+        ]
+      },
+      {
+        "symbol": "o",
+        "height": "close-mid",
+        "backness": "back",
+        "rounded": true,
+        "examples": [
+          "orod",
+          "ost"
+        ]
+      },
+      {
+        "symbol": "u",
+        "height": "close",
+        "backness": "back",
+        "rounded": true,
+        "examples": [
+          "ur",
+          "ûn"
+        ]
+      },
+      {
+        "symbol": "y",
+        "height": "close",
+        "backness": "front",
+        "rounded": true,
+        "examples": [
+          ""
+        ]
+      }
+    ]
+  },
+  "evolutionRules": [],
+  "constraints": {
+    "allowDuplicates": false,
+    "caseSensitive": true,
+    "bannedSequences": [],
+    "allowedGraphemes": "",
+    "phonotacticStructure": "",
+    "mustStartWith": [],
+    "mustEndWith": []
+  },
+  "scriptConfig": {
+    "name": "Standard Script",
+    "direction": "ltr",
+    "glyphs": [],
+    "spacingMode": "proportional"
+  },
+  "notebook": "",
+  "lastModified": 1767467736778
+}
