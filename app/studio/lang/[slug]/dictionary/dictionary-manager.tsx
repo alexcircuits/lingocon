@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useState, useTransition, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -100,83 +100,82 @@ export function DictionaryManager({
   ])
 
   // URL Updates
-  const updateUrl = (newPage: number, newQuery: string) => {
+  const updateUrl = useCallback((newPage: number, newQuery: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (newPage > 1) params.set("page", newPage.toString())
+    else params.delete("page")
+
+    if (newQuery) params.set("q", newQuery)
+    else params.delete("q")
+
     startTransition(() => {
-      const params = new URLSearchParams(searchParams)
-      if (newPage > 1) params.set("page", newPage.toString())
-      else params.delete("page")
-
-      if (newQuery) params.set("q", newQuery)
-      else params.delete("q")
-
-      const newUrl = `${pathname}?${params.toString()}`
-      router.push(newUrl)
+      router.push(`${pathname}?${params.toString()}`)
     })
-  }
+  }, [pathname, router, searchParams])
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     updateUrl(1, query)
-  }
+  }, [updateUrl])
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     updateUrl(page, initialQuery)
-  }
+  }, [updateUrl, initialQuery])
 
   const handleCreate = async (data: any) => {
-    startTransition(async () => {
-      const result = await createDictionaryEntry({
-        ...data,
-        relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
-        languageId,
-      })
-
-      if (result.error) {
-        toast.error(result.error, {
-          action: {
-            label: "Retry",
-            onClick: () => handleCreate(data),
-          },
-        })
-      } else {
-        toast.success(`"${data.lemma}" added successfully`, {
-          action: {
-            label: "Add Another",
-            onClick: () => {
-              setIsAddOpen(true)
-            },
-          },
-        })
-        setIsAddOpen(false)
-        router.refresh()
-      }
+    const result = await createDictionaryEntry({
+      ...data,
+      relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
+      languageId,
     })
+
+    if (result.error) {
+      toast.error(result.error, {
+        action: {
+          label: "Retry",
+          onClick: () => handleCreate(data),
+        },
+      })
+    } else {
+      toast.success(`"${data.lemma}" added successfully`, {
+        action: {
+          label: "Add Another",
+          onClick: () => {
+            setIsAddOpen(true)
+          },
+        },
+      })
+      setIsAddOpen(false)
+      startTransition(() => {
+        router.refresh()
+      })
+    }
   }
 
   const handleUpdate = async (data: any) => {
     if (!editingEntry) return
 
-    startTransition(async () => {
-      const result = await updateDictionaryEntry({
-        id: editingEntry.id,
-        ...data,
-        relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
-        languageId,
-      })
-
-      if (result.error) {
-        toast.error(result.error, {
-          action: {
-            label: "Retry",
-            onClick: () => handleUpdate(data),
-          },
-        })
-      } else {
-        toast.success(`"${data.lemma}" updated successfully`)
-        setIsEditOpen(false)
-        setEditingEntry(null)
-        router.refresh()
-      }
+    const result = await updateDictionaryEntry({
+      id: editingEntry.id,
+      ...data,
+      relatedWords: data.relatedWords.length > 0 ? data.relatedWords : undefined,
+      languageId,
     })
+
+    if (result.error) {
+      toast.error(result.error, {
+        action: {
+          label: "Retry",
+          onClick: () => handleUpdate(data),
+        },
+      })
+    } else {
+      toast.success(`"${data.lemma}" updated successfully`)
+      setIsEditOpen(false)
+      setEditingEntry(null)
+      startTransition(() => {
+        router.refresh()
+      })
+    }
   }
 
   const handleDelete = async () => {
@@ -185,40 +184,40 @@ export function DictionaryManager({
     const deletedEntry = initialEntries.find(e => e.id === deletingId)
     const entryLemma = deletedEntry?.lemma || "entry"
 
-    startTransition(async () => {
-      const result = await deleteDictionaryEntry(deletingId, languageId)
+    const result = await deleteDictionaryEntry(deletingId, languageId)
 
-      if (result.error) {
-        toast.error(result.error, {
-          action: {
-            label: "Retry",
-            onClick: () => handleDelete(),
+    if (result.error) {
+      toast.error(result.error, {
+        action: {
+          label: "Retry",
+          onClick: () => handleDelete(),
+        },
+      })
+    } else {
+      toast.success(`"${entryLemma}" deleted successfully`, {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            // Note: Undo would require restoring the entry
+            // This is a placeholder for future implementation
+            toast.info("Undo functionality coming soon")
           },
-        })
-      } else {
-        toast.success(`"${entryLemma}" deleted successfully`, {
-          action: {
-            label: "Undo",
-            onClick: async () => {
-              // Note: Undo would require restoring the entry
-              // This is a placeholder for future implementation
-              toast.info("Undo functionality coming soon")
-            },
-          },
-        })
-        setIsDeleteOpen(false)
-        setDeletingId(null)
+        },
+      })
+      setIsDeleteOpen(false)
+      setDeletingId(null)
 
-        // Remove from selection if selected
-        if (selectedEntries.has(deletingId)) {
-          const newSelected = new Set(selectedEntries)
-          newSelected.delete(deletingId)
-          setSelectedEntries(newSelected)
-        }
-
-        router.refresh()
+      // Remove from selection if selected
+      if (selectedEntries.has(deletingId)) {
+        const newSelected = new Set(selectedEntries)
+        newSelected.delete(deletingId)
+        setSelectedEntries(newSelected)
       }
-    })
+
+      startTransition(() => {
+        router.refresh()
+      })
+    }
   }
 
   const handleImport = async (file: File) => {
@@ -434,8 +433,8 @@ export function DictionaryManager({
         onOpenChange={setIsDeleteOpen}
         onConfirm={handleDelete}
         isPending={isPending}
-        itemName={deletingId ? initialEntries.find(e => e.id === deletingId)?.lemma : undefined}
-        description={deletingId ? `This will permanently delete the dictionary entry "${initialEntries.find(e => e.id === deletingId)?.lemma}". This action cannot be undone.` : undefined}
+        itemName={deletingId ? initialEntries?.find(e => e.id === deletingId)?.lemma : undefined}
+        description={deletingId ? `This will permanently delete the dictionary entry "${initialEntries?.find(e => e.id === deletingId)?.lemma}". This action cannot be undone.` : undefined}
       />
 
       <ImportDialog

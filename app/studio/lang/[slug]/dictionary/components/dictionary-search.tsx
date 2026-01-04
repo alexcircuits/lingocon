@@ -15,8 +15,10 @@ export function DictionarySearch({ onSearch, defaultValue = "" }: DictionarySear
   const debouncedValue = useDebounce(value, 300)
 
   useEffect(() => {
+    // Skip initial trigger if value hasn't changed from default
+    if (value === defaultValue) return
     onSearch(debouncedValue)
-  }, [debouncedValue, onSearch])
+  }, [debouncedValue, onSearch, defaultValue, value])
 
   return (
     <div className="relative flex-1">

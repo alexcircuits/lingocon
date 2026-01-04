@@ -3,6 +3,8 @@ import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { DictionaryManager } from "./dictionary-manager"
 import { Prisma } from "@prisma/client"
+import { Suspense } from "react"
+import { EnhancedLoadingSkeleton } from "@/components/enhanced-loading-skeleton"
 
 const ITEMS_PER_PAGE = 20
 
@@ -112,16 +114,18 @@ export default async function DictionaryPage({
         </p>
       </div>
 
-      <DictionaryManager
-        languageId={language.id}
-        entries={entries}
-        symbols={language.scriptSymbols}
-        currentPage={page}
-        totalPages={totalPages}
-        totalEntries={total}
-        initialQuery={query}
-        enableAudio={isAudioEnabled}
-      />
+      <Suspense fallback={<EnhancedLoadingSkeleton variant="table" />}>
+        <DictionaryManager
+          languageId={language.id}
+          entries={entries}
+          symbols={language.scriptSymbols}
+          currentPage={page}
+          totalPages={totalPages}
+          totalEntries={total}
+          initialQuery={query}
+          enableAudio={isAudioEnabled}
+        />
+      </Suspense>
     </div>
   )
 }
