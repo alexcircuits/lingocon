@@ -4,7 +4,6 @@ import { useState, useMemo } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Tooltip,
     TooltipContent,
@@ -91,6 +90,10 @@ const IPA_CONSONANTS = [
     { symbol: "ʜ", name: "voiceless epiglottal fricative" },
     { symbol: "ʢ", name: "voiced epiglottal fricative" },
     { symbol: "ʡ", name: "epiglottal plosive" },
+    // Co-articulated
+    { symbol: "ɕ", name: "voiceless alveolo-palatal fricative" },
+    { symbol: "ʑ", name: "voiced alveolo-palatal fricative" },
+    { symbol: "ɧ", name: "voiceless sj-sound" },
     // Affricates
     { symbol: "t͡s", name: "voiceless alveolar affricate" },
     { symbol: "d͡z", name: "voiced alveolar affricate" },
@@ -100,6 +103,10 @@ const IPA_CONSONANTS = [
     { symbol: "d͡ʑ", name: "voiced alveolo-palatal affricate" },
     { symbol: "ʈ͡ʂ", name: "voiceless retroflex affricate" },
     { symbol: "ɖ͡ʐ", name: "voiced retroflex affricate" },
+    { symbol: "p͡f", name: "voiceless labiodental affricate" },
+    { symbol: "b͡v", name: "voiced labiodental affricate" },
+    { symbol: "k͡x", name: "voiceless velar affricate" },
+    { symbol: "g͡ɣ", name: "voiced velar affricate" },
 ]
 
 const IPA_VOWELS = [
@@ -181,6 +188,16 @@ const IPA_DIACRITICS = [
     { symbol: "˞", name: "rhoticity" },
     { symbol: "ɚ", name: "rhoticized schwa" },
     { symbol: "ɝ", name: "rhoticized open-mid central" },
+    // Tones (Tone letters)
+    { symbol: "˥", name: "extra high" },
+    { symbol: "˦", name: "high" },
+    { symbol: "˧", name: "mid" },
+    { symbol: "˨", name: "low" },
+    { symbol: "˩", name: "extra low" },
+    { symbol: "꜖", name: "extra low" },
+    { symbol: "꜒", name: "high" },
+    { symbol: "ʼ", name: "ejective" },
+    { symbol: "˪", name: "lateral release" },
 ]
 
 const IPA_SUPRASEGMENTALS = [
@@ -229,6 +246,8 @@ const IPA_CLICKS = [
     { symbol: "tʼ", name: "alveolar ejective" },
     { symbol: "kʼ", name: "velar ejective" },
     { symbol: "sʼ", name: "alveolar fricative ejective" },
+    // Other clicks
+    { symbol: "ǃ˞", name: "retroflex click" },
 ]
 
 interface IPAKeyboardProps {

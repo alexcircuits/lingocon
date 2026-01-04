@@ -110,7 +110,7 @@ const IPAInput = React.forwardRef<HTMLInputElement, IPAInputProps>(
                     disabled={disabled}
                     {...props}
                 />
-                <Popover open={isOpen} onOpenChange={setIsOpen}>
+                <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
                     <PopoverTrigger asChild>
                         <Button
                             type="button"
