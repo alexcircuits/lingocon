@@ -3,6 +3,7 @@
 import { ZodError } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
+import { revalidatePath } from "next/cache"
 import {
   createLanguageSchema,
   updateLanguageSchema,
@@ -43,6 +44,9 @@ export async function createLanguage(input: CreateLanguageInput) {
         ownerId: userId,
       },
     })
+
+    revalidatePath("/dashboard")
+    revalidatePath("/browse")
 
     return {
       success: true,
@@ -110,6 +114,12 @@ export async function updateLanguage(input: UpdateLanguageInput) {
       where: { id: validated.id },
       data: updateData,
     })
+
+    revalidatePath("/dashboard")
+    revalidatePath("/browse")
+    revalidatePath(`/studio/lang/${updated.slug}`)
+    revalidatePath(`/studio/lang/${updated.slug}/settings`)
+    revalidatePath(`/lang/${updated.slug}`)
 
     return {
       success: true,
