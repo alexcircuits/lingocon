@@ -13,7 +13,7 @@ interface GrammarContentProps {
 }
 
 export function GrammarContent({ content }: GrammarContentProps) {
-  // Process content to extract IGT nodes and render them separately
+  // Ensure content is in the right format for TipTap
   const processedContent = useMemo(() => {
     // If content is a string, wrap it in a proper TipTap JSON structure
     if (typeof content === "string") {
@@ -39,35 +39,7 @@ export function GrammarContent({ content }: GrammarContentProps) {
       }
     }
 
-    const nodes = content.content.map((node: any) => {
-      if (node.type === "igt") {
-        // Replace IGT node with paragraph placeholder
-        return {
-          type: "paragraph",
-          attrs: { "data-igt-id": node.attrs?.sentence || Math.random() },
-        }
-      }
-      if (node.type === "paradigm") {
-        // Replace paradigm node with paragraph placeholder
-        return {
-          type: "paragraph",
-          attrs: { "data-paradigm-id": node.attrs?.paradigmId || Math.random() },
-        }
-      }
-      return node
-    })
-
-    return { ...content, content: nodes }
-  }, [content])
-
-  const igtNodes = useMemo(() => {
-    if (!content || typeof content !== "object" || !Array.isArray(content.content)) return []
-    return content.content.filter((node: any) => node.type === "igt")
-  }, [content])
-
-  const paradigmNodes = useMemo(() => {
-    if (!content || typeof content !== "object" || !Array.isArray(content.content)) return []
-    return content.content.filter((node: any) => node.type === "paradigm")
+    return content
   }, [content])
 
   const editor = useEditor({
@@ -84,30 +56,6 @@ export function GrammarContent({ content }: GrammarContentProps) {
   return (
     <div className="prose prose-slate dark:prose-invert max-w-none">
       <EditorContent editor={editor} />
-      {igtNodes.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {igtNodes.map((node: any, idx: number) => (
-            <IGTBlock
-              key={idx}
-              sentence={node.attrs?.sentence || ""}
-              gloss={node.attrs?.gloss || ""}
-              translation={node.attrs?.translation || ""}
-              editable={false}
-            />
-          ))}
-        </div>
-      )}
-      {paradigmNodes.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {paradigmNodes.map((node: any, idx: number) => (
-            <ParadigmEmbed
-              key={idx}
-              paradigmId={node.attrs?.paradigmId || ""}
-              paradigmName={node.attrs?.paradigmName}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }

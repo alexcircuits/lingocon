@@ -1,6 +1,7 @@
 "use server"
 
 import { ZodError } from "zod"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import {
@@ -37,7 +38,15 @@ export async function createParadigm(input: CreateParadigmInput) {
         notes: validated.notes || null,
         languageId: validated.languageId,
       },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
+    revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
     return {
       success: true,
@@ -74,7 +83,7 @@ export async function updateParadigm(input: UpdateParadigmInput) {
 
     const paradigm = await prisma.paradigm.findUnique({
       where: { id: validated.id },
-      select: { languageId: true },
+      include: { language: { select: { slug: true } } },
     })
 
     if (!paradigm) {
@@ -100,6 +109,9 @@ export async function updateParadigm(input: UpdateParadigmInput) {
       where: { id: validated.id },
       data: updateData,
     })
+
+    revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
+    revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
     return {
       success: true,
@@ -140,9 +152,13 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
       }
     }
 
-    await prisma.paradigm.delete({
+    const paradigm = await prisma.paradigm.delete({
       where: { id: paradigmId },
+      include: { language: { select: { slug: true } } },
     })
+
+    revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
+    revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
     return {
       success: true,
@@ -222,4 +238,5 @@ export async function getParadigmById(paradigmId: string) {
     }
   }
 }
+
 

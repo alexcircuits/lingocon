@@ -29,7 +29,7 @@ export async function createText(data: {
 }) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }
@@ -43,6 +43,12 @@ export async function createText(data: {
   if (!language || language.ownerId !== userId) {
     return { error: "You don't have permission to add texts to this language" }
   }
+
+  // Get the slug as well
+  const langSlug = (await prisma.language.findUnique({
+    where: { id: data.languageId },
+    select: { slug: true }
+  }))?.slug
 
   const baseSlug = generateSlug(data.title)
   let slug = baseSlug
@@ -75,8 +81,8 @@ export async function createText(data: {
     }
   })
 
-  revalidatePath(`/studio/lang/[slug]/texts`)
-  revalidatePath(`/lang/[slug]/texts`)
+  revalidatePath(`/studio/lang/${langSlug}/texts`)
+  revalidatePath(`/lang/${langSlug}/texts`)
 
   return { text }
 }
@@ -98,7 +104,7 @@ export async function updateText(
 ) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }
@@ -121,8 +127,8 @@ export async function updateText(
 
     while (true) {
       const existing = await prisma.text.findFirst({
-        where: { 
-          languageId: text.languageId, 
+        where: {
+          languageId: text.languageId,
           slug,
           id: { not: id }
         }
@@ -150,7 +156,7 @@ export async function updateText(
 export async function deleteText(id: string) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }

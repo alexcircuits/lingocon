@@ -1,6 +1,7 @@
 "use server"
 
 import { ZodError } from "zod"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import {
@@ -40,7 +41,15 @@ export async function createScriptSymbol(input: CreateScriptSymbolInput) {
         order: validated.order,
         languageId: validated.languageId,
       },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
+    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
 
     return {
       success: true,
@@ -93,7 +102,15 @@ export async function updateScriptSymbol(input: UpdateScriptSymbolInput) {
         name: validated.name || null,
         order: validated.order,
       },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
+    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
 
     return {
       success: true,
@@ -134,9 +151,17 @@ export async function deleteScriptSymbol(symbolId: string, languageId: string) {
       }
     }
 
-    await prisma.scriptSymbol.delete({
+    const symbol = await prisma.scriptSymbol.delete({
       where: { id: symbolId },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
+    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
 
     return {
       success: true,
@@ -177,7 +202,7 @@ export async function reorderScriptSymbols(
 
     const symbol = await prisma.scriptSymbol.findUnique({
       where: { id: symbolId },
-      select: { order: true },
+      select: { order: true, language: { select: { slug: true } } },
     })
 
     if (!symbol) {
@@ -221,6 +246,9 @@ export async function reorderScriptSymbols(
       }),
     ])
 
+    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
+    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
+
     return {
       success: true,
     }
@@ -257,6 +285,11 @@ export async function saveAlphabetOrder(
       }
     }
 
+    const language = await prisma.language.findUnique({
+      where: { id: languageId },
+      select: { slug: true }
+    })
+
     // Update all symbols in a transaction
     await prisma.$transaction(
       symbolIds.map((id, index) =>
@@ -266,6 +299,11 @@ export async function saveAlphabetOrder(
         })
       )
     )
+
+    if (language) {
+      revalidatePath(`/studio/lang/${language.slug}/alphabet`)
+      revalidatePath(`/lang/${language.slug}/alphabet`)
+    }
 
     return {
       success: true,
@@ -281,4 +319,5 @@ export async function saveAlphabetOrder(
     }
   }
 }
+
 

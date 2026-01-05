@@ -1,6 +1,7 @@
 "use server"
 
 import { ZodError } from "zod"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import {
@@ -56,7 +57,15 @@ export async function createGrammarPage(input: CreateGrammarPageInput) {
         paradigmId: validated.paradigmId || null,
         languageId: validated.languageId,
       },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar`)
 
     return {
       success: true,
@@ -140,7 +149,17 @@ export async function updateGrammarPage(input: UpdateGrammarPageInput) {
     const page = await prisma.grammarPage.update({
       where: { id: validated.id },
       data: updateData,
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar/${page.slug}`)
+    revalidatePath(`/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar/${page.slug}`)
 
     return {
       success: true,
@@ -181,9 +200,17 @@ export async function deleteGrammarPage(pageId: string, languageId: string) {
       }
     }
 
-    await prisma.grammarPage.delete({
+    const page = await prisma.grammarPage.delete({
       where: { id: pageId },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
+
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar`)
 
     return {
       success: true,
@@ -224,7 +251,7 @@ export async function reorderGrammarPages(
 
     const page = await prisma.grammarPage.findUnique({
       where: { id: pageId },
-      select: { order: true },
+      select: { order: true, language: { select: { slug: true } } },
     })
 
     if (!page) {
@@ -268,6 +295,9 @@ export async function reorderGrammarPages(
       }),
     ])
 
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar`)
+
     return {
       success: true,
     }
@@ -282,4 +312,5 @@ export async function reorderGrammarPages(
     }
   }
 }
+
 

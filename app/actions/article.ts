@@ -24,7 +24,7 @@ export async function createArticle(data: {
 }) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }
@@ -38,6 +38,12 @@ export async function createArticle(data: {
   if (!language || language.ownerId !== userId) {
     return { error: "You don't have permission to add articles to this language" }
   }
+
+  // Get the slug as well
+  const langSlug = (await prisma.language.findUnique({
+    where: { id: data.languageId },
+    select: { slug: true }
+  }))?.slug
 
   const baseSlug = generateSlug(data.title)
   let slug = baseSlug
@@ -67,8 +73,8 @@ export async function createArticle(data: {
     }
   })
 
-  revalidatePath(`/studio/lang/[slug]/articles`)
-  revalidatePath(`/lang/[slug]/articles`)
+  revalidatePath(`/studio/lang/${langSlug}/articles`)
+  revalidatePath(`/lang/${langSlug}/articles`)
 
   return { article }
 }
@@ -86,7 +92,7 @@ export async function updateArticle(
 ) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }
@@ -109,8 +115,8 @@ export async function updateArticle(
 
     while (true) {
       const existing = await prisma.article.findFirst({
-        where: { 
-          languageId: article.languageId, 
+        where: {
+          languageId: article.languageId,
           slug,
           id: { not: id }
         }
@@ -139,7 +145,7 @@ export async function updateArticle(
 export async function deleteArticle(id: string) {
   const session = await auth()
   const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
-  
+
   if (!userId) {
     return { error: "Unauthorized" }
   }

@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core"
+import { ReactNodeViewRenderer } from "@tiptap/react"
+import { ParadigmNodeView } from "./paradigm-node-view"
 
 export interface ParadigmOptions {
   HTMLAttributes: Record<string, any>
@@ -94,5 +96,10 @@ export const Paradigm = Node.create<ParadigmOptions>({
           },
     }
   },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ParadigmNodeView)
+  },
 })
+
 

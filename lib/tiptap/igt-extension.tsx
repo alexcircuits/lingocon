@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core"
+import { ReactNodeViewRenderer } from "@tiptap/react"
+import { IGTNodeView } from "./igt-node-view"
 
 export interface IGTOptions {
   HTMLAttributes: Record<string, any>
@@ -119,5 +121,10 @@ export const IGT = Node.create<IGTOptions>({
           },
     }
   },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(IGTNodeView)
+  },
 })
+
 

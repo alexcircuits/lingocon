@@ -1,6 +1,7 @@
 "use server"
 
 import { ZodError } from "zod"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import {
@@ -44,6 +45,11 @@ export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
         notes: validated.notes || null,
         languageId: validated.languageId,
       },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
 
     // Log activity
@@ -55,6 +61,9 @@ export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
       userId,
       description: `Added dictionary entry "${validated.lemma}"`,
     })
+
+    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
+    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
 
     return {
       success: true,
@@ -113,6 +122,11 @@ export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
     const entry = await prisma.dictionaryEntry.update({
       where: { id: validated.id },
       data: updateData,
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
 
     // Log activity
@@ -124,6 +138,9 @@ export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
       userId,
       description: `Updated dictionary entry "${entry.lemma}"`,
     })
+
+    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
+    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
 
     return {
       success: true,
@@ -203,6 +220,11 @@ export async function bulkUpdateDictionaryEntries(
       data: updateData,
     })
 
+    const language = await prisma.language.findUnique({
+      where: { id: validated.languageId },
+      select: { slug: true }
+    })
+
     // Log activity
     await createActivity({
       type: "UPDATED",
@@ -212,6 +234,11 @@ export async function bulkUpdateDictionaryEntries(
       userId,
       description: `Bulk updated ${validated.entryIds.length} dictionary entries`,
     })
+
+    if (language) {
+      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
+      revalidatePath(`/lang/${language.slug}/dictionary`)
+    }
 
     return {
       success: true,
@@ -252,13 +279,13 @@ export async function deleteDictionaryEntry(entryId: string, languageId: string)
       }
     }
 
-    const entry = await prisma.dictionaryEntry.findUnique({
+    const entry = await prisma.dictionaryEntry.delete({
       where: { id: entryId },
-      select: { lemma: true, languageId: true },
-    })
-
-    await prisma.dictionaryEntry.delete({
-      where: { id: entryId },
+      include: {
+        language: {
+          select: { slug: true }
+        }
+      }
     })
 
     // Log activity
@@ -272,6 +299,9 @@ export async function deleteDictionaryEntry(entryId: string, languageId: string)
         description: `Deleted dictionary entry "${entry.lemma}"`,
       })
     }
+
+    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
+    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
 
     return {
       success: true,
@@ -287,3 +317,4 @@ export async function deleteDictionaryEntry(entryId: string, languageId: string)
     }
   }
 }
+
