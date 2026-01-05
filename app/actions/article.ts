@@ -74,7 +74,9 @@ export async function createArticle(data: {
   })
 
   revalidatePath(`/studio/lang/${langSlug}/articles`)
+  revalidatePath(`/studio/lang/${langSlug}/articles/${article.slug}`)
   revalidatePath(`/lang/${langSlug}/articles`)
+  revalidatePath(`/lang/${langSlug}/articles/${article.slug}`)
 
   return { article }
 }
@@ -137,7 +139,9 @@ export async function updateArticle(
   })
 
   revalidatePath(`/studio/lang/${article.language.slug}/articles`)
+  revalidatePath(`/studio/lang/${article.language.slug}/articles/${updated.slug}`)
   revalidatePath(`/lang/${article.language.slug}/articles`)
+  revalidatePath(`/lang/${article.language.slug}/articles/${updated.slug}`)
 
   return { article: updated }
 }
@@ -162,7 +166,9 @@ export async function deleteArticle(id: string) {
   await prisma.article.delete({ where: { id } })
 
   revalidatePath(`/studio/lang/${article.language.slug}/articles`)
+  revalidatePath(`/studio/lang/${article.language.slug}/articles/${article.slug}`)
   revalidatePath(`/lang/${article.language.slug}/articles`)
+  revalidatePath(`/lang/${article.language.slug}/articles/${article.slug}`)
 
   return { success: true }
 }

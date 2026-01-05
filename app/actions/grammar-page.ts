@@ -65,7 +65,9 @@ export async function createGrammarPage(input: CreateGrammarPageInput) {
     })
 
     revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar/${page.slug}`)
     revalidatePath(`/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar/${page.slug}`)
 
     return {
       success: true,
@@ -210,7 +212,9 @@ export async function deleteGrammarPage(pageId: string, languageId: string) {
     })
 
     revalidatePath(`/studio/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/studio/lang/${page.language.slug}/grammar/${page.slug}`)
     revalidatePath(`/lang/${page.language.slug}/grammar`)
+    revalidatePath(`/lang/${page.language.slug}/grammar/${page.slug}`)
 
     return {
       success: true,

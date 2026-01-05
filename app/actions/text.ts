@@ -82,7 +82,9 @@ export async function createText(data: {
   })
 
   revalidatePath(`/studio/lang/${langSlug}/texts`)
+  revalidatePath(`/studio/lang/${langSlug}/texts/${text.slug}`)
   revalidatePath(`/lang/${langSlug}/texts`)
+  revalidatePath(`/lang/${langSlug}/texts/${text.slug}`)
 
   return { text }
 }
@@ -148,7 +150,9 @@ export async function updateText(
   })
 
   revalidatePath(`/studio/lang/${text.language.slug}/texts`)
+  revalidatePath(`/studio/lang/${text.language.slug}/texts/${updated.slug}`)
   revalidatePath(`/lang/${text.language.slug}/texts`)
+  revalidatePath(`/lang/${text.language.slug}/texts/${updated.slug}`)
 
   return { text: updated }
 }
@@ -173,7 +177,9 @@ export async function deleteText(id: string) {
   await prisma.text.delete({ where: { id } })
 
   revalidatePath(`/studio/lang/${text.language.slug}/texts`)
+  revalidatePath(`/studio/lang/${text.language.slug}/texts/${text.slug}`)
   revalidatePath(`/lang/${text.language.slug}/texts`)
+  revalidatePath(`/lang/${text.language.slug}/texts/${text.slug}`)
 
   return { success: true }
 }
