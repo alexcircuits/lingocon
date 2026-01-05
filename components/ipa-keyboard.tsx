@@ -343,28 +343,27 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
         const displaySymbol = symbol.combining ? `◌${symbol.symbol}` : symbol.symbol
 
         return (
-            <TooltipProvider key={`${symbol.symbol}-${index}`} delayDuration={200}>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                                "h-10 min-w-[40px] px-2 font-mono text-lg hover:bg-primary hover:text-primary-foreground transition-colors",
-                                symbol.combining && "text-base"
-                            )}
-                            onClick={() => onSelect(symbol.symbol)}
-                        >
-                            {displaySymbol}
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[200px]">
-                        <p className="text-sm">{symbol.name}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <Tooltip key={`${symbol.symbol}-${index}`}>
+                <TooltipTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                            "h-10 min-w-[40px] px-2 font-mono text-lg hover:bg-primary hover:text-primary-foreground transition-colors",
+                            symbol.combining && "text-base"
+                        )}
+                        onClick={() => onSelect(symbol.symbol)}
+                    >
+                        {displaySymbol}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px]">
+                    <p className="text-sm">{symbol.name}</p>
+                </TooltipContent>
+            </Tooltip>
         )
+
     }
 
     const renderSymbolGrid = (symbols: Array<{ symbol: string; name: string; combining?: boolean }>) => (
@@ -374,15 +373,15 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
     )
 
     return (
-        <div className="w-[400px] max-w-[95vw]">
-            {/* Header with current value, backspace, and listen button */}
-            {currentValue && (
-                <div className="p-3 border-b flex items-center justify-between gap-2 bg-muted/30">
-                    <div className="flex-1 font-mono text-lg truncate">
-                        {currentValue}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                        <TooltipProvider delayDuration={200}>
+        <TooltipProvider delayDuration={200}>
+            <div className="w-[400px] max-w-[95vw] flex flex-col">
+                {/* Header with current value, backspace, and listen button */}
+                {currentValue && (
+                    <div className="p-3 border-b flex items-center justify-between gap-2 bg-muted/30">
+                        <div className="flex-1 font-mono text-lg truncate">
+                            {currentValue}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -399,8 +398,6 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                                     <p>Delete last character</p>
                                 </TooltipContent>
                             </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider delayDuration={200}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -422,99 +419,117 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                                     <p>Play IPA pronunciation</p>
                                 </TooltipContent>
                             </Tooltip>
-                        </TooltipProvider>
+                        </div>
+                    </div>
+                )}
+
+                {/* Search bar */}
+                <div className="p-3 border-b">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Search symbols..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 pr-9 h-9"
+                        />
+                        {searchQuery && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                onClick={() => setSearchQuery("")}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                 </div>
-            )}
 
-            {/* Search bar */}
-            <div className="p-3 border-b">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search symbols..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 pr-9 h-9"
-                    />
-                    {searchQuery && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                            onClick={() => setSearchQuery("")}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    )}
+                {/* Show search results or tabs */}
+                {filteredSymbols ? (
+                    <div
+                        className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                        onWheelCapture={(e) => e.stopPropagation()}
+                    >
+                        {filteredSymbols.length > 0 ? (
+                            renderSymbolGrid(filteredSymbols)
+                        ) : (
+                            <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
+                                No symbols found for &quot;{searchQuery}&quot;
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
+                        <TabsList className="w-full grid grid-cols-5 h-auto p-1">
+                            <TabsTrigger value="consonants" className="text-xs px-2 py-1.5">
+                                Consonants
+                            </TabsTrigger>
+                            <TabsTrigger value="vowels" className="text-xs px-2 py-1.5">
+                                Vowels
+                            </TabsTrigger>
+                            <TabsTrigger value="diacritics" className="text-xs px-2 py-1.5">
+                                Diacritics
+                            </TabsTrigger>
+                            <TabsTrigger value="supra" className="text-xs px-2 py-1.5">
+                                Supra
+                            </TabsTrigger>
+                            <TabsTrigger value="clicks" className="text-xs px-2 py-1.5">
+                                Clicks
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="consonants" className="m-0">
+                            <div
+                                className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                                onWheelCapture={(e) => e.stopPropagation()}
+                            >
+                                {renderSymbolGrid(IPA_CONSONANTS)}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="vowels" className="m-0">
+                            <div
+                                className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                                onWheelCapture={(e) => e.stopPropagation()}
+                            >
+                                {renderSymbolGrid(IPA_VOWELS)}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="diacritics" className="m-0">
+                            <div
+                                className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                                onWheelCapture={(e) => e.stopPropagation()}
+                            >
+                                {renderSymbolGrid(IPA_DIACRITICS)}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="supra" className="m-0">
+                            <div
+                                className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                                onWheelCapture={(e) => e.stopPropagation()}
+                            >
+                                {renderSymbolGrid(IPA_SUPRASEGMENTALS)}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="clicks" className="m-0">
+                            <div
+                                className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
+                                onWheelCapture={(e) => e.stopPropagation()}
+                            >
+                                {renderSymbolGrid(IPA_CLICKS)}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                )}
+
+                {/* Footer with hint */}
+                <div className="p-2 border-t text-xs text-muted-foreground text-center">
+                    Click symbols to insert • Click outside to close
                 </div>
             </div>
-
-            {/* Show search results or tabs */}
-            {filteredSymbols ? (
-                <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                    {filteredSymbols.length > 0 ? (
-                        renderSymbolGrid(filteredSymbols)
-                    ) : (
-                        <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
-                            No symbols found for &quot;{searchQuery}&quot;
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="w-full grid grid-cols-5 h-auto p-1">
-                        <TabsTrigger value="consonants" className="text-xs px-2 py-1.5">
-                            Consonants
-                        </TabsTrigger>
-                        <TabsTrigger value="vowels" className="text-xs px-2 py-1.5">
-                            Vowels
-                        </TabsTrigger>
-                        <TabsTrigger value="diacritics" className="text-xs px-2 py-1.5">
-                            Diacritics
-                        </TabsTrigger>
-                        <TabsTrigger value="supra" className="text-xs px-2 py-1.5">
-                            Supra
-                        </TabsTrigger>
-                        <TabsTrigger value="clicks" className="text-xs px-2 py-1.5">
-                            Clicks
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="consonants" className="m-0">
-                        <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                            {renderSymbolGrid(IPA_CONSONANTS)}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="vowels" className="m-0">
-                        <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                            {renderSymbolGrid(IPA_VOWELS)}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="diacritics" className="m-0">
-                        <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                            {renderSymbolGrid(IPA_DIACRITICS)}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="supra" className="m-0">
-                        <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                            {renderSymbolGrid(IPA_SUPRASEGMENTALS)}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="clicks" className="m-0">
-                        <div className="h-[280px] overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                            {renderSymbolGrid(IPA_CLICKS)}
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            )}
-
-            {/* Footer with hint */}
-            <div className="p-2 border-t text-xs text-muted-foreground text-center">
-                Click symbols to insert • Click outside to close
-            </div>
-        </div>
+        </TooltipProvider>
     )
 }
