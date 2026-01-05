@@ -87,7 +87,7 @@ export function NotificationCenter() {
             <PopoverContent align="end" className="w-[350px] p-0 overflow-hidden border-border/40 bg-background/95 backdrop-blur-xl">
                 <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/30">
                     <div>
-                        <h3 className="text-sm font-semibold">What's New</h3>
+                        <h3 className="text-sm font-semibold">What&apos;s New</h3>
                         <p className="text-[10px] text-muted-foreground">Latest feature announcements</p>
                     </div>
                     <Sparkles className="h-4 w-4 text-primary opacity-50" />

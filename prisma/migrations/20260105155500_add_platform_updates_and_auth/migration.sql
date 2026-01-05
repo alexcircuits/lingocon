@@ -1,6 +1,3 @@
--- AlterTable
-ALTER TABLE "users" ADD COLUMN "password" TEXT;
-
 -- CreateTable
 CREATE TABLE "platform_updates" (
     "id" TEXT NOT NULL,
