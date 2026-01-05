@@ -610,6 +610,9 @@ function SortableSymbol({
           ) : (
             <span>{symbol.symbol}</span>
           )}
+          {/^\p{M}$/u.test(symbol.symbol) && (
+            <span className="absolute text-muted-foreground/30 -ml-4 pointer-events-none">◌</span>
+          )}
           {symbol.latin && symbol.latin !== symbol.symbol && (
             <>
               <span className="text-muted-foreground/30 mx-1">/</span>

@@ -9,13 +9,17 @@ import {
   Image,
 } from "@react-pdf/renderer"
 
+import { createAlphabetSorter } from "@/lib/utils/alphabet-sorter"
+import { join } from "path"
+
 // Register standard fonts
+const fontsPath = join(process.cwd(), "public/fonts")
 Font.register({
-  family: "Inter",
+  family: "NotoSans",
   fonts: [
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKOBc.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2", fontWeight: 600 },
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2", fontWeight: 700, fontStyle: "normal" }
+    { src: join(fontsPath, "NotoSans-Regular.ttf"), fontWeight: 400 },
+    { src: join(fontsPath, "NotoSans-Bold.ttf"), fontWeight: 700 }, // React-pdf uses 700 for bold usually
+    { src: join(fontsPath, "NotoSans-Italic.ttf"), fontStyle: "italic", fontWeight: 400 },
   ]
 })
 
@@ -23,7 +27,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 60,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
     lineHeight: 1.6,
     color: "#1a1a1a",
   },
@@ -39,7 +43,7 @@ const styles = StyleSheet.create({
   },
   coverTitle: {
     fontSize: 48,
-    fontFamily: "Times-Roman",
+    fontFamily: "NotoSans",
     fontWeight: "bold",
     color: "#0f172a",
     marginBottom: 10,
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontFamily: "Times-Roman",
+    fontFamily: "NotoSans",
     fontWeight: "bold",
     marginBottom: 20,
     color: "#0f172a",
@@ -86,7 +90,7 @@ const styles = StyleSheet.create({
   },
   h2: {
     fontSize: 18,
-    fontFamily: "Times-Roman",
+    fontFamily: "NotoSans",
     fontWeight: "bold",
     marginTop: 20,
     marginBottom: 10,
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
   },
   h3: {
     fontSize: 14,
-    fontFamily: "Times-Roman",
+    fontFamily: "NotoSans",
     fontWeight: "bold",
     marginTop: 15,
     marginBottom: 8,
@@ -278,7 +282,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
         case "igt":
           return (
             <View key={index} style={[styles.table, { backgroundColor: "#f8fafc", padding: 8, borderLeft: "4 solid #cbd5e1" }]}>
-              <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold" }}>{node.attrs?.sentence}</Text>
+              <Text style={{ fontSize: 12, fontFamily: "NotoSans", fontWeight: "bold" }}>{node.attrs?.sentence}</Text>
               <Text style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{node.attrs?.gloss}</Text>
               <Text style={{ fontSize: 11, fontStyle: "italic", marginTop: 4 }}>{node.attrs?.translation}</Text>
             </View>
@@ -376,10 +380,9 @@ export function LanguagePDFDocument({
   dictionaryEntries,
   paradigms,
 }: PDFDocumentProps) {
-  // Sort dictionary entries alphabetically by lemma
-  const sortedEntries = [...dictionaryEntries].sort((a, b) =>
-    a.lemma.localeCompare(b.lemma)
-  )
+  // Sort dictionary entries alphabet-basely
+  const sorter = createAlphabetSorter(scriptSymbols)
+  const sortedEntries = [...dictionaryEntries].sort((a, b) => sorter(a.lemma, b.lemma))
 
   return (
     <Document>

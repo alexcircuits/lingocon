@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { ContextualHelp } from "@/components/contextual-help"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
+import { validateStringAgainstAlphabet } from "@/lib/utils/alphabet-validation"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
@@ -55,7 +56,18 @@ export function DictionaryEntryDialog({
   const { errors, touched, handleBlur, handleChange, validateForm } = useFormValidation(
     formData,
     {
-      lemma: [commonRules.required("Lemma is required"), commonRules.maxLength(200)],
+      lemma: [
+        commonRules.required("Lemma is required"),
+        commonRules.maxLength(200),
+        {
+          validator: (value) => {
+            if (!symbols || symbols.length === 0) return true
+            const invalidChars = validateStringAgainstAlphabet(value, symbols)
+            return invalidChars.length === 0
+          },
+          message: "Contains characters not in your alphabet"
+        }
+      ],
       gloss: [commonRules.required("Gloss is required"), commonRules.maxLength(500)],
       ipa: [commonRules.maxLength(100)],
       partOfSpeech: [commonRules.maxLength(50)],
