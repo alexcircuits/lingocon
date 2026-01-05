@@ -36,6 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useState } from "react"
+import { NotificationCenter } from "@/components/notification-center"
 
 interface NavbarProps {
   user?: {
@@ -114,6 +115,9 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
               </Button>
             </Link>
           )}
+
+          {/* Notifications */}
+          <NotificationCenter />
 
           {/* User menu or sign in */}
           {isAuthenticated ? (

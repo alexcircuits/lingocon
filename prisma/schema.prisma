@@ -359,3 +359,15 @@ model Follow {
   @@index([followingId])
   @@map("follows")
 }
+
+model PlatformUpdate {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  icon        String?  // Lucide icon name
+  link        String?  // Optional link to more info
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("platform_updates")
+}
