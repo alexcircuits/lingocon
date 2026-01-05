@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/dialog"
 import { Card } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
-import { AlertTriangle, FileDown, Flag, Globe, MessageCircle, MessageSquare } from "lucide-react"
+import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare } from "lucide-react"
+import { FlagGenerator } from "@/components/flag-generator"
 
 interface LanguageSettingsProps {
   language: {
@@ -162,10 +163,16 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
           </div>
 
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Flag className="h-4 w-4" />
-              Language Flag
-            </Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="flex items-center gap-2">
+                <Flag className="h-4 w-4" />
+                Language Flag
+              </Label>
+              <FlagGenerator
+                languageName={language.name}
+                onSave={(url) => setFormData({ ...formData, flagUrl: url })}
+              />
+            </div>
             <FileUpload
               type="flag"
               value={formData.flagUrl}
