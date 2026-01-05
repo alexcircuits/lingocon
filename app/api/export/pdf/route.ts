@@ -6,6 +6,8 @@ import React from "react"
 import { join } from "path"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserId()
