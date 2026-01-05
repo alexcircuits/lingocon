@@ -52,16 +52,22 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
 
     for (const segment of segments) {
         const char = segment.segment
+        const decomposed = char.normalize("NFD")
 
-        // Check if the exact composed char is allowed
-        // Normalize both to NFC to ensure consistent comparison
+        // 1. Always allow whitespace, digits, and common punctuation symbols
+        // \s - whitespace, \d - digits, \p{P} - punctuation, \p{S} - symbols (math, etc.)
+        if (/^[\s\d\p{P}\p{S}]+$/u.test(char)) {
+            continue
+        }
+
+        // 2. Check if the exact composed char is allowed
+        // Normalize both to NFC/NFD to ensure consistent comparison
         if (allowedChars.has(char) || allowedChars.has(char.normalize("NFC")) || allowedChars.has(char.normalize("NFD"))) {
             continue
         }
 
-        // If composed char itself isn't explicitly allowed, check its parts
+        // 3. If composed char itself isn't explicitly allowed, check its parts
         // Normalize to NFD to split base and diacritics
-        const decomposed = char.normalize("NFD")
         let isValidSequence = true
 
         for (const codePoint of decomposed) {

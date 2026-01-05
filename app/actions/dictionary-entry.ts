@@ -22,7 +22,8 @@ export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
   }
 
   try {
-    const validated = createDictionaryEntrySchema.parse(input)
+    const sterilizedInput = JSON.parse(JSON.stringify(input))
+    const validated = createDictionaryEntrySchema.parse(sterilizedInput)
 
     // Verify edit permission (owner or editor)
     const canEdit = await canEditLanguage(validated.languageId, userId)
@@ -86,7 +87,8 @@ export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
   }
 
   try {
-    const validated = updateDictionaryEntrySchema.parse(input)
+    const sterilizedInput = JSON.parse(JSON.stringify(input))
+    const validated = updateDictionaryEntrySchema.parse(sterilizedInput)
 
     // Verify edit permission (owner or editor)
     const canEdit = await canEditLanguage(validated.languageId, userId)

@@ -128,11 +128,11 @@ export function DictionaryManager({
       lemma: String(data.lemma),
       gloss: String(data.gloss),
       languageId,
-      ipa: data.ipa || undefined,
-      partOfSpeech: data.partOfSpeech || undefined,
-      etymology: data.etymology || undefined,
-      notes: data.notes || undefined,
-      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : undefined,
+      ipa: data.ipa || null,
+      partOfSpeech: data.partOfSpeech || null,
+      etymology: data.etymology || null,
+      notes: data.notes || null,
+      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
     }))
 
     const result = await createDictionaryEntry(sterilizedData)
@@ -169,11 +169,11 @@ export function DictionaryManager({
       lemma: String(data.lemma),
       gloss: String(data.gloss),
       languageId,
-      ipa: data.ipa || undefined,
-      partOfSpeech: data.partOfSpeech || undefined,
-      etymology: data.etymology || undefined,
-      notes: data.notes || undefined,
-      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : undefined,
+      ipa: data.ipa || null,
+      partOfSpeech: data.partOfSpeech || null,
+      etymology: data.etymology || null,
+      notes: data.notes || null,
+      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
     }))
 
     const result = await updateDictionaryEntry(sterilizedData)
