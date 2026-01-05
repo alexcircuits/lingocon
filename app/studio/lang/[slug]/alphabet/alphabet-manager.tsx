@@ -375,7 +375,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
           description="Start building your alphabet by adding your first symbol."
           action={{
             label: "Add Symbol",
-            href: "#", // Handled by onClick below
+            onClick: () => setIsAddOpen(true),
           }}
         />
       ) : (
