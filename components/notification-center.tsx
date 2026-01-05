@@ -47,10 +47,17 @@ export function NotificationCenter() {
             if (result.success && result.data) {
                 // @ts-ignore
                 setUpdates(result.data)
-                // Check if there are updates from the last 24 hours to show the badge
-                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-                const newUpdates = result.data.some((u: PlatformUpdate) => new Date(u.createdAt) > oneDayAgo)
-                setHasNew(newUpdates)
+
+                // Calculate badge based on seen state
+                const lastSeenId = localStorage.getItem("lingocon_last_seen_update")
+                const latestId = result.data[0]?.id
+
+                if (latestId && latestId !== lastSeenId) {
+                    // Show badge if latest update is recent (last 3 days)
+                    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                    const isRecent = new Date(result.data[0].createdAt) > threeDaysAgo
+                    if (isRecent) setHasNew(true)
+                }
             }
         } catch (error) {
             console.error("Failed to fetch platform updates:", error)
@@ -66,7 +73,12 @@ export function NotificationCenter() {
     return (
         <Popover open={isOpen} onOpenChange={(open) => {
             setIsOpen(open)
-            if (open) setHasNew(false) // Clear badge when opened
+            if (open) {
+                setHasNew(false)
+                if (updates.length > 0) {
+                    localStorage.setItem("lingocon_last_seen_update", updates[0].id)
+                }
+            }
         }}>
             <PopoverTrigger asChild>
                 <Button
