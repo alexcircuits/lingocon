@@ -14,6 +14,9 @@ async function getLanguage(slug: string, userId: string | null) {
       description: true,
       visibility: true,
       flagUrl: true,
+      fontUrl: true,
+      fontFamily: true,
+      fontScale: true,
       ownerId: true,
     },
   })

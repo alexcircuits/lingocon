@@ -604,11 +604,11 @@ function SortableSymbol({
         <div className="text-4xl font-serif font-medium mb-2 flex items-center justify-center gap-1">
           {symbol.capitalSymbol ? (
             <>
-              <span>{symbol.capitalSymbol}</span>
-              <span>{symbol.symbol}</span>
+              <span className="font-custom-script">{symbol.capitalSymbol}</span>
+              <span className="font-custom-script">{symbol.symbol}</span>
             </>
           ) : (
-            <span>{symbol.symbol}</span>
+            <span className="font-custom-script">{symbol.symbol}</span>
           )}
           {/^\p{M}$/u.test(symbol.symbol) && (
             <span className="absolute text-muted-foreground/30 -ml-4 pointer-events-none">◌</span>

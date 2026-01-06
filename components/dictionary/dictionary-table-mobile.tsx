@@ -67,7 +67,7 @@ export function DictionaryTableMobile({
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg font-serif mb-1 break-words">
+                    <CardTitle className="text-lg font-serif mb-1 break-words font-custom-script">
                       {entry.lemma}
                     </CardTitle>
                     {latin && (

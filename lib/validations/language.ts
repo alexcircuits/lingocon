@@ -21,6 +21,9 @@ export const updateLanguageSchema = z.object({
   discordUrl: z.string().url().optional().nullable().or(z.literal("")),
   telegramUrl: z.string().url().optional().nullable().or(z.literal("")),
   websiteUrl: z.string().url().optional().nullable().or(z.literal("")),
+  fontUrl: z.string().optional().nullable(),
+  fontFamily: z.string().max(100).optional().nullable(),
+  fontScale: z.number().min(0.5).max(3.0).optional(),
 })
 
 export type CreateLanguageInput = z.infer<typeof createLanguageSchema>

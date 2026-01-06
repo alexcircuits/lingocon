@@ -10,9 +10,10 @@ import { useMemo } from "react"
 
 interface GrammarContentProps {
   content: any // TipTap JSON content
+  className?: string
 }
 
-export function GrammarContent({ content }: GrammarContentProps) {
+export function GrammarContent({ content, className }: GrammarContentProps) {
   // Ensure content is in the right format for TipTap
   const processedContent = useMemo(() => {
     // If content is a string, wrap it in a proper TipTap JSON structure
@@ -54,7 +55,7 @@ export function GrammarContent({ content }: GrammarContentProps) {
   }
 
   return (
-    <div className="prose prose-slate dark:prose-invert max-w-none">
+    <div className={`prose prose-slate dark:prose-invert max-w-none ${className || ''}`}>
       <EditorContent editor={editor} />
     </div>
   )

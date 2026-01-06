@@ -23,7 +23,7 @@ export function Footer() {
                     </nav>
 
                     <div className="text-sm text-muted-foreground/60 text-center md:text-right">
-                        <p className="mb-1">© {new Date().getFullYear()} LingoCon.</p>
+                        <p className="mb-1">v1.1 Public Beta © {new Date().getFullYear()} LingoCon.</p>
                         <p>
                             Made by team{" "}
                             <Link

@@ -109,6 +109,12 @@ export async function updateLanguage(input: UpdateLanguageInput) {
       updateData.telegramUrl = validated.telegramUrl || null
     if (validated.websiteUrl !== undefined)
       updateData.websiteUrl = validated.websiteUrl || null
+    if (validated.fontUrl !== undefined)
+      updateData.fontUrl = validated.fontUrl || null
+    if (validated.fontFamily !== undefined)
+      updateData.fontFamily = validated.fontFamily || null
+    if (validated.fontScale !== undefined)
+      updateData.fontScale = validated.fontScale
 
     const updated = await prisma.language.update({
       where: { id: validated.id },

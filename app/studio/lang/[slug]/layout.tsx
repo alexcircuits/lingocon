@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { StudioLayout } from "../studio-layout"
+import { FontLoader } from "@/components/font-loader"
 
 async function getLanguage(slug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
@@ -64,6 +65,11 @@ export default async function StudioLangLayout({
     notFound()
   }
 
-  return <StudioLayout language={language}>{children}</StudioLayout>
+  return (
+    <StudioLayout language={language}>
+      <FontLoader fontUrl={language.fontUrl} fontFamily={language.fontFamily} fontScale={language.fontScale} />
+      {children}
+    </StudioLayout>
+  )
 }
 

@@ -5,13 +5,14 @@ import { join } from "path"
 import { existsSync } from "fs"
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
-const ALLOWED_FILE_TYPES = [...ALLOWED_IMAGE_TYPES, "application/pdf", "text/plain", "application/epub+zip"]
+const ALLOWED_FONT_TYPES = ["font/ttf", "font/otf", "font/woff", "font/woff2", "application/x-font-ttf", "application/x-font-opentype", "application/font-woff", "application/font-woff2"]
+const ALLOWED_FILE_TYPES = [...ALLOWED_IMAGE_TYPES, "application/pdf", "text/plain", "application/epub+zip", ...ALLOWED_FONT_TYPES]
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()
-    
+
     // Allow in dev mode or with valid session
     if (!session?.user?.id && process.env.DEV_MODE !== "true") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const file = formData.get("file") as File | null
     const type = formData.get("type") as string | null // "flag", "cover", "image", "file"
-    
+
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
@@ -35,12 +36,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate file type based on upload type
-    const allowedTypes = type === "file" ? ALLOWED_FILE_TYPES : ALLOWED_IMAGE_TYPES
+    let allowedTypes = ALLOWED_IMAGE_TYPES
+    if (type === "file") allowedTypes = ALLOWED_FILE_TYPES
+    if (type === "font") allowedTypes = ALLOWED_FONT_TYPES
+
     // Use "cover" directory for "image" type as well
     const uploadType = type === "image" ? "cover" : type
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: `Invalid file type. Allowed: ${allowedTypes.join(", ")}` 
+      return NextResponse.json({
+        error: `Invalid file type. Allowed: ${allowedTypes.join(", ")}`
       }, { status: 400 })
     }
 
@@ -64,8 +68,8 @@ export async function POST(req: NextRequest) {
 
     // Return public URL (ensure it starts with /)
     const url = `/uploads/${uploadType}/${filename}`
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       url,
       filename: file.name,
       size: file.size,

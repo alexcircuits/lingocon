@@ -89,6 +89,11 @@ model Language {
   telegramUrl String?
   websiteUrl  String?
 
+  // Custom Font for Script
+  fontUrl     String?  // Path to uploaded font file
+  fontFamily  String?  // CSS font-family name
+  fontScale   Float    @default(1.0)
+
   ownerId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

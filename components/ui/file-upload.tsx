@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Upload, X, FileText, Image as ImageIcon, Loader2 } from "lucide-react"
 
 interface FileUploadProps {
-  type: "flag" | "cover" | "image" | "file"
+  type: "flag" | "cover" | "image" | "file" | "font"
   accept?: string
   maxSize?: number // in bytes
   value?: string
@@ -72,9 +72,16 @@ export function FileUpload({
         "text/plain": [".txt"],
         "application/epub+zip": [".epub"],
       }
-      : {
-        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
-      }
+      : type === "font"
+        ? {
+          "font/ttf": [".ttf"],
+          "font/otf": [".otf"],
+          "font/woff": [".woff"],
+          "font/woff2": [".woff2"],
+        }
+        : {
+          "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
+        }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

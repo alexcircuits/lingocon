@@ -45,7 +45,7 @@ export function IGTBlock({ sentence, gloss, translation, onEdit, editable = fals
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Card className="p-4 cursor-pointer hover:bg-accent transition-colors">
-              <div className="font-mono text-lg">{sentence || "(empty)"}</div>
+              <div className="font-mono font-custom-script-mono text-lg">{sentence || "(empty)"}</div>
               <div className="font-mono text-sm text-muted-foreground mt-1">
                 {gloss || "(empty)"}
               </div>
@@ -98,7 +98,7 @@ export function IGTBlock({ sentence, gloss, translation, onEdit, editable = fals
         </Dialog>
       ) : (
         <Card className="p-4">
-          <div className="font-mono text-lg">{sentence || "(empty)"}</div>
+          <div className="font-mono font-custom-script-mono text-lg">{sentence || "(empty)"}</div>
           <div className="font-mono text-sm text-muted-foreground mt-1">
             {gloss || "(empty)"}
           </div>

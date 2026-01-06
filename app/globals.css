@@ -253,6 +253,20 @@
   background-position: center;
 }
 
+/* Custom Language Script Font - Sans Fallback */
+.font-custom-script {
+  font-family: var(--language-font, sans-serif);
+  font-size: calc(1em * var(--language-font-scale, 1));
+}
+
+/* Custom Language Script Font - Mono Fallback */
+.font-custom-script-mono {
+  font-family: var(--language-font, monospace);
+  font-size: calc(1em * var(--language-font-scale, 1));
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+}
+
 .animate-scroll {
   animation: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
 }

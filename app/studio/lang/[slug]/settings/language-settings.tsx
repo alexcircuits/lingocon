@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/dialog"
 import { Card } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
-import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare } from "lucide-react"
+import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare, Type } from "lucide-react"
 import { FlagGenerator } from "@/components/flag-generator"
 
 interface LanguageSettingsProps {
@@ -39,6 +40,9 @@ interface LanguageSettingsProps {
     discordUrl?: string | null
     telegramUrl?: string | null
     websiteUrl?: string | null
+    fontUrl?: string | null
+    fontFamily?: string | null
+    fontScale: number
   }
   languageSlug: string
 }
@@ -58,6 +62,9 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
     discordUrl: language.discordUrl || "",
     telegramUrl: language.telegramUrl || "",
     websiteUrl: language.websiteUrl || "",
+    fontUrl: language.fontUrl || "",
+    fontFamily: language.fontFamily || "",
+    fontScale: language.fontScale || 1.0,
   })
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,6 +82,9 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
         ...(formData.discordUrl ? { discordUrl: formData.discordUrl } : {}),
         ...(formData.telegramUrl ? { telegramUrl: formData.telegramUrl } : {}),
         ...(formData.websiteUrl ? { websiteUrl: formData.websiteUrl } : {}),
+        ...(formData.fontUrl ? { fontUrl: formData.fontUrl } : {}),
+        ...(formData.fontFamily ? { fontFamily: formData.fontFamily } : {}),
+        fontScale: Number(formData.fontScale),
       }
 
       const result = await updateLanguage(updateData)
@@ -183,6 +193,108 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
             <p className="text-xs text-muted-foreground">
               Upload a flag or emblem to represent your language. Recommended: square or flag ratio (max 2MB)
             </p>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-border/40">
+            <div>
+              <Label className="text-base font-medium flex items-center gap-2 mb-1">
+                <Type className="h-4 w-4" />
+                Custom Script Font
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Upload a custom font file (.ttf, .otf, .woff, .woff2) to display your language&apos;s script correctly.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="fontUpload">Font File</Label>
+                <FileUpload
+                  type="font"
+                  value={formData.fontUrl}
+                  onChange={(url) => setFormData({ ...formData, fontUrl: url || "" })}
+                  placeholder="Upload font file"
+                  maxSize={5 * 1024 * 1024} // 5MB
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fontFamily">Font Family Name (Optional)</Label>
+                  <Input
+                    id="fontFamily"
+                    value={formData.fontFamily}
+                    onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
+                    placeholder="e.g. MyConlangScript"
+                    disabled={isPending}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="fontScale">Font Scale ({formData.fontScale.toFixed(1)}x)</Label>
+                    <span className="text-xs text-muted-foreground">Adjust if font is too small/large</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      id="fontScale"
+                      min={0.5}
+                      max={3.0}
+                      step={0.1}
+                      value={[formData.fontScale]}
+                      onValueChange={(vals) => setFormData({ ...formData, fontScale: vals[0] })}
+                      disabled={isPending}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min={0.5}
+                      max={3.0}
+                      step={0.1}
+                      value={formData.fontScale}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value)
+                        if (!isNaN(val) && val >= 0.5 && val <= 3.0) {
+                          setFormData({ ...formData, fontScale: val })
+                        }
+                      }}
+                      className="w-20"
+                    />
+                  </div>
+                </div>
+
+                {formData.fontUrl && (
+                  <div className="space-y-2">
+                    <Label>Preview</Label>
+                    <div className="p-4 rounded-lg border border-border/40 bg-secondary/20 overflow-hidden">
+                      <style dangerouslySetInnerHTML={{
+                        __html: `
+                          @font-face {
+                            font-family: 'PreviewFont';
+                            src: url('${formData.fontUrl}');
+                          }
+                        `
+                      }} />
+                      <p
+                        className="text-2xl break-all"
+                        style={{
+                          fontFamily: "'PreviewFont', sans-serif",
+                          fontSize: `${formData.fontScale}em`
+                        }}
+                        contentEditable
+                        suppressContentEditableWarning
+                      >
+                        The quick brown fox jumps over the lazy dog.
+                        1234567890
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Editable preview area with {formData.fontScale}x scaling
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

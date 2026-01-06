@@ -129,9 +129,11 @@ export function DictionaryTable({
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {displayLemma}
+                  <span className={!showLatin ? "font-custom-script text-base" : ""}>
+                    {displayLemma}
+                  </span>
                   {showLatin && displayLemma !== entry.lemma && (
-                    <span className="text-xs text-muted-foreground ml-2">
+                    <span className="text-xs text-muted-foreground ml-2 font-custom-script">
                       ({entry.lemma})
                     </span>
                   )}

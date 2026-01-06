@@ -197,6 +197,7 @@ export function DictionaryEntryDialog({
                 disabled={isPending}
                 maxLength={200}
                 className={cn(
+                  "font-custom-script",
                   errors.lemma && touched.lemma && "border-destructive focus-visible:ring-destructive"
                 )}
               />

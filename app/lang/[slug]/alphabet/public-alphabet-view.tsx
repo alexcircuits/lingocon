@@ -29,11 +29,11 @@ export function PublicAlphabetView({ symbols }: PublicAlphabetViewProps) {
             <div className="text-4xl font-bold mb-2 flex items-center justify-center gap-1">
               {symbol.capitalSymbol ? (
                 <>
-                  <span>{symbol.capitalSymbol}</span>
-                  <span>{symbol.symbol}</span>
+                  <span className="font-custom-script">{symbol.capitalSymbol}</span>
+                  <span className="font-custom-script">{symbol.symbol}</span>
                 </>
               ) : (
-                <span>{symbol.symbol}</span>
+                <span className="font-custom-script">{symbol.symbol}</span>
               )}
               {symbol.latin && symbol.latin !== symbol.symbol && (
                 <>

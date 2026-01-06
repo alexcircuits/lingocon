@@ -95,28 +95,30 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
                   return (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
-                        {displayLemma}
+                        <span className={!showLatin ? "font-custom-script text-lg" : ""}>
+                          {displayLemma}
+                        </span>
                         {showLatin && displayLemma !== entry.lemma && (
-                          <span className="text-xs text-muted-foreground ml-2">
+                          <span className="text-xs text-muted-foreground ml-2 font-custom-script">
                             ({entry.lemma})
                           </span>
                         )}
                       </TableCell>
                       <TableCell>{entry.gloss}</TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {entry.ipa ? (
-                        <span className="flex items-center gap-2">
-                          <span>/{entry.ipa}/</span>
-                          <IPASpeaker ipa={entry.ipa} size="sm" />
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {entry.ipa ? (
+                          <span className="flex items-center gap-2">
+                            <span>/{entry.ipa}/</span>
+                            <IPASpeaker ipa={entry.ipa} size="sm" />
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                      {entry.partOfSpeech || "-"}
-                    </TableCell>
-                  </TableRow>
+                        {entry.partOfSpeech || "-"}
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
               </TableBody>
