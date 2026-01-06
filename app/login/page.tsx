@@ -1,9 +1,19 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Languages, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { LoginForm } from "./components/login-form"
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description: "Sign in to LingoCon to manage your constructed languages and documentation.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+}
 
 export default function LoginPage() {
   return (

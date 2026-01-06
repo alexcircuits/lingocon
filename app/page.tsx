@@ -24,7 +24,51 @@ import { HeroBackground } from "@/components/hero-background"
 import { TextReveal } from "@/components/ui/text-reveal"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Footer } from "@/components/footer"
+
 export const dynamic = "force-dynamic"
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
+
+function JsonLd() {
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "LingoCon",
+    url: siteUrl,
+    description: "The platform for conlang creators. Build lexicons, write grammar documentation, and share your constructed languages with the world.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  }
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "LingoCon",
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    sameAs: [],
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+    </>
+  )
+}
+
 
 async function getFeaturedLanguages() {
   const languages = await prisma.language.findMany({
@@ -162,6 +206,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
+      <JsonLd />
       <Navbar user={user} isDevMode={isDevMode} />
 
       {/* Hero Section - Clean & Modern */}

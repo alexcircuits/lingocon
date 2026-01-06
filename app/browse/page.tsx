@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
@@ -9,6 +10,11 @@ import { SortSelector } from "./components/sort-selector"
 import { BrowseSearch } from "./components/browse-search"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+
+export const metadata: Metadata = {
+  title: "Browse Languages",
+  description: "Explore public constructed languages created by the LingoCon community. Discover new conlangs, lexicons, and grammar documentation.",
+}
 
 export const dynamic = "force-dynamic"
 
