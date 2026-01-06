@@ -30,10 +30,9 @@ export function FontLoader({ fontUrl, fontFamily, fontScale = 1.0 }: FontLoaderP
         })
 
         return () => {
-            // Cleanup CSS variable - though persistence might be desired during navigation
-            // We keep it to avoid style pollution when switching languages if spa navigation
-            // But clearing it on unmount might flash fonts. 
-            // For now, let's leave it as it will be overwritten by next load or page refresh
+            // Cleanup CSS variables to prevent style pollution on navigation
+            document.documentElement.style.removeProperty('--language-font')
+            document.documentElement.style.removeProperty('--language-font-scale')
         }
     }, [fontUrl, fontFamily, fontScale])
 
