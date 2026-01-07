@@ -9,8 +9,10 @@ import {
   getActivityHistory,
   getCompletenessStats
 } from "@/app/actions/analytics"
-import { PosDistributionChart } from "@/components/analytics/pos-distribution-chart"
-import { ActivityChart } from "@/components/analytics/activity-chart"
+import dynamic from "next/dynamic"
+
+const PosDistributionChart = dynamic(() => import("@/components/analytics/pos-distribution-chart").then(mod => mod.PosDistributionChart), { ssr: false })
+const ActivityChart = dynamic(() => import("@/components/analytics/activity-chart").then(mod => mod.ActivityChart), { ssr: false })
 import { CompletenessCard } from "@/components/analytics/completeness-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

@@ -5,7 +5,11 @@ import { join } from "path"
 import { existsSync } from "fs"
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
-const ALLOWED_FONT_TYPES = ["font/ttf", "font/otf", "font/woff", "font/woff2", "application/x-font-ttf", "application/x-font-opentype", "application/font-woff", "application/font-woff2"]
+const ALLOWED_FONT_TYPES = [
+  "font/ttf", "font/otf", "font/woff", "font/woff2",
+  "application/x-font-ttf", "application/x-font-opentype", "application/font-woff", "application/font-woff2",
+  "font/sfnt", "application/font-sfnt", "application/vnd.ms-opentype", "application/x-font-truetype"
+]
 const ALLOWED_FILE_TYPES = [...ALLOWED_IMAGE_TYPES, "application/pdf", "text/plain", "application/epub+zip", ...ALLOWED_FONT_TYPES]
 const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
 

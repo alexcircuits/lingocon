@@ -78,6 +78,11 @@ export function FileUpload({
           "font/otf": [".otf"],
           "font/woff": [".woff"],
           "font/woff2": [".woff2"],
+          "font/sfnt": [".ttf", ".otf"],
+          "application/font-sfnt": [".ttf", ".otf"],
+          "application/vnd.ms-opentype": [".otf"],
+          "application/x-font-truetype": [".ttf"],
+          "application/font-woff": [".woff"],
         }
         : {
           "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
