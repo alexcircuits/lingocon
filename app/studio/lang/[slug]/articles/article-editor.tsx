@@ -58,14 +58,26 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
   })
   const [coverImage, setCoverImage] = useState<string | null>(article?.coverImage || null)
 
-  const [content, setContent] = useState<any>(article?.content || {
-    type: "doc",
-    content: [
-      {
-        type: "paragraph",
-        content: [{ type: "text", text: "" }],
-      },
-    ],
+  const [content, setContent] = useState<any>(() => {
+    if (!article?.content) {
+      return {
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
+      }
+    }
+
+    if (typeof article.content === 'string') {
+      try {
+        return JSON.parse(article.content)
+      } catch {
+        return {
+          type: "doc",
+          content: [{ type: "paragraph", content: [{ type: "text", text: article.content }] }]
+        }
+      }
+    }
+
+    return article.content
   })
 
   const handleTitleChange = (value: string) => {

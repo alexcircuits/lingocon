@@ -238,6 +238,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
   if (!content || typeof content !== "object") return null
 
   const renderNodes = (nodes: any[]) => {
+    if (!nodes || !Array.isArray(nodes)) return null
     return nodes.map((node, index) => {
       switch (node.type) {
         case "paragraph":
@@ -307,7 +308,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
     return content.map((item, index) => {
       if (item.type === "text") {
         let style: any = {}
-        if (item.marks) {
+        if (item.marks && Array.isArray(item.marks)) {
           item.marks.forEach((mark: any) => {
             if (mark.type === "bold") style = { ...style, ...styles.bold }
             if (mark.type === "italic") style = { ...style, ...styles.italic }

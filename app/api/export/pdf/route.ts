@@ -87,7 +87,15 @@ export async function GET(request: NextRequest) {
     // Resolve flag path to absolute disk path if it's a relative upload URL
     let flatPath = language.flagUrl
     if (flatPath && flatPath.startsWith("/uploads/")) {
-      flatPath = join(process.cwd(), "public", flatPath)
+      const absolutePath = join(process.cwd(), "public", flatPath)
+      // Verify file exists to prevent PDF generation crash
+      const { existsSync } = require("fs")
+      if (existsSync(absolutePath)) {
+        flatPath = absolutePath
+      } else {
+        console.warn(`Flag image not found at path: ${absolutePath}`)
+        flatPath = null
+      }
     }
 
     // Generate PDF

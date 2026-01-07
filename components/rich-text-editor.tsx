@@ -1,13 +1,12 @@
-"use client"
-
 import { useEditor, EditorContent, Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Button } from "@/components/ui/button"
-import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Table2 } from "lucide-react"
+import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Table2, Type } from "lucide-react"
 import { cn } from "@/lib/utils"
 // Import extensions dynamically or safely
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
+import { CustomFont } from "@/lib/tiptap/custom-font-extension"
 
 interface RichTextEditorProps {
     content: any
@@ -32,6 +31,7 @@ export function RichTextEditor({
     const editor = useEditor({
         extensions: [
             StarterKit,
+            CustomFont,
             ...(withIGT ? [IGT] : []),
             ...(withParadigm ? [Paradigm] : []),
         ],
@@ -82,6 +82,19 @@ export function RichTextEditor({
                 >
                     <Italic className="h-4 w-4" />
                 </Button>
+
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => editor.chain().focus().toggleMark('customFont').run()}
+                    className={cn(editor.isActive('customFont') && "bg-secondary text-primary")}
+                    disabled={disabled}
+                    title="Toggle Custom Font"
+                >
+                    <Type className="h-4 w-4" />
+                </Button>
+
                 <div className="w-px h-6 bg-border mx-1" />
                 <Button
                     type="button"

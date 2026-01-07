@@ -9,6 +9,8 @@ import { GrammarContent } from "@/components/grammar-content"
 import { TextSidebar } from "@/components/text-sidebar"
 import { auth } from "@/auth"
 
+export const dynamic = "force-dynamic"
+
 async function getTextData(languageSlug: string, textSlug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
     where: { slug: languageSlug },

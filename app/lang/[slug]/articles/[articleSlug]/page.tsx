@@ -10,6 +10,8 @@ import { ArticleSidebar } from "@/components/article-sidebar"
 
 import { auth } from "@/auth"
 
+export const dynamic = "force-dynamic"
+
 async function getArticleData(languageSlug: string, articleSlug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
     where: { slug: languageSlug },
@@ -126,7 +128,7 @@ export default async function PublicArticlePage({
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
-      <ArticleSidebar 
+      <ArticleSidebar
         languageSlug={slug}
         articles={otherArticles}
         currentSlug={articleSlug}
@@ -156,8 +158,8 @@ export default async function PublicArticlePage({
           {article.coverImage && (
             <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-border/40 bg-secondary/30 mb-8">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={article.coverImage} 
+              <img
+                src={article.coverImage}
                 alt={article.title}
                 className="w-full h-full object-cover"
               />
@@ -168,7 +170,7 @@ export default async function PublicArticlePage({
             prose-headings:font-serif prose-headings:font-medium
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
             prose-img:rounded-xl">
-             <GrammarContent content={article.content} />
+            <GrammarContent content={article.content} />
           </div>
         </article>
       </div>

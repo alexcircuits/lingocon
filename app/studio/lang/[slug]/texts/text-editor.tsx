@@ -58,7 +58,13 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
   // Initialize content: handle existing JSON or legacy string
   const initialContent = text?.content
     ? (typeof text.content === 'string'
-      ? { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: text.content }] }] }
+      ? (() => {
+        try {
+          return JSON.parse(text.content)
+        } catch {
+          return { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: text.content }] }] }
+        }
+      })()
       : text.content)
     : { type: 'doc', content: [{ type: 'paragraph' }] }
 

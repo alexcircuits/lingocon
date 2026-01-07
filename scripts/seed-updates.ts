@@ -7,13 +7,12 @@ async function main() {
 
     await prisma.platformUpdate.create({
         data: {
-            title: "New Feature: Flag Generator",
-            description: "You can now design custom flags for your conlangs directly in the Studio settings! Choose from multiple layouts and colors.",
-            icon: "sparkles",
-            link: "#"
+            title: "Custom Fonts & More",
+            description: "We've added a Contact page, increased font upload limits to 15MB, improved PDF exports, and added a new 'Type' tool to format text with your custom font in the editor!",
+            icon: "rocket",
+            link: "/contact"
         }
     })
-
     console.log("Seed complete!")
 }
 
