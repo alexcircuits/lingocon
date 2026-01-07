@@ -37,10 +37,7 @@ async function getTextData(languageSlug: string, textSlug: string, userId: strin
     },
   })
 
-  console.log(`[Debug] getting text data for lang=${languageSlug} text=${textSlug} user=${userId}`)
-
   if (!language) {
-    console.log(`[Debug] Language not found: ${languageSlug}`)
     return null
   }
 
@@ -49,7 +46,6 @@ async function getTextData(languageSlug: string, textSlug: string, userId: strin
   const canViewPrivate = isOwner || isDev
 
   if (language.visibility === "PRIVATE" && !canViewPrivate) {
-    console.log(`[Debug] Language is private and user is not owner/dev: ${languageSlug}`)
     return null
   }
 
@@ -79,13 +75,11 @@ async function getTextData(languageSlug: string, textSlug: string, userId: strin
   })
 
   if (!text) {
-    console.log(`[Debug] Text not found in db: ${textSlug} for language ${language.id}`)
     return null
   }
 
   // Check visibility (drafts are visible to owner)
   if (!text.published && !canViewPrivate) {
-    console.log(`[Debug] Text unpublished and user not owner`)
     return null
   }
 

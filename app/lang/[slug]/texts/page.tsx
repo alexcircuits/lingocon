@@ -13,6 +13,7 @@ async function getLanguageWithTexts(slug: string) {
       slug: true,
       visibility: true,
       texts: {
+        where: { published: true },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,

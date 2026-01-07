@@ -14,6 +14,7 @@ async function getLanguageWithArticles(slug: string) {
       slug: true,
       visibility: true,
       articles: {
+        where: { published: true },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,

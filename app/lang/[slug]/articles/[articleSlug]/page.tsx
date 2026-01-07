@@ -39,11 +39,8 @@ async function getArticleData(languageSlug: string, articleSlug: string, userId:
     },
   })
 
-  console.log(`[Debug] getting article data for lang=${languageSlug} article=${articleSlug} user=${userId}`)
-
   // 1. Check language existence and visibility
   if (!language) {
-    console.log(`[Debug] Language not found: ${languageSlug}`)
     return null
   }
 
@@ -52,7 +49,6 @@ async function getArticleData(languageSlug: string, articleSlug: string, userId:
   const canViewPrivate = isOwner || isDev
 
   if (language.visibility === "PRIVATE" && !canViewPrivate) {
-    console.log(`[Debug] Language is private and user is not owner/dev: ${languageSlug}`)
     return null
   }
 
@@ -83,13 +79,11 @@ async function getArticleData(languageSlug: string, articleSlug: string, userId:
 
   // 2. Check article existence
   if (!article) {
-    console.log(`[Debug] Article not found in db: ${articleSlug} for language ${language.id}`)
     return null
   }
 
   // 3. Check article visibility (drafts are visible to owner)
   if (!article.published && !canViewPrivate) {
-    console.log(`[Debug] Article unpublished and user not owner`)
     return null
   }
 
