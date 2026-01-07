@@ -31,7 +31,7 @@ export function SearchResults() {
             params.delete("q")
         }
         router.replace(`/search?${params.toString()}`, { scroll: false })
-    }, [debouncedQuery, router])
+    }, [debouncedQuery, router, searchParams])
 
     // Fetch results
     useEffect(() => {

@@ -38,11 +38,11 @@ export function useAutoSave<T>({
 
     // Check if data has changed
     const hasChanged = JSON.stringify(data) !== JSON.stringify(previousDataRef.current)
-    
+
     if (hasChanged) {
       setHasUnsavedChanges(true)
     }
-  }, [data, enabled])
+  }, [data, enabled, onError])
 
   useEffect(() => {
     if (!enabled || isInitialMount.current) return
@@ -52,13 +52,13 @@ export function useAutoSave<T>({
 
     if (hasChanged && hasUnsavedChanges) {
       setStatus("saving")
-      
+
       Promise.resolve(onSave(debouncedData))
         .then(() => {
           setStatus("saved")
           setHasUnsavedChanges(false)
           previousDataRef.current = debouncedData
-          
+
           // Reset to idle after 2 seconds
           setTimeout(() => {
             setStatus("idle")
@@ -67,14 +67,14 @@ export function useAutoSave<T>({
         .catch((error) => {
           setStatus("error")
           onError?.(error)
-          
+
           // Reset to idle after 3 seconds
           setTimeout(() => {
             setStatus("idle")
           }, 3000)
         })
     }
-  }, [debouncedData, onSave, enabled, hasUnsavedChanges])
+  }, [debouncedData, onSave, enabled, hasUnsavedChanges, onError])
 
   return {
     status,

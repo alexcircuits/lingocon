@@ -389,6 +389,7 @@ export function LanguagePDFDocument({
       {/* Cover Page */}
       <Page size="A4" style={styles.coverPage}>
         <View style={styles.coverHeader}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           {flagUrl && <Image src={flagUrl} style={styles.coverFlag} />}
           <Text style={styles.coverTitle}>{language.name}</Text>
           <Text style={styles.coverSubtitle}>Language Documentation</Text>

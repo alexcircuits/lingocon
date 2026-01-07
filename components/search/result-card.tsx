@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, FileText, Globe, Hash, Languages } from "lucide-react"
@@ -58,10 +59,13 @@ export function ResultCard({ result }: ResultCardProps) {
                             <div className="relative z-10 flex items-center gap-4">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-background shadow-sm ring-1 ring-border/50">
                                     {result.flagUrl ? (
-                                        <img
+                                        <Image
                                             src={result.flagUrl}
                                             alt={result.name}
                                             className="h-full w-full object-cover"
+                                            unoptimized
+                                            width={100}
+                                            height={100}
                                         />
                                     ) : (
                                         <Languages className="h-6 w-6 text-primary/60" />
