@@ -214,7 +214,7 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
                   value={formData.fontUrl}
                   onChange={(url) => setFormData({ ...formData, fontUrl: url || "" })}
                   placeholder="Upload font file"
-                  maxSize={5 * 1024 * 1024} // 5MB
+                  maxSize={15 * 1024 * 1024} // 15MB
                 />
               </div>
 
