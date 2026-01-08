@@ -10,7 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
+import { Search, BookOpen, Link2, StickyNote } from "lucide-react"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { IPASpeaker } from "@/components/ipa-speaker"
@@ -24,6 +31,7 @@ interface PublicDictionaryProps {
 export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showLatin, setShowLatin] = useState(false)
+  const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null)
 
   // Filter entries based on search query
   const filteredEntries = useMemo(() => {
@@ -40,6 +48,15 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
         (entry.partOfSpeech && entry.partOfSpeech.toLowerCase().includes(query))
     )
   }, [entries, searchQuery])
+
+  // Check if entry has additional details
+  const hasDetails = (entry: DictionaryEntry) => {
+    return (
+      entry.etymology ||
+      entry.notes ||
+      (Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0)
+    )
+  }
 
   if (entries.length === 0) {
     return (
@@ -92,8 +109,13 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
                   const displayLemma = showLatin
                     ? transliterateToLatin(entry.lemma, symbols)
                     : entry.lemma
+                  const entryHasDetails = hasDetails(entry)
                   return (
-                    <TableRow key={entry.id}>
+                    <TableRow
+                      key={entry.id}
+                      className={entryHasDetails ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
+                      onClick={() => entryHasDetails && setSelectedEntry(entry)}
+                    >
                       <TableCell className="font-medium">
                         <span className={!showLatin ? "font-custom-script text-lg" : ""}>
                           {displayLemma}
@@ -102,6 +124,9 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
                           <span className="text-xs text-muted-foreground ml-2 font-custom-script">
                             ({entry.lemma})
                           </span>
+                        )}
+                        {entryHasDetails && (
+                          <span className="ml-2 text-xs text-primary/60">•</span>
                         )}
                       </TableCell>
                       <TableCell>{entry.gloss}</TableCell>
@@ -131,6 +156,106 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
           )}
         </>
       )}
+
+      {/* Entry Details Sheet */}
+      <Sheet open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
+        <SheetContent className="overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          {selectedEntry && (
+            <>
+              <SheetHeader className="space-y-4 pb-4 border-b">
+                <div>
+                  <SheetTitle className="font-custom-script text-2xl">
+                    {showLatin
+                      ? transliterateToLatin(selectedEntry.lemma, symbols)
+                      : selectedEntry.lemma
+                    }
+                  </SheetTitle>
+                  {showLatin && transliterateToLatin(selectedEntry.lemma, symbols) !== selectedEntry.lemma && (
+                    <p className="text-sm text-muted-foreground font-custom-script mt-1">
+                      {selectedEntry.lemma}
+                    </p>
+                  )}
+                </div>
+                {(selectedEntry.ipa || selectedEntry.partOfSpeech) && (
+                  <div className="flex items-center gap-3">
+                    {selectedEntry.ipa && (
+                      <div className="flex items-center gap-2 text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                        <span>/{selectedEntry.ipa}/</span>
+                        <IPASpeaker ipa={selectedEntry.ipa} size="sm" />
+                      </div>
+                    )}
+                    {selectedEntry.partOfSpeech && (
+                      <Badge variant="secondary">{selectedEntry.partOfSpeech}</Badge>
+                    )}
+                  </div>
+                )}
+              </SheetHeader>
+
+              <div className="space-y-6 pt-6">
+                {/* Gloss/Translation */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Translation</h4>
+                  <p className="text-lg">{selectedEntry.gloss}</p>
+                </div>
+
+                {/* Etymology */}
+                {selectedEntry.etymology && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Etymology
+                    </h4>
+                    <p className="text-sm italic text-foreground/80">
+                      {selectedEntry.etymology}
+                    </p>
+                  </div>
+                )}
+
+                {/* Related Words */}
+                {Array.isArray(selectedEntry.relatedWords) && (selectedEntry.relatedWords as string[]).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <Link2 className="h-4 w-4" />
+                      Related Words
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedEntry.relatedWords as string[]).map((word) => (
+                        <Badge
+                          key={word}
+                          variant="outline"
+                          className="font-custom-script cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => {
+                            // Find and select the related entry
+                            const relatedEntry = entries.find(e => e.lemma === word)
+                            if (relatedEntry) {
+                              setSelectedEntry(relatedEntry)
+                            }
+                          }}
+                        >
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedEntry.notes && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <StickyNote className="h-4 w-4" />
+                      Notes
+                    </h4>
+                    <p className="text-sm text-foreground/80 whitespace-pre-wrap">
+                      {selectedEntry.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
