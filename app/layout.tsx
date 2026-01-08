@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com";
 
@@ -47,18 +48,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
-        <SessionProvider>
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              className: "border-border/50 bg-card shadow-soft",
-            }}
-          />
-        </SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                className: "border-border/50 bg-card shadow-soft",
+              }}
+            />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

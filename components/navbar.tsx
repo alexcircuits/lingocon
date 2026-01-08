@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/sheet"
 import { useState } from "react"
 import { NotificationCenter } from "@/components/notification-center"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface NavbarProps {
   user?: {
@@ -115,6 +116,9 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
               </Button>
             </Link>
           )}
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Notifications */}
           <NotificationCenter />
