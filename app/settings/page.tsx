@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 
 export default function SettingsPage() {
     const { data: session, update } = useSession()
@@ -53,30 +53,50 @@ export default function SettingsPage() {
 
     const onSubmit = async (values: UpdateUserInput) => {
         setLoading(true)
-        const result = await updateUser(values)
-        setLoading(false)
+        try {
+            const result = await updateUser({
+                name: values.name,
+                image: values.image || "",
+            })
 
-        if (result.error) {
+            if (result.error) {
+                toast.error("Error", {
+                    description: result.error,
+                })
+            } else {
+                toast.success("Profile updated", {
+                    description: "Your settings have been saved successfully.",
+                })
+                await update() // Update client-side session
+                router.refresh()
+            }
+        } catch (error) {
             toast.error("Error", {
-                description: result.error,
+                description: "Failed to save changes. Please try again.",
             })
-        } else {
-            toast.success("Profile updated", {
-                description: "Your settings have been saved successfully.",
-            })
-            update() // Update client-side session
-            router.refresh()
+        } finally {
+            setLoading(false)
         }
     }
 
     return (
         <div className="container max-w-4xl py-10 space-y-8">
             <div className="flex items-center justify-between space-y-2">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-                    <p className="text-muted-foreground">
-                        Manage your account settings and profile preferences.
-                    </p>
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.back()}
+                        className="shrink-0"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+                        <p className="text-muted-foreground">
+                            Manage your account settings and profile preferences.
+                        </p>
+                    </div>
                 </div>
             </div>
 
