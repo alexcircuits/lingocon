@@ -86,7 +86,7 @@ export function DerivationWizard({
                 <DialogHeader>
                     <DialogTitle>Derive Word</DialogTitle>
                     <DialogDescription>
-                        Create a new word derived from <span className="font-semibold text-foreground">"{sourceEntry?.lemma}"</span>.
+                        Create a new word derived from <span className="font-semibold text-foreground">&quot;{sourceEntry?.lemma}&quot;</span>.
                     </DialogDescription>
                 </DialogHeader>
 
