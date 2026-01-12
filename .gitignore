@@ -37,3 +37,10 @@ next-env.d.ts
 
 
 /lib/generated/prisma
+
+
+#Public
+/public
+
+#scripts
+/scripts

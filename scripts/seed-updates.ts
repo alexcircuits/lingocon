@@ -7,10 +7,10 @@ async function main() {
 
     await prisma.platformUpdate.create({
         data: {
-            title: "Custom Fonts & More",
-            description: "We've added a Contact page, increased font upload limits to 15MB, improved PDF exports, and added a new 'Type' tool to format text with your custom font in the editor!",
-            icon: "rocket",
-            link: "/contact"
+            title: "Data Loss Apology",
+            description: "We sincerely apologize for the inconvenience. Due to a deployment error, all uploaded flags and custom fonts were deleted. Please re-upload your language flags and fonts. We are taking steps to ensure this does not happen again.",
+            icon: "alert-triangle",
+            link: "/dashboard" // Directing them to dashboard to re-upload seems appropriate
         }
     })
     console.log("Seed complete!")
