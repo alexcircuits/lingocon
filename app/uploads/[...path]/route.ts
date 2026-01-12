@@ -14,7 +14,7 @@ export async function GET(
 
         // Check if file exists
         if (!existsSync(filePath)) {
-            return new NextResponse("File not found", { status: 404 })
+            return new NextResponse(`File not found at: ${filePath}`, { status: 404 })
         }
 
         // Get file stats to verify it's a file
