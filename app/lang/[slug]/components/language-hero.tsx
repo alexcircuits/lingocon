@@ -58,7 +58,6 @@ export function LanguageHero({ language, isFavorite }: LanguageHeroProps) {
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                                 priority
-                                unoptimized={language.flagUrl.startsWith("/uploads/")}
                             />
                         </div>
                     ) : (

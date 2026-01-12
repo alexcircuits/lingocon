@@ -55,7 +55,6 @@ export function LanguageCard({ language }: LanguageCardProps) {
                       alt={`${language.name} flag`}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      unoptimized={language.flagUrl.startsWith("/uploads/")}
                     />
                   </div>
                 ) : (
