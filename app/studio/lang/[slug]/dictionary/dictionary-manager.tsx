@@ -451,6 +451,10 @@ export function DictionaryManager({
               showLatin={showLatin}
               symbols={symbols}
               enableAudio={enableAudio}
+              onDerive={(entry) => {
+                setDerivationSourceEntry(entry)
+                setIsDeriveOpen(true)
+              }}
             />
           </div>
 
