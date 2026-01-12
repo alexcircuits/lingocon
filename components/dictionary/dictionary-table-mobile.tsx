@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, Volume2 } from "lucide-react"
+import { Pencil, Trash2, Volume2, GitFork } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
@@ -16,6 +16,7 @@ interface DictionaryTableMobileProps {
   onSelectionChange: (selected: Set<string>) => void
   onEdit: (entry: DictionaryEntry) => void
   onDelete: (entry: DictionaryEntry) => void
+  onDerive: (entry: DictionaryEntry) => void
   showLatin: boolean
   enableAudio: boolean
 }
@@ -27,6 +28,7 @@ export function DictionaryTableMobile({
   onSelectionChange,
   onEdit,
   onDelete,
+  onDerive,
   showLatin,
   enableAudio,
 }: DictionaryTableMobileProps) {
@@ -87,20 +89,29 @@ export function DictionaryTableMobile({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex justify-end gap-1 mt-3">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
                     onClick={() => onEdit(entry)}
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => onDerive(entry)}
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    title="Derive Word"
+                  >
+                    <GitFork className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onDelete(entry)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

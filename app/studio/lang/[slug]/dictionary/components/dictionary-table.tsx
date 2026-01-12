@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, GitFork } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { ContextualHelp } from "@/components/contextual-help"
@@ -22,6 +22,7 @@ interface DictionaryTableProps {
   onSelectChange: (selected: Set<string>) => void
   onEdit: (entry: DictionaryEntry) => void
   onDelete: (id: string) => void
+  onDerive: (entry: DictionaryEntry) => void
   showLatin: boolean
   symbols: ScriptSymbol[]
   isPending?: boolean
@@ -33,6 +34,7 @@ export function DictionaryTable({
   onSelectChange,
   onEdit,
   onDelete,
+  onDerive,
   showLatin,
   symbols,
   isPending,
@@ -181,6 +183,17 @@ export function DictionaryTable({
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDerive(entry)}
+                      disabled={isPending}
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      title="Derive Word"
+                    >
+                      <GitFork className="h-4 w-4" />
+                    </Button>
+                    <Button
+
                       variant="ghost"
                       size="icon"
                       onClick={() => onDelete(entry.id)}

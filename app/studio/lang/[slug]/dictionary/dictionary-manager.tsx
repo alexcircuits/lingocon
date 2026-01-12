@@ -19,6 +19,7 @@ import { DictionaryEntryDialog } from "./components/dictionary-entry-dialog"
 import { DeleteConfirmDialog } from "./components/delete-confirm-dialog"
 import { ImportDialog } from "./components/import-dialog"
 import { DictionaryPagination } from "./components/dictionary-pagination"
+import { DerivationWizard } from "./components/derivation-wizard"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
@@ -63,9 +64,11 @@ export function DictionaryManager({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
+  const [isDeriveOpen, setIsDeriveOpen] = useState(false)
 
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
+  const [derivationSourceEntry, setDerivationSourceEntry] = useState<DictionaryEntry | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
 
@@ -95,6 +98,7 @@ export function DictionaryManager({
         if (isDeleteOpen) setIsDeleteOpen(false)
         if (isImportOpen) setIsImportOpen(false)
         if (isBulkEditOpen) setIsBulkEditOpen(false)
+        if (isDeriveOpen) setIsDeriveOpen(false)
       },
     },
   ])
@@ -154,6 +158,32 @@ export function DictionaryManager({
         },
       })
       setIsAddOpen(false)
+      startTransition(() => {
+        router.refresh()
+      })
+    }
+  }
+
+  const handleDeriveSubmit = async (data: any) => {
+    // Use JSON.parse(JSON.stringify()) to ensure a strictly plain object for the Server Action
+    const sterilizedData = JSON.parse(JSON.stringify({
+      lemma: String(data.lemma),
+      gloss: String(data.gloss),
+      languageId,
+      ipa: data.ipa || null,
+      partOfSpeech: data.partOfSpeech || null,
+      etymology: data.etymology || null,
+      notes: data.notes || null,
+      relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
+    }))
+
+    const result = await createDictionaryEntry(sterilizedData)
+
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success(`derived word "${data.lemma}" created`)
+      setIsDeriveOpen(false)
       startTransition(() => {
         router.refresh()
       })
@@ -397,6 +427,10 @@ export function DictionaryManager({
               showLatin={showLatin}
               symbols={symbols}
               isPending={isPending}
+              onDerive={(entry) => {
+                setDerivationSourceEntry(entry)
+                setIsDeriveOpen(true)
+              }}
             />
           </div>
 
@@ -460,6 +494,14 @@ export function DictionaryManager({
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
         onImport={handleImport}
+        isPending={isPending}
+      />
+
+      <DerivationWizard
+        open={isDeriveOpen}
+        onOpenChange={setIsDeriveOpen}
+        sourceEntry={derivationSourceEntry}
+        onSubmit={handleDeriveSubmit}
         isPending={isPending}
       />
 
