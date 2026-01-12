@@ -11,7 +11,7 @@ export const updateParadigmSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, "Name is required").max(200).optional(),
   slots: z.record(z.string(), z.any()).optional(),
-  notes: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional().nullable(),
   languageId: z.string().min(1),
 })
 

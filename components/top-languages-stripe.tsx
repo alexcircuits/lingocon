@@ -85,6 +85,7 @@ export function TopLanguagesStripe({ languages }: TopLanguagesStripeProps) {
                                     alt={lang.name}
                                     fill
                                     className="object-cover transition-transform group-hover/card:scale-110"
+                                    unoptimized={lang.flagUrl.startsWith("/uploads/")}
                                 />
                             </div>
                         ) : (

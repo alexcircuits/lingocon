@@ -92,7 +92,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         const result = await createParadigm({
           name: formData.name,
           slots,
-          notes: formData.notes || undefined,
+          notes: formData.notes.trim() || undefined,
           languageId,
         })
 
@@ -153,7 +153,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
           id: editingParadigm.id,
           name: formData.name,
           slots,
-          notes: formData.notes || undefined,
+          notes: formData.notes.trim() === "" ? null : formData.notes.trim(),
           languageId,
         })
 
@@ -520,8 +520,8 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
           </form>
         </DialogContent>
       </Dialog>
-      
-      <DeleteConfirmDialog 
+
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         onConfirm={handleDelete}
