@@ -38,6 +38,7 @@ export function AnimatedLanguageCard({ language, index }: AnimatedLanguageCardPr
                     alt={`${language.name} flag`}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    unoptimized={language.flagUrl.startsWith("/uploads/")}
                   />
                 </div>
               ) : (
