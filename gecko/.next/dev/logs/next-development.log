@@ -1,0 +1,42 @@
+[00:00:58.195] Server  ERROR   ⨯ Error: Cannot find module 'next/dist/client/components/builtin/global-not-found'
+Require stack:
+- /Users/oleksandrchepkov/Documents/langua/gecko/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/oleksandrchepkov/Documents/langua/gecko/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/oleksandrchepkov/Documents/langua/gecko/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/oleksandrchepkov/Documents/langua/gecko/node_modules/next/dist/server/lib/router-server.js
+- /Users/oleksandrchepkov/Documents/langua/gecko/node_modules/next/dist/server/lib/start-server.js
+[00:00:58.950] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:58.951] Server  ERROR   ⨯ "unhandledRejection:" Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:58.953] Server  ERROR   ⨯ "unhandledRejection: " Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:59.193] Server  ERROR   TurbopackInternalError: Failed to write page endpoint /_app
+
+Caused by:
+- content is not available as task execution failed
+- content is not available as task execution failed
+- File not found: "[project]/Documents/langua/node_modules/next/dist/lib/default-transpiled-packages.json"
+
+Debug info:
+- Execution of get_written_endpoint_with_issues_operation failed
+- Execution of endpoint_write_to_disk failed
+- Execution of <PageEndpoint as Endpoint>::output failed
+- Failed to write page endpoint /_app
+- Execution of PageEndpoint::output failed
+- Execution of *ChunkGroupResult::all_assets failed
+- Execution of PageEndpoint::client_chunk_group failed
+- Execution of PageEndpoint::client_evaluatable_assets failed
+- content is not available as task execution failed
+- Execution of PageEndpoint::client_module failed
+- content is not available as task execution failed
+- Execution of *create_page_loader_entry_module failed
+- Execution of PagesProject::client_module_context failed
+- Execution of *ModuleAssetContext::new failed
+- Execution of get_client_module_options_context failed
+- Execution of *get_jsx_transform_options failed
+- Execution of get_client_resolve_options_context failed
+- Execution of get_transpiled_packages failed
+- File not found: "[project]/Documents/langua/node_modules/next/dist/lib/default-transpiled-packages.json"
+[00:00:59.194] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:59.225] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:59.227] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:59.234] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'
+[00:00:59.235] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/oleksandrchepkov/Documents/langua/gecko/src/app'

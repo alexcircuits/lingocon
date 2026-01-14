@@ -24,9 +24,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { IPAKeyboard } from "@/components/ipa-keyboard"
 import { Card } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
-import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare, Type } from "lucide-react"
+import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare, Type, Volume2, Keyboard } from "lucide-react"
+import { IPASpeaker } from "@/components/ipa-speaker"
+
+
 import { FlagGenerator } from "@/components/flag-generator"
 
 interface LanguageSettingsProps {
@@ -45,14 +54,58 @@ interface LanguageSettingsProps {
     fontScale: number
   }
   languageSlug: string
+  dictionaryEntries: {
+    id: string
+    lemma: string
+    ipa: string | null
+  }[]
 }
 
-export function LanguageSettings({ language, languageSlug }: LanguageSettingsProps) {
+interface LanguageWithMetadata {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  visibility: string
+  flagUrl: string | null
+  discordUrl?: string | null
+  telegramUrl?: string | null
+  websiteUrl?: string | null
+  fontUrl?: string | null
+  fontFamily?: string | null
+  fontScale: number
+  metadata: any
+}
+
+const availableVoices = [
+  { id: "Joanna", name: "English (US) - Joanna (Default)" },
+  { id: "Matthew", name: "English (US) - Matthew" },
+  { id: "Amy", name: "English (UK) - Amy" },
+  { id: "Brian", name: "English (UK) - Brian" },
+  { id: "Giorgio", name: "Italian - Giorgio (Pure Vowels)" },
+  { id: "Carla", name: "Italian - Carla" },
+  { id: "Conchita", name: "Spanish - Conchita" },
+  { id: "Enrique", name: "Spanish - Enrique" },
+  { id: "Mathieu", name: "French - Mathieu" },
+  { id: "Celine", name: "French - Celine" },
+  { id: "Marlene", name: "German - Marlene" },
+  { id: "Hans", name: "German - Hans" },
+  { id: "Tatyana", name: "Russian - Tatyana" },
+  { id: "Maxim", name: "Russian - Maxim" },
+  { id: "Takumi", name: "Japanese - Takumi" },
+  { id: "Mizuki", name: "Japanese - Mizuki" },
+]
+
+export function LanguageSettings({ language, languageSlug, dictionaryEntries }: LanguageSettingsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState("")
+  const [previewIpa, setPreviewIpa] = useState("")
+
+
+  const typedLanguage = language as unknown as LanguageWithMetadata
 
   const [formData, setFormData] = useState({
     name: language.name,
@@ -65,6 +118,8 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
     fontUrl: language.fontUrl || "",
     fontFamily: language.fontFamily || "",
     fontScale: language.fontScale || 1.0,
+    ttsVoice: typedLanguage.metadata?.tts?.voiceId || "Joanna",
+    ttsSpeed: typedLanguage.metadata?.tts?.speed || "slow",
   })
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -85,6 +140,13 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
         ...(formData.fontUrl ? { fontUrl: formData.fontUrl } : {}),
         ...(formData.fontFamily ? { fontFamily: formData.fontFamily } : {}),
         fontScale: Number(formData.fontScale),
+        metadata: {
+          ...(typedLanguage.metadata || {}),
+          tts: {
+            voiceId: formData.ttsVoice,
+            speed: formData.ttsSpeed,
+          }
+        }
       }
 
       const result = await updateLanguage(updateData)
@@ -297,6 +359,145 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
             </div>
           </div>
 
+          <div className="space-y-4 pt-4 border-t border-border/40">
+            <div>
+              <Label className="text-base font-medium flex items-center gap-2 mb-1">
+                <Volume2 className="h-4 w-4" />
+                Pronunciation (TTS)
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Customize how the IPA speaker sounds. Some languages (like Italian) may handle pure vowels better than English voices.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="ttsVoice">Voice</Label>
+                <Select
+                  value={formData.ttsVoice}
+                  onValueChange={(value) => setFormData({ ...formData, ttsVoice: value })}
+                  disabled={isPending}
+                >
+                  <SelectTrigger id="ttsVoice">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVoices.map((voice) => (
+                      <SelectItem key={voice.id} value={voice.id}>
+                        {voice.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="ttsSpeed">Speed ({typeof formData.ttsSpeed === 'string' && formData.ttsSpeed.endsWith('%') ? (parseInt(formData.ttsSpeed) / 100).toFixed(1) : (
+                      formData.ttsSpeed === 'x-slow' ? '0.5' :
+                        formData.ttsSpeed === 'slow' ? '0.75' :
+                          formData.ttsSpeed === 'medium' ? '1.0' :
+                            formData.ttsSpeed === 'fast' ? '1.25' :
+                              formData.ttsSpeed === 'x-fast' ? '1.5' : '1.0'
+                    )}x)</Label>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      id="ttsSpeed"
+                      min={0.5}
+                      max={2.0}
+                      step={0.1}
+                      value={[(() => {
+                        if (!formData.ttsSpeed) return 1.0;
+                        if (formData.ttsSpeed.endsWith('%')) return parseInt(formData.ttsSpeed) / 100;
+                        switch (formData.ttsSpeed) {
+                          case 'x-slow': return 0.5;
+                          case 'slow': return 0.75;
+                          case 'fast': return 1.25;
+                          case 'x-fast': return 1.5;
+                          default: return 1.0;
+                        }
+                      })()]}
+                      onValueChange={(vals) => setFormData({ ...formData, ttsSpeed: `${Math.round(vals[0] * 100)}%` })}
+                      disabled={isPending}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min={0.5}
+                      max={2.0}
+                      step={0.1}
+                      value={(() => {
+                        if (!formData.ttsSpeed) return 1.0;
+                        if (formData.ttsSpeed.endsWith('%')) return parseInt(formData.ttsSpeed) / 100;
+                        switch (formData.ttsSpeed) {
+                          case 'x-slow': return 0.5;
+                          case 'slow': return 0.75;
+                          case 'fast': return 1.25;
+                          case 'x-fast': return 1.5;
+                          default: return 1.0;
+                        }
+                      })()}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value)
+                        if (!isNaN(val) && val >= 0.5 && val <= 2.0) {
+                          setFormData({ ...formData, ttsSpeed: `${Math.round(val * 100)}%` })
+                        }
+                      }}
+                      className="w-20"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-border/40">
+            <Label className="text-sm font-medium mb-3 block">Preview Voice</Label>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter IPA to preview..."
+                    value={previewIpa}
+                    onChange={(e) => setPreviewIpa(e.target.value)}
+                    className="font-mono flex-1"
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" title="Open IPA Keyboard">
+                        <Keyboard className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <IPAKeyboard
+                        currentValue={previewIpa}
+                        onSelect={(symbol) => setPreviewIpa((prev) => prev + symbol)}
+                        onDelete={() => setPreviewIpa((prev) => prev.slice(0, -1))}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Type IPA directly or use the keyboard to test the voice.
+                </p>
+              </div>
+              <div className="flex items-start pt-1">
+                <IPASpeaker
+                  ipa={previewIpa}
+                  voiceId={formData.ttsVoice}
+                  speed={formData.ttsSpeed}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  Test
+                </IPASpeaker>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="visibility">Visibility</Label>
             <Select
@@ -471,7 +672,7 @@ export function LanguageSettings({ language, languageSlug }: LanguageSettingsPro
           </Button>
         </div>
       </Card>
-    </div>
+    </div >
   )
 }
 

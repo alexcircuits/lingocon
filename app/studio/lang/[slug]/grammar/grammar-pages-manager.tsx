@@ -82,7 +82,7 @@ export function GrammarPagesManager({
         <EmptyState
           icon={BookOpen}
           title="No grammar pages yet"
-          description="Create your first grammar page to start documenting grammar rules, phonology, morphology, and syntax."
+          description="Create your first grammar page to start documenting grammar rules, morphology, and syntax."
           action={{
             label: "Create Grammar Page",
             href: `/studio/lang/${languageSlug}/grammar/new`,

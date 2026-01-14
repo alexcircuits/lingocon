@@ -26,6 +26,10 @@ interface DictionaryTableProps {
   showLatin: boolean
   symbols: ScriptSymbol[]
   isPending?: boolean
+  ttsSettings?: {
+    voiceId: string
+    speed: string
+  }
 }
 
 export function DictionaryTable({
@@ -38,6 +42,7 @@ export function DictionaryTable({
   showLatin,
   symbols,
   isPending,
+  ttsSettings,
 }: DictionaryTableProps) {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -162,7 +167,12 @@ export function DictionaryTable({
                   {entry.ipa ? (
                     <span className="flex items-center gap-2">
                       <span>/{entry.ipa}/</span>
-                      <IPASpeaker ipa={entry.ipa} size="sm" />
+                      <IPASpeaker
+                        ipa={entry.ipa}
+                        size="sm"
+                        voiceId={ttsSettings?.voiceId}
+                        speed={ttsSettings?.speed}
+                      />
                     </span>
                   ) : (
                     "-"

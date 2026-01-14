@@ -5,21 +5,34 @@ import { LanguageSettings } from "./language-settings"
 import { Collaborators } from "./collaborators"
 
 async function getLanguage(slug: string, userId: string | null) {
-  const language = await prisma.language.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      visibility: true,
-      flagUrl: true,
-      fontUrl: true,
-      fontFamily: true,
-      fontScale: true,
-      ownerId: true,
-    },
-  })
+  const [language, dictionaryEntries] = await Promise.all([
+    prisma.language.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        visibility: true,
+        flagUrl: true,
+        fontUrl: true,
+        fontFamily: true,
+        fontScale: true,
+        ownerId: true,
+        metadata: true,
+      },
+    }),
+    prisma.dictionaryEntry.findMany({
+      where: { language: { slug } },
+      select: {
+        id: true,
+        lemma: true,
+        ipa: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+  ])
 
   if (!language) {
     return null
@@ -34,7 +47,7 @@ async function getLanguage(slug: string, userId: string | null) {
     }
   }
 
-  return language
+  return { language, dictionaryEntries }
 }
 
 export default async function SettingsPage({
@@ -50,12 +63,13 @@ export default async function SettingsPage({
   }
 
   const { slug } = await params
-  const language = await getLanguage(slug, userId)
+  const data = await getLanguage(slug, userId)
 
-  if (!language) {
+  if (!data) {
     notFound()
   }
 
+  const { language, dictionaryEntries } = data
   const owner = userId ? await isLanguageOwner(language.id, userId) : false
 
   return (
@@ -67,7 +81,7 @@ export default async function SettingsPage({
         </p>
       </div>
 
-      <LanguageSettings language={language} languageSlug={slug} />
+      <LanguageSettings language={language} languageSlug={slug} dictionaryEntries={dictionaryEntries} />
       <Collaborators languageId={language.id} isOwner={owner} />
     </div>
   )

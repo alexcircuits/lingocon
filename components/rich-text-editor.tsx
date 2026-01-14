@@ -31,6 +31,8 @@ import { cn } from "@/lib/utils"
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
 import { CustomFont } from "@/lib/tiptap/custom-font-extension"
+import { IpaChartGenerator } from "@/components/ipa-chart-generator"
+import { useState } from "react"
 
 interface RichTextEditorProps {
     content: any
@@ -41,6 +43,9 @@ interface RichTextEditorProps {
     withIGT?: boolean
     withParadigm?: boolean
     onParadigmClick?: (editor: Editor) => void
+    // IPA Chart
+    withIpaChart?: boolean
+    symbols?: any[]
 }
 
 export function RichTextEditor({
@@ -51,13 +56,18 @@ export function RichTextEditor({
     withIGT = false,
     withParadigm = false,
     onParadigmClick,
+    withIpaChart = false,
+    symbols = [],
 }: RichTextEditorProps) {
+    const [isIpaChartOpen, setIsIpaChartOpen] = useState(false)
+
     const editor = useEditor({
         extensions: [
             StarterKit,
             CustomFont,
             Table.configure({
                 resizable: true,
+                allowTableNodeSelection: true,
             }),
             TableRow,
             TableHeader,
@@ -345,10 +355,34 @@ export function RichTextEditor({
                         <Table2 className="h-4 w-4 text-blue-500" />
                     </Button>
                 )}
+
+                {withIpaChart && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsIpaChartOpen(true)}
+                        disabled={disabled}
+                        title="Generate IPA Chart"
+                    >
+                        <span className="text-xs font-bold border rounded px-0.5 border-current">IPA</span>
+                    </Button>
+                )}
             </div>
 
             {/* Content */}
             <EditorContent editor={editor} />
+
+            {withIpaChart && (
+                <IpaChartGenerator
+                    open={isIpaChartOpen}
+                    onOpenChange={setIsIpaChartOpen}
+                    symbols={symbols}
+                    onInsert={(html) => {
+                        editor.chain().focus().insertContent(html).run()
+                    }}
+                />
+            )}
         </div>
     )
 }

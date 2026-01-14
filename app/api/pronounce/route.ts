@@ -93,7 +93,7 @@ function validateIPA(ipa: string): { valid: boolean; warning?: string } {
 // This uses ipa-reader.com's approach via a proxy
 // Note: ipa-reader.com may not have a public API, so this is a placeholder
 // that can be adapted to use AWS Polly or another service
-async function synthesizeIPA(ipa: string, speed: string = "slow"): Promise<{ audioUrl?: string; error?: string }> {
+async function synthesizeIPA(ipa: string, speed: string = "slow", voiceId?: string): Promise<{ audioUrl?: string; error?: string }> {
   try {
     // Remove slashes if present
     const cleanedIPA = ipa.replace(/^\/|\/$/g, "").trim()
@@ -119,7 +119,7 @@ async function synthesizeIPA(ipa: string, speed: string = "slow"): Promise<{ aud
     const command = new SynthesizeSpeechCommand({
       Text: ssmlText,
       TextType: "ssml",
-      VoiceId: (process.env.AWS_POLLY_VOICE_ID || "Joanna") as any,
+      VoiceId: (voiceId || process.env.AWS_POLLY_VOICE_ID || "Joanna") as any,
       OutputFormat: "mp3",
     })
 
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { ipa, speed = "slow" } = body
+    const { ipa, speed = "slow", voiceId } = body
 
     // Validate input
     if (!ipa) {
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Synthesize audio
-    const result = await synthesizeIPA(sanitizedIPA, speed)
+    const result = await synthesizeIPA(sanitizedIPA, speed, voiceId)
 
     if (result.error) {
       return NextResponse.json(

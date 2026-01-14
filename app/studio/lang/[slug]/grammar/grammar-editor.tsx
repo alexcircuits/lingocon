@@ -34,6 +34,7 @@ interface GrammarEditorProps {
   languageSlug: string
   page?: GrammarPage
   order?: number
+  symbols?: any[]
 }
 
 export function GrammarEditor({
@@ -41,6 +42,7 @@ export function GrammarEditor({
   languageSlug,
   page,
   order = 0,
+  symbols = [],
 }: GrammarEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -213,6 +215,8 @@ export function GrammarEditor({
               setActiveEditor(editor)
               setIsParadigmDialogOpen(true)
             }}
+            withIpaChart
+            symbols={symbols}
           />
         </Card>
 

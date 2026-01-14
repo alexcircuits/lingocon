@@ -11,6 +11,11 @@ async function getLanguage(slug: string, userId: string | null) {
       name: true,
       slug: true,
       ownerId: true,
+      scriptSymbols: {
+        orderBy: {
+          order: "asc",
+        },
+      },
       grammarPages: {
         orderBy: {
           order: "desc",
@@ -63,7 +68,7 @@ export default async function NewGrammarPage({
       : 0
 
   return (
-    <GrammarEditor languageId={language.id} languageSlug={slug} order={nextOrder} />
+    <GrammarEditor languageId={language.id} languageSlug={slug} order={nextOrder} symbols={language.scriptSymbols} />
   )
 }
 

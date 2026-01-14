@@ -11,11 +11,16 @@ import {
 } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 
+import { cn } from "@/lib/utils"
+
 interface IPASpeakerProps {
   ipa: string
   className?: string
   size?: "sm" | "md" | "lg"
   variant?: "ghost" | "outline" | "default"
+  voiceId?: string
+  speed?: string
+  children?: React.ReactNode
 }
 
 export function IPASpeaker({
@@ -23,6 +28,9 @@ export function IPASpeaker({
   className = "",
   size = "sm",
   variant = "ghost",
+  voiceId,
+  speed,
+  children,
 }: IPASpeakerProps) {
   const [loading, setLoading] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
@@ -57,7 +65,7 @@ export function IPASpeaker({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ipa }),
+        body: JSON.stringify({ ipa, voiceId, speed }),
       })
 
       const data = await response.json()
@@ -112,20 +120,18 @@ export function IPASpeaker({
           <span className="inline-flex items-center">
             <Button
               variant={variant}
-              size={size === "sm" ? "icon" : "icon"}
+              size={size === "sm" && !children ? "icon" : undefined}
               onClick={handlePlay}
               disabled={loading || !ipa || ipa.trim().length === 0}
-              className={`${className} ${size === "sm" ? "h-6 w-6" : ""}`}
+              className={cn(className, size === "sm" && !children ? "h-6 w-6" : "")}
               aria-label="Play IPA pronunciation (approximate)"
               type="button"
             >
-              {loading ? (
-                <Loader2 className={`${sizeClasses[size]} animate-spin`} />
-              ) : error ? (
-                <AlertCircle className={sizeClasses[size]} />
-              ) : (
-                <Volume2 className={sizeClasses[size]} />
+              {loading && <Loader2 className={cn("animate-spin", children ? "mr-2 h-4 w-4" : sizeClasses[size])} />}
+              {!loading && !children && (
+                error ? <AlertCircle className={sizeClasses[size]} /> : <Volume2 className={sizeClasses[size]} />
               )}
+              {children}
             </Button>
           </span>
         </TooltipTrigger>

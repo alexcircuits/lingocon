@@ -21,6 +21,7 @@ async function getLanguageDetails(slug: string, userId: string | null) {
           order: "asc",
         },
       },
+      metadata: true,
     },
   })
 
@@ -37,21 +38,26 @@ async function getLanguageDetails(slug: string, userId: string | null) {
 async function getDictionaryEntries(
   languageId: string,
   page: number,
-  query: string
+  query: string,
+  field?: string
 ) {
   const skip = (page - 1) * ITEMS_PER_PAGE
 
   const where: Prisma.DictionaryEntryWhereInput = {
     languageId,
     ...(query
-      ? {
-        OR: [
-          { lemma: { contains: query, mode: "insensitive" } },
-          { gloss: { contains: query, mode: "insensitive" } },
-          { ipa: { contains: query, mode: "insensitive" } },
-          { partOfSpeech: { contains: query, mode: "insensitive" } },
-        ],
-      }
+      ? field
+        ? {
+          [field]: { contains: query, mode: "insensitive" },
+        }
+        : {
+          OR: [
+            { lemma: { contains: query, mode: "insensitive" } },
+            { gloss: { contains: query, mode: "insensitive" } },
+            { ipa: { contains: query, mode: "insensitive" } },
+            { partOfSpeech: { contains: query, mode: "insensitive" } },
+          ],
+        }
       : {}),
   }
 
@@ -77,7 +83,7 @@ export default async function DictionaryPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ page?: string; q?: string }>
+  searchParams: Promise<{ page?: string; q?: string; f?: string }>
 }) {
   const userId = await getUserId()
 
@@ -86,10 +92,11 @@ export default async function DictionaryPage({
   }
 
   const { slug } = await params
-  const { page: pageParam, q: queryParam } = await searchParams
+  const { page: pageParam, q: queryParam, f: fieldParam } = await searchParams
 
   const page = Number(pageParam) || 1
   const query = queryParam || ""
+  const field = fieldParam || ""
 
   const language = await getLanguageDetails(slug, userId)
 
@@ -100,7 +107,8 @@ export default async function DictionaryPage({
   const { entries, total, totalPages } = await getDictionaryEntries(
     language.id,
     page,
-    query
+    query,
+    field
   )
 
   const isAudioEnabled = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION)
@@ -123,7 +131,9 @@ export default async function DictionaryPage({
           totalPages={totalPages}
           totalEntries={total}
           initialQuery={query}
+          initialField={field}
           enableAudio={isAudioEnabled}
+          ttsSettings={(language.metadata as any)?.tts}
         />
       </Suspense>
     </div>

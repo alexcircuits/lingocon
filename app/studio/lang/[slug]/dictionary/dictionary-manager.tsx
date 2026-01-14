@@ -37,7 +37,12 @@ interface DictionaryManagerProps {
   totalPages: number
   totalEntries: number
   initialQuery: string
+  initialField: string
   enableAudio: boolean
+  ttsSettings?: {
+    voiceId: string
+    speed: string
+  }
 }
 
 export function DictionaryManager({
@@ -48,7 +53,9 @@ export function DictionaryManager({
   totalPages,
   totalEntries,
   initialQuery,
+  initialField,
   enableAudio,
+  ttsSettings,
 }: DictionaryManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -112,14 +119,29 @@ export function DictionaryManager({
     if (newQuery) params.set("q", newQuery)
     else params.delete("q")
 
+    // Preserve the field parameter if it exists in the current URL or if we're not changing it here
+    // But actually DictionarySearch will handle calling handleSearch with both arguments
+
+
     startTransition(() => {
       router.push(`${pathname}?${params.toString()}`)
     })
   }, [pathname, router, searchParams])
 
-  const handleSearch = useCallback((query: string) => {
-    updateUrl(1, query)
-  }, [updateUrl])
+  const handleSearch = useCallback((query: string, field?: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (query) params.set("q", query)
+    else params.delete("q")
+
+    if (field) params.set("f", field)
+    else params.delete("f")
+
+    params.delete("page") // Reset to page 1 on search
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`)
+    })
+  }, [pathname, router, searchParams])
 
   const handlePageChange = useCallback((page: number) => {
     updateUrl(page, initialQuery)
@@ -314,7 +336,11 @@ export function DictionaryManager({
 
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="flex-1 w-full">
-          <DictionarySearch onSearch={handleSearch} defaultValue={initialQuery} />
+          <DictionarySearch
+            onSearch={handleSearch}
+            defaultValue={initialQuery}
+            defaultField={initialField}
+          />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -505,6 +531,7 @@ export function DictionaryManager({
         open={isDeriveOpen}
         onOpenChange={setIsDeriveOpen}
         sourceEntry={derivationSourceEntry}
+        allEntries={initialEntries}
         onSubmit={handleDeriveSubmit}
         isPending={isPending}
       />

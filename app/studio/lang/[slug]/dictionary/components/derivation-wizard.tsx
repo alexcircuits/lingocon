@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
     Dialog,
     DialogContent,
@@ -19,13 +19,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Loader2, ArrowRight } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Loader2, ArrowRight, Search, Check, Plus } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { DictionaryEntry } from "@prisma/client"
 
 interface DerivationWizardProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     sourceEntry: DictionaryEntry | null
+    allEntries?: DictionaryEntry[]
     onSubmit: (data: any) => Promise<void>
     isPending?: boolean
 }
@@ -36,6 +39,7 @@ export function DerivationWizard({
     open,
     onOpenChange,
     sourceEntry,
+    allEntries = [],
     onSubmit,
     isPending,
 }: DerivationWizardProps) {
@@ -44,40 +48,103 @@ export function DerivationWizard({
     const [newGloss, setNewGloss] = useState("")
     const [newPartOfSpeech, setNewPartOfSpeech] = useState("")
 
+    // For compound: second word selection
+    const [secondWordId, setSecondWordId] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
+
+    // Get the second entry object
+    const secondEntry = useMemo(() => {
+        if (!secondWordId) return null
+        return allEntries.find(e => e.id === secondWordId) || null
+    }, [secondWordId, allEntries])
+
+    // Filter available entries (exclude the source entry)
+    const availableEntries = useMemo(() => {
+        if (!sourceEntry) return allEntries
+        return allEntries.filter(e => e.id !== sourceEntry.id)
+    }, [allEntries, sourceEntry])
+
+    // Filter by search query
+    const filteredEntries = useMemo(() => {
+        if (!searchQuery.trim()) return availableEntries
+        const query = searchQuery.toLowerCase()
+        return availableEntries.filter(e =>
+            e.lemma.toLowerCase().includes(query) ||
+            e.gloss.toLowerCase().includes(query)
+        )
+    }, [availableEntries, searchQuery])
+
     // Reset state when opening
     useEffect(() => {
         if (open && sourceEntry) {
             setAffix("")
             setNewGloss(`Derived from ${sourceEntry.lemma}`)
             setNewPartOfSpeech(sourceEntry.partOfSpeech || "")
+            setSecondWordId(null)
+            setSearchQuery("")
         }
     }, [open, sourceEntry])
+
+    // Update gloss when compound second word changes
+    useEffect(() => {
+        if (type === "COMPOUND" && sourceEntry && secondEntry) {
+            setNewGloss(`Compound of ${sourceEntry.lemma} + ${secondEntry.lemma}`)
+        } else if (sourceEntry) {
+            setNewGloss(`Derived from ${sourceEntry.lemma}`)
+        }
+    }, [type, sourceEntry, secondEntry])
 
     const deriveWord = (root: string, affixVal: string, method: DerivationType) => {
         if (!root) return ""
         if (method === "SUFFIX") return root + affixVal
         if (method === "PREFIX") return affixVal + root
-        if (method === "COMPOUND") return root + affixVal // Simplified for now
+        if (method === "COMPOUND") {
+            // For compound, use the second word's lemma instead of affix
+            if (secondEntry) {
+                return root + secondEntry.lemma
+            }
+            return root + affixVal // Fallback to typed affix if no second word selected
+        }
         return root
     }
 
-    const resultLemma = sourceEntry ? deriveWord(sourceEntry.lemma, affix, type) : ""
+    const resultLemma = sourceEntry
+        ? deriveWord(sourceEntry.lemma, affix, type)
+        : ""
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!sourceEntry || !resultLemma) return
 
+        // Build related words array
+        const relatedWords: string[] = [sourceEntry.lemma]
+        if (type === "COMPOUND" && secondEntry) {
+            relatedWords.push(secondEntry.lemma)
+        }
+
+        // Build etymology text
+        let etymologyText: string
+        if (type === "COMPOUND" && secondEntry) {
+            etymologyText = `Compound of [${sourceEntry.lemma}] + [${secondEntry.lemma}]`
+        } else {
+            etymologyText = `Derived from [${sourceEntry.lemma}] using ${type.toLowerCase()} '${affix}'`
+        }
+
         await onSubmit({
             lemma: resultLemma,
             gloss: newGloss,
             partOfSpeech: newPartOfSpeech,
-            etymology: `Derived from [${sourceEntry.lemma}] using ${type.toLowerCase()} '${affix}'`,
-            relatedWords: [sourceEntry.lemma], // We'll handle ID resolution in the parent or server action if needed, but simple string relation is good for display
-            // Ideally we pass sourceEntry.id, but the current UI displays string relatedWords. 
-            // Let's rely on the manager to handle relatedWords correctly if they are IDs.
-            // Based on schema, relatedWords is Json? but manager treats it as strings in the table. 
-            // Let's pass the ID if we can, or just the lemma. The table code showed `entry.relatedWords as string[]`.
+            etymology: etymologyText,
+            relatedWords,
         })
+    }
+
+    const isCompoundValid = type !== "COMPOUND" || secondEntry !== null
+    const canSubmit = resultLemma && isCompoundValid
+
+    const handleSelectSecondWord = (entryId: string) => {
+        setSecondWordId(entryId)
+        setSearchQuery("")
     }
 
     return (
@@ -97,7 +164,13 @@ export function DerivationWizard({
                                 <Label>Derivation Type</Label>
                                 <Select
                                     value={type}
-                                    onValueChange={(v) => setType(v as DerivationType)}
+                                    onValueChange={(v) => {
+                                        setType(v as DerivationType)
+                                        if (v !== "COMPOUND") {
+                                            setSecondWordId(null)
+                                            setSearchQuery("")
+                                        }
+                                    }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -109,15 +182,78 @@ export function DerivationWizard({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Affix / Component</Label>
-                                <Input
-                                    placeholder={type === "SUFFIX" ? "-er, -tion" : "un-, re-"}
-                                    value={affix}
-                                    onChange={(e) => setAffix(e.target.value)}
-                                    autoFocus
-                                />
-                            </div>
+
+                            {type === "COMPOUND" ? (
+                                <div className="space-y-2">
+                                    <Label>Second Word</Label>
+                                    {secondEntry ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 px-3 py-2 rounded-md border bg-muted/50 font-serif">
+                                                {secondEntry.lemma}
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSecondWordId(null)}
+                                                className="text-muted-foreground hover:text-destructive"
+                                            >
+                                                Change
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search words..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-9"
+                                                />
+                                            </div>
+                                            <ScrollArea className="h-[120px] rounded-md border">
+                                                <div className="p-1">
+                                                    {filteredEntries.length === 0 ? (
+                                                        <div className="py-4 text-center text-sm text-muted-foreground">
+                                                            No words found
+                                                        </div>
+                                                    ) : (
+                                                        filteredEntries.slice(0, 50).map((entry) => (
+                                                            <button
+                                                                key={entry.id}
+                                                                type="button"
+                                                                onClick={() => handleSelectSecondWord(entry.id)}
+                                                                className={cn(
+                                                                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-left text-sm",
+                                                                    "hover:bg-accent hover:text-accent-foreground",
+                                                                    "focus:bg-accent focus:text-accent-foreground focus:outline-none",
+                                                                    "transition-colors cursor-pointer"
+                                                                )}
+                                                            >
+                                                                <span className="font-serif">{entry.lemma}</span>
+                                                                <span className="text-xs text-muted-foreground truncate flex-1">
+                                                                    {entry.gloss}
+                                                                </span>
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </ScrollArea>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label>Affix / Component</Label>
+                                    <Input
+                                        placeholder={type === "SUFFIX" ? "-er, -tion" : "un-, re-"}
+                                        value={affix}
+                                        onChange={(e) => setAffix(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Preview Section */}
@@ -126,6 +262,17 @@ export function DerivationWizard({
                                 <div className="text-sm text-muted-foreground">Source</div>
                                 <div className="font-serif text-lg">{sourceEntry?.lemma}</div>
                             </div>
+                            {type === "COMPOUND" && (
+                                <>
+                                    <Plus className="h-4 w-4 text-muted-foreground" />
+                                    <div className="text-center flex-1">
+                                        <div className="text-sm text-muted-foreground">Second</div>
+                                        <div className="font-serif text-lg">
+                                            {secondEntry?.lemma || "..."}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                             <ArrowRight className="h-4 w-4 text-muted-foreground" />
                             <div className="text-center flex-1">
                                 <div className="text-sm text-muted-foreground">Result</div>
@@ -162,7 +309,7 @@ export function DerivationWizard({
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={!resultLemma || isPending}>
+                        <Button type="submit" disabled={!canSubmit || isPending}>
                             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Create Derived Word
                         </Button>
