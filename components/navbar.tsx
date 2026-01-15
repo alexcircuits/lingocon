@@ -24,7 +24,8 @@ import {
   Menu,
   Home,
   Search,
-  Plus
+  Plus,
+  Shield
 } from "lucide-react"
 import { SearchBar } from "@/components/search/search-bar"
 import { cn } from "@/lib/utils"
@@ -45,6 +46,7 @@ interface NavbarProps {
     name?: string | null
     email?: string | null
     image?: string | null
+    isAdmin?: boolean
   } | null
   isDevMode?: boolean
 }
@@ -158,6 +160,14 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
+                {user?.isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="cursor-pointer">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link href="/favorites" className="cursor-pointer">
                     <Heart className="mr-2 h-4 w-4" />

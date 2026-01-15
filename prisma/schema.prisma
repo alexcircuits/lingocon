@@ -18,6 +18,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

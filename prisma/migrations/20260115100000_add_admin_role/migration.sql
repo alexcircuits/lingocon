@@ -1,0 +1,2 @@
+-- AddAdminRoleToUser
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN NOT NULL DEFAULT false;

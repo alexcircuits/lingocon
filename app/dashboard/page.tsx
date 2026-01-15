@@ -85,12 +85,19 @@ export default async function DashboardPage() {
   const stats = await getStats(userId)
   const activities = userId ? await getRecentActivitiesForUserLanguages(userId, 10) : []
 
+  // Fetch isAdmin status from database
+  const dbUser = userId ? await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true }
+  }) : null
+
   const isDevMode = process.env.DEV_MODE === "true"
   const user = session?.user ? {
     id: session.user.id!,
     name: session.user.name,
     email: session.user.email,
     image: session.user.image,
+    isAdmin: dbUser?.isAdmin || false,
   } : null
 
   const greeting = getGreeting()
