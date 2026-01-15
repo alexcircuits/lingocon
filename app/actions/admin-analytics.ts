@@ -439,3 +439,50 @@ export async function getAllLanguages(params: {
         }
     }
 }
+
+/**
+ * Get detailed user info
+ */
+export async function getUserDetails(userId: string) {
+    await requireAdmin()
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            languages: {
+                orderBy: { createdAt: "desc" },
+                include: {
+                    _count: {
+                        select: {
+                            dictionaryEntries: true,
+                            grammarPages: true
+                        }
+                    }
+                }
+            },
+            _count: {
+                select: {
+                    activities: true,
+                    articles: true,
+                    texts: true,
+                    favorites: true
+                }
+            }
+        }
+    })
+
+    if (!user) return null
+
+    return {
+        ...user,
+        languages: user.languages.map(lang => ({
+            id: lang.id,
+            name: lang.name,
+            slug: lang.slug,
+            visibility: lang.visibility,
+            entries: lang._count.dictionaryEntries,
+            grammarPages: lang._count.grammarPages,
+            createdAt: lang.createdAt
+        }))
+    }
+}

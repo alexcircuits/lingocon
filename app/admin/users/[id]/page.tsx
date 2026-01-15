@@ -1,63 +1,33 @@
-import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
 import { notFound } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import {
     ArrowLeft,
     Languages,
     BookOpen,
     FileText,
     Activity,
-    Calendar,
     ExternalLink
 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { getUserDetails } from "@/app/actions/admin-analytics"
+import { UserRoleToggle } from "@/components/admin/user-role-toggle"
 
 export const dynamic = "force-dynamic"
-
-async function getUser(id: string) {
-    return prisma.user.findUnique({
-        where: { id },
-        include: {
-            languages: {
-                include: {
-                    _count: {
-                        select: {
-                            dictionaryEntries: true,
-                            grammarPages: true,
-                            favorites: true
-                        }
-                    }
-                },
-                orderBy: { updatedAt: "desc" as const }
-            },
-            _count: {
-                select: {
-                    activities: true,
-                    articles: true,
-                    texts: true,
-                    followers: true,
-                    following: true
-                }
-            }
-        }
-    })
-}
-
-type UserWithDetails = NonNullable<Awaited<ReturnType<typeof getUser>>>
 
 export default async function AdminUserDetailPage({
     params,
 }: {
     params: Promise<{ id: string }>
 }) {
+    // Check admin first
     await requireAdmin()
+
     const { id } = await params
-    const user = await getUser(id)
+    const user = await getUserDetails(id)
 
     if (!user) {
         notFound()
@@ -85,9 +55,17 @@ export default async function AdminUserDetailPage({
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-serif">{user.name || "Unknown"}</h1>
+                        {/* @ts-expect-error - field exists in db but maybe not in types yet */}
                         {user.isAdmin && (
                             <Badge variant="secondary">Admin</Badge>
                         )}
+                        <div className="ml-auto">
+                            <UserRoleToggle
+                                userId={user.id}
+                                // @ts-expect-error - field exists in db
+                                isAdmin={user.isAdmin}
+                            />
+                        </div>
                     </div>
                     <p className="text-muted-foreground">{user.email}</p>
                     <p className="text-sm text-muted-foreground mt-2">
@@ -183,7 +161,7 @@ export default async function AdminUserDetailPage({
                                             </Badge>
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                            {lang._count.dictionaryEntries} entries · {lang._count.grammarPages} pages · {lang._count.favorites} favorites
+                                            {lang.entries} entries · {lang.grammarPages} pages
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -204,3 +182,4 @@ export default async function AdminUserDetailPage({
         </div>
     )
 }
+
