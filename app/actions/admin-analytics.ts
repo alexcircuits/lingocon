@@ -486,3 +486,76 @@ export async function getUserDetails(userId: string) {
         }))
     }
 }
+
+/**
+ * Get detailed language info for admin
+ */
+export async function getLanguageDetails(languageId: string) {
+    await requireAdmin()
+
+    const language = await prisma.language.findUnique({
+        where: { id: languageId },
+        include: {
+            owner: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true
+                }
+            },
+            collaborators: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            image: true
+                        }
+                    }
+                }
+            },
+            _count: {
+                select: {
+                    dictionaryEntries: true,
+                    grammarPages: true,
+                    scriptSymbols: true,
+                    paradigms: true,
+                    articles: true,
+                    texts: true,
+                    favorites: true,
+                    activities: true
+                }
+            }
+        }
+    })
+
+    if (!language) return null
+
+    // Get recent activity for this language
+    const recentActivity = await prisma.activity.findMany({
+        where: { languageId },
+        include: {
+            user: {
+                select: { name: true, email: true }
+            }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10
+    })
+
+    return {
+        ...language,
+        stats: language._count,
+        recentActivity: recentActivity.map(a => ({
+            id: a.id,
+            type: a.type,
+            entityType: a.entityType,
+            description: a.description,
+            user: a.user.name || a.user.email,
+            createdAt: a.createdAt
+        }))
+    }
+}
+

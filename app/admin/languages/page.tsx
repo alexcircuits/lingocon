@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { Pagination } from "@/components/admin/pagination"
 
 export const dynamic = "force-dynamic"
 
@@ -59,8 +60,9 @@ async function LanguagesList({
                     const visColor = visibilityColors[lang.visibility as keyof typeof visibilityColors]
 
                     return (
-                        <div
+                        <Link
                             key={lang.id}
+                            href={`/admin/languages/${lang.id}`}
                             className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-border transition-colors"
                         >
                             <div className={`p-2 rounded-lg ${visColor}`}>
@@ -94,27 +96,19 @@ async function LanguagesList({
                             <div className="text-sm text-muted-foreground">
                                 {format(new Date(lang.createdAt), "MMM d, yyyy")}
                             </div>
-                            <Link
-                                href={`/lang/${lang.slug}`}
-                                target="_blank"
-                                className="text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                <ExternalLink className="h-4 w-4" />
-                            </Link>
-                        </div>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        </Link>
                     )
                 })}
             </div>
 
-            {/* Pagination Info */}
-            <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border/50">
-                <p>
-                    Showing {languages.length} of {pagination.total} languages
-                </p>
-                <p>
-                    Page {pagination.page} of {pagination.pages}
-                </p>
-            </div>
+            {/* Pagination */}
+            <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.pages}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+            />
         </div>
     )
 }
@@ -155,8 +149,8 @@ export default async function AdminLanguagesPage({
                         <Link
                             href="/admin/languages"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${visibility === "ALL"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/80"
                                 }`}
                         >
                             All
@@ -164,8 +158,8 @@ export default async function AdminLanguagesPage({
                         <Link
                             href="/admin/languages?visibility=PUBLIC"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${visibility === "PUBLIC"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/80"
                                 }`}
                         >
                             Public
@@ -173,8 +167,8 @@ export default async function AdminLanguagesPage({
                         <Link
                             href="/admin/languages?visibility=UNLISTED"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${visibility === "UNLISTED"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/80"
                                 }`}
                         >
                             Unlisted
@@ -182,8 +176,8 @@ export default async function AdminLanguagesPage({
                         <Link
                             href="/admin/languages?visibility=PRIVATE"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${visibility === "PRIVATE"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted hover:bg-muted/80"
                                 }`}
                         >
                             Private

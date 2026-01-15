@@ -19,6 +19,13 @@ model User {
   image         String?
   password      String?
   isAdmin       Boolean   @default(false)
+  
+  // Admin moderation fields
+  isSuspended   Boolean   @default(false)
+  suspendedAt   DateTime?
+  suspendReason String?   @db.Text
+  adminNotes    String?   @db.Text
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -32,6 +39,7 @@ model User {
   following Follow[] @relation("UserFollowing")
   articles  Article[]
   texts     Text[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -313,6 +321,25 @@ model Text {
   @@index([languageId, type])
   @@index([paradigmId])
   @@map("texts")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // e.g. "SUSPEND_USER", "UNPUBLISH_ARTICLE"
+  resource    String   // e.g. "USER", "ARTICLE", "LANGUAGE"
+  resourceId  String?
+  details     Json?    // Additional info about the action
+  adminId     String
+  
+  createdAt   DateTime @default(now())
+
+  admin       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model Activity {

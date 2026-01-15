@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, BookOpen, ExternalLink, Calendar } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { UnpublishButton } from "@/components/admin/unpublish-button"
 
 export const dynamic = "force-dynamic"
 
@@ -59,7 +60,7 @@ async function ContentList() {
                             {articles.map((article) => (
                                 <div
                                     key={article.id}
-                                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
+                                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors group"
                                 >
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium truncate">{article.title}</p>
@@ -71,13 +72,16 @@ async function ContentList() {
                                             {article.publishedAt ? format(new Date(article.publishedAt), "MMM d, yyyy") : "Draft"}
                                         </p>
                                     </div>
-                                    <Link
-                                        href={`/lang/${article.language.slug}/articles/${article.slug}`}
-                                        target="_blank"
-                                        className="text-muted-foreground hover:text-primary transition-colors"
-                                    >
-                                        <ExternalLink className="h-4 w-4" />
-                                    </Link>
+                                    <div className="flex items-center gap-1">
+                                        <UnpublishButton id={article.id} type="article" title={article.title} />
+                                        <Link
+                                            href={`/lang/${article.language.slug}/articles/${article.slug}`}
+                                            target="_blank"
+                                            className="text-muted-foreground hover:text-primary transition-colors p-2"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Link>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -103,7 +107,7 @@ async function ContentList() {
                             {texts.map((text) => (
                                 <div
                                     key={text.id}
-                                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
+                                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:border-border transition-colors group"
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
@@ -120,13 +124,16 @@ async function ContentList() {
                                             {format(new Date(text.createdAt), "MMM d, yyyy")}
                                         </p>
                                     </div>
-                                    <Link
-                                        href={`/lang/${text.language.slug}/texts/${text.slug}`}
-                                        target="_blank"
-                                        className="text-muted-foreground hover:text-primary transition-colors"
-                                    >
-                                        <ExternalLink className="h-4 w-4" />
-                                    </Link>
+                                    <div className="flex items-center gap-1">
+                                        <UnpublishButton id={text.id} type="text" title={text.title} />
+                                        <Link
+                                            href={`/lang/${text.language.slug}/texts/${text.slug}`}
+                                            target="_blank"
+                                            className="text-muted-foreground hover:text-primary transition-colors p-2"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Link>
+                                    </div>
                                 </div>
                             ))}
                         </div>

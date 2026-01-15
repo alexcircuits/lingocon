@@ -9,12 +9,16 @@ import {
     BookOpen,
     FileText,
     Activity,
-    ExternalLink
+    ExternalLink,
+    Ban,
+    StickyNote
 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 import { getUserDetails } from "@/app/actions/admin-analytics"
 import { UserRoleToggle } from "@/components/admin/user-role-toggle"
+import { UserSuspensionToggle } from "@/components/admin/user-suspension-toggle"
+import { AdminNotesEditor } from "@/components/admin/admin-notes-editor"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +61,12 @@ export default async function AdminUserDetailPage({
                         <h1 className="text-3xl font-serif">{user.name || "Unknown"}</h1>
                         {user.isAdmin && (
                             <Badge variant="secondary">Admin</Badge>
+                        )}
+                        {user.isSuspended && (
+                            <Badge variant="destructive" className="gap-1">
+                                <Ban className="h-3 w-3" />
+                                Suspended
+                            </Badge>
                         )}
                         <div className="ml-auto">
                             <UserRoleToggle
@@ -177,6 +187,42 @@ export default async function AdminUserDetailPage({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Admin Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                {/* Suspension */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg font-medium flex items-center gap-2">
+                            <Ban className="h-4 w-4 text-destructive" />
+                            Suspension Status
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <UserSuspensionToggle
+                            userId={user.id}
+                            isSuspended={user.isSuspended}
+                            suspendReason={user.suspendReason}
+                        />
+                    </CardContent>
+                </Card>
+
+                {/* Admin Notes */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg font-medium flex items-center gap-2">
+                            <StickyNote className="h-4 w-4 text-amber-500" />
+                            Admin Notes
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <AdminNotesEditor
+                            userId={user.id}
+                            notes={user.adminNotes}
+                        />
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }

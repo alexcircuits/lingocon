@@ -2,11 +2,14 @@ import { Suspense } from "react"
 import { getAllUsers } from "@/app/actions/admin-analytics"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Users, Search, Languages, Activity, FileText } from "lucide-react"
+import { Users, Search, Languages, Activity, FileText, Download } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { Pagination } from "@/components/admin/pagination"
+import { CopyButton } from "@/components/admin/copy-button"
 
 export const dynamic = "force-dynamic"
 
@@ -32,60 +35,63 @@ async function UsersList({ search, page }: { search?: string; page?: number }) {
             {/* User List */}
             <div className="space-y-2">
                 {users.map((user) => (
-                    <Link
+                    <div
                         key={user.id}
-                        href={`/admin/users/${user.id}`}
-                        className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-border transition-colors"
+                        className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-border transition-colors group"
                     >
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.image || undefined} />
-                            <AvatarFallback>
-                                {user.name?.charAt(0) || user.email?.charAt(0) || "?"}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <p className="font-medium truncate">{user.name}</p>
-                                {user.isAdmin && (
-                                    <Badge variant="secondary" className="text-xs">
-                                        Admin
-                                    </Badge>
-                                )}
+                        <Link href={`/admin/users/${user.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={user.image || undefined} />
+                                <AvatarFallback>
+                                    {user.name?.charAt(0) || user.email?.charAt(0) || "?"}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-medium truncate">{user.name}</p>
+                                    {user.isAdmin && (
+                                        <Badge variant="secondary" className="text-xs">
+                                            Admin
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-sm text-muted-foreground truncate">
+                                    {user.email}
+                                </p>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                                {user.email}
-                            </p>
+                            <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1.5">
+                                    <Languages className="h-4 w-4" />
+                                    <span>{user.languages}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Activity className="h-4 w-4" />
+                                    <span>{user.activities}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <FileText className="h-4 w-4" />
+                                    <span>{user.articles}</span>
+                                </div>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                                {format(new Date(user.createdAt), "MMM d, yyyy")}
+                            </div>
+                        </Link>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <CopyButton value={user.id} label="ID" />
+                            {user.email && <CopyButton value={user.email} label="Email" />}
                         </div>
-                        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                                <Languages className="h-4 w-4" />
-                                <span>{user.languages}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <Activity className="h-4 w-4" />
-                                <span>{user.activities}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <FileText className="h-4 w-4" />
-                                <span>{user.articles}</span>
-                            </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            {format(new Date(user.createdAt), "MMM d, yyyy")}
-                        </div>
-                    </Link>
+                    </div>
                 ))}
             </div>
 
-            {/* Pagination Info */}
-            <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border/50">
-                <p>
-                    Showing {users.length} of {pagination.total} users
-                </p>
-                <p>
-                    Page {pagination.page} of {pagination.pages}
-                </p>
-            </div>
+            {/* Pagination */}
+            <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.pages}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+            />
         </div>
     )
 }
@@ -119,6 +125,12 @@ export default async function AdminUsersPage({
                         Manage and view all registered users
                     </p>
                 </div>
+                <Button variant="outline" asChild className="gap-2">
+                    <a href="/api/admin/export/users" download>
+                        <Download className="h-4 w-4" />
+                        Export CSV
+                    </a>
+                </Button>
             </div>
 
             {/* Search */}

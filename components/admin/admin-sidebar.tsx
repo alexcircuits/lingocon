@@ -11,7 +11,8 @@ import {
     FileText,
     Settings,
     Shield,
-    ArrowLeft
+    ArrowLeft,
+    ShieldAlert
 } from "lucide-react"
 
 const navItems = [
@@ -41,9 +42,13 @@ const navItems = [
         icon: FileText
     },
     {
-        title: "System",
         href: "/admin/system",
         icon: Settings
+    },
+    {
+        title: "Audit Logs",
+        href: "/admin/audit",
+        icon: ShieldAlert
     }
 ]
 
