@@ -55,14 +55,12 @@ export default async function AdminUserDetailPage({
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-serif">{user.name || "Unknown"}</h1>
-                        {/* @ts-expect-error - field exists in db but maybe not in types yet */}
                         {user.isAdmin && (
                             <Badge variant="secondary">Admin</Badge>
                         )}
                         <div className="ml-auto">
                             <UserRoleToggle
                                 userId={user.id}
-                                // @ts-expect-error - field exists in db
                                 isAdmin={user.isAdmin}
                             />
                         </div>
