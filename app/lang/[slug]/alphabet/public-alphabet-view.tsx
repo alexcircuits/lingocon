@@ -5,9 +5,11 @@ import type { ScriptSymbol } from "@prisma/client"
 
 interface PublicAlphabetViewProps {
   symbols: ScriptSymbol[]
+  voiceId?: string
+  speed?: string
 }
 
-export function PublicAlphabetView({ symbols }: PublicAlphabetViewProps) {
+export function PublicAlphabetView({ symbols, voiceId, speed }: PublicAlphabetViewProps) {
   if (symbols.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
@@ -45,7 +47,7 @@ export function PublicAlphabetView({ symbols }: PublicAlphabetViewProps) {
             {symbol.ipa && (
               <div className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-2">
                 <span>/{symbol.ipa}/</span>
-                <IPASpeaker ipa={symbol.ipa} size="sm" />
+                <IPASpeaker ipa={symbol.ipa} size="sm" voiceId={voiceId} speed={speed} />
               </div>
             )}
             {symbol.name && (

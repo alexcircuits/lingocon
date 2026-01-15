@@ -15,6 +15,7 @@ async function getLanguage(slug: string) {
           order: "asc",
         },
       },
+      metadata: true,
     },
   })
 
@@ -46,7 +47,11 @@ export default async function AlphabetPage({
         </p>
       </div>
 
-      <PublicAlphabetView symbols={language.scriptSymbols} />
+      <PublicAlphabetView
+        symbols={language.scriptSymbols}
+        voiceId={(language.metadata as any)?.tts?.voiceId}
+        speed={(language.metadata as any)?.tts?.speed}
+      />
     </div>
   )
 }

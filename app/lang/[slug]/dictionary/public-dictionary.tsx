@@ -26,9 +26,12 @@ import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 interface PublicDictionaryProps {
   entries: DictionaryEntry[]
   symbols: ScriptSymbol[]
+  voiceId?: string
+  speed?: string
 }
 
-export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
+export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDictionaryProps) {
+  console.log('DEBUG: PublicDictionary props:', { voiceId, speed })
   const [searchQuery, setSearchQuery] = useState("")
   const [showLatin, setShowLatin] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null)
@@ -134,7 +137,7 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
                         {entry.ipa ? (
                           <span className="flex items-center gap-2">
                             <span>/{entry.ipa}/</span>
-                            <IPASpeaker ipa={entry.ipa} size="sm" />
+                            <IPASpeaker ipa={entry.ipa} size="sm" voiceId={voiceId} speed={speed} />
                           </span>
                         ) : (
                           "-"
@@ -181,7 +184,7 @@ export function PublicDictionary({ entries, symbols }: PublicDictionaryProps) {
                     {selectedEntry.ipa && (
                       <div className="flex items-center gap-2 text-sm font-mono bg-muted/50 px-2 py-1 rounded">
                         <span>/{selectedEntry.ipa}/</span>
-                        <IPASpeaker ipa={selectedEntry.ipa} size="sm" />
+                        <IPASpeaker ipa={selectedEntry.ipa} size="sm" voiceId={voiceId} speed={speed} />
                       </div>
                     )}
                     {selectedEntry.partOfSpeech && (

@@ -102,12 +102,17 @@ export function ParadigmEmbed({ paradigmId, paradigmName, className }: ParadigmE
                       const ipaValue = isIPA ? extractIPA(cellValue) : null
                       const isEmpty = cellValue === "-" || cellValue === ""
 
+                      // Extract TTS settings if available
+                      const ttsSettings = paradigm?.language?.metadata?.tts
+                      const voiceId = ttsSettings?.voiceId
+                      const speed = ttsSettings?.speed
+
                       return (
                         <TableCell key={colIdx} className={isEmpty ? "text-muted-foreground/30" : ""}>
                           {isIPA && ipaValue ? (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{cellValue}</span>
-                              <IPASpeaker ipa={ipaValue} size="sm" />
+                              <IPASpeaker ipa={ipaValue} size="sm" voiceId={voiceId} speed={speed} />
                             </div>
                           ) : (
                             <span className={isEmpty ? "" : "font-medium"}>{cellValue}</span>

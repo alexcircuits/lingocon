@@ -214,6 +214,11 @@ export async function getParadigmById(paradigmId: string) {
         name: true,
         slots: true,
         notes: true,
+        language: {
+          select: {
+            metadata: true,
+          },
+        },
       },
     })
 

@@ -53,20 +53,18 @@ export function DictionaryEntryDialog({
     notes: "",
   })
 
+  // Calculate alphabet warnings (non-blocking validation)
+  const alphabetWarnings =
+    formData.lemma && symbols && symbols.length > 0
+      ? validateStringAgainstAlphabet(formData.lemma, symbols)
+      : []
+
   const { errors, touched, handleBlur, handleChange, validateForm } = useFormValidation(
     formData,
     {
       lemma: [
         commonRules.required("Lemma is required"),
         commonRules.maxLength(200),
-        {
-          validator: (value) => {
-            if (!symbols || symbols.length === 0) return true
-            const invalidChars = validateStringAgainstAlphabet(value, symbols)
-            return invalidChars.length === 0
-          },
-          message: "Contains characters not in your alphabet"
-        }
       ],
       gloss: [commonRules.required("Gloss is required"), commonRules.maxLength(500)],
       ipa: [commonRules.maxLength(100)],
@@ -198,13 +196,38 @@ export function DictionaryEntryDialog({
                 maxLength={200}
                 className={cn(
                   "font-custom-script",
-                  errors.lemma && touched.lemma && "border-destructive focus-visible:ring-destructive"
+                  errors.lemma && touched.lemma && "border-destructive focus-visible:ring-destructive",
+                  !errors.lemma && alphabetWarnings.length > 0 && "border-yellow-500 focus-visible:ring-yellow-500"
                 )}
               />
               {errors.lemma && touched.lemma && (
                 <div className="flex items-center gap-1 text-sm text-destructive">
                   <AlertCircle className="h-3.5 w-3.5" />
                   <span>{errors.lemma}</span>
+                </div>
+              )}
+              {!errors.lemma && alphabetWarnings.length > 0 && (
+                <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Contains characters not in your alphabet:{" "}
+                      <span className="font-mono font-medium">
+                        {alphabetWarnings.join(", ")}
+                      </span>
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-xs hover:bg-yellow-500/20 hover:text-yellow-700 dark:hover:text-yellow-300"
+                    onClick={() => {
+                      toast.success("Thanks for the feedback! We'll look into it.")
+                    }}
+                  >
+                    Report
+                  </Button>
                 </div>
               )}
             </div>

@@ -20,6 +20,7 @@ async function getLanguage(slug: string) {
           order: "asc",
         },
       },
+      metadata: true,
     },
   })
 
@@ -37,6 +38,7 @@ export default async function DictionaryPage({
 }) {
   const { slug } = await params
   const language = await getLanguage(slug)
+  console.log('DEBUG: DictionaryPage language.metadata:', JSON.stringify(language?.metadata, null, 2))
 
   if (!language) {
     notFound()
@@ -51,7 +53,12 @@ export default async function DictionaryPage({
         </p>
       </div>
 
-      <PublicDictionary entries={language.dictionaryEntries} symbols={language.scriptSymbols} />
+      <PublicDictionary
+        entries={language.dictionaryEntries}
+        symbols={language.scriptSymbols}
+        voiceId={(language.metadata as any)?.tts?.voiceId}
+        speed={(language.metadata as any)?.tts?.speed}
+      />
     </div>
   )
 }

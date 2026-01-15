@@ -34,51 +34,56 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
         }
     })
 
-    // Normalize the input string to NFD (canonical decomposition) to separate base chars from diacritics
-    // This allows us to check them individually if needed, OR we can check the composed form.
-    // Strategy:
-    // 1. Check if the grapheme cluster (composed char) is in the allowed set.
-    // 2. If not, check if it's composed of valid parts (base + allowed combining marks).
-
-    // Actually, let's keep it simple first.
-    // If the user defines "e" and "´" separately, then "é" should be valid.
-    // But "é" might be entered as U+00E9 (composed) or U+0065 U+0301 (decomposed).
+    // Sort allowed symbols by length (descending) so we match the longest valid symbol first
+    // This is crucial for digraphs (e.g. matching "ch" before "c" or "h")
+    const sortedSymbols = Array.from(allowedChars).sort((a, b) => b.length - a.length)
 
     const invalidChars: string[] = []
 
-    // Use Intl.Segmenter to iterate over grapheme clusters (user-perceived characters)
-    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" })
-    const segments = segmenter.segment(str)
+    // Normalize input to NFC for consistent matching with our allowed set
+    // We can also try NFD if NFC fails, or vice versa, but sticking to one is cleaner.
+    // Since we added both NFC and NFD to allowedChars, we can just consume the string.
+    let remaining = str.normalize("NFC")
 
-    for (const segment of segments) {
-        const char = segment.segment
-        const decomposed = char.normalize("NFD")
+    while (remaining.length > 0) {
+        // 1. Check if it starts with an ignored character (whitespace, digit, punctuation, symbol)
+        // We check one char at a time for these
+        // Intl.Segmenter is better for graphemes, but for regex checks on \s\d\p{P}\p{S}, one code point is usually providing the class.
+        // Let's use Segmenter just to be safe about what "one character" is.
 
-        // 1. Always allow whitespace, digits, and common punctuation symbols
-        // \s - whitespace, \d - digits, \p{P} - punctuation, \p{S} - symbols (math, etc.)
-        if (/^[\s\d\p{P}\p{S}]+$/u.test(char)) {
-            continue
-        }
+        let matchFound = false
 
-        // 2. Check if the exact composed char is allowed
-        // Normalize both to NFC/NFD to ensure consistent comparison
-        if (allowedChars.has(char) || allowedChars.has(char.normalize("NFC")) || allowedChars.has(char.normalize("NFD"))) {
-            continue
-        }
-
-        // 3. If composed char itself isn't explicitly allowed, check its parts
-        // Normalize to NFD to split base and diacritics
-        let isValidSequence = true
-
-        for (const codePoint of decomposed) {
-            if (!allowedChars.has(codePoint)) {
-                isValidSequence = false
+        // Try to match one of the allowed symbols at the beginning of the string
+        for (const symbol of sortedSymbols) {
+            if (remaining.startsWith(symbol)) {
+                remaining = remaining.slice(symbol.length)
+                matchFound = true
                 break
             }
         }
 
-        if (!isValidSequence) {
-            invalidChars.push(char)
+        if (matchFound) continue
+
+        // If no symbol matched, check if the next grapheme is a valid "ignored" character
+        // We need to extract the next grapheme
+        const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" })
+        const iterator = segmenter.segment(remaining)[Symbol.iterator]()
+        const nextSegment = iterator.next().value
+
+        if (nextSegment) {
+            const char = nextSegment.segment
+            // Check if it's whitespace, digits, or punctuation
+            if (/^[\s\d\p{P}\p{S}]+$/u.test(char)) {
+                remaining = remaining.slice(char.length)
+                matchFound = true
+            } else {
+                // If we get here, it's an invalid character
+                invalidChars.push(char)
+                remaining = remaining.slice(char.length)
+            }
+        } else {
+            // Should not happen if length > 0, but just in case
+            break;
         }
     }
 
