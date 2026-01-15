@@ -1,9 +1,16 @@
 -- AlterTable
 ALTER TABLE "users" ADD COLUMN     "adminNotes" TEXT,
 ADD COLUMN     "isSuspended" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "password" TEXT,
 ADD COLUMN     "suspendReason" TEXT,
 ADD COLUMN     "suspendedAt" TIMESTAMP(3);
+
+-- Safely add password column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'password') THEN
+        ALTER TABLE "users" ADD COLUMN "password" TEXT;
+    END IF;
+END $$;
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
