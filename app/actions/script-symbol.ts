@@ -10,6 +10,7 @@ import {
   type CreateScriptSymbolInput,
   type UpdateScriptSymbolInput,
 } from "@/lib/validations/script-symbol"
+import { checkScriptBadges } from "@/app/actions/badge"
 
 export async function createScriptSymbol(input: CreateScriptSymbolInput) {
   const userId = await getUserId()
@@ -50,6 +51,9 @@ export async function createScriptSymbol(input: CreateScriptSymbolInput) {
 
     revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
     revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
+
+    // Check for script-related badge achievements
+    checkScriptBadges(userId, validated.languageId).catch(console.error)
 
     return {
       success: true,

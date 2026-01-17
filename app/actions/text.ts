@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getDevUserId } from "@/lib/dev-auth"
 import { revalidatePath } from "next/cache"
 import { TextType } from "@prisma/client"
+import { checkContentBadges } from "@/app/actions/badge"
 
 function generateSlug(title: string): string {
   return title
@@ -85,6 +86,9 @@ export async function createText(data: {
   revalidatePath(`/studio/lang/${langSlug}/texts/${text.slug}`)
   revalidatePath(`/lang/${langSlug}/texts`)
   revalidatePath(`/lang/${langSlug}/texts/${text.slug}`)
+
+  // Check for content badges
+  checkContentBadges(userId).catch(console.error)
 
   return { text }
 }

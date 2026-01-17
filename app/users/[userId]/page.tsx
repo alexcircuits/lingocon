@@ -2,15 +2,21 @@ import Link from "next/link"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { LanguageCard } from "@/app/browse/components/language-card"
-import { User, Languages, Users } from "lucide-react"
+import { User, Medal, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { getFollowCounts, getFollowers, getFollowing } from "@/app/actions/follow"
-import { ProfileHeader } from "@/components/profile-header"
+import { getUserBadges } from "@/app/actions/badge"
 import { ActivityFeed } from "@/components/activity-feed"
 import { Footer } from "@/components/footer"
+import { BadgeGrid } from "@/components/badges"
+
+// New Components
+import { ProfileCover } from "@/components/profile/profile-cover"
+import { ProfileSidebar } from "@/components/profile/profile-sidebar"
+import { LanguageList } from "@/components/profile/language-list"
+import { BackButton } from "@/components/back-button"
 
 async function getUser(userId: string) {
   const user = await prisma.user.findUnique({
@@ -23,7 +29,6 @@ async function getUser(userId: string) {
       createdAt: true,
     },
   })
-
   return user
 }
 
@@ -48,15 +53,15 @@ async function getUserLanguages(userId: string) {
           dictionaryEntries: true,
         },
       },
+      scriptSymbols: { take: 0 }, // Hack to satisfy types if needed, or arguably just select all and letting Prismic infer
+      // actually LanguageCard needs specific fields. Let's just grab everything to be safe and simple since LanguageCard expects the full model
     },
     orderBy: {
       updatedAt: "desc",
     },
   })
-
   return languages
 }
-
 
 export default async function UserProfilePage({
   params,
@@ -75,161 +80,154 @@ export default async function UserProfilePage({
   const followCounts = await getFollowCounts(userId)
   const followersResult = await getFollowers(userId)
   const followingResult = await getFollowing(userId)
+  const badges = await getUserBadges(userId)
+  const earnedBadgesCount = badges.filter(b => b.isEarned).length
 
   const followers = followersResult.success ? followersResult.data : []
   const following = followingResult.success ? followingResult.data : []
-
   const isOwnProfile = session?.user?.id === userId
 
+  const stats = {
+    languages: languages.length,
+    followers: followCounts.success ? followCounts.followers : 0,
+    following: followCounts.success ? followCounts.following : 0,
+  }
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <ProfileHeader user={user} isOwnProfile={isOwnProfile} />
+    <div className="min-h-screen bg-background flex flex-col relative">
+      <BackButton />
+      <ProfileCover />
 
-      <div className="container mx-auto px-4 py-12">
-        {/* Stats Grid */}
-        <div className="mb-12 grid grid-cols-3 divide-x divide-border rounded-xl border bg-card p-4 shadow-sm md:grid-cols-3">
-          <div className="flex flex-col items-center justify-center gap-1 px-4 text-center">
-            <span className="text-2xl font-bold text-foreground">{languages.length}</span>
-            <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              <Languages className="h-3.5 w-3.5" />
-              Languages
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 px-4 text-center">
-            <span className="text-2xl font-bold text-foreground">{followCounts.success ? followCounts.followers : 0}</span>
-            <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              Followers
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 px-4 text-center">
-            <span className="text-2xl font-bold text-foreground">{followCounts.success ? followCounts.following : 0}</span>
-            <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              <User className="h-3.5 w-3.5" />
-              Following
-            </span>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 md:px-6 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[320px_1fr] gap-8 pb-20">
 
-        <Tabs defaultValue="languages" className="space-y-8">
-          <div className="flex justify-center md:justify-start">
-            <TabsList className="bg-muted/40 p-1">
-              <TabsTrigger value="languages" className="px-6">Languages</TabsTrigger>
-              <TabsTrigger value="activity" className="px-6">Activity</TabsTrigger>
-              <TabsTrigger value="followers" className="px-6">Followers</TabsTrigger>
-              <TabsTrigger value="following" className="px-6">Following</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="languages" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {languages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-dashed">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-                  <Languages className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold">No public languages</h3>
-                <p className="mt-2 text-muted-foreground max-w-sm">
-                  {isOwnProfile ? "You haven't published any languages yet." : "This user hasn't created any public languages yet."}
-                </p>
-                {isOwnProfile && (
-                  <Link href="/browse" className="mt-6">
-                    <Button variant="outline">Create Language</Button>
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {languages.map((language) => (
-                  <LanguageCard key={language.id} language={language} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="activity" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="max-w-2xl">
-              <h3 className="text-lg font-semibold mb-6">Recent Activity</h3>
-              <ActivityFeed userId={userId} />
+          {/* Left Sidebar - Sticky on Desktop */}
+          <aside className="relative">
+            <div className="md:sticky md:top-24">
+              <ProfileSidebar
+                user={user}
+                stats={stats}
+                isOwnProfile={isOwnProfile}
+                badges={badges}
+              />
             </div>
-          </TabsContent>
+          </aside>
 
-          <TabsContent value="followers" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {followers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-dashed">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-                  <Users className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold">No followers yet</h3>
-                <p className="mt-2 text-muted-foreground">
-                  {isOwnProfile ? "Share your work to gain followers!" : "Be the first to follow this user."}
-                </p>
+          {/* Main Content Area */}
+          <main className="mt-8 md:mt-12 min-w-0">
+            <Tabs defaultValue="languages" className="space-y-6">
+              <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-0 md:px-0 md:static md:bg-transparent md:backdrop-blur-none md:p-0">
+                <TabsList className="bg-muted/40 p-1 w-full flex justify-start overflow-x-auto no-scrollbar md:w-auto md:inline-flex">
+                  <TabsTrigger value="languages" className="flex-1 md:flex-none md:w-32">Languages</TabsTrigger>
+                  <TabsTrigger value="badges" className="flex-1 md:flex-none md:gap-1.5 md:px-6">
+                    Badges
+                    {earnedBadgesCount > 0 && (
+                      <span className="ml-1 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full hidden md:inline-flex">
+                        {earnedBadgesCount}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="activity" className="flex-1 md:flex-none md:w-28">Activity</TabsTrigger>
+                  <TabsTrigger value="social" className="flex-1 md:flex-none md:w-28">Network</TabsTrigger>
+                </TabsList>
               </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {followers.map((follower) => (
-                  <div key={follower.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:bg-muted/20 hover:border-border/80">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={follower.image || undefined} />
-                        <AvatarFallback>{follower.name?.[0] || "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="font-medium truncate">{follower.name || "Anonymous"}</span>
-                        <span className="text-xs text-muted-foreground truncate">{follower.email}</span>
-                      </div>
-                    </div>
-                    <Link href={`/users/${follower.id}`}>
-                      <Button variant="ghost" size="sm">View</Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
 
-          <TabsContent value="following" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {following.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-dashed">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-                  <User className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold">Not following anyone</h3>
-                <p className="mt-2 text-muted-foreground">
-                  {isOwnProfile ? "Explore the community to find creators to follow!" : "This user isn't following anyone yet."}
-                </p>
-                {isOwnProfile && (
-                  <Link href="/browse" className="mt-6">
-                    <Button variant="outline">Browse Users</Button>
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {following.map((followed) => (
-                  <div key={followed.id} className="flex items-center justify-between rounded-xl border bg-card p-4 transition-all hover:bg-muted/20 hover:border-border/80">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={followed.image || undefined} />
-                        <AvatarFallback>{followed.name?.[0] || "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="font-medium truncate">{followed.name || "Anonymous"}</span>
-                        <span className="text-xs text-muted-foreground truncate">{followed.email}</span>
-                      </div>
-                    </div>
-                    <Link href={`/users/${followed.id}`}>
-                      <Button variant="ghost" size="sm">View</Button>
-                    </Link>
+              <TabsContent value="languages" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <LanguageList languages={languages} isOwnProfile={isOwnProfile} />
+              </TabsContent>
+
+              <TabsContent value="badges" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-card border rounded-xl p-6 shadow-sm">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Medal className="h-5 w-5 text-primary" />
+                      Achievements
+                    </h2>
+                    <p className="text-muted-foreground text-sm">Track your progress and earnings</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+                  <BadgeGrid badges={badges} showFilters={true} showProgress={true} />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="activity" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="max-w-2xl">
+                  <h3 className="text-lg font-semibold mb-6">Recent Activity</h3>
+                  <ActivityFeed userId={userId} />
+                </div>
+              </TabsContent>
+
+              {/* Combined Social Tab for cleaner UI */}
+              <TabsContent value="social" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid gap-8">
+                  {/* Followers */}
+                  <section>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Followers ({stats.followers})
+                    </h3>
+                    {followers.length === 0 ? (
+                      <div className="text-center py-8 border rounded-xl border-dashed bg-muted/20">
+                        <p className="text-muted-foreground">No followers yet</p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {followers.map((follower) => (
+                          <Link key={follower.id} href={`/users/${follower.id}`}>
+                            <div className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={follower.image || undefined} />
+                                <AvatarFallback>{follower.name?.[0] || "U"}</AvatarFallback>
+                              </Avatar>
+                              <div className="overflow-hidden">
+                                <p className="font-medium truncate">{follower.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{follower.email}</p>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Following */}
+                  <section>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Following ({stats.following})
+                    </h3>
+                    {following.length === 0 ? (
+                      <div className="text-center py-8 border rounded-xl border-dashed bg-muted/20">
+                        <p className="text-muted-foreground">Not following anyone yet</p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {following.map((followed) => (
+                          <Link key={followed.id} href={`/users/${followed.id}`}>
+                            <div className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={followed.image || undefined} />
+                                <AvatarFallback>{followed.name?.[0] || "U"}</AvatarFallback>
+                              </Avatar>
+                              <div className="overflow-hidden">
+                                <p className="font-medium truncate">{followed.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{followed.email}</p>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </main>
+        </div>
       </div>
-      <Footer />
+
+      <div className="mt-auto">
+        <Footer />
+      </div>
     </div>
   )
 }
-
-

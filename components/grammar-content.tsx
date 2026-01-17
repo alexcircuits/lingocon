@@ -2,8 +2,13 @@
 
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import { Table } from "@tiptap/extension-table"
+import { TableRow } from "@tiptap/extension-table-row"
+import { TableCell } from "@tiptap/extension-table-cell"
+import { TableHeader } from "@tiptap/extension-table-header"
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
+import { CustomFont } from "@/lib/tiptap/custom-font-extension"
 import { IGTBlock } from "@/components/igt-block"
 import { ParadigmEmbed } from "@/components/paradigm-embed"
 import { useMemo } from "react"
@@ -44,7 +49,16 @@ export function GrammarContent({ content, className }: GrammarContentProps) {
   }, [content])
 
   const editor = useEditor({
-    extensions: [StarterKit, IGT, Paradigm],
+    extensions: [
+      StarterKit,
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      IGT,
+      Paradigm,
+      CustomFont
+    ],
     content: processedContent as any,
     editable: false,
     immediatelyRender: false,

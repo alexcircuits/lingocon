@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { getDevUserId } from "@/lib/dev-auth"
 import { revalidatePath } from "next/cache"
+import { checkContentBadges } from "@/app/actions/badge"
 
 function generateSlug(title: string): string {
   return title
@@ -77,6 +78,11 @@ export async function createArticle(data: {
   revalidatePath(`/studio/lang/${langSlug}/articles/${article.slug}`)
   revalidatePath(`/lang/${langSlug}/articles`)
   revalidatePath(`/lang/${langSlug}/articles/${article.slug}`)
+
+  // Check for content badges if article is published
+  if (data.published) {
+    checkContentBadges(userId).catch(console.error)
+  }
 
   return { article }
 }

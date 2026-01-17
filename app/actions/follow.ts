@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { toggleFollowSchema, type ToggleFollowInput } from "@/lib/validations/follow"
+import { checkFollowerBadges } from "@/app/actions/badge"
 
 export async function toggleFollow(input: ToggleFollowInput) {
   const userId = await getUserId()
@@ -52,6 +53,10 @@ export async function toggleFollow(input: ToggleFollowInput) {
           followingId: validated.followingId,
         },
       })
+
+      // Check for follower badges for the user being followed
+      checkFollowerBadges(validated.followingId).catch(console.error)
+
       return {
         success: true,
         isFollowing: true,

@@ -10,6 +10,7 @@ import {
   type CreateGrammarPageInput,
   type UpdateGrammarPageInput,
 } from "@/lib/validations/grammar-page"
+import { checkGrammarBadges } from "@/app/actions/badge"
 
 export async function createGrammarPage(input: CreateGrammarPageInput) {
   const userId = await getUserId()
@@ -68,6 +69,9 @@ export async function createGrammarPage(input: CreateGrammarPageInput) {
     revalidatePath(`/studio/lang/${page.language.slug}/grammar/${page.slug}`)
     revalidatePath(`/lang/${page.language.slug}/grammar`)
     revalidatePath(`/lang/${page.language.slug}/grammar/${page.slug}`)
+
+    // Check for grammar-related badge achievements
+    checkGrammarBadges(userId).catch(console.error)
 
     return {
       success: true,

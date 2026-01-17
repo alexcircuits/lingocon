@@ -10,6 +10,7 @@ import {
   type CreateLanguageInput,
   type UpdateLanguageInput,
 } from "@/lib/validations/language"
+import { checkLanguageBadges } from "@/app/actions/badge"
 
 export async function createLanguage(input: CreateLanguageInput) {
   const userId = await getUserId()
@@ -47,6 +48,9 @@ export async function createLanguage(input: CreateLanguageInput) {
 
     revalidatePath("/dashboard")
     revalidatePath("/browse")
+
+    // Check for language-related badge achievements
+    checkLanguageBadges(userId).catch(console.error)
 
     return {
       success: true,
@@ -126,6 +130,11 @@ export async function updateLanguage(input: UpdateLanguageInput) {
     revalidatePath(`/studio/lang/${updated.slug}`)
     revalidatePath(`/studio/lang/${updated.slug}/settings`)
     revalidatePath(`/lang/${updated.slug}`)
+
+    // Check for "first_publish" badge if visibility changed to PUBLIC
+    if (validated.visibility === "PUBLIC") {
+      checkLanguageBadges(userId).catch(console.error)
+    }
 
     return {
       success: true,

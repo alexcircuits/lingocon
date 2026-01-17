@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -58,6 +59,7 @@ export default function RootLayout({
         >
           <SessionProvider>
             {children}
+            <AchievementListener />
             <Toaster
               position="bottom-right"
               toastOptions={{

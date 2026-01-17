@@ -12,6 +12,7 @@ import {
   type UpdateDictionaryEntryInput,
 } from "@/lib/validations/dictionary-entry"
 import { createActivity } from "@/lib/utils/activity"
+import { checkDictionaryBadges } from "@/app/actions/badge"
 
 export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
   const userId = await getUserId()
@@ -64,6 +65,9 @@ export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
 
     revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
     revalidatePath(`/lang/${entry.language.slug}/dictionary`)
+
+    // Check for dictionary-related badge achievements
+    checkDictionaryBadges(userId).catch(console.error)
 
     return {
       success: true,

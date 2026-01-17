@@ -6,6 +6,8 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { FollowButton } from "@/components/follow-button"
+import { BadgeShowcase } from "@/components/badges"
+import { BadgeData } from "@/components/badges/badge-card"
 
 interface ProfileHeaderProps {
     user: {
@@ -16,9 +18,10 @@ interface ProfileHeaderProps {
         createdAt: Date
     }
     isOwnProfile: boolean
+    badges?: BadgeData[]
 }
 
-export function ProfileHeader({ user, isOwnProfile }: ProfileHeaderProps) {
+export function ProfileHeader({ user, isOwnProfile, badges = [] }: ProfileHeaderProps) {
     return (
         <div className="relative border-b bg-card pb-12 pt-24 md:pt-32">
             {/* Geometric Pattern Background */}
@@ -50,6 +53,13 @@ export function ProfileHeader({ user, isOwnProfile }: ProfileHeaderProps) {
                                 <span>Joined {formatDate(user.createdAt)}</span>
                             </div>
                         </div>
+
+                        {/* Badges Showcase */}
+                        {badges && badges.length > 0 && (
+                            <div className="mt-4 flex justify-center md:justify-start">
+                                <BadgeShowcase badges={badges} userId={user.id} />
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex shrink-0 gap-2 pb-2">

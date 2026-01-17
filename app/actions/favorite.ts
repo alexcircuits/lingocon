@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
+import { checkFavoriteBadges } from "@/app/actions/badge"
 
 export interface ToggleFavoriteInput {
   languageId: string
@@ -47,6 +48,15 @@ export async function toggleFavorite(
           languageId: input.languageId,
         },
       })
+
+      // Check for favorite badges for the language owner
+      const language = await prisma.language.findUnique({
+        where: { id: input.languageId },
+        select: { ownerId: true },
+      })
+      if (language) {
+        checkFavoriteBadges(language.ownerId).catch(console.error)
+      }
     }
 
     // Get updated favorite count

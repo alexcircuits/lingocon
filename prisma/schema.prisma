@@ -40,6 +40,7 @@ model User {
   articles  Article[]
   texts     Text[]
   auditLogs AuditLog[]
+  userBadges UserBadge[]
 
   @@map("users")
 }
@@ -403,4 +404,56 @@ model PlatformUpdate {
   updatedAt   DateTime @updatedAt
 
   @@map("platform_updates")
+}
+
+// Badges and Achievements
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum BadgeCategory {
+  LANGUAGES     // Creating and publishing languages
+  DICTIONARY    // Dictionary entries
+  GRAMMAR       // Grammar pages
+  SCRIPT        // Alphabet/script symbols
+  SOCIAL        // Followers, favorites
+  CONTENT       // Articles, texts
+  ENGAGEMENT    // Streaks, consistency
+}
+
+model Badge {
+  id          String        @id @default(cuid())
+  key         String        @unique  // e.g., "first_language", "dictionary_100"
+  name        String                 // Display name
+  description String        @db.Text // How to earn it
+  icon        String                 // Lucide icon name or emoji
+  tier        BadgeTier     @default(BRONZE)
+  category    BadgeCategory
+  threshold   Int           @default(1)  // Number required to earn
+  createdAt   DateTime      @default(now())
+
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String    @id @default(cuid())
+  userId    String
+  badgeId   String
+  progress  Int       @default(0)  // Current progress toward threshold
+  earnedAt  DateTime?              // Null if not yet earned
+  notified  Boolean   @default(false) // Whether the user has been notified
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+  @@map("user_badges")
 }

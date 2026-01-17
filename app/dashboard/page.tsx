@@ -11,7 +11,9 @@ import { AnimatedLanguageCard } from "./components/animated-language-card"
 import { LanguageImportDialog } from "@/components/language-import-dialog"
 import { ActivityFeed } from "@/components/activity-feed"
 import { getRecentActivitiesForUserLanguages } from "@/lib/utils/activity"
+import { getNextBadges } from "@/app/actions/badge"
 import { Navbar } from "@/components/navbar"
+import { BadgeProgress } from "@/components/badges"
 import { cn } from "@/lib/utils"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
 
@@ -84,6 +86,7 @@ export default async function DashboardPage() {
   const languages = await getLanguages(userId)
   const stats = await getStats(userId)
   const activities = userId ? await getRecentActivitiesForUserLanguages(userId, 10) : []
+  const nextBadges = userId ? await getNextBadges(userId) : []
 
   // Fetch isAdmin status from database
   const dbUser = userId ? await prisma.user.findUnique({
@@ -213,21 +216,35 @@ export default async function DashboardPage() {
           </div>
 
           {/* Activity Sidebar */}
-          <div className="space-y-5">
-            <h2 className="text-lg font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-violet-500" />
-              Recent Activity
-            </h2>
-            <div className="bg-card border border-border/50 rounded-xl p-4 min-h-[280px]">
-              {activities.length > 0 ? (
-                <ActivityFeed activities={activities} showLanguage={true} />
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
-                  <Calendar className="h-8 w-8 mb-3 opacity-30" />
-                  <p className="text-sm font-medium">No activity yet</p>
-                  <p className="text-xs mt-1">Your changes will appear here</p>
+          <div className="space-y-6">
+            {/* Achievements Progress */}
+            {nextBadges.length > 0 && (
+              <div className="bg-card border border-border/50 rounded-xl p-4">
+                <BadgeProgress badges={nextBadges} />
+                <div className="mt-4 pt-3 border-t border-border/40 text-center">
+                  <Link href={`/users/${userId}?tab=badges`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                    View all achievements
+                  </Link>
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-violet-500" />
+                Recent Activity
+              </h2>
+              <div className="bg-card border border-border/50 rounded-xl p-4 min-h-[280px]">
+                {activities.length > 0 ? (
+                  <ActivityFeed activities={activities} showLanguage={true} />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                    <Calendar className="h-8 w-8 mb-3 opacity-30" />
+                    <p className="text-sm font-medium">No activity yet</p>
+                    <p className="text-xs mt-1">Your changes will appear here</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

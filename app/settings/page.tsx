@@ -8,25 +8,14 @@ import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
 import { updateUser } from "@/app/actions/user"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
-import { Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft, User, Mail, Shield, Bell } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
 
 export default function SettingsPage() {
     const { data: session, update } = useSession()
@@ -41,7 +30,6 @@ export default function SettingsPage() {
         },
     })
 
-    // Update form default values when session loads
     useEffect(() => {
         if (session?.user) {
             form.reset({
@@ -60,109 +48,141 @@ export default function SettingsPage() {
             })
 
             if (result.error) {
-                toast.error("Error", {
-                    description: result.error,
-                })
+                toast.error(result.error)
             } else {
-                toast.success("Profile updated", {
-                    description: "Your settings have been saved successfully.",
-                })
-                await update() // Update client-side session
+                toast.success("Profile updated successfully")
+                await update()
                 router.refresh()
             }
         } catch (error) {
-            toast.error("Error", {
-                description: "Failed to save changes. Please try again.",
-            })
+            toast.error("Failed to save changes")
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="container max-w-4xl py-10 space-y-8">
-            <div className="flex items-center justify-between space-y-2">
+        <div className="min-h-screen bg-muted/20">
+            <div className="container max-w-4xl py-10 space-y-8">
+                {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.back()}
-                        className="shrink-0"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-                        <p className="text-muted-foreground">
-                            Manage your account settings and profile preferences.
-                        </p>
+                        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+                        <p className="text-muted-foreground">Manage your account and preferences</p>
                     </div>
                 </div>
-            </div>
 
-            <div className="grid gap-8 md:grid-cols-[200px_1fr]">
-                <nav className="flex flex-col space-y-1">
-                    <Button variant="ghost" className="justify-start font-semibold bg-muted/50 hover:bg-muted/70">Profile</Button>
-                    <Button variant="ghost" className="justify-start text-muted-foreground" disabled>Account</Button>
-                    <Button variant="ghost" className="justify-start text-muted-foreground" disabled>Notifications</Button>
-                </nav>
+                <Tabs defaultValue="profile" className="space-y-6">
+                    <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="account">Account</TabsTrigger>
+                        <TabsTrigger value="notifications" disabled className="opacity-50">Notifications</TabsTrigger>
+                    </TabsList>
 
-                <div className="grid gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Profile</CardTitle>
-                            <CardDescription>
-                                This is how others will see you on the site.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                    <div className="space-y-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="name"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Display Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Your name" {...field} />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        This is your public display name. It can be your real name or a pseudonym.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="image"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Avatar URL</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="https://example.com/avatar.jpg" {...field} />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        Enter a URL for your profile picture.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                    <TabsContent value="profile" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Public Profile</CardTitle>
+                                <CardDescription>
+                                    This information will be displayed publicly on your profile page.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                        <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                                            {/* Avatar Preview */}
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Avatar className="h-24 w-24 border mb-2">
+                                                    <AvatarImage src={form.watch("image") || session?.user?.image || undefined} />
+                                                    <AvatarFallback className="text-2xl">{session?.user?.name?.[0] || "U"}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="text-xs text-muted-foreground">Preview</span>
+                                            </div>
+
+                                            {/* Form Fields */}
+                                            <div className="flex-1 space-y-4 w-full">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="name"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Display Name</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="Your name" {...field} />
+                                                            </FormControl>
+                                                            <FormDescription>
+                                                                Visible to other users.
+                                                            </FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="image"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Avatar URL</FormLabel>
+                                                            <FormControl>
+                                                                <div className="flex gap-2">
+                                                                    <Input placeholder="https://..." {...field} />
+                                                                </div>
+                                                            </FormControl>
+                                                            <FormDescription>
+                                                                Link to an image for your profile picture.
+                                                            </FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <Separator />
+
+                                        <div className="flex justify-end">
+                                            <Button type="submit" disabled={loading} className="min-w-[120px]">
+                                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Save Changes
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </Form>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="account" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Account Details</CardTitle>
+                                <CardDescription>View your account information.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email Address</label>
+                                    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+                                        <Mail className="mr-2 h-4 w-4" />
+                                        {session?.user?.email}
                                     </div>
-                                    <div className="flex justify-start">
-                                        <Button type="submit" disabled={loading}>
-                                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Save Changes
-                                        </Button>
+                                    <p className="text-[0.8rem] text-muted-foreground">
+                                        Managed by your authentication provider.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Account ID</label>
+                                    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono text-muted-foreground">
+                                        {session?.user?.id}
                                     </div>
-                                </form>
-                            </Form>
-                        </CardContent>
-                    </Card>
-                </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     )
