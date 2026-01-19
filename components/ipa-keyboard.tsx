@@ -453,6 +453,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                     <div
                         className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                         onWheelCapture={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchMove={(e) => e.stopPropagation()}
+                        data-radix-scroll-area-viewport
                     >
                         {filteredSymbols.length > 0 ? (
                             renderSymbolGrid(filteredSymbols)
@@ -486,6 +489,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             <div
                                 className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                                 onWheelCapture={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                data-radix-scroll-area-viewport
                             >
                                 {renderSymbolGrid(IPA_CONSONANTS)}
                             </div>
@@ -494,6 +500,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             <div
                                 className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                                 onWheelCapture={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                data-radix-scroll-area-viewport
                             >
                                 {renderSymbolGrid(IPA_VOWELS)}
                             </div>
@@ -502,6 +511,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             <div
                                 className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                                 onWheelCapture={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                data-radix-scroll-area-viewport
                             >
                                 {renderSymbolGrid(IPA_DIACRITICS)}
                             </div>
@@ -510,6 +522,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             <div
                                 className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                                 onWheelCapture={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                data-radix-scroll-area-viewport
                             >
                                 {renderSymbolGrid(IPA_SUPRASEGMENTALS)}
                             </div>
@@ -518,6 +533,9 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             <div
                                 className="h-[280px] overflow-y-auto pr-2 touch-pan-y overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40"
                                 onWheelCapture={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                data-radix-scroll-area-viewport
                             >
                                 {renderSymbolGrid(IPA_CLICKS)}
                             </div>
