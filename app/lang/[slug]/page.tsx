@@ -41,6 +41,7 @@ async function getLanguage(slug: string) {
         },
       },
       articles: {
+        where: { published: true },
         take: 3,
         orderBy: { createdAt: "desc" },
         select: {
@@ -51,6 +52,7 @@ async function getLanguage(slug: string) {
         },
       },
       texts: {
+        where: { published: true },
         take: 3,
         orderBy: { createdAt: "desc" },
         select: {

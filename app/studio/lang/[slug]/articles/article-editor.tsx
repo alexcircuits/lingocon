@@ -244,7 +244,7 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
 
           <Button type="submit" disabled={isPending}>
             <Save className="mr-2 h-4 w-4" />
-            {isPending ? "Saving..." : article ? "Update Article" : "Publish Article"}
+            {isPending ? "Saving..." : article ? "Save Changes" : "Save Article"}
           </Button>
         </div>
       </form>

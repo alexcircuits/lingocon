@@ -66,8 +66,8 @@ export async function createArticle(data: {
       excerpt: data.excerpt,
       content: data.content,
       coverImage: data.coverImage,
-      published: data.published || false,
-      publishedAt: data.published ? new Date() : null,
+      published: true,
+      publishedAt: new Date(),
       paradigmId: data.paradigmId || null,
       languageId: data.languageId,
       authorId: userId,
@@ -140,7 +140,8 @@ export async function updateArticle(
       ...data,
       slug,
       paradigmId: data.paradigmId !== undefined ? (data.paradigmId || null) : article.paradigmId,
-      publishedAt: data.published && !article.published ? new Date() : article.publishedAt,
+      published: true,
+      publishedAt: !article.published ? new Date() : article.publishedAt,
     }
   })
 

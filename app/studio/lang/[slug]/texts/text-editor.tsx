@@ -322,7 +322,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
 
           <Button type="submit" disabled={isPending}>
             <Save className="mr-2 h-4 w-4" />
-            {isPending ? "Saving..." : text ? "Update Text" : "Save Text"}
+            {isPending ? "Saving..." : text ? "Save Changes" : "Save Text"}
           </Button>
         </div>
       </form>

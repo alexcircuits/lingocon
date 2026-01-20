@@ -75,7 +75,7 @@ export async function createText(data: {
       fileName: data.fileName,
       fileSize: data.fileSize,
       coverImage: data.coverImage,
-      published: data.published || false,
+      published: true,
       paradigmId: data.paradigmId || null,
       languageId: data.languageId,
       authorId: userId,
@@ -148,6 +148,7 @@ export async function updateText(
     where: { id },
     data: {
       ...data,
+      published: true,
       slug,
       paradigmId: data.paradigmId !== undefined ? (data.paradigmId || null) : text.paradigmId,
     }
