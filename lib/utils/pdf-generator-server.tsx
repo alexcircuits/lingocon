@@ -138,8 +138,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    borderRadius: 4,
-    overflow: "hidden",
   },
   tableRow: {
     flexDirection: "row",
@@ -173,8 +171,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 8,
     backgroundColor: "#fcfcfc",
-    borderRadius: 4,
-    borderLeft: "2 solid #cbd5e1",
+    borderLeftWidth: 2,
+    borderLeftColor: "#cbd5e1",
   },
   lemma: {
     fontSize: 12,
@@ -291,7 +289,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
           return <View key={index} style={{ height: 10 }} />
         case "igt":
           return (
-            <View key={index} style={[styles.table, { backgroundColor: "#f8fafc", padding: 8, borderLeft: "4 solid #cbd5e1" }]}>
+            <View key={index} style={[styles.table, { backgroundColor: "#f8fafc", padding: 8, borderLeftWidth: 4, borderLeftColor: "#cbd5e1" }]}>
               <Text style={{ fontSize: 12, fontFamily: "NotoSans", fontWeight: "bold" }}>{node.attrs?.sentence}</Text>
               <Text style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{node.attrs?.gloss}</Text>
               <Text style={{ fontSize: 11, fontStyle: "italic", marginTop: 4 }}>{node.attrs?.translation}</Text>

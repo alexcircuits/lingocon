@@ -99,34 +99,71 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate PDF
-    const pdfDocument = React.createElement(LanguagePDFDocument, {
-      language,
-      flagUrl: flatPath,
-      scriptSymbols: language.scriptSymbols,
-      grammarPages: language.grammarPages,
-      dictionaryEntries: language.dictionaryEntries,
-      paradigms: language.paradigms,
-    }) as React.ReactElement
+    let pdfBuffer: Buffer | Uint8Array
+    try {
+      const pdfDocument = React.createElement(LanguagePDFDocument, {
+        language,
+        flagUrl: flatPath,
+        scriptSymbols: language.scriptSymbols,
+        grammarPages: language.grammarPages,
+        dictionaryEntries: language.dictionaryEntries,
+        paradigms: language.paradigms,
+      }) as React.ReactElement
 
-    const pdfBuffer = await renderToBuffer(pdfDocument)
+      pdfBuffer = await renderToBuffer(pdfDocument)
+    } catch (renderError) {
+      const err = renderError as Error
+      console.error("PDF Render Error:", {
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+      })
+      return NextResponse.json(
+        {
+          error: "Failed to render PDF document",
+          stage: "render",
+          details: err.message,
+          errorName: err.name,
+        },
+        { status: 500 }
+      )
+    }
 
-    // Convert buffer to Uint8Array for NextResponse
-    const pdfArray = Buffer.isBuffer(pdfBuffer)
-      ? new Uint8Array(pdfBuffer)
-      : new Uint8Array(pdfBuffer as ArrayBuffer)
+    // Convert to ArrayBuffer for NextResponse (ArrayBuffer is BodyInit compatible)
+    const bufferData = Buffer.isBuffer(pdfBuffer)
+      ? pdfBuffer
+      : Buffer.from(pdfBuffer)
+
+    // Create a new ArrayBuffer from the buffer data
+    const uint8Array = new Uint8Array(bufferData)
+    const arrayBuffer = uint8Array.buffer.slice(
+      uint8Array.byteOffset,
+      uint8Array.byteOffset + uint8Array.byteLength
+    ) as ArrayBuffer
 
     // Return PDF as download
-    return new NextResponse(pdfArray, {
+    return new NextResponse(arrayBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${language.slug}-documentation.pdf"`,
-        "Content-Length": pdfArray.length.toString(),
+        "Content-Length": bufferData.length.toString(),
       },
     })
   } catch (error) {
-    console.error("Error generating PDF:", error)
+    const err = error as Error
+    console.error("PDF Export Error:", {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+    })
     return NextResponse.json(
-      { error: "Failed to generate PDF" },
+      {
+        error: "Failed to generate PDF",
+        stage: "general",
+        details: err.message,
+        errorName: err.name,
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      },
       { status: 500 }
     )
   }
