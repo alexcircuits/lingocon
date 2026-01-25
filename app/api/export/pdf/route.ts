@@ -5,7 +5,6 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { join } from "path"
 import { promises as fs } from "fs"
-import sharp from "sharp"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 
 export const dynamic = "force-dynamic"
@@ -86,16 +85,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Language not found" }, { status: 404 })
     }
 
-    // Resolve flag path to absolute disk path if it's a relative upload URL
-    // Validate and load image
-    const flagBuffer = await fetchAndValidateImage(language.flagUrl)
+    // Flag images removed as per user request
+    const flagBuffer = null
 
     // Generate PDF
     let pdfBuffer: Buffer | Uint8Array
     try {
       const pdfDocument = React.createElement(LanguagePDFDocument, {
         language,
-        flagUrl: flagBuffer,
+        flagUrl: null,
         scriptSymbols: language.scriptSymbols,
         grammarPages: language.grammarPages,
         dictionaryEntries: language.dictionaryEntries,
@@ -161,54 +159,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * Validates and attempts to read an image into a Buffer.
- * Checks for magic numbers to ensure it's a valid JPG or PNG.
- */
-async function fetchAndValidateImage(url: string | null): Promise<Buffer | null> {
-  if (!url) return null
 
-  try {
-    let buffer: Buffer
-
-    // Handle local file
-    if (url.startsWith("/uploads/")) {
-      const publicDir = join(process.cwd(), "public")
-      const filePath = join(publicDir, url)
-
-      try {
-        buffer = await fs.readFile(filePath)
-      } catch (e) {
-        console.warn(`[PDF Export] File not found: ${filePath}`)
-        return null
-      }
-    } else if (url.startsWith("http://") || url.startsWith("https://")) {
-      // Remote URL
-      const response = await fetch(url)
-      if (!response.ok) {
-        console.warn(`[PDF Export] Failed to fetch image: ${url} - ${response.statusText}`)
-        return null
-      }
-      const arrayBuffer = await response.arrayBuffer()
-      buffer = Buffer.from(arrayBuffer)
-    } else {
-      // Unknown or unsupported path type
-      return null
-    }
-
-    // Convert using sharp (handles WebP, JPEG, PNG, etc)
-    try {
-      const pngBuffer = await sharp(buffer)
-        .png()
-        .toBuffer()
-      return pngBuffer
-    } catch (e) {
-      console.warn(`[PDF Export] Failed to convert image ${url} to PNG:`, e)
-      return null
-    }
-
-  } catch (error) {
-    console.error(`[PDF Export] Error processing image ${url}:`, error)
-    return null
-  }
-}
