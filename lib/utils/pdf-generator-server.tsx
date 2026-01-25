@@ -85,7 +85,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 9,
     color: "#94a3b8",
-    borderTop: "1 solid #e2e8f0",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
     paddingTop: 10,
   },
   sectionTitle: {
@@ -94,7 +95,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     color: "#0f172a",
-    borderBottom: "2 solid #0f172a",
+    borderBottomWidth: 2,
+    borderBottomColor: "#0f172a",
     paddingBottom: 8,
   },
   h2: {
