@@ -4,6 +4,7 @@ import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { join } from "path"
+import { promises as fs } from "fs"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 
 export const dynamic = "force-dynamic"
@@ -85,41 +86,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Resolve flag path to absolute disk path if it's a relative upload URL
-    let flatPath = language.flagUrl
-
-    // Check if image format is supported by PDFKit (JPG, PNG)
-    // PDFKit does not support WebP, GIF, SVG, etc.
-    if (flatPath) {
-      const lower = flatPath.toLowerCase()
-      const isSupported =
-        lower.endsWith(".jpg") ||
-        lower.endsWith(".jpeg") ||
-        lower.endsWith(".png")
-
-      if (!isSupported) {
-        console.warn(`[PDF Export] Skipped unsupported image format: ${flatPath}`)
-        flatPath = null
-      }
-    }
-
-    if (flatPath && flatPath.startsWith("/uploads/")) {
-      const absolutePath = join(process.cwd(), "public", flatPath)
-      // Verify file exists to prevent PDF generation crash
-      const { existsSync } = require("fs")
-      if (existsSync(absolutePath)) {
-        flatPath = absolutePath
-      } else {
-        console.warn(`Flag image not found at path: ${absolutePath}`)
-        flatPath = null
-      }
-    }
+    // Validate and load image
+    const flagBuffer = await fetchAndValidateImage(language.flagUrl)
 
     // Generate PDF
     let pdfBuffer: Buffer | Uint8Array
     try {
       const pdfDocument = React.createElement(LanguagePDFDocument, {
         language,
-        flagUrl: flatPath,
+        flagUrl: flagBuffer,
         scriptSymbols: language.scriptSymbols,
         grammarPages: language.grammarPages,
         dictionaryEntries: language.dictionaryEntries,
@@ -182,6 +157,63 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Validates and attempts to read an image into a Buffer.
+ * Checks for magic numbers to ensure it's a valid JPG or PNG.
+ */
+async function fetchAndValidateImage(url: string | null): Promise<Buffer | null> {
+  if (!url) return null
+
+  try {
+    let buffer: Buffer
+
+    // Handle local file
+    if (url.startsWith("/uploads/")) {
+      const publicDir = join(process.cwd(), "public")
+      const filePath = join(publicDir, url)
+
+      try {
+        buffer = await fs.readFile(filePath)
+      } catch (e) {
+        console.warn(`[PDF Export] File not found: ${filePath}`)
+        return null
+      }
+    } else if (url.startsWith("http://") || url.startsWith("https://")) {
+      // Remote URL
+      const response = await fetch(url)
+      if (!response.ok) {
+        console.warn(`[PDF Export] Failed to fetch image: ${url} - ${response.statusText}`)
+        return null
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      buffer = Buffer.from(arrayBuffer)
+    } else {
+      // Unknown or unsupported path type
+      return null
+    }
+
+    // Validate Magic Numbers for JPEG and PNG
+    if (buffer.length < 4) return null
+
+    // JPEG: FF D8 FF
+    const isJpg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
+
+    // PNG: 89 50 4E 47
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
+
+    if (isJpg || isPng) {
+      return buffer
+    } else {
+      console.warn(`[PDF Export] Invalid image format (magic numbers mismatch): ${url}`)
+      return null
+    }
+
+  } catch (error) {
+    console.error(`[PDF Export] Error processing image ${url}:`, error)
+    return null
   }
 }
 

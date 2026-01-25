@@ -199,7 +199,7 @@ interface PDFDocumentProps {
     description: string | null
     slug: string
   }
-  flagUrl: string | null
+  flagUrl: string | Buffer | null
   scriptSymbols: Array<{
     symbol: string
     ipa: string | null
