@@ -438,7 +438,7 @@ export function LanguagePDFDocument({
         <Page size="A4" style={styles.page}>
           <Text style={styles.sectionTitle}>Paradigms & Tables</Text>
           {paradigms.map((paradigm, pIdx) => (
-            <View key={pIdx} style={{ marginBottom: 30 }} wrap={false}>
+            <View key={pIdx} style={{ marginBottom: 30 }}>
               <Text style={styles.h2}>{paradigm.name}</Text>
               {paradigm.notes && <Text style={[styles.notes, { marginBottom: 10 }]}>{paradigm.notes}</Text>}
               <ParadigmPDFTable paradigm={paradigm} />
@@ -454,7 +454,7 @@ export function LanguagePDFDocument({
           <Text style={styles.sectionTitle}>Dictionary</Text>
           <View style={styles.dictionaryGrid}>
             {sortedEntries.map((entry, idx) => (
-              <View key={idx} style={styles.dictionaryEntry} wrap={false}>
+              <View key={idx} style={styles.dictionaryEntry}>
                 <Text style={styles.lemma}>{entry.lemma}</Text>
                 <Text style={styles.gloss}>{entry.gloss}</Text>
                 {entry.ipa && <Text style={styles.ipa}>/{entry.ipa}/</Text>}
