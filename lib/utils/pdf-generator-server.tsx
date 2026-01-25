@@ -10,16 +10,25 @@ import {
 } from "@react-pdf/renderer"
 
 import { createAlphabetSorter } from "@/lib/utils/alphabet-sorter"
-import { join } from "path"
 
-// Register standard fonts
-const fontsPath = join(process.cwd(), "public/fonts")
+// Register NotoSans fonts from Google Fonts CDN (works in serverless environments)
+// Font registration must happen before rendering - it's done at module load time
 Font.register({
   family: "NotoSans",
   fonts: [
-    { src: join(fontsPath, "NotoSans-Regular.ttf"), fontWeight: 400 },
-    { src: join(fontsPath, "NotoSans-Bold.ttf"), fontWeight: 700 }, // React-pdf uses 700 for bold usually
-    { src: join(fontsPath, "NotoSans-Italic.ttf"), fontStyle: "italic", fontWeight: 400 },
+    {
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-400-normal.ttf",
+      fontWeight: 400
+    },
+    {
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-700-normal.ttf",
+      fontWeight: 700
+    },
+    {
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-400-italic.ttf",
+      fontStyle: "italic",
+      fontWeight: 400
+    },
   ]
 })
 
