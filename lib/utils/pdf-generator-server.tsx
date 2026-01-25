@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     marginBottom: 10,
-    textAlign: "justify",
   },
   bold: { fontWeight: "bold" },
   italic: { fontStyle: "italic" },
