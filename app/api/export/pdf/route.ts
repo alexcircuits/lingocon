@@ -86,6 +86,22 @@ export async function GET(request: NextRequest) {
 
     // Resolve flag path to absolute disk path if it's a relative upload URL
     let flatPath = language.flagUrl
+
+    // Check if image format is supported by PDFKit (JPG, PNG)
+    // PDFKit does not support WebP, GIF, SVG, etc.
+    if (flatPath) {
+      const lower = flatPath.toLowerCase()
+      const isSupported =
+        lower.endsWith(".jpg") ||
+        lower.endsWith(".jpeg") ||
+        lower.endsWith(".png")
+
+      if (!isSupported) {
+        console.warn(`[PDF Export] Skipped unsupported image format: ${flatPath}`)
+        flatPath = null
+      }
+    }
+
     if (flatPath && flatPath.startsWith("/uploads/")) {
       const absolutePath = join(process.cwd(), "public", flatPath)
       // Verify file exists to prevent PDF generation crash
