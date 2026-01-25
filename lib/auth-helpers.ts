@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { getDevUserId } from "./dev-auth"
 import { prisma } from "./prisma"
+import { isAdmin } from "@/lib/admin"
 
 export async function getUserId(): Promise<string | null> {
   const session = await auth()
@@ -29,6 +30,9 @@ export async function canEditLanguage(
   userId: string | null
 ): Promise<boolean> {
   if (!userId) return false
+
+  // Admins can edit everything
+  if (await isAdmin()) return true
 
   // Check if user is owner
   const language = await prisma.language.findUnique({
@@ -59,6 +63,9 @@ export async function canViewLanguage(
   languageId: string,
   userId: string | null
 ): Promise<boolean> {
+  // Admins can view everything
+  if (await isAdmin()) return true
+
   // Check if language exists and is public
   const language = await prisma.language.findUnique({
     where: { id: languageId },

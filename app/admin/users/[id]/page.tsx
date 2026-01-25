@@ -11,7 +11,8 @@ import {
     Activity,
     ExternalLink,
     Ban,
-    StickyNote
+    StickyNote,
+    Pencil
 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
@@ -177,8 +178,17 @@ export default async function AdminUserDetailPage({
                                             href={`/lang/${lang.slug}`}
                                             target="_blank"
                                             className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                            title="View Public Page"
                                         >
                                             <ExternalLink className="h-4 w-4" />
+                                        </Link>
+                                        <Link
+                                            href={`/studio/lang/${lang.slug}`}
+                                            target="_blank"
+                                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                            title="Open Studio"
+                                        >
+                                            <Pencil className="h-4 w-4" />
                                         </Link>
                                     </div>
                                 </div>
@@ -223,7 +233,7 @@ export default async function AdminUserDetailPage({
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     )
 }
 
