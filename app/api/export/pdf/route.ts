@@ -5,6 +5,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { join } from "path"
 import { promises as fs } from "fs"
+import sharp from "sharp"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 
 export const dynamic = "force-dynamic"
@@ -195,19 +196,14 @@ async function fetchAndValidateImage(url: string | null): Promise<Buffer | null>
       return null
     }
 
-    // Validate Magic Numbers for JPEG and PNG
-    if (buffer.length < 4) return null
-
-    // JPEG: FF D8 FF
-    const isJpg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
-
-    // PNG: 89 50 4E 47
-    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
-
-    if (isJpg || isPng) {
-      return buffer
-    } else {
-      console.warn(`[PDF Export] Invalid image format (magic numbers mismatch): ${url}`)
+    // Convert using sharp (handles WebP, JPEG, PNG, etc)
+    try {
+      const pngBuffer = await sharp(buffer)
+        .png()
+        .toBuffer()
+      return pngBuffer
+    } catch (e) {
+      console.warn(`[PDF Export] Failed to convert image ${url} to PNG:`, e)
       return null
     }
 
@@ -216,4 +212,3 @@ async function fetchAndValidateImage(url: string | null): Promise<Buffer | null>
     return null
   }
 }
-
