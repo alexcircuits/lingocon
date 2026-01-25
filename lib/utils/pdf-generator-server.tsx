@@ -32,6 +32,7 @@ Font.register({
   ]
 })
 
+// Simplified styles - removed all borders to fix rendering crash
 const styles = StyleSheet.create({
   page: {
     padding: 60,
@@ -85,8 +86,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 9,
     color: "#94a3b8",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
     paddingTop: 10,
   },
   sectionTitle: {
@@ -95,8 +94,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     color: "#0f172a",
-    borderBottomWidth: 2,
-    borderBottomColor: "#0f172a",
     paddingBottom: 8,
   },
   h2: {
@@ -138,43 +135,34 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     marginTop: 15,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    backgroundColor: "#f8fafc",
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
     minHeight: 24,
     alignItems: "center",
+    backgroundColor: "#ffffff",
+    marginBottom: 1,
   },
   tableHeader: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#f1f5f9",
     fontWeight: "bold",
   },
   tableCell: {
     flex: 1,
     padding: 6,
-    borderRightWidth: 1,
-    borderRightColor: "#e2e8f0",
   },
   tableCellLast: {
     flex: 1,
     padding: 6,
-    borderRightWidth: 0,
   },
   dictionaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    flexDirection: "column",
   },
   dictionaryEntry: {
-    width: "48%",
-    marginBottom: 15,
+    marginBottom: 12,
     padding: 8,
-    backgroundColor: "#fcfcfc",
-    borderLeftWidth: 2,
-    borderLeftColor: "#cbd5e1",
+    backgroundColor: "#f8fafc",
   },
   lemma: {
     fontSize: 12,
@@ -272,7 +260,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
         case "orderedList":
           return (
             <View key={index} style={styles.bulletList}>
-              {node.content.map((item: any, idx: number) => (
+              {node.content?.map((item: any, idx: number) => (
                 <View key={idx} style={styles.listItem}>
                   <Text style={styles.bullet}>{idx + 1}.</Text>
                   <View style={{ flex: 1 }}>{renderNodes(item.content)}</View>
@@ -291,10 +279,10 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
           return <View key={index} style={{ height: 10 }} />
         case "igt":
           return (
-            <View key={index} style={[styles.table, { backgroundColor: "#f8fafc", padding: 8, borderLeftWidth: 4, borderLeftColor: "#cbd5e1" }]}>
-              <Text style={{ fontSize: 12, fontFamily: "NotoSans", fontWeight: "bold" }}>{node.attrs?.sentence}</Text>
-              <Text style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{node.attrs?.gloss}</Text>
-              <Text style={{ fontSize: 11, fontStyle: "italic", marginTop: 4 }}>{node.attrs?.translation}</Text>
+            <View key={index} style={{ marginVertical: 10, padding: 8, backgroundColor: "#f8fafc" }}>
+              <Text style={{ fontSize: 12, fontFamily: "NotoSans", fontWeight: "bold" }}>{node.attrs?.sentence || ""}</Text>
+              <Text style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{node.attrs?.gloss || ""}</Text>
+              <Text style={{ fontSize: 11, fontStyle: "italic", marginTop: 4 }}>{node.attrs?.translation || ""}</Text>
             </View>
           )
         case "paradigm":
@@ -325,7 +313,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
         }
         return (
           <Text key={index} style={style}>
-            {item.text}
+            {item.text || ""}
           </Text>
         )
       }
@@ -357,8 +345,8 @@ const ParadigmPDFTable = ({ paradigm }: { paradigm: any }) => {
       <View style={[styles.tableRow, styles.tableHeader]}>
         <View style={styles.tableCell}><Text style={styles.bold}></Text></View>
         {columns.map((col: string, idx: number) => (
-          <View key={idx} style={idx === columns.length - 1 ? styles.tableCellLast : styles.tableCell}>
-            <Text style={styles.bold}>{col}</Text>
+          <View key={idx} style={styles.tableCell}>
+            <Text style={styles.bold}>{col || ""}</Text>
           </View>
         ))}
       </View>
@@ -366,12 +354,12 @@ const ParadigmPDFTable = ({ paradigm }: { paradigm: any }) => {
       {rows.map((row: string, rowIdx: number) => (
         <View key={rowIdx} style={styles.tableRow}>
           <View style={[styles.tableCell, { backgroundColor: "#f8fafc" }]}>
-            <Text style={styles.bold}>{row}</Text>
+            <Text style={styles.bold}>{row || ""}</Text>
           </View>
           {columns.map((_: string, colIdx: number) => {
             const cellValue = cells[`${rowIdx}-${colIdx}`] || "-"
             return (
-              <View key={colIdx} style={colIdx === columns.length - 1 ? styles.tableCellLast : styles.tableCell}>
+              <View key={colIdx} style={styles.tableCell}>
                 <Text>{cellValue}</Text>
               </View>
             )
@@ -418,17 +406,17 @@ export function LanguagePDFDocument({
           <Text style={styles.sectionTitle}>Alphabet & Script</Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={styles.tableCell}>Symbol</Text>
-              <Text style={styles.tableCell}>Latin</Text>
-              <Text style={styles.tableCell}>IPA</Text>
-              <Text style={styles.tableCellLast}>Name</Text>
+              <View style={styles.tableCell}><Text style={styles.bold}>Symbol</Text></View>
+              <View style={styles.tableCell}><Text style={styles.bold}>Latin</Text></View>
+              <View style={styles.tableCell}><Text style={styles.bold}>IPA</Text></View>
+              <View style={styles.tableCell}><Text style={styles.bold}>Name</Text></View>
             </View>
             {scriptSymbols.map((symbol, idx) => (
               <View key={idx} style={styles.tableRow}>
-                <Text style={styles.tableCell}>{symbol.symbol}</Text>
-                <Text style={styles.tableCell}>{symbol.latin || "-"}</Text>
-                <Text style={styles.tableCell}>{symbol.ipa || "-"}</Text>
-                <Text style={styles.tableCellLast}>{symbol.name || "-"}</Text>
+                <View style={styles.tableCell}><Text>{symbol.symbol}</Text></View>
+                <View style={styles.tableCell}><Text>{symbol.latin || "-"}</Text></View>
+                <View style={styles.tableCell}><Text>{symbol.ipa || "-"}</Text></View>
+                <View style={styles.tableCell}><Text>{symbol.name || "-"}</Text></View>
               </View>
             ))}
           </View>
