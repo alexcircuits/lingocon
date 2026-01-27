@@ -126,8 +126,20 @@ See `/app/api/pronounce/route.ts` for implementation details.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit changes.
+**We are under-resourced and strictly prioritize momentum over polish.**
+
+If you want to help, but don't know where to start, visit our [**Contributions Hub**](https://lingocon.com/contributions). We explicitly welcome:
+- AI-generated content/fixes
+- Messy, partial, or "unprofessional" code that solves a problem
+- Direct file drops via email for non-technical users
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full "No Shame" policy.
+
+## Authors
+
+See the full list of humans who built this in [AUTHORS.md](AUTHORS.md).
 
 ## License
 
 [AGPLv3](LICENSE)
+

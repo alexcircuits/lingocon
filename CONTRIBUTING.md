@@ -1,52 +1,43 @@
 # Contributing to LingoCon
 
-First off, thanks for taking the time to contribute!
+**LingoCon is currently under-resourced.** We don't have time for corporate fluff, long approval cycles, or bikeshedding about code style. We need things that work.
 
-All types of contributions are encouraged and valued. See the [Table of Contents](#table-of-contents) for different ways to help and details about how this project handles them. Please make sure to read the relevant section before making your contribution. It will make it a lot easier for us maintainers and smooth out the experience for all involved. The community looks forward to your contributions.
+If you have 10 minutes or 10 hours, you can help.
 
-If you have questions, feel free to ask in our [Discord server](https://discord.gg/EaVRggatDQ).
+## The "No Shame" Policy
 
-## Table of Contents
+*   **AI-generated work is fine.** If you used LLMs to draft documentation, write tests, or fix a bug, just ship it.
+*   **Messy is better than nothing.** We don't care if your code is "ugly" as long as it solves a problem. We can refactor later.
+*   **Silence is the enemy.** Don't wait until it's "perfect" to open a PR. Open it now.
 
-- [Code of Conduct](#code-of-conduct)
-- [How Can I Contribute?](#how-can-i-contribute)
-  - [Reporting Bugs](#reporting-bugs)
-  - [Suggesting Enhancements](#suggesting-enhancements)
-  - [Your First Code Contribution](#your-first-code-contribution)
-- [Styleguides](#styleguides)
-  - [Commit Messages](#commit-messages)
+## How to Help
 
-## Code of Conduct
+We've mapped out specific paths for everyone on our [**Contributions Hub**](https://lingocon.com/contributions).
 
-This project and everyone participating in it is governed by the [LingoCon Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+### 1. The Observer (2 mins)
+Found a typo? A broken button? A weird logic bug? 
+[**Open a GitHub Issue**](https://github.com/NoirSystems/lingocon/issues/new). Be as descriptive as you want, or just drop a screenshot.
 
-## Workflow
+### 2. The Prompter (10-30 mins)
+Good at prompting AI? Help us write glossary examples, grammar explanations, or sample conlang data.
+[**Submit Markdown**](https://github.com/NoirSystems/lingocon/issues/new?labels=content).
 
-**Important**: Changes pushed to this repository will be checked and pushed to production after some time. This means your contributions, once accepted and merged, will eventually go live on [lingocon.com](https://lingocon.com).
+### 3. The Hotfixer (1 hour)
+Grab an issue labeled `good first issue`. Change a CSS class. Update a dependency. Fix a small bug.
+[**View Issues**](https://github.com/NoirSystems/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
-## How Can I Contribute?
+### 4. The Academic (45 mins)
+Are we teaching people the wrong IPA chart? Is our glossaries logic linguistically sound? Fix our data.
+[**Edit Data Files**](https://github.com/NoirSystems/lingocon/tree/main/actions).
 
-### Reporting Bugs
+### 5. The Old School
+Don't like GitHub? Email your files or napkin sketches to **contribute@noirsystems.com**.
 
-This section guides you through submitting a bug report. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+## What You Get
 
-- **Use a clear and descriptive title** for the issue to identify the problem.
-- **Describe the steps to reproduce the issue** in as much detail as possible.
-- **Provide specific examples** to demonstrate the steps.
+1.  **Permanent Credit**: All contributors are added to the [AUTHORS.md](AUTHORS.md) file.
+2.  **Discord Titles**: Frequent contributors get specific roles (Language Curator, Code Architect) in our [Discord](https://discord.gg/EaVRggatDQ).
+3.  **Real Impact**: Your change might be live on lingocon.com within 24 hours.
 
-### Suggesting Enhancements
+**Stop overthinking it. Just ship it.**
 
-This section guides you through submitting an enhancement suggestion, including completely new features and minor improvements to existing functionality.
-
-- **Use a clear and descriptive title** for the issue.
-- **Provide a step-by-step description of the suggested enhancement** in as much detail as possible.
-- **Explain why this enhancement would be useful** to most users.
-
-## Styleguides
-
-### Commit Messages
-
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
