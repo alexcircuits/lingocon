@@ -47,7 +47,7 @@ export default function ContributionsPage() {
 
                     <div className="prose prose-lg text-muted-foreground max-w-2xl font-light">
                         <p className="text-xl">
-                            LingoCon is built and maintained by a single developer. It works, mostly.
+                            LingoCon is an ambitious project currently running on a skeleton crew. It works, mostly.
                             But there are bugs, missing features, and rough edges everywhere.
                         </p>
                         <p className="text-xl">
