@@ -13,7 +13,8 @@ import {
   Search,
   PenTool,
   Library,
-  Github
+  Github,
+  Construction
 } from "lucide-react"
 import { FeaturedLanguages } from "@/components/featured-languages"
 import { Navbar } from "@/components/navbar"
@@ -307,6 +308,12 @@ export default async function Home() {
                 Star on GitHub
               </Button>
             </Link>
+            <Link href="/contributions">
+              <Button size="lg" variant="secondary" className="gap-2 h-12 px-6 rounded-full shadow-sm hover:bg-secondary/80">
+                <Construction className="w-5 h-5" />
+                How to Contribute
+              </Button>
+            </Link>
             <Link href="https://discord.gg/EaVRggatDQ" target="_blank">
               <Button size="lg" className="gap-2 h-12 px-6 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 shadow-lg shadow-[#5865F2]/20">
                 <DiscordIcon className="w-5 h-5" />
@@ -444,24 +451,26 @@ export default async function Home() {
       </section> */}
 
       {/* Featured Languages */}
-      {featuredLanguages.length > 0 && (
-        <section className="py-24 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif mb-4">
-                Made with LingoCon
-              </h2>
-              <p className="text-muted-foreground text-lg">
-                Explore languages created by our community
-              </p>
+      {
+        featuredLanguages.length > 0 && (
+          <section className="py-24 bg-background">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-serif mb-4">
+                  Made with LingoCon
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Explore languages created by our community
+                </p>
+              </div>
+              <FeaturedLanguages languages={featuredLanguages} />
             </div>
-            <FeaturedLanguages languages={featuredLanguages} />
-          </div>
-        </section>
-      )}
+          </section>
+        )
+      }
 
       {/* Footer */}
       <Footer />
-    </main>
+    </main >
   )
 }
