@@ -587,6 +587,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {/* PDF export temporarily disabled - needs font/rendering fixes
             <Button
               type="button"
               variant="outline"
@@ -600,6 +601,8 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
               <span>PDF Documentation</span>
               <span className="text-xs text-muted-foreground font-normal">Complete Reference</span>
             </Button>
+            */}
+
 
             <Button
               type="button"
