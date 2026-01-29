@@ -11,36 +11,17 @@ import {
 
 import { createAlphabetSorter } from "@/lib/utils/alphabet-sorter"
 
-// Register NotoSans fonts with full Unicode support (not just Latin subset)
-// Using the regular version which includes IPA and other special characters
-Font.register({
-  family: "NotoSans",
-  fonts: [
-    {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-400-normal.ttf",
-      fontWeight: 400
-    },
-    {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-700-normal.ttf",
-      fontWeight: 700
-    },
-    {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-400-italic.ttf",
-      fontStyle: "italic",
-      fontWeight: 400
-    },
-  ]
-})
-
 // Disable hyphenation to prevent "unsupported number" errors from hyphenation callbacks
+// This is a known issue in @react-pdf/renderer
 Font.registerHyphenationCallback((word) => [word])
 
-// Simplified styles - removed all borders to fix rendering crash
+// Using built-in Helvetica font which is reliable and always available
+// Custom fonts can cause issues with special characters and font loading
 const styles = StyleSheet.create({
   page: {
     padding: 60,
     fontSize: 10,
-    fontFamily: "NotoSans",
+    fontFamily: "Helvetica",
     lineHeight: 1.6,
     color: "#1a1a1a",
   },
@@ -56,7 +37,7 @@ const styles = StyleSheet.create({
   },
   coverTitle: {
     fontSize: 48,
-    fontFamily: "NotoSans",
+    fontFamily: "Helvetica",
     fontWeight: "bold",
     color: "#0f172a",
     marginBottom: 10,
@@ -93,7 +74,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontFamily: "NotoSans",
+    fontFamily: "Helvetica",
     fontWeight: "bold",
     marginBottom: 20,
     color: "#0f172a",
@@ -101,7 +82,7 @@ const styles = StyleSheet.create({
   },
   h2: {
     fontSize: 18,
-    fontFamily: "NotoSans",
+    fontFamily: "Helvetica",
     fontWeight: "bold",
     marginTop: 20,
     marginBottom: 10,
@@ -109,7 +90,7 @@ const styles = StyleSheet.create({
   },
   h3: {
     fontSize: 14,
-    fontFamily: "NotoSans",
+    fontFamily: "Helvetica",
     fontWeight: "bold",
     marginTop: 15,
     marginBottom: 8,
@@ -282,7 +263,7 @@ const TipTapRenderer = ({ content, paradigms }: { content: any; paradigms: any[]
         case "igt":
           return (
             <View key={index} style={{ marginVertical: 10, padding: 8, backgroundColor: "#f8fafc" }}>
-              <Text style={{ fontSize: 12, fontFamily: "NotoSans", fontWeight: "bold" }}>{node.attrs?.sentence || ""}</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Helvetica", fontWeight: "bold" }}>{node.attrs?.sentence || ""}</Text>
               <Text style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{node.attrs?.gloss || ""}</Text>
               <Text style={{ fontSize: 11, fontStyle: "italic", marginTop: 4 }}>{node.attrs?.translation || ""}</Text>
             </View>
