@@ -11,26 +11,29 @@ import {
 
 import { createAlphabetSorter } from "@/lib/utils/alphabet-sorter"
 
-// Register NotoSans fonts from Google Fonts CDN (works in serverless environments)
-// Font registration must happen before rendering - it's done at module load time
+// Register NotoSans fonts with full Unicode support (not just Latin subset)
+// Using the regular version which includes IPA and other special characters
 Font.register({
   family: "NotoSans",
   fonts: [
     {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-400-normal.ttf",
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-400-normal.ttf",
       fontWeight: 400
     },
     {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-700-normal.ttf",
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-700-normal.ttf",
       fontWeight: 700
     },
     {
-      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-400-italic.ttf",
+      src: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/unicode-400-italic.ttf",
       fontStyle: "italic",
       fontWeight: 400
     },
   ]
 })
+
+// Disable hyphenation to prevent "unsupported number" errors from hyphenation callbacks
+Font.registerHyphenationCallback((word) => [word])
 
 // Simplified styles - removed all borders to fix rendering crash
 const styles = StyleSheet.create({
