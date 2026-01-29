@@ -1,37 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
+import { fetchLanguageForExport } from "@/lib/services/export-service"
+import { stringify } from "csv-stringify/sync"
 
 export const dynamic = "force-dynamic"
-
-function escapeCSVField(field: string | null | undefined): string {
-  if (!field) return ""
-  // Escape quotes by doubling them, wrap in quotes if contains comma, quote, or newline
-  const escaped = String(field).replace(/"/g, '""')
-  if (escaped.includes(",") || escaped.includes('"') || escaped.includes("\n")) {
-    return `"${escaped}"`
-  }
-  return escaped
-}
-
-function generateCSV(entries: Array<{
-  lemma: string
-  gloss: string
-  ipa: string | null
-  partOfSpeech: string | null
-  notes: string | null
-}>): string {
-  const headers = ["Lemma", "Gloss", "IPA", "Part of Speech", "Notes"]
-  const rows = entries.map((entry) => [
-    escapeCSVField(entry.lemma),
-    escapeCSVField(entry.gloss),
-    escapeCSVField(entry.ipa),
-    escapeCSVField(entry.partOfSpeech),
-    escapeCSVField(entry.notes),
-  ])
-
-  return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n")
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,51 +16,48 @@ export async function GET(request: NextRequest) {
     const languageId = searchParams.get("languageId")
 
     if (!languageId) {
-      return NextResponse.json(
-        { error: "languageId parameter is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Language ID is required" }, { status: 400 })
     }
 
-    // Verify ownership
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true },
+    const language = await fetchLanguageForExport(languageId, userId)
+
+    // Prepare data for CSV - We focus on Dictionary Entries
+    const csvData = language.dictionaryEntries.map((entry) => ({
+      Lemma: entry.lemma,
+      Gloss: entry.gloss,
+      IPA: entry.ipa || "",
+      "Part of Speech": entry.partOfSpeech || "",
+      Notes: entry.notes || "",
+    }))
+
+    const csvString = stringify(csvData, {
+      header: true,
+      columns: [
+        "Lemma",
+        "Gloss",
+        "IPA",
+        "Part of Speech",
+        "Notes",
+      ],
     })
 
-    if (!language || language.ownerId !== userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
-    }
-
-    // Fetch dictionary entries
-    const entries = await prisma.dictionaryEntry.findMany({
-      where: { languageId },
-      orderBy: { lemma: "asc" },
-      select: {
-        lemma: true,
-        gloss: true,
-        ipa: true,
-        partOfSpeech: true,
-        notes: true,
-      },
-    })
-
-    // Generate CSV
-    const csv = generateCSV(entries)
-
-    // Return as downloadable file
-    return new NextResponse(csv, {
+    return new NextResponse(csvString, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="dictionary-${languageId}.csv"`,
+        "Content-Disposition": `attachment; filename="${language.slug}-dictionary.csv"`,
       },
     })
   } catch (error) {
-    console.error("CSV export error:", error)
-    return NextResponse.json(
-      { error: "Failed to export CSV" },
-      { status: 500 }
-    )
+    const err = error as Error
+    console.error("CSV Export Error:", err)
+
+    if (err.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
+    if (err.message === "Language not found") {
+      return NextResponse.json({ error: "Language not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ error: "Failed to export CSV" }, { status: 500 })
   }
 }
-

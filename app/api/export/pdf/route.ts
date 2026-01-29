@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
+import { getUserId } from "@/lib/auth-helpers"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
-import { join } from "path"
-import { promises as fs } from "fs"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
+import { fetchLanguageForExport } from "@/lib/services/export-service"
 
 export const dynamic = "force-dynamic"
 
@@ -27,63 +25,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify user can view this language
-    const canView = await canViewLanguage(languageId, userId)
-    if (!canView) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
-    }
-
-    // Fetch language data
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: {
-        name: true,
-        description: true,
-        slug: true,
-        flagUrl: true,
-        scriptSymbols: {
-          orderBy: { order: "asc" },
-          select: {
-            symbol: true,
-            ipa: true,
-            latin: true,
-            name: true,
-            order: true,
-          },
-        },
-        grammarPages: {
-          orderBy: { order: "asc" },
-          select: {
-            title: true,
-            slug: true,
-            content: true,
-            order: true,
-          },
-        },
-        dictionaryEntries: {
-          orderBy: { lemma: "asc" },
-          select: {
-            lemma: true,
-            gloss: true,
-            ipa: true,
-            partOfSpeech: true,
-            notes: true,
-          },
-        },
-        paradigms: {
-          select: {
-            id: true,
-            name: true,
-            slots: true,
-            notes: true,
-          },
-        },
-      },
-    })
-
-    if (!language) {
-      return NextResponse.json({ error: "Language not found" }, { status: 404 })
-    }
+    // Fetch language data using shared service
+    // This handles permission checks (throws if unauthorized or not found)
+    const language = await fetchLanguageForExport(languageId, userId)
 
     // Flag images removed as per user request
     const flagBuffer = null
@@ -146,6 +90,15 @@ export async function GET(request: NextRequest) {
       name: err.name,
       stack: err.stack,
     })
+
+    // Handle known errors
+    if (err.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
+    if (err.message === "Language not found") {
+      return NextResponse.json({ error: "Language not found" }, { status: 404 })
+    }
+
     return NextResponse.json(
       {
         error: "Failed to generate PDF",

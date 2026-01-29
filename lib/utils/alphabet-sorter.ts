@@ -5,12 +5,27 @@ interface SortableSymbol {
     order: number
 }
 
+/**
+ * Helper to normalize comparison results to -1, 0, or 1
+ * This prevents issues with libraries that can't handle large numbers
+ */
+function normalizeCompare(diff: number): number {
+    if (!Number.isFinite(diff) || Number.isNaN(diff)) return 0
+    if (diff < 0) return -1
+    if (diff > 0) return 1
+    return 0
+}
+
 export function createAlphabetSorter(symbols: SortableSymbol[]) {
     // Create a map of character to order index
     const orderMap = new Map<string, number>()
 
-    // Sort symbols by their defined order first
-    const sortedSymbols = [...symbols].sort((a, b) => a.order - b.order)
+    // Sort symbols by their defined order first, with safety checks
+    const sortedSymbols = [...symbols].sort((a, b) => {
+        const orderA = Number.isFinite(a.order) ? a.order : 0
+        const orderB = Number.isFinite(b.order) ? b.order : 0
+        return normalizeCompare(orderA - orderB)
+    })
 
     sortedSymbols.forEach((s, index) => {
         if (s.symbol) {
@@ -25,7 +40,7 @@ export function createAlphabetSorter(symbols: SortableSymbol[]) {
         }
     })
 
-    return (a: string, b: string) => {
+    return (a: string, b: string): number => {
         if (!a && !b) return 0
         if (!a) return -1
         if (!b) return 1
@@ -34,12 +49,7 @@ export function createAlphabetSorter(symbols: SortableSymbol[]) {
         const normA = a.normalize("NFC")
         const normB = b.normalize("NFC")
 
-        // We can't just iterate char by char because of complex clusters.
-        // However, simplest approach for now assumes user put base chars in alphabet.
-        // Ideally we use Intl.Segmenter but that might be slow for large lists in JS sort.
-        // Let's stick to simple char iteration for now, or Intl.Collator if we could customize it (we can't easily).
-
-        // Better approach: Iterate through the strings
+        // Compare character by character
         const lenA = normA.length
         const lenB = normB.length
         const minLen = Math.min(lenA, lenB)
@@ -54,19 +64,19 @@ export function createAlphabetSorter(symbols: SortableSymbol[]) {
 
                 // If both are in our alphabet, compare by order
                 if (orderA !== undefined && orderB !== undefined) {
-                    return orderA - orderB
+                    return normalizeCompare(orderA - orderB)
                 }
 
-                // If one is in alphabet and other isn't, alphabet comes first? 
-                // Or standard sort? Let's say standard sort for undefined ones.
+                // If one is in alphabet and other isn't, alphabet comes first
                 if (orderA !== undefined) return -1
                 if (orderB !== undefined) return 1
 
-                // Both unknown, use standard locale compare
+                // Both unknown, use standard locale compare (already returns -1, 0, 1)
                 return charA.localeCompare(charB)
             }
         }
 
-        return lenA - lenB
+        // Compare by length - normalize to prevent large numbers
+        return normalizeCompare(lenA - lenB)
     }
 }

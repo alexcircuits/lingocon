@@ -580,22 +580,83 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
       <Card className="p-6">
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">Export</h3>
+            <h3 className="text-lg font-semibold mb-2">Export Data</h3>
             <p className="text-sm text-muted-foreground">
-              Export your language documentation as a PDF file
+              Download your language data in various formats.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              window.open(`/api/export/pdf?languageId=${language.id}`, "_blank")
-            }}
-            disabled={isPending}
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.open(`/api/export/pdf?languageId=${language.id}`, "_blank")
+              }}
+              disabled={isPending}
+              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+            >
+              <FileDown className="h-6 w-6" />
+              <span>PDF Documentation</span>
+              <span className="text-xs text-muted-foreground font-normal">Complete Reference</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.open(`/api/export/docx?languageId=${language.id}`, "_blank")
+              }}
+              disabled={isPending}
+              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+            >
+              <FileDown className="h-6 w-6" />
+              <span>Google Docs / Word</span>
+              <span className="text-xs text-muted-foreground font-normal">Editable Document</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.open(`/api/export/xlsx?languageId=${language.id}`, "_blank")
+              }}
+              disabled={isPending}
+              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+            >
+              <FileDown className="h-6 w-6" />
+              <span>Excel Spreadsheet</span>
+              <span className="text-xs text-muted-foreground font-normal">Multi-sheet Workbook</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.open(`/api/export/csv?languageId=${language.id}`, "_blank")
+              }}
+              disabled={isPending}
+              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+            >
+              <FileDown className="h-6 w-6" />
+              <span>CSV (Dictionary)</span>
+              <span className="text-xs text-muted-foreground font-normal">Spreadsheet Compatible</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.open(`/api/export/json?languageId=${language.id}`, "_blank")
+              }}
+              disabled={isPending}
+              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+            >
+              <FileDown className="h-6 w-6" />
+              <span>JSON Data</span>
+              <span className="text-xs text-muted-foreground font-normal">Raw Database Export</span>
+            </Button>
+          </div>
         </div>
       </Card>
 
