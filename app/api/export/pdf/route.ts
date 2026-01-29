@@ -29,6 +29,48 @@ export async function GET(request: NextRequest) {
     // This handles permission checks (throws if unauthorized or not found)
     const language = await fetchLanguageForExport(languageId, userId)
 
+    // Sanitize data to prevent PDF rendering crashes from invalid numbers
+    // The @react-pdf/renderer library cannot handle very large numbers
+    const sanitizeForPDF = (obj: unknown): unknown => {
+      if (obj === null || obj === undefined) return obj
+      if (typeof obj === "number") {
+        if (!Number.isFinite(obj) || Math.abs(obj) > 1e15) {
+          return 0 // Replace invalid/huge numbers with 0
+        }
+        return obj
+      }
+      if (typeof obj === "string") return obj
+      if (typeof obj === "boolean") return obj
+      if (Array.isArray(obj)) {
+        return obj.map(sanitizeForPDF)
+      }
+      if (typeof obj === "object") {
+        const result: Record<string, unknown> = {}
+        for (const [key, value] of Object.entries(obj)) {
+          result[key] = sanitizeForPDF(value)
+        }
+        return result
+      }
+      return obj
+    }
+
+    // Sanitize all data that contains JSON content
+    const sanitizedGrammarPages = language.grammarPages.map(page => ({
+      ...page,
+      content: sanitizeForPDF(page.content),
+      order: Number.isFinite(page.order) ? page.order : 0,
+    }))
+
+    const sanitizedParadigms = language.paradigms.map(p => ({
+      ...p,
+      slots: sanitizeForPDF(p.slots),
+    }))
+
+    const sanitizedScriptSymbols = language.scriptSymbols.map(s => ({
+      ...s,
+      order: Number.isFinite(s.order) ? s.order : 0,
+    }))
+
     // Flag images removed as per user request
     const flagBuffer = null
 
@@ -38,10 +80,10 @@ export async function GET(request: NextRequest) {
       const pdfDocument = React.createElement(LanguagePDFDocument, {
         language,
         flagUrl: null,
-        scriptSymbols: language.scriptSymbols,
-        grammarPages: language.grammarPages,
+        scriptSymbols: sanitizedScriptSymbols,
+        grammarPages: sanitizedGrammarPages,
         dictionaryEntries: language.dictionaryEntries,
-        paradigms: language.paradigms,
+        paradigms: sanitizedParadigms,
       }) as React.ReactElement
 
       pdfBuffer = await renderToBuffer(pdfDocument)
