@@ -41,20 +41,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
 
     // Dynamic language pages
+    // Only include PUBLIC languages that have actual content to avoid "thin content" penalties
     const publicLanguages = await prisma.language.findMany({
-        where: { visibility: "PUBLIC" },
+        where: {
+            visibility: "PUBLIC",
+            slug: {
+                not: "-", // Exclude placeholder slugs
+            }
+        },
         select: {
             slug: true,
             updatedAt: true,
+            _count: {
+                select: {
+                    dictionaryEntries: true,
+                    grammarPages: true,
+                    articles: true,
+                    texts: true,
+                }
+            }
         },
     });
 
-    const languagePages: MetadataRoute.Sitemap = publicLanguages.map((lang) => ({
-        url: `${siteUrl}/lang/${lang.slug}`,
-        lastModified: lang.updatedAt,
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-    }));
+    const languagePages: MetadataRoute.Sitemap = publicLanguages
+        .filter(lang => {
+            // Filter out languages with no content (empty shells)
+            const hasContent =
+                lang._count.dictionaryEntries > 0 ||
+                lang._count.grammarPages > 0 ||
+                lang._count.articles > 0 ||
+                lang._count.texts > 0;
+
+            // Filter out invalid slugs (too short or just hyphens)
+            const isValidSlug = lang.slug.length > 1 && lang.slug !== '-';
+
+            return hasContent && isValidSlug;
+        })
+        .map((lang) => ({
+            url: `${siteUrl}/lang/${lang.slug}`,
+            lastModified: lang.updatedAt,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+        }));
 
     return [...staticPages, ...languagePages];
 }

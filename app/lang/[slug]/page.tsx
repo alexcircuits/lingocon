@@ -92,9 +92,20 @@ export async function generateMetadata({
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
   const url = `${siteUrl}/lang/${language.slug}`
   const title = `${language.name} — Language Documentation`
-  const description =
-    language.description ||
-    `Documentation for ${language.name}. Explore alphabet, grammar, and dictionary.`
+
+  // Generate a rich description based on content
+  let description = language.description
+
+  if (!description) {
+    const parts = []
+    if (language._count.dictionaryEntries > 0) parts.push(`${language._count.dictionaryEntries} dictionary entries`)
+    if (language._count.grammarPages > 0) parts.push("grammar documentation")
+    if (language._count.texts > 0) parts.push("translated texts")
+    if (language._count.scriptSymbols > 0) parts.push("custom script")
+
+    const contentSummary = parts.length > 0 ? ` featuring ${parts.join(", ")}` : ""
+    description = `Explore ${language.name} language documentation${contentSummary} on LingoCon.`
+  }
 
   return {
     title,
