@@ -17,7 +17,17 @@ import { BadgeProgress } from "@/components/badges"
 import { cn } from "@/lib/utils"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
 
+
+export const metadata = {
+  title: "Dashboard",
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
+
 export const dynamic = "force-dynamic"
+
 
 function getGreeting(): string {
   const hour = new Date().getHours()

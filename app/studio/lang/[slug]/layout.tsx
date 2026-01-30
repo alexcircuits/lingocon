@@ -5,7 +5,16 @@ import { redirect, notFound } from "next/navigation"
 import { StudioLayout } from "../studio-layout"
 import { FontLoader } from "@/components/font-loader"
 
+
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
+
 async function getLanguage(slug: string, userId: string | null) {
+
   const language = await prisma.language.findUnique({
     where: { slug },
     include: {

@@ -1,6 +1,14 @@
 import { requireAdmin } from "@/lib/admin"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 
+export const metadata = {
+    title: "Admin Dashboard",
+    robots: {
+        index: false,
+        follow: false,
+    },
+}
+
 export default async function AdminLayout({
     children,
 }: {
@@ -8,6 +16,7 @@ export default async function AdminLayout({
 }) {
     // Protect all admin routes
     await requireAdmin()
+
 
     return (
         <div className="min-h-screen bg-background">
