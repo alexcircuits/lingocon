@@ -98,9 +98,6 @@ export function TopLanguagesStripe({ languages }: TopLanguagesStripeProps) {
                                 </span>
                             </div>
                         )}
-
-                        {/* Subtle shine effect on hover */}
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/card:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none" />
                     </Link>
                 ))}
             </div>
