@@ -24,7 +24,17 @@ export function TopLanguagesStripe({ languages }: TopLanguagesStripeProps) {
     const scrollerRef = useRef<HTMLDivElement>(null)
     const [isAnimating, setIsAnimating] = useState(false)
 
-    // Need at least 2 languages to make a carousel worthwhile
+    // Trigger animation after hydration - must be called before any early returns
+    useEffect(() => {
+        if (languages.length < 1) return
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(() => {
+            setIsAnimating(true)
+        }, 100)
+        return () => clearTimeout(timer)
+    }, [languages.length])
+
+    // Need at least 1 language to make a carousel worthwhile
     if (languages.length < 1) {
         return null
     }
@@ -34,14 +44,6 @@ export function TopLanguagesStripe({ languages }: TopLanguagesStripeProps) {
     const repeatCount = Math.max(4, Math.ceil(12 / languages.length))
     const duplicatedLanguages = Array(repeatCount).fill(languages).flat()
 
-    // Trigger animation after hydration
-    useEffect(() => {
-        // Small delay to ensure DOM is ready
-        const timer = setTimeout(() => {
-            setIsAnimating(true)
-        }, 100)
-        return () => clearTimeout(timer)
-    }, [])
 
     return (
         <div className="relative w-full overflow-hidden group">
