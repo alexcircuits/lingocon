@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
-import Image from "next/image"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { Flag, Heart, Sparkles } from "lucide-react"
+import { Heart } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { LanguagePlaceholder } from "@/components/language-placeholder"
 
 interface TopLanguage {
     id: string
@@ -68,21 +68,13 @@ export function TopLanguagesStripe({ languages }: TopLanguagesStripeProps) {
                         href={`/lang/${lang.slug}`}
                         className="relative flex items-center gap-3 px-5 py-3 rounded-full bg-background/60 dark:bg-white/5 border border-border/30 dark:border-white/10 backdrop-blur-md shadow-sm hover:shadow-lg hover:bg-background/90 dark:hover:bg-white/10 hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-300 ease-out group/card shrink-0"
                     >
-                        {/* Flag / Icon */}
-                        {lang.flagUrl ? (
-                            <div className="relative h-7 w-10 overflow-hidden rounded-sm border border-border/20 shadow-sm shrink-0">
-                                <Image
-                                    src={lang.flagUrl}
-                                    alt={lang.name}
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                        ) : (
-                            <div className="h-7 w-10 flex items-center justify-center rounded-sm bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/10 shrink-0">
-                                <Sparkles className="h-3.5 w-3.5 text-primary/50" />
-                            </div>
-                        )}
+                        {/* Flag / Placeholder */}
+                        <LanguagePlaceholder
+                            name={lang.name}
+                            flagUrl={lang.flagUrl}
+                            size="sm"
+                            variant="flag"
+                        />
 
                         {/* Name */}
                         <span className="font-medium text-sm text-foreground/90 group-hover/card:text-foreground transition-colors whitespace-nowrap">

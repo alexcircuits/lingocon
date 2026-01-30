@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { BookOpen, FileText, Globe, Hash, Languages } from "lucide-react"
+import { BookOpen, FileText, Globe, Hash } from "lucide-react"
+import { LanguagePlaceholder } from "@/components/language-placeholder"
 
 interface BaseResult {
     id: string
@@ -57,20 +57,13 @@ export function ResultCard({ result }: ResultCardProps) {
                                 <Globe className="h-24 w-24" />
                             </div>
                             <div className="relative z-10 flex items-center gap-4">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-background shadow-sm ring-1 ring-border/50">
-                                    {result.flagUrl ? (
-                                        <Image
-                                            src={result.flagUrl}
-                                            alt={result.name}
-                                            className="h-full w-full object-cover"
-                                            unoptimized
-                                            width={100}
-                                            height={100}
-                                        />
-                                    ) : (
-                                        <Languages className="h-6 w-6 text-primary/60" />
-                                    )}
-                                </div>
+                                <LanguagePlaceholder
+                                    name={result.name}
+                                    flagUrl={result.flagUrl}
+                                    size="md"
+                                    variant="square"
+                                    className="rounded-xl"
+                                />
                                 <div>
                                     <h3 className="text-lg font-bold tracking-tight text-foreground">{result.name}</h3>
                                     <p className="text-xs text-muted-foreground">by {result.owner.name || "Unknown"}</p>

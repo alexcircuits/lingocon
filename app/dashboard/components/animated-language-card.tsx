@@ -2,11 +2,11 @@
 
 import { motion } from "motion/react"
 import Link from "next/link"
-import Image from "next/image"
-import { Calendar, FileText, BookOpen, ArrowRight, Flag } from "lucide-react"
+import { Calendar, FileText, BookOpen, ArrowRight } from "lucide-react"
 import { formatDate, cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import type { Language } from "@prisma/client"
+import { LanguagePlaceholder } from "@/components/language-placeholder"
 
 interface AnimatedLanguageCardProps {
   language: Language & {
@@ -31,23 +31,12 @@ export function AnimatedLanguageCard({ language, index }: AnimatedLanguageCardPr
         <div className="relative p-5 rounded-xl border border-border/60 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              {language.flagUrl ? (
-                <div className="relative h-10 w-14 overflow-hidden border border-border/40 shrink-0 shadow-sm">
-                  <Image
-                    src={language.flagUrl}
-                    alt={`${language.name} flag`}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    unoptimized={language.flagUrl.startsWith("/uploads/")}
-                  />
-                </div>
-              ) : (
-                <div className="h-10 w-14 bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors shrink-0">
-                  <span className="text-lg font-serif text-primary font-bold">
-                    {language.name.charAt(0)}
-                  </span>
-                </div>
-              )}
+              <LanguagePlaceholder
+                name={language.name}
+                flagUrl={language.flagUrl}
+                size="md"
+                variant="flag"
+              />
               <div>
                 <h3 className="font-serif text-lg font-medium group-hover:text-primary transition-colors">
                   {language.name}

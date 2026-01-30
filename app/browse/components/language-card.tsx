@@ -1,16 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, FileText, BookOpen, Languages, ArrowRight, Flag } from "lucide-react"
+import { FileText, BookOpen, Languages, ArrowRight } from "lucide-react"
 import { FavoriteButton } from "@/components/favorite-button"
 import { formatDate } from "@/lib/utils"
 import type { Language, User as UserType } from "@prisma/client"
 import { motion } from "motion/react"
-import { AnimatedCard } from "@/components/ui/animated-card"
+import { LanguagePlaceholder } from "@/components/language-placeholder"
 
 interface LanguageCardProps {
   language: Language & {
@@ -48,21 +47,12 @@ export function LanguageCard({ language }: LanguageCardProps) {
           <CardHeader className="pb-3 relative z-10">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                {language.flagUrl ? (
-                  <div className="relative h-10 w-14 overflow-hidden border border-border/40 shrink-0 shadow-sm">
-                    <Image
-                      src={language.flagUrl}
-                      alt={`${language.name} flag`}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      unoptimized={language.flagUrl.startsWith("/uploads/")}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-10 w-14 items-center justify-center bg-secondary/50 border border-border/40 shrink-0">
-                    <Flag className="h-5 w-5 text-muted-foreground/40" />
-                  </div>
-                )}
+                <LanguagePlaceholder
+                  name={language.name}
+                  flagUrl={language.flagUrl}
+                  size="md"
+                  variant="flag"
+                />
                 <div className="space-y-0.5">
                   <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
                     {language.name}

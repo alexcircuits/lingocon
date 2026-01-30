@@ -7,6 +7,35 @@ import type { Language, User as UserType } from "@prisma/client"
 import { cn } from "@/lib/utils"
 import { Heart } from "lucide-react"
 
+// Generate a consistent gradient based on the language name
+function getGradientFromName(name: string): [string, string] {
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+        const char = name.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash
+    }
+    const gradients: [string, string][] = [
+        ["#667eea", "#764ba2"],
+        ["#f093fb", "#f5576c"],
+        ["#4facfe", "#00f2fe"],
+        ["#43e97b", "#38f9d7"],
+        ["#fa709a", "#fee140"],
+        ["#a8edea", "#fed6e3"],
+        ["#ff9a9e", "#fad0c4"],
+        ["#ffecd2", "#fcb69f"],
+        ["#a18cd1", "#fbc2eb"],
+        ["#fad0c4", "#ffd1ff"],
+        ["#667eea", "#f093fb"],
+        ["#00c6fb", "#005bea"],
+        ["#d299c2", "#fef9d7"],
+        ["#89f7fe", "#66a6ff"],
+        ["#cd9cf2", "#f6f3ff"],
+        ["#fddb92", "#d1fdff"],
+    ]
+    return gradients[Math.abs(hash) % gradients.length]
+}
+
 interface BookCardProps {
     language: Language & {
         owner: Pick<UserType, "id" | "name" | "image">
@@ -44,7 +73,16 @@ export function BookCard({ language }: BookCardProps) {
                             <div className="absolute inset-0 bg-primary/10 mix-blend-multiply" />
                         </div>
                     ) : (
-                        <div className="h-1/2 bg-primary/5 pattern-grid-lg text-primary/10" />
+                        <div
+                            className="h-1/2 relative overflow-hidden flex items-center justify-center"
+                            style={{
+                                background: `linear-gradient(135deg, ${getGradientFromName(language.name)[0]}, ${getGradientFromName(language.name)[1]})`,
+                            }}
+                        >
+                            <span className="text-5xl font-serif font-bold text-white/30 select-none">
+                                {language.name.slice(0, 2).toUpperCase()}
+                            </span>
+                        </div>
                     )}
 
                     <div className="h-1/2 bg-card p-6 flex flex-col justify-between border-t border-border/10 relative">
