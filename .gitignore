@@ -44,3 +44,4 @@ next-env.d.ts
 
 #scripts
 /scripts
+build_log.txt

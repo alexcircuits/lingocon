@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PlausibleAnalytics } from "@/components/plausible-analytics";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com";
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         >
           <SessionProvider>
             {children}
+            <PlausibleAnalytics />
             <AchievementListener />
             <Toaster
               position="bottom-right"
