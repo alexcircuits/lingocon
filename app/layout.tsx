@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
-import Script from "next/script";
+
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com";
 
@@ -60,12 +60,6 @@ export default function RootLayout({
         >
           <SessionProvider>
             {children}
-            <Script
-              src={process.env.NEXT_PUBLIC_ANALYTICS_SCRIPT_URL}
-              data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
-              data-api={`${process.env.NEXT_PUBLIC_PLAUSIBLE_API_HOST}/api/event`}
-              strategy="afterInteractive"
-            />
             <AchievementListener />
             <Toaster
               position="bottom-right"
