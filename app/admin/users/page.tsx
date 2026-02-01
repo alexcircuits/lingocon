@@ -116,7 +116,7 @@ export default async function AdminUsersPage({
     const page = params.page ? parseInt(params.page) : 1
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
@@ -136,7 +136,7 @@ export default async function AdminUsersPage({
             {/* Search */}
             <Card className="mb-6">
                 <CardContent className="pt-6">
-                    <form className="flex gap-4">
+                    <form className="flex flex-wrap gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input

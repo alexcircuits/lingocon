@@ -38,7 +38,7 @@ export default async function AuditLogPage({ searchParams }: AuditLogPageProps) 
     })
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             <div className="mb-8">
                 <h1 className="text-3xl font-serif mb-2">Audit Logs</h1>
                 <p className="text-muted-foreground">

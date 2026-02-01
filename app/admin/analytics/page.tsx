@@ -67,7 +67,7 @@ export default function AdminAnalyticsPage() {
 
     if (loading) {
         return (
-            <div className="p-8">
+            <div className="p-4 md:p-8">
                 <h1 className="text-3xl font-serif mb-8">Analytics</h1>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {[...Array(4)].map((_, i) => (
@@ -79,7 +79,7 @@ export default function AdminAnalyticsPage() {
     }
 
     return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-serif mb-2">Analytics</h1>

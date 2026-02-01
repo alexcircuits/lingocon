@@ -324,7 +324,7 @@ function LoadingSkeleton() {
 
 export default function AdminDashboardPage() {
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-4 md:p-8 space-y-8">
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-serif mb-2">Admin Dashboard</h1>
