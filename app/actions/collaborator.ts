@@ -11,7 +11,8 @@ import {
 
 export async function inviteCollaborator(input: {
   languageId: string
-  email: string
+  email?: string
+  userId?: string
   role: "OWNER" | "EDITOR" | "VIEWER"
 }) {
   const userId = await getUserId()
@@ -29,14 +30,22 @@ export async function inviteCollaborator(input: {
       return { error: "Only the language owner can invite collaborators" }
     }
 
-    // Find user by email
-    const targetUser = await prisma.user.findUnique({
-      where: { email: validated.email },
-      select: { id: true, name: true, email: true },
-    })
+    let targetUser;
+
+    if (validated.userId) {
+      targetUser = await prisma.user.findUnique({
+        where: { id: validated.userId },
+        select: { id: true, name: true, email: true },
+      })
+    } else if (validated.email) {
+      targetUser = await prisma.user.findUnique({
+        where: { email: validated.email },
+        select: { id: true, name: true, email: true },
+      })
+    }
 
     if (!targetUser) {
-      return { error: "User with this email not found" }
+      return { error: "User not found" }
     }
 
     // Don't allow inviting the owner
@@ -226,7 +235,7 @@ export async function getCollaborators(languageId: string) {
   // Verify ownership or collaboration
   const { canViewLanguage } = await import("@/lib/auth-helpers")
   const canView = await canViewLanguage(languageId, userId)
-  
+
   if (!canView) {
     return { error: "Unauthorized" }
   }

@@ -39,7 +39,10 @@ function getGreeting(): string {
 async function getLanguages(userId: string) {
   return prisma.language.findMany({
     where: {
-      ownerId: userId,
+      OR: [
+        { ownerId: userId },
+        { collaborators: { some: { userId: userId } } }
+      ]
     },
     include: {
       _count: {
@@ -58,7 +61,12 @@ async function getLanguages(userId: string) {
 
 async function getStats(userId: string) {
   const languages = await prisma.language.findMany({
-    where: { ownerId: userId },
+    where: {
+      OR: [
+        { ownerId: userId },
+        { collaborators: { some: { userId: userId } } }
+      ]
+    },
     include: {
       _count: {
         select: {

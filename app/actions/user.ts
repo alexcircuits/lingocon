@@ -49,3 +49,43 @@ export async function updateUser(input: UpdateUserInput) {
         }
     }
 }
+
+export async function searchUsers(query: string) {
+    const userId = await getUserId()
+
+    if (!userId) {
+        return { error: "Unauthorized" }
+    }
+
+    if (query.length < 2) {
+        return { success: true, data: [] }
+    }
+
+    try {
+        const users = await prisma.user.findMany({
+            where: {
+                OR: [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { email: { contains: query, mode: 'insensitive' } },
+                ],
+                NOT: {
+                    id: userId // Exclude self
+                }
+            },
+            take: 10,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true
+            }
+        })
+
+        return {
+            success: true,
+            data: users
+        }
+    } catch (error) {
+        return { error: "Failed to search users" }
+    }
+}

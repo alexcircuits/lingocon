@@ -61,6 +61,7 @@ interface LanguageSettingsProps {
     lemma: string
     ipa: string | null
   }[]
+  isOwner?: boolean
 }
 
 interface LanguageWithMetadata {
@@ -99,7 +100,7 @@ const availableVoices = [
   { id: "Mizuki", name: "Japanese - Mizuki" },
 ]
 
-export function LanguageSettings({ language, languageSlug, dictionaryEntries }: LanguageSettingsProps) {
+export function LanguageSettings({ language, languageSlug, dictionaryEntries, isOwner = false }: LanguageSettingsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -685,79 +686,85 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
         </div>
       </Card>
 
-      <Card className="p-6 border-destructive">
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold text-destructive mb-2">
-              Danger Zone
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Once you delete a language, there is no going back. Please be certain.
-            </p>
-          </div>
 
-          <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-destructive">
-                  <AlertTriangle className="h-5 w-5" />
-                  Delete Language
-                </DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  language and all associated data (alphabet, grammar pages,
-                  dictionary entries).
-                </DialogDescription>
-              </DialogHeader>
 
-              <div className="space-y-4 py-4">
-                <p className="text-sm">
-                  To confirm, type the language name{" "}
-                  <strong>{language.name}</strong> below:
+      {
+        isOwner && (
+          <Card className="p-6 border-destructive">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-destructive mb-2">
+                  Danger Zone
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Once you delete a language, there is no going back. Please be certain.
                 </p>
-                <Input
-                  value={deleteConfirm}
-                  onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder={language.name}
-                  disabled={isPending}
-                />
               </div>
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDeleteOpen(false)
-                    setDeleteConfirm("")
-                    setError(null)
-                  }}
-                  disabled={isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={isPending || deleteConfirm !== language.name}
-                >
-                  {isPending ? "Deleting..." : "Delete Language"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
+                      Delete Language
+                    </DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. This will permanently delete the
+                      language and all associated data (alphabet, grammar pages,
+                      dictionary entries).
+                    </DialogDescription>
+                  </DialogHeader>
 
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => setIsDeleteOpen(true)}
-            disabled={isPending}
-          >
-            Delete Language
-          </Button>
-        </div>
-      </Card>
+                  <div className="space-y-4 py-4">
+                    <p className="text-sm">
+                      To confirm, type the language name{" "}
+                      <strong>{language.name}</strong> below:
+                    </p>
+                    <Input
+                      value={deleteConfirm}
+                      onChange={(e) => setDeleteConfirm(e.target.value)}
+                      placeholder={language.name}
+                      disabled={isPending}
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsDeleteOpen(false)
+                        setDeleteConfirm("")
+                        setError(null)
+                      }}
+                      disabled={isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleDelete}
+                      disabled={isPending || deleteConfirm !== language.name}
+                    >
+                      {isPending ? "Deleting..." : "Delete Language"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setIsDeleteOpen(true)}
+                disabled={isPending}
+              >
+                Delete Language
+              </Button>
+            </div>
+          </Card>
+        )
+      }
     </div >
   )
 }

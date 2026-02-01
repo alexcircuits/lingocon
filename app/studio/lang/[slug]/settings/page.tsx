@@ -81,7 +81,7 @@ export default async function SettingsPage({
         </p>
       </div>
 
-      <LanguageSettings language={language} languageSlug={slug} dictionaryEntries={dictionaryEntries} />
+      <LanguageSettings language={language} languageSlug={slug} dictionaryEntries={dictionaryEntries} isOwner={owner} />
       <Collaborators languageId={language.id} isOwner={owner} />
     </div>
   )

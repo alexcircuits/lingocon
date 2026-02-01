@@ -10,7 +10,7 @@ import {
   getCollaborators,
 } from "@/app/actions/collaborator"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -28,9 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, UserPlus, Users } from "lucide-react"
+import { Trash2, UserPlus, Users, X } from "lucide-react"
 import { EmptyState } from "@/components/empty-state"
 import type { LanguageCollaborator, CollaboratorRole } from "@prisma/client"
+import { UserSearch, type User as SearchUser } from "@/components/user-search"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface CollaboratorsProps {
   languageId: string
@@ -53,7 +55,8 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
     >
   >([])
   const [loading, setLoading] = useState(true)
-  const [email, setEmail] = useState("")
+  // Removed duplicate loading
+  const [selectedUser, setSelectedUser] = useState<SearchUser | null>(null)
   const [role, setRole] = useState<CollaboratorRole>("VIEWER")
 
   useEffect(() => {
@@ -79,10 +82,15 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
       return
     }
 
+    if (!selectedUser) {
+      toast.error("Please select a user to invite")
+      return
+    }
+
     startTransition(async () => {
       const result = await inviteCollaborator({
         languageId,
-        email,
+        userId: selectedUser.id,
         role,
       })
 
@@ -90,7 +98,7 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
         toast.error(result.error)
       } else {
         toast.success("Collaborator invited successfully")
-        setEmail("")
+        setSelectedUser(null)
         setRole("VIEWER")
         loadCollaborators()
       }
@@ -164,21 +172,19 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
             />
           ) : (
             <div className="space-y-2">
-                <div className="space-y-2">
-                  {collaborators.map((collab) => (
-                    <div
-                      key={collab.id}
-                      className="flex items-center justify-between p-2 border rounded"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {collab.user.name || collab.user.email || "Anonymous"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{collab.role}</p>
-                      </div>
-                    </div>
-                  ))}
+              {collaborators.map((collab) => (
+                <div
+                  key={collab.id}
+                  className="flex items-center justify-between p-2 border rounded"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {collab.user.name || collab.user.email || "Anonymous"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{collab.role}</p>
+                  </div>
                 </div>
+              ))}
             </div>
           )}
         </CardContent>
@@ -199,16 +205,35 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
         <form onSubmit={handleInvite} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="collaborator-email">Email Address</Label>
-              <Input
-                id="collaborator-email"
-                type="email"
-                placeholder="user@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isPending}
-              />
+              <Label>User</Label>
+              {selectedUser ? (
+                <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={selectedUser.image || undefined} />
+                      <AvatarFallback>{selectedUser.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{selectedUser.name || "Unknown"}</span>
+                      <span className="text-xs text-muted-foreground">{selectedUser.email}</span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setSelectedUser(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <UserSearch
+                  onSelect={setSelectedUser}
+                  label="Search by name or email..."
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="collaborator-role">Role</Label>
@@ -223,7 +248,7 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
               </Select>
             </div>
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || !selectedUser}>
             <UserPlus className="mr-2 h-4 w-4" />
             {isPending ? "Inviting..." : "Invite Collaborator"}
           </Button>
