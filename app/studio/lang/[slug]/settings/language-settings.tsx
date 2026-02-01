@@ -418,9 +418,9 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
                   <div className="flex items-center justify-between">
                     <Label htmlFor="ttsSpeed">Speed ({typeof formData.ttsSpeed === 'string' && formData.ttsSpeed.endsWith('%') ? (parseInt(formData.ttsSpeed) / 100).toFixed(1) : (
                       formData.ttsSpeed === 'x-slow' ? '0.5' :
-                        formData.ttsSpeed === 'slow' ? '0.75' :
+                        formData.ttsSpeed === 'slow' ? '0.7' :
                           formData.ttsSpeed === 'medium' ? '1.0' :
-                            formData.ttsSpeed === 'fast' ? '1.25' :
+                            formData.ttsSpeed === 'fast' ? '1.2' :
                               formData.ttsSpeed === 'x-fast' ? '1.5' : '1.0'
                     )}x)</Label>
                   </div>
@@ -435,8 +435,8 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
                         if (formData.ttsSpeed.endsWith('%')) return parseInt(formData.ttsSpeed) / 100;
                         switch (formData.ttsSpeed) {
                           case 'x-slow': return 0.5;
-                          case 'slow': return 0.75;
-                          case 'fast': return 1.25;
+                          case 'slow': return 0.7;
+                          case 'fast': return 1.2;
                           case 'x-fast': return 1.5;
                           default: return 1.0;
                         }
@@ -455,8 +455,8 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
                         if (formData.ttsSpeed.endsWith('%')) return parseInt(formData.ttsSpeed) / 100;
                         switch (formData.ttsSpeed) {
                           case 'x-slow': return 0.5;
-                          case 'slow': return 0.75;
-                          case 'fast': return 1.25;
+                          case 'slow': return 0.7;
+                          case 'fast': return 1.2;
                           case 'x-fast': return 1.5;
                           default: return 1.0;
                         }
