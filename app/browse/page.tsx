@@ -60,6 +60,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         telegramUrl: true,
         websiteUrl: true,
         ownerId: true,
+        allowsDiacritics: true,
         owner: {
           select: {
             id: true,
@@ -116,6 +117,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         telegramUrl: true,
         websiteUrl: true,
         ownerId: true,
+        allowsDiacritics: true,
         owner: {
           select: {
             id: true,

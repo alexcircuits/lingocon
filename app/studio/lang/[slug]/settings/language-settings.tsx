@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,7 @@ interface LanguageSettingsProps {
     fontUrl?: string | null
     fontFamily?: string | null
     fontScale: number
+    allowsDiacritics?: boolean
   }
   languageSlug: string
   dictionaryEntries: {
@@ -74,6 +76,7 @@ interface LanguageWithMetadata {
   fontUrl?: string | null
   fontFamily?: string | null
   fontScale: number
+  allowsDiacritics?: boolean
   metadata: any
 }
 
@@ -118,6 +121,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
     fontUrl: language.fontUrl || "",
     fontFamily: language.fontFamily || "",
     fontScale: language.fontScale || 1.0,
+    allowsDiacritics: (language as any).allowsDiacritics ?? false,
     ttsVoice: typedLanguage.metadata?.tts?.voiceId || "Joanna",
     ttsSpeed: typedLanguage.metadata?.tts?.speed || "slow",
   })
@@ -140,6 +144,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
         ...(formData.fontUrl ? { fontUrl: formData.fontUrl } : {}),
         ...(formData.fontFamily ? { fontFamily: formData.fontFamily } : {}),
         fontScale: Number(formData.fontScale),
+        allowsDiacritics: Boolean(formData.allowsDiacritics),
         metadata: {
           ...(typedLanguage.metadata || {}),
           tts: {
@@ -231,6 +236,23 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries }: 
               disabled={isPending}
               rows={4}
               maxLength={1000}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="allowsDiacritics" className="text-base font-medium">
+                Diacritical Language
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Allow diacritics (ě, á, ą, etc.) without adding each as a separate alphabet symbol
+              </p>
+            </div>
+            <Switch
+              id="allowsDiacritics"
+              checked={formData.allowsDiacritics}
+              onCheckedChange={(checked) => setFormData({ ...formData, allowsDiacritics: checked })}
+              disabled={isPending}
             />
           </div>
 

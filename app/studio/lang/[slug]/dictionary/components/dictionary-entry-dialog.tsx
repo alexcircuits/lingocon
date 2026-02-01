@@ -32,6 +32,7 @@ interface DictionaryEntryDialogProps {
   isPending?: boolean
   mode: "create" | "edit"
   symbols: ScriptSymbol[]
+  allowsDiacritics?: boolean
 }
 
 export function DictionaryEntryDialog({
@@ -42,6 +43,7 @@ export function DictionaryEntryDialog({
   isPending,
   mode,
   symbols,
+  allowsDiacritics = false,
 }: DictionaryEntryDialogProps) {
   const [formData, setFormData] = useState({
     lemma: "",
@@ -56,7 +58,7 @@ export function DictionaryEntryDialog({
   // Calculate alphabet warnings (non-blocking validation)
   const alphabetWarnings =
     formData.lemma && symbols && symbols.length > 0
-      ? validateStringAgainstAlphabet(formData.lemma, symbols)
+      ? validateStringAgainstAlphabet(formData.lemma, symbols, { allowsDiacritics })
       : []
 
   const { errors, touched, handleBlur, handleChange, validateForm } = useFormValidation(

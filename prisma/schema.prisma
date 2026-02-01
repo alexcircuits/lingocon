@@ -103,6 +103,9 @@ model Language {
   fontUrl     String?  // Path to uploaded font file
   fontFamily  String?  // CSS font-family name
   fontScale   Float    @default(1.0)
+  
+  // Diacritics support - when enabled, allows diacritical variants of base letters
+  allowsDiacritics Boolean @default(false)
 
   ownerId     String
   createdAt   DateTime @default(now())

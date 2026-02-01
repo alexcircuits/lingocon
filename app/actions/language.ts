@@ -119,6 +119,8 @@ export async function updateLanguage(input: UpdateLanguageInput) {
       updateData.fontFamily = validated.fontFamily || null
     if (validated.fontScale !== undefined)
       updateData.fontScale = validated.fontScale
+    if (validated.allowsDiacritics !== undefined)
+      updateData.allowsDiacritics = validated.allowsDiacritics
 
     const updated = await prisma.language.update({
       where: { id: validated.id },

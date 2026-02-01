@@ -4,13 +4,34 @@ interface AlphabetSymbol {
     capitalSymbol?: string | null
 }
 
-export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymbol[]): string[] {
+interface ValidationOptions {
+    allowsDiacritics?: boolean
+}
+
+/**
+ * Extract the base character from a grapheme by removing combining diacritical marks.
+ * e.g., "ě" -> "e", "á" -> "a", "ą" -> "a"
+ */
+function getBaseCharacter(grapheme: string): string {
+    // Normalize to NFD to separate base char from combining marks
+    const decomposed = grapheme.normalize("NFD")
+    // Remove all combining diacritical marks (\p{M} matches all combining marks)
+    return decomposed.replace(/\p{M}/gu, "")
+}
+
+export function validateStringAgainstAlphabet(
+    str: string,
+    symbols: AlphabetSymbol[],
+    options: ValidationOptions = {}
+): string[] {
     if (!str || !symbols || symbols.length === 0) return []
+
+    const { allowsDiacritics = false } = options
 
     // Create a set of allowed characters
     // We need to handle both precomposed and decomposed forms
     const allowedChars = new Set<string>()
-    const combiningDiacritics = new Set<string>()
+    const baseChars = new Set<string>() // For diacritics mode
 
     symbols.forEach((s) => {
         // Add the main symbol
@@ -19,11 +40,10 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
             allowedChars.add(s.symbol.normalize("NFC"))
             allowedChars.add(s.symbol.normalize("NFD"))
 
-            // Check if it's a combining diacritic (using regex for simplicity)
-            if (/^\p{M}$/u.test(s.symbol)) {
-                combiningDiacritics.add(s.symbol)
-                combiningDiacritics.add(s.symbol.normalize("NFC"))
-                combiningDiacritics.add(s.symbol.normalize("NFD"))
+            // Also add the base character for diacritics mode
+            if (allowsDiacritics) {
+                const base = getBaseCharacter(s.symbol)
+                if (base) baseChars.add(base.toLowerCase())
             }
         }
         // Add the capital symbol
@@ -31,6 +51,12 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
             allowedChars.add(s.capitalSymbol)
             allowedChars.add(s.capitalSymbol.normalize("NFC"))
             allowedChars.add(s.capitalSymbol.normalize("NFD"))
+
+            // Also add the base character for diacritics mode
+            if (allowsDiacritics) {
+                const base = getBaseCharacter(s.capitalSymbol)
+                if (base) baseChars.add(base.toLowerCase())
+            }
         }
     })
 
@@ -46,11 +72,6 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
     let remaining = str.normalize("NFC")
 
     while (remaining.length > 0) {
-        // 1. Check if it starts with an ignored character (whitespace, digit, punctuation, symbol)
-        // We check one char at a time for these
-        // Intl.Segmenter is better for graphemes, but for regex checks on \s\d\p{P}\p{S}, one code point is usually providing the class.
-        // Let's use Segmenter just to be safe about what "one character" is.
-
         let matchFound = false
 
         // Try to match one of the allowed symbols at the beginning of the string
@@ -64,7 +85,7 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
 
         if (matchFound) continue
 
-        // If no symbol matched, check if the next grapheme is a valid "ignored" character
+        // If no symbol matched, check if the next grapheme is valid
         // We need to extract the next grapheme
         const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" })
         const iterator = segmenter.segment(remaining)[Symbol.iterator]()
@@ -72,12 +93,26 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
 
         if (nextSegment) {
             const char = nextSegment.segment
-            // Check if it's whitespace, digits, or punctuation
+
+            // Check if it's whitespace, digits, or punctuation (always allowed)
             if (/^[\s\d\p{P}\p{S}]+$/u.test(char)) {
                 remaining = remaining.slice(char.length)
                 matchFound = true
+            }
+            // If diacritics mode is enabled, check if base char is in alphabet
+            else if (allowsDiacritics) {
+                const base = getBaseCharacter(char)
+                if (base && baseChars.has(base.toLowerCase())) {
+                    // Base character is in alphabet, so diacritical variant is allowed
+                    remaining = remaining.slice(char.length)
+                    matchFound = true
+                } else {
+                    // Base character not in alphabet
+                    invalidChars.push(char)
+                    remaining = remaining.slice(char.length)
+                }
             } else {
-                // If we get here, it's an invalid character
+                // Standard mode - mark as invalid
                 invalidChars.push(char)
                 remaining = remaining.slice(char.length)
             }
@@ -90,3 +125,4 @@ export function validateStringAgainstAlphabet(str: string, symbols: AlphabetSymb
     // Remove duplicates
     return Array.from(new Set(invalidChars))
 }
+

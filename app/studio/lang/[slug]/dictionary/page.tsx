@@ -22,6 +22,7 @@ async function getLanguageDetails(slug: string, userId: string | null) {
         },
       },
       metadata: true,
+      allowsDiacritics: true,
     },
   })
 
@@ -134,6 +135,7 @@ export default async function DictionaryPage({
           initialField={field}
           enableAudio={isAudioEnabled}
           ttsSettings={(language.metadata as any)?.tts}
+          allowsDiacritics={language.allowsDiacritics}
         />
       </Suspense>
     </div>

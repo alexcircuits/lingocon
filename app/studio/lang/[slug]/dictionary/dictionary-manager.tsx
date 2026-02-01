@@ -43,6 +43,7 @@ interface DictionaryManagerProps {
     voiceId: string
     speed: string
   }
+  allowsDiacritics?: boolean
 }
 
 export function DictionaryManager({
@@ -56,6 +57,7 @@ export function DictionaryManager({
   initialField,
   enableAudio,
   ttsSettings,
+  allowsDiacritics = false,
 }: DictionaryManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -499,6 +501,7 @@ export function DictionaryManager({
         isPending={isPending}
         mode="create"
         symbols={symbols}
+        allowsDiacritics={allowsDiacritics}
       />
 
       <DictionaryEntryDialog
@@ -509,6 +512,7 @@ export function DictionaryManager({
         isPending={isPending}
         mode="edit"
         symbols={symbols}
+        allowsDiacritics={allowsDiacritics}
       />
 
       <DeleteConfirmDialog
