@@ -46,9 +46,20 @@ export async function POST(req: NextRequest) {
 
     // Use "cover" directory for "image" type as well
     const uploadType = type === "image" ? "cover" : type
-    if (!allowedTypes.includes(file.type)) {
+
+    let isValidType = allowedTypes.includes(file.type)
+
+    // Fallback for fonts that might have missing or generic MIME types on some OS
+    if (!isValidType && type === "font") {
+      const ext = file.name.split(".").pop()?.toLowerCase()
+      if (ext && ["ttf", "otf", "woff", "woff2"].includes(ext)) {
+        isValidType = true
+      }
+    }
+
+    if (!isValidType) {
       return NextResponse.json({
-        error: `Invalid file type. Allowed: ${allowedTypes.join(", ")}`
+        error: "Invalid font or file type. Please upload a valid TTF/OTF/WOFF file."
       }, { status: 400 })
     }
 

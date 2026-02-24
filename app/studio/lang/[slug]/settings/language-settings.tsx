@@ -137,7 +137,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         id: String(language.id),
         name: String(formData.name),
         visibility: formData.visibility,
-        ...(formData.description ? { description: formData.description } : {}),
+        description: formData.description,
         ...(formData.flagUrl ? { flagUrl: formData.flagUrl } : {}),
         ...(formData.discordUrl ? { discordUrl: formData.discordUrl } : {}),
         ...(formData.telegramUrl ? { telegramUrl: formData.telegramUrl } : {}),

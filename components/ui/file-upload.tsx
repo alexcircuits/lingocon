@@ -83,6 +83,8 @@ export function FileUpload({
           "application/vnd.ms-opentype": [".otf"],
           "application/x-font-truetype": [".ttf"],
           "application/font-woff": [".woff"],
+          "application/octet-stream": [".ttf", ".otf", ".woff", ".woff2"],
+          "font/*": [".ttf", ".otf", ".woff", ".woff2"],
         }
         : {
           "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],

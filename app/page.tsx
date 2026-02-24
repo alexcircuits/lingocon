@@ -26,6 +26,7 @@ import { HeroBackground } from "@/components/hero-background"
 import { TextReveal } from "@/components/ui/text-reveal"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Footer } from "@/components/footer"
+import { WordOfTheDay } from "@/components/word-of-the-day"
 
 export const dynamic = "force-dynamic"
 
@@ -449,6 +450,23 @@ export default async function Home() {
         </div>
         <InfiniteMovingCards items={testimonials} direction="right" speed="slow" />
       </section> */}
+
+      {/* Word of the Day */}
+      <section className="py-24 bg-secondary/30 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-serif mb-4">
+              Word of the Day
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Discover new words from our community&apos;s languages
+            </p>
+          </div>
+          <div className="max-w-lg mx-auto">
+            <WordOfTheDay />
+          </div>
+        </div>
+      </section>
 
       {/* Featured Languages */}
       {
