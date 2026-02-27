@@ -4,6 +4,7 @@ import { getUserId } from "@/lib/auth-helpers"
 import { parseCSV, validateCSVData } from "@/lib/utils/csv-parser"
 
 export const dynamic = "force-dynamic"
+export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,60 +56,82 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Import entries in a transaction
-    const results = await prisma.$transaction(async (tx) => {
-      const created: string[] = []
-      const skipped: string[] = []
-      const errors: string[] = []
+    // Fetch all existing lemmas for this language in one query (case-sensitive)
+    const existingEntries = await prisma.dictionaryEntry.findMany({
+      where: { languageId },
+      select: { lemma: true },
+    })
+    const existingLemmas = new Set(existingEntries.map((e) => e.lemma.trim()))
 
-      for (const row of rows) {
-        try {
-          // Check if entry already exists (by lemma, case-insensitive)
-          const existing = await tx.dictionaryEntry.findFirst({
-            where: {
-              languageId,
-              lemma: {
-                equals: row.lemma.trim(),
-                mode: "insensitive",
-              },
-            },
-          })
+    // Deduplicate within the CSV itself (case-sensitive) and against existing DB entries
+    const created: string[] = []
+    const skipped: string[] = []
+    const seenInFile = new Set<string>()
+    const toInsert: {
+      languageId: string
+      lemma: string
+      gloss: string
+      ipa: string | null
+      partOfSpeech: string | null
+      notes: string | null
+    }[] = []
 
-          if (existing) {
-            skipped.push(row.lemma)
-            continue
-          }
+    for (const row of rows) {
+      const lemma = row.lemma.trim()
 
-          // Create new entry
-          await tx.dictionaryEntry.create({
-            data: {
-              languageId,
-              lemma: row.lemma.trim(),
-              gloss: row.gloss.trim(),
-              ipa: row.ipa?.trim() || null,
-              partOfSpeech: row.partOfSpeech?.trim() || null,
-              notes: row.notes?.trim() || null,
-            },
-          })
-
-          created.push(row.lemma)
-        } catch (error) {
-          errors.push(`${row.lemma}: ${error instanceof Error ? error.message : "Unknown error"}`)
-        }
+      // Skip if already exists in DB (case-sensitive)
+      if (existingLemmas.has(lemma)) {
+        skipped.push(lemma)
+        continue
       }
 
-      return { created, skipped, errors }
-    })
+      // Skip if duplicate within this CSV file (case-sensitive)
+      if (seenInFile.has(lemma)) {
+        skipped.push(lemma)
+        continue
+      }
+
+      seenInFile.add(lemma)
+      created.push(lemma)
+      toInsert.push({
+        languageId,
+        lemma,
+        gloss: row.gloss.trim(),
+        ipa: row.ipa?.trim() || null,
+        partOfSpeech: row.partOfSpeech?.trim() || null,
+        notes: row.notes?.trim() || null,
+      })
+    }
+
+    // Batch insert in chunks of 500 to avoid query size limits
+    const BATCH_SIZE = 500
+    const errors: string[] = []
+
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const batch = toInsert.slice(i, i + BATCH_SIZE)
+      try {
+        await prisma.dictionaryEntry.createMany({
+          data: batch,
+          skipDuplicates: true,
+        })
+      } catch (error) {
+        const batchLemmas = batch.map((b) => b.lemma).join(", ")
+        errors.push(
+          `Batch ${Math.floor(i / BATCH_SIZE) + 1} failed (${batchLemmas}): ${error instanceof Error ? error.message : "Unknown error"
+          }`
+        )
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      imported: results.created.length,
-      skipped: results.skipped.length,
-      errors: results.errors.length,
+      imported: created.length - errors.length,
+      skipped: skipped.length,
+      errors: errors.length,
       details: {
-        created: results.created,
-        skipped: results.skipped,
-        errors: results.errors,
+        created,
+        skipped,
+        errors,
       },
       warnings: validation.errors.filter((e) => e.startsWith("Warning:")),
     })

@@ -134,16 +134,16 @@ export function validateCSVData(
     errors.push(`${emptyGlosses} row(s) have empty gloss fields`)
   }
 
-  // Check for duplicates (warn, don't error)
+  // Check for duplicates (warn, don't error) — case-sensitive
   const lemmaSet = new Set<string>()
   const duplicates: string[] = []
   rows.forEach((row) => {
     if (row.lemma) {
-      const normalized = row.lemma.toLowerCase().trim()
-      if (lemmaSet.has(normalized)) {
+      const trimmed = row.lemma.trim()
+      if (lemmaSet.has(trimmed)) {
         duplicates.push(row.lemma)
       }
-      lemmaSet.add(normalized)
+      lemmaSet.add(trimmed)
     }
   })
 

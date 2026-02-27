@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, Volume2 } from "lucide-react"
 import { getWordOfTheDay } from "@/app/actions/word"
@@ -54,9 +55,11 @@ export async function WordOfTheDay() {
                 className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group"
             >
                 {word.language.flagUrl && (
-                    <img
+                    <Image
                         src={word.language.flagUrl}
-                        alt=""
+                        alt={`${word.language.name} flag`}
+                        width={16}
+                        height={12}
                         className="w-4 h-3 rounded-sm object-cover"
                     />
                 )}

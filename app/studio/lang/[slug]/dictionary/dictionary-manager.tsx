@@ -7,9 +7,10 @@ import {
   createDictionaryEntry,
   updateDictionaryEntry,
   deleteDictionaryEntry,
+  bulkDeleteDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus } from "lucide-react"
+import { Download, Upload, Edit, Plus, Trash2 } from "lucide-react"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { DictionarySearch } from "./components/dictionary-search"
@@ -74,6 +75,7 @@ export function DictionaryManager({
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
   const [isDeriveOpen, setIsDeriveOpen] = useState(false)
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
 
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
@@ -108,6 +110,7 @@ export function DictionaryManager({
         if (isImportOpen) setIsImportOpen(false)
         if (isBulkEditOpen) setIsBulkEditOpen(false)
         if (isDeriveOpen) setIsDeriveOpen(false)
+        if (isBulkDeleteOpen) setIsBulkDeleteOpen(false)
       },
     },
   ])
@@ -291,6 +294,24 @@ export function DictionaryManager({
     }
   }
 
+  const handleBulkDelete = async () => {
+    if (selectedEntries.size === 0) return
+
+    const ids = Array.from(selectedEntries)
+    const result = await bulkDeleteDictionaryEntries(ids, languageId)
+
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success(`Deleted ${result.deletedCount} entries`)
+      setIsBulkDeleteOpen(false)
+      setSelectedEntries(new Set())
+      startTransition(() => {
+        router.refresh()
+      })
+    }
+  }
+
   const handleImport = async (file: File) => {
     try {
       const formData = new FormData()
@@ -381,15 +402,27 @@ export function DictionaryManager({
           />
 
           {selectedEntries.size > 0 && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsBulkEditOpen(true)}
-              disabled={isPending}
-              title={`Bulk Edit (${selectedEntries.size})`}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsBulkEditOpen(true)}
+                disabled={isPending}
+                title={`Bulk Edit (${selectedEntries.size})`}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsBulkDeleteOpen(true)}
+                disabled={isPending}
+                title={`Delete Selected (${selectedEntries.size})`}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
           )}
 
           <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2">
@@ -522,6 +555,15 @@ export function DictionaryManager({
         isPending={isPending}
         itemName={deletingId ? initialEntries?.find(e => e.id === deletingId)?.lemma : undefined}
         description={deletingId ? `This will permanently delete the dictionary entry "${initialEntries?.find(e => e.id === deletingId)?.lemma}". This action cannot be undone.` : undefined}
+      />
+
+      <DeleteConfirmDialog
+        open={isBulkDeleteOpen}
+        onOpenChange={setIsBulkDeleteOpen}
+        onConfirm={handleBulkDelete}
+        isPending={isPending}
+        title={`Delete ${selectedEntries.size} entries?`}
+        description={`This will permanently delete ${selectedEntries.size} selected dictionary entries. This action cannot be undone.`}
       />
 
       <ImportDialog

@@ -322,3 +322,90 @@ export async function deleteDictionaryEntry(entryId: string, languageId: string)
   }
 }
 
+export async function bulkDeleteDictionaryEntries(
+  entryIds: string[],
+  languageId: string
+) {
+  const userId = await getUserId()
+
+  if (!userId) {
+    return {
+      error: "Unauthorized",
+    }
+  }
+
+  try {
+    if (!entryIds || entryIds.length === 0) {
+      return {
+        error: "No entries selected",
+      }
+    }
+
+    // Verify edit permission (owner or editor)
+    const canEdit = await canEditLanguage(languageId, userId)
+    if (!canEdit) {
+      return {
+        error: "Unauthorized - You don't have permission to edit this language",
+      }
+    }
+
+    // Verify all entries belong to this language
+    const entries = await prisma.dictionaryEntry.findMany({
+      where: {
+        id: { in: entryIds },
+        languageId,
+      },
+      select: { id: true },
+    })
+
+    if (entries.length !== entryIds.length) {
+      return {
+        error: "Some entries not found or don't belong to this language",
+      }
+    }
+
+    // Delete all selected entries at once
+    const result = await prisma.dictionaryEntry.deleteMany({
+      where: {
+        id: { in: entryIds },
+        languageId,
+      },
+    })
+
+    const language = await prisma.language.findUnique({
+      where: { id: languageId },
+      select: { slug: true },
+    })
+
+    // Log activity
+    await createActivity({
+      type: "DELETED",
+      entityType: "DICTIONARY_ENTRY",
+      entityId: entryIds[0],
+      languageId,
+      userId,
+      description: `Bulk deleted ${result.count} dictionary entries`,
+    })
+
+    if (language) {
+      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
+      revalidatePath(`/lang/${language.slug}/dictionary`)
+    }
+
+    return {
+      success: true,
+      deletedCount: result.count,
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        error: error.message,
+      }
+    }
+    return {
+      error: "Failed to bulk delete dictionary entries",
+    }
+  }
+}
+
+

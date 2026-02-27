@@ -389,7 +389,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border/60">
-                          <TableHead className="w-[150px] bg-muted/20"></TableHead>
+                          <TableHead className="w-[150px] bg-muted/20 sticky left-0 z-20"></TableHead>
                           {columns.map((col: string, idx: number) => (
                             <TableHead key={idx} className="bg-muted/20 font-semibold text-foreground/80 min-w-[120px]">
                               {col}
@@ -400,7 +400,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                       <TableBody>
                         {rows.map((row: string, rowIdx: number) => (
                           <TableRow key={rowIdx} className="hover:bg-muted/5">
-                            <TableCell className="font-medium bg-muted/10 text-muted-foreground border-r border-border/40">
+                            <TableCell className="font-medium bg-muted/10 text-muted-foreground border-r border-border/40 sticky left-0 z-20 shadow-[1px_0_0_0_hsl(var(--border)_/_0.6)]">
                               {row}
                             </TableCell>
                             {columns.map((_: string, colIdx: number) => {
