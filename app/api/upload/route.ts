@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Upload type not specified" }, { status: 400 })
     }
 
+    // Validate upload type to prevent path traversal
+    const ALLOWED_UPLOAD_TYPES = ["flag", "cover", "image", "file", "font"]
+    if (!ALLOWED_UPLOAD_TYPES.includes(type)) {
+      return NextResponse.json({ error: "Invalid upload type" }, { status: 400 })
+    }
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: "File too large (max 15MB)" }, { status: 400 })

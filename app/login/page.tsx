@@ -51,7 +51,7 @@ export default function LoginPage() {
 
               <div className="mt-6 text-center">
                 <p className="text-xs text-muted-foreground">
-                  By signing in, you agree to our <Link href="/terms" className="underline hover:text-primary">Terms</Link> and <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>.
+                  By signing in, you agree to our Terms of Service and Privacy Policy.
                 </p>
               </div>
             </CardContent>

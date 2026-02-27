@@ -1,8 +1,7 @@
 "use server"
 
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { getDevUserId } from "@/lib/dev-auth"
+import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { TextType } from "@prisma/client"
 import { checkContentBadges } from "@/app/actions/badge"
@@ -28,20 +27,15 @@ export async function createText(data: {
   paradigmId?: string | null
   languageId: string
 }) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
   }
 
   // Verify user owns or can edit the language
-  const language = await prisma.language.findUnique({
-    where: { id: data.languageId },
-    select: { ownerId: true }
-  })
-
-  if (!language || language.ownerId !== userId) {
+  const canEdit = await canEditLanguage(data.languageId, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to add texts to this language" }
   }
 
@@ -108,8 +102,7 @@ export async function updateText(
     paradigmId?: string | null
   }
 ) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
@@ -117,10 +110,15 @@ export async function updateText(
 
   const text = await prisma.text.findUnique({
     where: { id },
-    include: { language: { select: { ownerId: true, slug: true } } }
+    include: { language: { select: { ownerId: true, slug: true, id: true } } }
   })
 
-  if (!text || text.language.ownerId !== userId) {
+  if (!text) {
+    return { error: "Text not found" }
+  }
+
+  const canEdit = await canEditLanguage(text.language.id, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to edit this text" }
   }
 
@@ -163,8 +161,7 @@ export async function updateText(
 }
 
 export async function deleteText(id: string) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
@@ -172,10 +169,15 @@ export async function deleteText(id: string) {
 
   const text = await prisma.text.findUnique({
     where: { id },
-    include: { language: { select: { ownerId: true, slug: true } } }
+    include: { language: { select: { ownerId: true, slug: true, id: true } } }
   })
 
-  if (!text || text.language.ownerId !== userId) {
+  if (!text) {
+    return { error: "Text not found" }
+  }
+
+  const canEdit = await canEditLanguage(text.language.id, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to delete this text" }
   }
 

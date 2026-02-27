@@ -85,17 +85,12 @@ export async function updateLanguage(input: UpdateLanguageInput) {
   try {
     const validated = updateLanguageSchema.parse(input)
 
-    // Verify ownership (skip in dev mode)
-    if (process.env.DEV_MODE !== "true") {
-      const language = await prisma.language.findUnique({
-        where: { id: validated.id },
-        select: { ownerId: true },
-      })
-
-      if (!language || language.ownerId !== userId) {
-        return {
-          error: "Unauthorized",
-        }
+    // Verify edit permission (owner or editor)
+    const { canEditLanguage } = await import("@/lib/auth-helpers")
+    const canEdit = await canEditLanguage(validated.id, userId)
+    if (!canEdit) {
+      return {
+        error: "Unauthorized",
       }
     }
 

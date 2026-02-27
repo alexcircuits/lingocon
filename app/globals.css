@@ -4,12 +4,12 @@
 
 /* Smooth transitions for interactive elements */
 @layer base {
-  * {
-    @apply transition-colors duration-200;
-  }
 
   button,
-  a {
+  a,
+  input,
+  select,
+  textarea {
     @apply transition-all duration-200;
   }
 }
@@ -41,8 +41,9 @@
   }
 }
 
-/* Editorial typography - Instrument Serif for headings, Inter for body */
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Editorial typography - Instrument Serif for headings, Inter for body
+   NOTE: Load via next/font or <link> in layout.tsx for better performance.
+   Keeping as CSS reference for font-family declarations below. */
 
 @layer base {
   :root {
@@ -183,7 +184,7 @@
       0 16px 32px hsla(220, 30%, 15%, 0.06);
   }
 
-  /* Hover lift effect */
+  /* Hover lift effect - transforms */
   .hover-lift {
     @apply transition-all duration-300 ease-out;
   }

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
+import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import { parseCSV, validateCSVData } from "@/lib/utils/csv-parser"
+import { revalidatePath } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -28,15 +29,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify ownership
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true },
-    })
-
-    if (!language || language.ownerId !== userId) {
+    // Verify edit permission
+    const canEdit = await canEditLanguage(languageId, userId)
+    if (!canEdit) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
+
+    // Get language slug for revalidation
+    const language = await prisma.language.findUnique({
+      where: { id: languageId },
+      select: { slug: true },
+    })
 
     // Read file content
     const text = await file.text()
@@ -121,6 +124,12 @@ export async function POST(request: NextRequest) {
           }`
         )
       }
+    }
+
+    // Revalidate the dictionary page
+    if (language?.slug) {
+      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
+      revalidatePath(`/lang/${language.slug}/dictionary`)
     }
 
     return NextResponse.json({

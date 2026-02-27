@@ -21,7 +21,26 @@ export interface WordOfTheDay {
  * Uses a seeded random selection to ensure all visitors see the same word each day.
  */
 export async function getWordOfTheDay(): Promise<WordOfTheDay | null> {
-    // Get all dictionary entries from public languages
+    // Count dictionary entries from public languages
+    const count = await prisma.dictionaryEntry.count({
+        where: {
+            language: {
+                visibility: "PUBLIC",
+            },
+        },
+    })
+
+    if (count === 0) {
+        return null
+    }
+
+    // Create a deterministic seed based on today's date
+    const today = new Date()
+    const dateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
+    const seed = hashCode(dateString)
+
+    // Pick a deterministic index and fetch just that one entry
+    const index = Math.abs(seed) % count
     const entries = await prisma.dictionaryEntry.findMany({
         where: {
             language: {
@@ -43,20 +62,11 @@ export async function getWordOfTheDay(): Promise<WordOfTheDay | null> {
                 },
             },
         },
+        skip: index,
+        take: 1,
     })
 
-    if (entries.length === 0) {
-        return null
-    }
-
-    // Create a deterministic seed based on today's date
-    const today = new Date()
-    const dateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
-    const seed = hashCode(dateString)
-
-    // Select an entry based on the seed
-    const index = Math.abs(seed) % entries.length
-    return entries[index]
+    return entries[0] ?? null
 }
 
 /**

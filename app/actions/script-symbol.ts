@@ -281,6 +281,13 @@ export async function saveAlphabetOrder(
   }
 
   try {
+    // Prevent unbounded transactions
+    if (symbolIds.length > 1000) {
+      return {
+        error: "Too many symbols to reorder at once (max 1000)",
+      }
+    }
+
     // Verify edit permission
     const canEdit = await canEditLanguage(languageId, userId)
     if (!canEdit) {

@@ -6,6 +6,14 @@ import { isAdmin } from "@/lib/admin"
 export async function getUserId(): Promise<string | null> {
   const session = await auth()
   if (session?.user?.id) {
+    // Check if user is suspended
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isSuspended: true },
+    })
+    if (user?.isSuspended) {
+      return null
+    }
     return session.user.id
   }
   if (process.env.DEV_MODE === "true") {

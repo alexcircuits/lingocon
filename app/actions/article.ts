@@ -1,8 +1,7 @@
 "use server"
 
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { getDevUserId } from "@/lib/dev-auth"
+import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { checkContentBadges } from "@/app/actions/badge"
 
@@ -23,20 +22,15 @@ export async function createArticle(data: {
   paradigmId?: string | null
   languageId: string
 }) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
   }
 
   // Verify user owns or can edit the language
-  const language = await prisma.language.findUnique({
-    where: { id: data.languageId },
-    select: { ownerId: true }
-  })
-
-  if (!language || language.ownerId !== userId) {
+  const canEdit = await canEditLanguage(data.languageId, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to add articles to this language" }
   }
 
@@ -98,8 +92,7 @@ export async function updateArticle(
     paradigmId?: string | null
   }
 ) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
@@ -107,10 +100,15 @@ export async function updateArticle(
 
   const article = await prisma.article.findUnique({
     where: { id },
-    include: { language: { select: { ownerId: true, slug: true } } }
+    include: { language: { select: { ownerId: true, slug: true, id: true } } }
   })
 
-  if (!article || article.language.ownerId !== userId) {
+  if (!article) {
+    return { error: "Article not found" }
+  }
+
+  const canEdit = await canEditLanguage(article.language.id, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to edit this article" }
   }
 
@@ -154,8 +152,7 @@ export async function updateArticle(
 }
 
 export async function deleteArticle(id: string) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
 
   if (!userId) {
     return { error: "Unauthorized" }
@@ -163,10 +160,15 @@ export async function deleteArticle(id: string) {
 
   const article = await prisma.article.findUnique({
     where: { id },
-    include: { language: { select: { ownerId: true, slug: true } } }
+    include: { language: { select: { ownerId: true, slug: true, id: true } } }
   })
 
-  if (!article || article.language.ownerId !== userId) {
+  if (!article) {
+    return { error: "Article not found" }
+  }
+
+  const canEdit = await canEditLanguage(article.language.id, userId)
+  if (!canEdit) {
     return { error: "You don't have permission to delete this article" }
   }
 
