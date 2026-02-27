@@ -5,14 +5,15 @@ import { PublicDictionary } from "./public-dictionary"
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({
     where: { slug },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      visibility: true,
+    include: {
       dictionaryEntries: {
         orderBy: {
           lemma: "asc",
+        },
+        include: {
+          exampleSentences: {
+            orderBy: { order: "asc" },
+          },
         },
       },
       scriptSymbols: {
@@ -20,7 +21,6 @@ async function getLanguage(slug: string) {
           order: "asc",
         },
       },
-      metadata: true,
     },
   })
 
@@ -38,7 +38,6 @@ export default async function DictionaryPage({
 }) {
   const { slug } = await params
   const language = await getLanguage(slug)
-  console.log('DEBUG: DictionaryPage language.metadata:', JSON.stringify(language?.metadata, null, 2))
 
   if (!language) {
     notFound()

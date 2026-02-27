@@ -25,6 +25,7 @@ export const updateLanguageSchema = z.object({
   fontFamily: z.string().max(100).optional().nullable(),
   fontScale: z.number().min(0.5).max(3.0).optional(),
   allowsDiacritics: z.boolean().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 export type CreateLanguageInput = z.infer<typeof createLanguageSchema>

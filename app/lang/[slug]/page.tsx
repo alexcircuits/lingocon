@@ -14,6 +14,8 @@ import { NavBento } from "./components/nav-bento"
 import { formatDistanceToNow } from "date-fns"
 import { getUserId } from "@/lib/auth-helpers"
 import { checkIsFavorite, getFavoriteCount } from "@/app/actions/favorite"
+import { getComments } from "@/app/actions/comment"
+import { CommentSection } from "@/components/comments/comment-section"
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({
@@ -142,7 +144,12 @@ export default async function PublicLanguagePage({
   }
 
   const userId = await getUserId()
-  const isFavorite = userId ? await checkIsFavorite(language.id, userId) : false
+  const [isFavorite, comments] = await Promise.all([
+    userId ? checkIsFavorite(language.id, userId) : false,
+    getComments(language.id),
+  ])
+
+  const isOwner = userId === (language as any).ownerId
 
   const sections = [
     {
@@ -270,6 +277,16 @@ export default async function PublicLanguagePage({
             <span>Updated {formatDate(language.updatedAt, "MMMM d, yyyy")}</span>
           </div>
         </div>
+      </section>
+
+      {/* Comments */}
+      <section className="border-t border-border/40 pt-10">
+        <CommentSection
+          comments={comments}
+          languageId={language.id}
+          currentUserId={userId}
+          isOwner={isOwner}
+        />
       </section>
     </div>
   )

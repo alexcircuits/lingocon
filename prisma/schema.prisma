@@ -41,6 +41,7 @@ model User {
   texts     Text[]
   auditLogs AuditLog[]
   userBadges UserBadge[]
+  comments   Comment[]
 
   @@map("users")
 }
@@ -121,6 +122,7 @@ model Language {
   favorites       Favorite[]
   articles        Article[]
   texts           Text[]
+  comments        Comment[]
 
   @@index([ownerId])
   @@index([slug])
@@ -196,11 +198,28 @@ model DictionaryEntry {
 
   language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
   paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
+  exampleSentences ExampleSentence[]
 
   @@index([languageId])
   @@index([languageId, lemma])
   @@index([paradigmId])
   @@map("dictionary_entries")
+}
+
+model ExampleSentence {
+  id                String   @id @default(cuid())
+  sentence          String   // Sentence in the conlang
+  gloss             String?  // Word-by-word gloss
+  translation       String   // Free translation
+  order             Int      @default(0)
+  dictionaryEntryId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  entry DictionaryEntry @relation(fields: [dictionaryEntryId], references: [id], onDelete: Cascade)
+
+  @@index([dictionaryEntryId])
+  @@map("example_sentences")
 }
 
 model Paradigm {
@@ -459,4 +478,27 @@ model UserBadge {
   @@index([userId])
   @@index([badgeId])
   @@map("user_badges")
+}
+
+// Comments on public languages
+model Comment {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  languageId  String
+  userId      String
+  parentId    String?  // For threaded replies
+  isHidden    Boolean  @default(false) // For moderation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([languageId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([languageId, createdAt])
+  @@map("comments")
 }

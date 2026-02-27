@@ -17,47 +17,77 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { Search, BookOpen, Link2, StickyNote } from "lucide-react"
+import { Search, BookOpen, Link2, StickyNote, ArrowLeftRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { IPASpeaker } from "@/components/ipa-speaker"
-import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
+import { ExampleSentences } from "@/components/dictionary/example-sentences"
+import type { DictionaryEntry, ScriptSymbol, ExampleSentence } from "@prisma/client"
+
+type DictionaryEntryWithExamples = DictionaryEntry & {
+  exampleSentences: ExampleSentence[]
+}
 
 interface PublicDictionaryProps {
-  entries: DictionaryEntry[]
+  entries: DictionaryEntryWithExamples[]
   symbols: ScriptSymbol[]
   voiceId?: string
   speed?: string
 }
 
 export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDictionaryProps) {
-  console.log('DEBUG: PublicDictionary props:', { voiceId, speed })
   const [searchQuery, setSearchQuery] = useState("")
   const [showLatin, setShowLatin] = useState(false)
-  const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null)
+  const [selectedEntry, setSelectedEntry] = useState<DictionaryEntryWithExamples | null>(null)
+  const [reversed, setReversed] = useState(false)
 
-  // Filter entries based on search query
+  // Filter entries based on search query and direction
   const filteredEntries = useMemo(() => {
     if (!searchQuery.trim()) {
+      // When reversed with no search, sort by gloss
+      if (reversed) {
+        return [...entries].sort((a, b) => a.gloss.localeCompare(b.gloss))
+      }
       return entries
     }
 
     const query = searchQuery.toLowerCase()
-    return entries.filter(
-      (entry) =>
+    const results = entries.filter((entry) => {
+      if (reversed) {
+        // Reverse mode: search gloss first, then lemma
+        return (
+          entry.gloss.toLowerCase().includes(query) ||
+          entry.lemma.toLowerCase().includes(query)
+        )
+      }
+      return (
         entry.lemma.toLowerCase().includes(query) ||
         entry.gloss.toLowerCase().includes(query) ||
         (entry.ipa && entry.ipa.toLowerCase().includes(query)) ||
         (entry.partOfSpeech && entry.partOfSpeech.toLowerCase().includes(query))
-    )
-  }, [entries, searchQuery])
+      )
+    })
+
+    if (reversed) {
+      // In reverse mode, prioritize gloss matches
+      results.sort((a, b) => {
+        const aGloss = a.gloss.toLowerCase().includes(query) ? 0 : 1
+        const bGloss = b.gloss.toLowerCase().includes(query) ? 0 : 1
+        return aGloss - bGloss || a.gloss.localeCompare(b.gloss)
+      })
+    }
+
+    return results
+  }, [entries, searchQuery, reversed])
 
   // Check if entry has additional details
-  const hasDetails = (entry: DictionaryEntry) => {
+  const hasDetails = (entry: DictionaryEntryWithExamples) => {
     return (
       entry.etymology ||
       entry.notes ||
-      (Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0)
+      (Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0) ||
+      entry.exampleSentences.length > 0
     )
   }
 
@@ -73,16 +103,25 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
+      <div className="flex gap-2 sm:gap-4 items-center flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by lemma, gloss, IPA, or part of speech..."
+            placeholder={reversed ? "Search by English meaning..." : "Search by lemma, gloss, IPA, or part of speech..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
         </div>
+        <Button
+          variant={reversed ? "default" : "outline"}
+          size="sm"
+          className="gap-2 shrink-0"
+          onClick={() => setReversed(!reversed)}
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5" />
+          {reversed ? "English → Conlang" : "Conlang → English"}
+        </Button>
         <TransliterationToggle
           onToggle={setShowLatin}
           defaultShowLatin={showLatin}
@@ -253,6 +292,16 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
                       {selectedEntry.notes}
                     </p>
                   </div>
+                )}
+
+                {/* Example Sentences */}
+                {selectedEntry.exampleSentences.length > 0 && (
+                  <ExampleSentences
+                    examples={selectedEntry.exampleSentences}
+                    dictionaryEntryId={selectedEntry.id}
+                    languageId={selectedEntry.languageId}
+                    canEdit={false}
+                  />
                 )}
               </div>
             </>
