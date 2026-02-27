@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet"
 import { useState } from "react"
 import { NotificationCenter } from "@/components/notification-center"
+import { InstallPWA } from "@/components/install-pwa"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 interface NavbarProps {
@@ -118,6 +119,9 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
               </Button>
             </Link>
           )}
+
+          {/* Install PWA */}
+          <InstallPWA />
 
           {/* Theme toggle */}
           <ThemeToggle />
