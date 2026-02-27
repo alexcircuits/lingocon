@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { createActivity } from "@/lib/utils/activity"
 
 const createCommentSchema = z.object({
     content: z.string().min(1, "Comment cannot be empty").max(2000, "Comment is too long"),
@@ -21,7 +22,7 @@ export async function createComment(input: z.infer<typeof createCommentSchema>) 
         // Verify language is public
         const language = await prisma.language.findUnique({
             where: { id: validated.languageId },
-            select: { visibility: true, slug: true },
+            select: { visibility: true, slug: true, ownerId: true, name: true },
         })
 
         if (!language || language.visibility !== "PUBLIC") {
@@ -54,6 +55,21 @@ export async function createComment(input: z.infer<typeof createCommentSchema>) 
         })
 
         revalidatePath(`/lang/${language.slug}`)
+
+        // Create activity notification for language owner
+        await createActivity({
+            type: "CREATED",
+            entityType: "COMMENT",
+            entityId: comment.id,
+            languageId: validated.languageId,
+            userId,
+            description: `New comment on ${language.name}`,
+            metadata: {
+                commentPreview: validated.content.substring(0, 100),
+                commenterName: comment.user.name || "Anonymous",
+                isReply: !!validated.parentId,
+            },
+        })
 
         return { success: true, data: comment }
     } catch (error) {

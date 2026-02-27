@@ -160,6 +160,13 @@ export default async function PublicLanguagePage({
       color: "text-primary",
     },
     {
+      title: "Phonology",
+      count: language._count.scriptSymbols, // shows symbol count as proxy for phonemes
+      href: `/lang/${language.slug}/phonology`,
+      iconName: "AudioWaveform" as const,
+      color: "text-cyan-500",
+    },
+    {
       title: "Grammar Pages",
       count: language._count.grammarPages,
       href: `/lang/${language.slug}/grammar`,

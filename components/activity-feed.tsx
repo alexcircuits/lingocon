@@ -14,7 +14,8 @@ import {
   Trash2,
   Edit,
   Table,
-  Users
+  Users,
+  MessageSquare
 } from "lucide-react"
 import Link from "next/link"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -29,7 +30,7 @@ interface ActivityFeedProps {
 export type ActivityWithRelations = {
   id: string
   type: "CREATED" | "UPDATED" | "DELETED"
-  entityType: "LANGUAGE" | "SCRIPT_SYMBOL" | "GRAMMAR_PAGE" | "DICTIONARY_ENTRY" | "PARADIGM" | "COLLABORATOR" | "ARTICLE" | "TEXT"
+  entityType: "LANGUAGE" | "SCRIPT_SYMBOL" | "GRAMMAR_PAGE" | "DICTIONARY_ENTRY" | "PARADIGM" | "COLLABORATOR" | "ARTICLE" | "TEXT" | "COMMENT"
   entityId: string
   languageId: string
   userId: string
@@ -170,6 +171,9 @@ function ActivityIcon({ type, entityType }: { type: string, entityType: string }
       break
     case "COLLABORATOR":
       Icon = Users
+      break
+    case "COMMENT":
+      Icon = MessageSquare
       break
     default:
       Icon = Activity

@@ -273,6 +273,7 @@ enum ActivityEntityType {
   COLLABORATOR
   ARTICLE
   TEXT
+  COMMENT
 }
 
 // Articles/News for a language

@@ -3,13 +3,13 @@
 import Link from "next/link"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
-import { Languages, BookOpen, FileText, Newspaper, BookMarked, ArrowRight } from "lucide-react"
+import { Languages, BookOpen, FileText, Newspaper, BookMarked, AudioWaveform, ArrowRight } from "lucide-react"
 
 interface NavSection {
     title: string
     count: number
     href: string
-    iconName: "Languages" | "BookOpen" | "FileText" | "Newspaper" | "BookMarked"
+    iconName: "Languages" | "BookOpen" | "FileText" | "Newspaper" | "BookMarked" | "AudioWaveform"
     color: string
 }
 
@@ -23,6 +23,7 @@ const iconMap = {
     FileText,
     Newspaper,
     BookMarked,
+    AudioWaveform,
 }
 
 export function NavBento({ sections }: NavBentoProps) {
