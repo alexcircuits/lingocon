@@ -1,2 +1,2 @@
 Alexander Chepkov, Kyiv, Ukraine, @alexcircuits
-Reyzadren Aeshaeirs -- email contributions
+Reyzadren -- email contributions

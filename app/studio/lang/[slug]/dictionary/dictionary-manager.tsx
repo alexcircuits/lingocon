@@ -8,6 +8,7 @@ import {
   updateDictionaryEntry,
   deleteDictionaryEntry,
   bulkDeleteDictionaryEntries,
+  deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
 import { Download, Upload, Edit, Plus, Trash2 } from "lucide-react"
@@ -76,6 +77,7 @@ export function DictionaryManager({
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
   const [isDeriveOpen, setIsDeriveOpen] = useState(false)
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false)
 
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
@@ -111,6 +113,7 @@ export function DictionaryManager({
         if (isBulkEditOpen) setIsBulkEditOpen(false)
         if (isDeriveOpen) setIsDeriveOpen(false)
         if (isBulkDeleteOpen) setIsBulkDeleteOpen(false)
+        if (isDeleteAllOpen) setIsDeleteAllOpen(false)
       },
     },
   ])
@@ -305,6 +308,21 @@ export function DictionaryManager({
     } else {
       toast.success(`Deleted ${result.deletedCount} entries`)
       setIsBulkDeleteOpen(false)
+      setSelectedEntries(new Set())
+      startTransition(() => {
+        router.refresh()
+      })
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    const result = await deleteAllDictionaryEntries(languageId)
+
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success(`Deleted all ${result.deletedCount} entries`)
+      setIsDeleteAllOpen(false)
       setSelectedEntries(new Set())
       startTransition(() => {
         router.refresh()
@@ -524,6 +542,20 @@ export function DictionaryManager({
             totalPages={totalPages}
             onPageChange={handlePageChange}
           />
+
+          {selectedEntries.size === 0 && totalEntries > 0 && (
+            <div className="flex justify-end pt-8">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteAllOpen(true)}
+                disabled={isPending}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete All {totalEntries} Entries
+              </Button>
+            </div>
+          )}
         </>
       )}
 
@@ -564,6 +596,15 @@ export function DictionaryManager({
         isPending={isPending}
         title={`Delete ${selectedEntries.size} entries?`}
         description={`This will permanently delete ${selectedEntries.size} selected dictionary entries. This action cannot be undone.`}
+      />
+
+      <DeleteConfirmDialog
+        open={isDeleteAllOpen}
+        onOpenChange={setIsDeleteAllOpen}
+        onConfirm={handleDeleteAll}
+        isPending={isPending}
+        title={`Delete all ${totalEntries} entries?`}
+        description={`This will permanently delete ALL ${totalEntries} dictionary entries for this language. This action cannot be undone.`}
       />
 
       <ImportDialog

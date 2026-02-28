@@ -408,4 +408,80 @@ export async function bulkDeleteDictionaryEntries(
   }
 }
 
+export async function deleteAllDictionaryEntries(languageId: string) {
+  const userId = await getUserId()
+
+  if (!userId) {
+    return {
+      error: "Unauthorized",
+    }
+  }
+
+  try {
+    if (!languageId) {
+      return {
+        error: "Language ID is required",
+      }
+    }
+
+    // Verify edit permission (owner or editor)
+    const canEdit = await canEditLanguage(languageId, userId)
+    if (!canEdit) {
+      return {
+        error: "Unauthorized - You don't have permission to edit this language",
+      }
+    }
+
+    // Get total count before deletion
+    const totalCount = await prisma.dictionaryEntry.count({
+      where: { languageId },
+    })
+
+    if (totalCount === 0) {
+      return {
+        error: "No entries to delete",
+      }
+    }
+
+    // Delete all entries for this language
+    const result = await prisma.dictionaryEntry.deleteMany({
+      where: { languageId },
+    })
+
+    const language = await prisma.language.findUnique({
+      where: { id: languageId },
+      select: { slug: true },
+    })
+
+    // Log activity
+    await createActivity({
+      type: "DELETED",
+      entityType: "DICTIONARY_ENTRY",
+      entityId: languageId,
+      languageId,
+      userId,
+      description: `Deleted all ${result.count} dictionary entries`,
+    })
+
+    if (language) {
+      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
+      revalidatePath(`/lang/${language.slug}/dictionary`)
+    }
+
+    return {
+      success: true,
+      deletedCount: result.count,
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        error: error.message,
+      }
+    }
+    return {
+      error: "Failed to delete all dictionary entries",
+    }
+  }
+}
+
 

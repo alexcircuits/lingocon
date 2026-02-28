@@ -14,7 +14,7 @@ const CONSONANT_PLACES = [
 
 const CONSONANT_MANNERS = [
     "Plosive", "Nasal", "Trill", "Tap/Flap", "Fricative",
-    "Lateral fricative", "Approximant", "Lateral approximant"
+    "Lateral fricative", "Affricate", "Approximant", "Lateral approximant"
 ]
 
 const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; voiced: boolean }> = {
@@ -79,6 +79,18 @@ const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; voiced:
     "ʎ": { place: "Palatal", manner: "Lateral approximant", voiced: true },
     "ʟ": { place: "Velar", manner: "Lateral approximant", voiced: true },
     "w": { place: "Velar", manner: "Approximant", voiced: true },
+    // Affricates
+    "ts": { place: "Alveolar", manner: "Affricate", voiced: false },
+    "dz": { place: "Alveolar", manner: "Affricate", voiced: true },
+    "tʃ": { place: "Postalveolar", manner: "Affricate", voiced: false },
+    "dʒ": { place: "Postalveolar", manner: "Affricate", voiced: true },
+    "tɕ": { place: "Palatal", manner: "Affricate", voiced: false },
+    "dʑ": { place: "Palatal", manner: "Affricate", voiced: true },
+    "ʈʂ": { place: "Retroflex", manner: "Affricate", voiced: false },
+    "ɖʐ": { place: "Retroflex", manner: "Affricate", voiced: true },
+    "pf": { place: "Bilabial", manner: "Affricate", voiced: false },
+    "bv": { place: "Bilabial", manner: "Affricate", voiced: true },
+    "kx": { place: "Velar", manner: "Affricate", voiced: false },
 }
 
 const VOWEL_HEIGHTS = ["Close", "Near-close", "Close-mid", "Mid", "Open-mid", "Near-open", "Open"]
@@ -125,15 +137,32 @@ export function PublicPhonologyView({ language, symbols }: PublicPhonologyViewPr
 
     const ipaSymbols = useMemo(() => {
         const ipas = new Set<string>()
+        // Build sorted list of known IPA keys, longest first, for greedy matching
+        const allKnownIPA = [
+            ...Object.keys(IPA_CONSONANT_MAP),
+            ...Object.keys(IPA_VOWEL_MAP),
+        ].sort((a, b) => b.length - a.length)
+
         symbols.forEach((s) => {
             if (s.ipa) {
                 const cleaned = s.ipa.replace(/[\/\[\]]/g, "").trim()
                 if (IPA_CONSONANT_MAP[cleaned] || IPA_VOWEL_MAP[cleaned]) {
                     ipas.add(cleaned)
                 } else {
-                    for (const char of cleaned) {
-                        if (IPA_CONSONANT_MAP[char] || IPA_VOWEL_MAP[char]) {
-                            ipas.add(char)
+                    // Greedy matching: try longest known IPA sequences first
+                    let remaining = cleaned
+                    while (remaining.length > 0) {
+                        let matched = false
+                        for (const key of allKnownIPA) {
+                            if (remaining.startsWith(key)) {
+                                ipas.add(key)
+                                remaining = remaining.slice(key.length)
+                                matched = true
+                                break
+                            }
+                        }
+                        if (!matched) {
+                            remaining = remaining.slice(1)
                         }
                     }
                 }
