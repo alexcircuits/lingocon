@@ -32,18 +32,26 @@ export function ScriptCard() {
             <div className="flex-1 flex flex-col items-center justify-center space-y-4">
                 <div className="flex space-x-1">
                     <AnimatePresence mode="wait">
-                        {SCRIPTS[currentScript].chars.map((char, i) => (
-                            <motion.div
-                                key={`${currentScript}-${i}`}
-                                initial={{ opacity: 0, y: 10, rotateX: 90 }}
-                                animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                                exit={{ opacity: 0, y: -10, rotateX: -90 }}
-                                transition={{ delay: i * 0.1, duration: 0.4 }}
-                                className="text-4xl sm:text-5xl font-light text-foreground"
-                            >
-                                {char}
-                            </motion.div>
-                        ))}
+                        <motion.div
+                            key={currentScript}
+                            className="flex space-x-1"
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                        >
+                            {SCRIPTS[currentScript].chars.map((char, i) => (
+                                <motion.div
+                                    key={`${currentScript}-${i}`}
+                                    initial={{ opacity: 0, y: 10, rotateX: 90 }}
+                                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                                    exit={{ opacity: 0, y: -10, rotateX: -90 }}
+                                    transition={{ delay: i * 0.1, duration: 0.4 }}
+                                    className="text-4xl sm:text-5xl font-light text-foreground"
+                                >
+                                    {char}
+                                </motion.div>
+                            ))}
+                        </motion.div>
                     </AnimatePresence>
                 </div>
 

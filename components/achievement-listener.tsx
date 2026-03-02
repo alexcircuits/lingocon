@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useAchievementToast } from "./badges/achievement-toast"
+import { useAchievementToast, AchievementToast } from "./badges/achievement-toast"
 import { getUnnotifiedBadges, markBadgesAsNotified } from "@/app/actions/badge-notifications"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
 
 export function AchievementListener() {
-    const { showAchievement } = useAchievementToast()
+    const { badge, showAchievement, dismiss } = useAchievementToast()
     const { data: session } = useSession()
     const pathname = usePathname()
     // Use a ref to track badges processed *in the current component lifecycle* to avoid React strict mode double-firing
@@ -48,5 +48,7 @@ export function AchievementListener() {
 
     }, [session, pathname, showAchievement]) // Only depend on these stable props
 
-    return null
+    if (!badge) return null
+
+    return <AchievementToast badge={badge} onDismiss={dismiss} />
 }

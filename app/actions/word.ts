@@ -13,6 +13,13 @@ export interface WordOfTheDay {
         name: string
         slug: string
         flagUrl: string | null
+        fontUrl: string | null
+        fontFamily: string | null
+        fontScale: number
+        scriptSymbols: {
+            symbol: string
+            latin: string | null
+        }[]
     }
 }
 
@@ -59,6 +66,15 @@ export async function getWordOfTheDay(): Promise<WordOfTheDay | null> {
                     name: true,
                     slug: true,
                     flagUrl: true,
+                    fontUrl: true,
+                    fontFamily: true,
+                    fontScale: true,
+                    scriptSymbols: {
+                        select: {
+                            symbol: true,
+                            latin: true,
+                        },
+                    },
                 },
             },
         },

@@ -136,8 +136,14 @@ export function PublicPhonologyView({ language, symbols }: PublicPhonologyViewPr
     const metadata = (language.metadata as any) || {}
 
     const ipaSymbols = useMemo(() => {
+        // Use manual override if enabled
+        const override = metadata.phonologyOverride
+        if (override?.enabled && (override.consonants?.length > 0 || override.vowels?.length > 0)) {
+            return new Set<string>([...(override.consonants || []), ...(override.vowels || [])])
+        }
+
+        // Auto-detect from alphabet symbols
         const ipas = new Set<string>()
-        // Build sorted list of known IPA keys, longest first, for greedy matching
         const allKnownIPA = [
             ...Object.keys(IPA_CONSONANT_MAP),
             ...Object.keys(IPA_VOWEL_MAP),
@@ -149,7 +155,6 @@ export function PublicPhonologyView({ language, symbols }: PublicPhonologyViewPr
                 if (IPA_CONSONANT_MAP[cleaned] || IPA_VOWEL_MAP[cleaned]) {
                     ipas.add(cleaned)
                 } else {
-                    // Greedy matching: try longest known IPA sequences first
                     let remaining = cleaned
                     while (remaining.length > 0) {
                         let matched = false
@@ -169,7 +174,7 @@ export function PublicPhonologyView({ language, symbols }: PublicPhonologyViewPr
             }
         })
         return ipas
-    }, [symbols])
+    }, [symbols, metadata])
 
     const consonantChart = useMemo(() => {
         const chart: Record<string, Record<string, { voiceless?: string; voiced?: string }>> = {}

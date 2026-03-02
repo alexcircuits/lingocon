@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { BadgeData } from "./badge-card"
 import { X, Trophy } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from "motion/react"
 
 interface AchievementToastProps {
     badge: BadgeData | null
@@ -115,6 +115,5 @@ export function useAchievementToast() {
         badge,
         showAchievement,
         dismiss,
-        ToastComponent: () => <AchievementToast badge={badge} onDismiss={dismiss} />,
     }
 }
