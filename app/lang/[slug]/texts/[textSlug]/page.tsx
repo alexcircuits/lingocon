@@ -175,7 +175,7 @@ export default async function PublicTextPage({
           </header>
 
           {text.coverImage && (
-            <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-border/40 bg-secondary/30 mb-8">
+            <div className="relative aspect-video w-full max-w-xl mx-auto rounded-xl overflow-hidden border border-border/40 bg-secondary/30 mb-8">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={text.coverImage}

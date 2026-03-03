@@ -127,9 +127,11 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
           content: formData.content,
-          coverImage: coverImage || undefined,
           paradigmId: paradigmId || undefined,
         }))
+        if (coverImage !== undefined) {
+          sterilizedData.coverImage = coverImage
+        }
 
         const result = await updateText(String(text.id), sterilizedData)
 
@@ -147,9 +149,11 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           type: "OTHER",
           content: formData.content,
           languageId,
-          coverImage: coverImage || undefined,
           paradigmId: paradigmId || undefined,
         }))
+        if (coverImage !== undefined) {
+          sterilizedData.coverImage = coverImage
+        }
         const result = await createText(sterilizedData)
 
         if (result.error) {

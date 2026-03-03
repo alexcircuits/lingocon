@@ -2,6 +2,7 @@ import { Mark, mergeAttributes } from '@tiptap/core';
 
 export const CustomFont = Mark.create({
     name: 'customFont',
+    exitable: true,
 
     addOptions() {
         return {
@@ -14,8 +15,7 @@ export const CustomFont = Mark.create({
     parseHTML() {
         return [
             {
-                tag: 'span',
-                getAttrs: (element) => (element as HTMLElement).classList.contains('font-custom-script') && null,
+                tag: 'span[class="font-custom-script"]',
             },
         ];
     },

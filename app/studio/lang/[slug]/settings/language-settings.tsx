@@ -141,7 +141,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         ...(formData.flagUrl ? { flagUrl: formData.flagUrl } : {}),
         discordUrl: formData.discordUrl || "",
         telegramUrl: formData.telegramUrl || "",
-        websiteUrl: formData.websiteUrl || "",
+        websiteUrl: formData.websiteUrl ? (formData.websiteUrl.startsWith('http') ? formData.websiteUrl : `https://${formData.websiteUrl}`) : "",
         ...(formData.fontUrl ? { fontUrl: formData.fontUrl } : {}),
         ...(formData.fontFamily ? { fontFamily: formData.fontFamily } : {}),
         fontScale: Number(formData.fontScale),
@@ -587,7 +587,6 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
                 placeholder="https://example.com"
                 disabled={isPending}
-                type="url"
               />
             </div>
           </div>
