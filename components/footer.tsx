@@ -27,17 +27,6 @@ export function Footer() {
 
                     <div className="text-sm text-muted-foreground/60 text-center md:text-right">
                         <p className="mb-1">v1.2 Public Beta © {new Date().getFullYear()} LingoCon.</p>
-                        <p>
-                            Made by team{" "}
-                            <Link
-                                href="https://noirsystems.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium text-foreground hover:text-primary transition-colors hover:underline"
-                            >
-                                NoirSystems
-                            </Link>
-                        </p>
                     </div>
                 </div>
             </div>
