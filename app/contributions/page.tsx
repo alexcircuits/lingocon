@@ -109,7 +109,7 @@ export default function ContributionsPage() {
                             time="2 mins"
                             description="Found a typo? A button that does nothing? Logic that makes no sense?"
                             action="Open an Issue"
-                            href="https://github.com/NoirSystems/lingocon/issues/new"
+                            href="https://github.com/alexcircuits/lingocon/issues/new"
                             color="text-red-500"
                         />
 
@@ -121,7 +121,7 @@ export default function ContributionsPage() {
                             time="10-30 mins"
                             description="Generate description examples, glossaries, or grammar explanations. Don&apos;t worry about formatting."
                             action="Submit Markdown"
-                            href="https://github.com/NoirSystems/lingocon/issues/new?labels=content"
+                            href="https://github.com/alexcircuits/lingocon/issues/new?labels=content"
                             color="text-violet-500"
                         />
 
@@ -133,7 +133,7 @@ export default function ContributionsPage() {
                             time="1 hour"
                             description="Grab a &apos;good first issue&apos;. Fix a CSS alignment. Update a dependency. No strict style guide."
                             action="View Issues"
-                            href="https://github.com/NoirSystems/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+                            href="https://github.com/alexcircuits/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
                             color="text-blue-500"
                         />
 
@@ -145,7 +145,7 @@ export default function ContributionsPage() {
                             time="45 mins"
                             description="Our IPA chart logic is flawed? The glossing abbreviations are wrong? Correct our data."
                             action="Edit Data Files"
-                            href="https://github.com/NoirSystems/lingocon/tree/main/actions"
+                            href="https://github.com/alexcircuits/lingocon/tree/main/actions"
                             color="text-emerald-500"
                         />
 
@@ -157,7 +157,7 @@ export default function ContributionsPage() {
                             time="5 mins"
                             description="Have a wild idea for a feature? Sketch it on a napkin. Take a photo. Upload it."
                             action="Pitch Idea"
-                            href="https://github.com/NoirSystems/lingocon/discussions"
+                            href="https://github.com/alexcircuits/lingocon/discussions"
                             color="text-amber-500"
                         />
 
@@ -191,7 +191,7 @@ export default function ContributionsPage() {
                                     If you don&apos;t, use the &quot;Issues&quot; tab to drag-and-drop files or paste text.
                                 </p>
                                 <div className="flex gap-4">
-                                    <Link href="https://github.com/NoirSystems/lingocon" target="_blank">
+                                    <Link href="https://github.com/alexcircuits/lingocon" target="_blank">
                                         <Button variant="outline" size="sm">Go to Repo</Button>
                                     </Link>
                                 </div>
@@ -259,7 +259,7 @@ export default function ContributionsPage() {
                             &quot;Perfect is the enemy of done.&quot;
                         </p>
 
-                        <Link href="https://github.com/NoirSystems/lingocon" target="_blank">
+                        <Link href="https://github.com/alexcircuits/lingocon" target="_blank">
                             <Button size="lg" className="h-14 px-8 text-lg rounded-full">
                                 Make your first contribution
                                 <ArrowRight className="ml-2 h-5 w-5" />

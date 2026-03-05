@@ -16,19 +16,19 @@ We've mapped out specific paths for everyone on our [**Contributions Hub**](http
 
 ### 1. The Observer (2 mins)
 Found a typo? A broken button? A weird logic bug? 
-[**Open a GitHub Issue**](https://github.com/NoirSystems/lingocon/issues/new). Be as descriptive as you want, or just drop a screenshot.
+[**Open a GitHub Issue**](https://github.com/alexcircuits/lingocon/issues/new). Be as descriptive as you want, or just drop a screenshot.
 
 ### 2. The Prompter (10-30 mins)
 Good at prompting AI? Help us write glossary examples, grammar explanations, or sample conlang data.
-[**Submit Markdown**](https://github.com/NoirSystems/lingocon/issues/new?labels=content).
+[**Submit Markdown**](https://github.com/alexcircuits/lingocon/issues/new?labels=content).
 
 ### 3. The Hotfixer (1 hour)
 Grab an issue labeled `good first issue`. Change a CSS class. Update a dependency. Fix a small bug.
-[**View Issues**](https://github.com/NoirSystems/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+[**View Issues**](https://github.com/alexcircuits/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 ### 4. The Academic (45 mins)
 Are we teaching people the wrong IPA chart? Is our glossaries logic linguistically sound? Fix our data.
-[**Edit Data Files**](https://github.com/NoirSystems/lingocon/tree/main/actions).
+[**Edit Data Files**](https://github.com/alexcircuits/lingocon/tree/main/actions).
 
 ### 5. The Old School
 Don't like GitHub? Email your files or napkin sketches to **contribute@noirsystems.com**.

@@ -303,7 +303,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="https://github.com/NoirSystems/lingocon" target="_blank">
+            <Link href="https://github.com/alexcircuits/lingocon" target="_blank">
               <Button variant="outline" size="lg" className="gap-2 h-12 px-6 rounded-full border-primary/20 bg-background/50 hover:bg-secondary/50">
                 <Github className="w-4 h-4" />
                 Star on GitHub
