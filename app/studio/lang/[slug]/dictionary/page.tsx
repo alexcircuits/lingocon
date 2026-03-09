@@ -136,6 +136,7 @@ export default async function DictionaryPage({
           enableAudio={isAudioEnabled}
           ttsSettings={(language.metadata as any)?.tts}
           allowsDiacritics={language.allowsDiacritics}
+          metadata={(language.metadata as Record<string, any>) || {}}
         />
       </Suspense>
     </div>

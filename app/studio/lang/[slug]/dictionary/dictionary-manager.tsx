@@ -11,7 +11,7 @@ import {
   deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus, Trash2 } from "lucide-react"
+import { Download, Upload, Edit, Plus, Trash2, Sparkles } from "lucide-react"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { DictionarySearch } from "./components/dictionary-search"
@@ -22,6 +22,7 @@ import { DeleteConfirmDialog } from "./components/delete-confirm-dialog"
 import { ImportDialog } from "./components/import-dialog"
 import { DictionaryPagination } from "./components/dictionary-pagination"
 import { DerivationWizard } from "./components/derivation-wizard"
+import { WordGeneratorDialog } from "./components/word-generator-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
@@ -46,6 +47,7 @@ interface DictionaryManagerProps {
     speed: string
   }
   allowsDiacritics?: boolean
+  metadata?: Record<string, any>
 }
 
 export function DictionaryManager({
@@ -60,6 +62,7 @@ export function DictionaryManager({
   enableAudio,
   ttsSettings,
   allowsDiacritics = false,
+  metadata = {},
 }: DictionaryManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -78,6 +81,8 @@ export function DictionaryManager({
   const [isDeriveOpen, setIsDeriveOpen] = useState(false)
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false)
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
+  const [prefillLemma, setPrefillLemma] = useState<string | null>(null)
 
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
@@ -414,6 +419,16 @@ export function DictionaryManager({
             <Upload className="h-4 w-4" />
           </Button>
 
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsGeneratorOpen(true)}
+            disabled={isPending}
+            title="Generate Words"
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+
           <ContextualHelp
             content="Use Cmd+N to quickly add a new entry. Cmd+/ shows all keyboard shortcuts."
             shortcut="⌘N"
@@ -561,12 +576,16 @@ export function DictionaryManager({
 
       <DictionaryEntryDialog
         open={isAddOpen}
-        onOpenChange={setIsAddOpen}
+        onOpenChange={(open) => {
+          setIsAddOpen(open)
+          if (!open) setPrefillLemma(null)
+        }}
         onSubmit={handleCreate}
         isPending={isPending}
         mode="create"
         symbols={symbols}
         allowsDiacritics={allowsDiacritics}
+        initialData={prefillLemma ? { lemma: prefillLemma } as any : undefined}
       />
 
       <DictionaryEntryDialog
@@ -621,6 +640,18 @@ export function DictionaryManager({
         allEntries={initialEntries}
         onSubmit={handleDeriveSubmit}
         isPending={isPending}
+      />
+
+      <WordGeneratorDialog
+        open={isGeneratorOpen}
+        onOpenChange={setIsGeneratorOpen}
+        symbols={symbols}
+        metadata={metadata}
+        existingLemmas={initialEntries.map(e => e.lemma)}
+        onAddWord={(word) => {
+          setPrefillLemma(word)
+          setIsAddOpen(true)
+        }}
       />
 
       {isBulkEditOpen && (
