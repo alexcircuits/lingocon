@@ -503,3 +503,57 @@ model Comment {
   @@index([languageId, createdAt])
   @@map("comments")
 }
+
+// Anonymous Surveys
+enum QuestionType {
+  TEXT
+  SELECT
+  MULTI_SELECT
+}
+
+model Survey {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions  SurveyQuestion[]
+  responses  SurveyResponse[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("surveys")
+}
+
+model SurveyQuestion {
+  id        String       @id @default(cuid())
+  text      String
+  type      QuestionType @default(TEXT)
+  options   Json?        // Array of options for SELECT/MULTI_SELECT
+  required  Boolean      @default(false)
+  order     Int          @default(0)
+  surveyId  String
+  createdAt DateTime     @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([surveyId, order])
+  @@map("survey_questions")
+}
+
+model SurveyResponse {
+  id        String   @id @default(cuid())
+  surveyId  String
+  answers   Json     // { questionId: answer }
+  createdAt DateTime @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([surveyId, createdAt])
+  @@map("survey_responses")
+}

@@ -27,6 +27,7 @@ import { TextReveal } from "@/components/ui/text-reveal"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Footer } from "@/components/footer"
 import { WordOfTheDay } from "@/components/word-of-the-day"
+import { SurveyBanner } from "@/components/survey-banner"
 
 export const dynamic = "force-dynamic"
 
@@ -486,6 +487,9 @@ export default async function Home() {
           </section>
         )
       }
+
+      {/* Survey Notification */}
+      <SurveyBanner />
 
       {/* Footer */}
       <Footer />
