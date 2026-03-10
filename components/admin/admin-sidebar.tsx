@@ -12,7 +12,8 @@ import {
     Settings,
     Shield,
     ArrowLeft,
-    ShieldAlert
+    ShieldAlert,
+    ClipboardList
 } from "lucide-react"
 
 const navItems = [
@@ -40,6 +41,11 @@ const navItems = [
         title: "Content",
         href: "/admin/content",
         icon: FileText
+    },
+    {
+        title: "Surveys",
+        href: "/admin/surveys",
+        icon: ClipboardList
     },
     {
         href: "/admin/system",
