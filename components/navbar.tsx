@@ -56,9 +56,9 @@ interface NavbarProps {
 const mainNavItems = [
   { name: "Home", href: "/", icon: Home },
   { name: "Browse", href: "/browse", icon: Globe },
+  { name: "Families", href: "/families", icon: GitBranch },
   { name: "Favorites", href: "/favorites", icon: Heart, requiresAuth: true },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
-  { name: "Families", href: "/dashboard/families", icon: GitBranch, requiresAuth: true },
 ]
 
 export function Navbar({ user, isDevMode = false }: NavbarProps) {
