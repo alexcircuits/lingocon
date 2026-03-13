@@ -20,6 +20,7 @@ import {
   Menu,
   AudioWaveform,
   Workflow,
+  GraduationCap,
 } from "lucide-react"
 import type { Language } from "@prisma/client"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -60,6 +61,7 @@ export function StudioLayout({ language, children }: StudioLayoutProps) {
     { name: "Paradigms", href: `${basePath}/paradigms`, icon: Table2 },
     { name: "Articles", href: `${basePath}/articles`, icon: Newspaper },
     { name: "Texts", href: `${basePath}/texts`, icon: BookMarked },
+    { name: "Flashcards", href: `${basePath}/flashcards`, icon: GraduationCap },
     { name: "Settings", href: `${basePath}/settings`, icon: Settings },
   ]
 

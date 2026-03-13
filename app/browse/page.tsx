@@ -61,7 +61,9 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         websiteUrl: true,
         ownerId: true,
         allowsDiacritics: true,
+        allowForking: true,
         parentLanguageId: true,
+        externalAncestry: true,
         owner: {
           select: {
             id: true,
@@ -119,7 +121,9 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         websiteUrl: true,
         ownerId: true,
         allowsDiacritics: true,
+        allowForking: true,
         parentLanguageId: true,
+        externalAncestry: true,
         owner: {
           select: {
             id: true,

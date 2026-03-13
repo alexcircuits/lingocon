@@ -8,18 +8,19 @@ import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
 import { ShareButtons } from "@/components/share-buttons"
 import { SparklesCore } from "@/components/ui/sparkles"
-import { Flag, Globe, MessageCircle, MessageSquare, ExternalLink } from "lucide-react"
+import { Flag, Globe, MessageCircle, MessageSquare, ExternalLink, GitBranch } from "lucide-react"
 
 interface LanguageHeroProps {
-    language: Pick<Language, "id" | "name" | "slug" | "description" | "visibility" | "flagUrl" | "discordUrl" | "telegramUrl" | "websiteUrl" | "createdAt" | "updatedAt"> & {
+    language: Pick<Language, "id" | "name" | "slug" | "description" | "visibility" | "flagUrl" | "discordUrl" | "telegramUrl" | "websiteUrl" | "createdAt" | "updatedAt" | "ownerId"> & {
         _count: {
             favorites: number
         }
     }
     isFavorite: boolean
+    userId: string | null
 }
 
-export function LanguageHero({ language, isFavorite }: LanguageHeroProps) {
+export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps) {
     const [shareUrl, setShareUrl] = useState("")
 
     useEffect(() => {
@@ -112,6 +113,15 @@ export function LanguageHero({ language, isFavorite }: LanguageHeroProps) {
                             favoriteCount={language._count.favorites}
                             className="h-10 px-6 rounded-full shadow-sm hover:shadow-md transition-all"
                         />
+
+                        {userId && userId !== language.ownerId && language.visibility === "PUBLIC" && (
+                            <Link href={`/dashboard/new-language?from=${language.slug}`}>
+                                <Badge variant="secondary" className="h-10 px-6 rounded-full cursor-pointer hover:bg-secondary/80 flex items-center gap-2">
+                                    <GitBranch className="h-4 w-4" />
+                                    Fork & Evolve
+                                </Badge>
+                            </Link>
+                        )}
 
                         <ShareButtons
                             url={shareUrl}

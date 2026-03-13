@@ -1,7 +1,7 @@
 import { memo } from "react"
 import { Handle, Position } from "reactflow"
 import { Card } from "@/components/ui/card"
-import { Crown, BookOpen } from "lucide-react"
+import { Crown, BookOpen, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface LanguageNodeProps {
@@ -10,6 +10,8 @@ interface LanguageNodeProps {
     slug: string
     count: number
     isRoot: boolean
+    isReadOnly?: boolean
+    owner?: { id: string; name: string | null; image: string | null }
   }
   selected: boolean
 }
@@ -24,6 +26,7 @@ export const LanguageNode = memo(({ data, selected }: LanguageNodeProps) => {
       <Handle
         type="target"
         position={Position.Top}
+        isConnectable={!data.isReadOnly}
         className={cn(
           "w-3 h-3 rounded-full border-2 border-background transition-colors",
           data.isRoot ? "bg-muted hover:bg-muted-foreground" : "bg-primary"
@@ -31,7 +34,17 @@ export const LanguageNode = memo(({ data, selected }: LanguageNodeProps) => {
       />
 
       <div className="flex flex-col items-center text-center gap-2">
-        {data.isRoot ? (
+        {data.isReadOnly && data.owner ? (
+          <div className="h-8 w-8 rounded-full overflow-hidden border border-border/50 -mt-1 mb-1 shadow-sm">
+            {data.owner.image ? (
+              <img src={data.owner.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                {data.owner.name?.[0]?.toUpperCase() || "?"}
+              </div>
+            )}
+          </div>
+        ) : data.isRoot ? (
           <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center -mt-1 mb-1 ring-1 ring-amber-500/20">
             <Crown className="h-4 w-4 text-amber-500" />
           </div>
@@ -51,6 +64,21 @@ export const LanguageNode = memo(({ data, selected }: LanguageNodeProps) => {
           <BookOpen className="h-3 w-3" />
           <span>{data.count} words</span>
         </div>
+
+        {/* Open in Studio link */}
+        {data.slug && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              window.open(`/studio/lang/${data.slug}`, "_blank")
+            }}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 mt-0.5"
+          >
+            <ExternalLink className="h-2.5 w-2.5" />
+            Open in Studio
+          </button>
+        )}
       </div>
 
       {/* Source handle (can connect FROM) */}

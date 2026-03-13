@@ -45,8 +45,14 @@ export async function evolveLanguage(input: EvolveLanguageInput) {
       }
     })
 
-    if (!parent || parent.ownerId !== userId) {
-      return { error: "Parent language not found or unauthorized to fork" }
+    if (!parent) {
+      return { error: "Parent language not found" }
+    }
+
+    // Must be either the owner, or the language is public AND allows forking
+    const isOwner = parent.ownerId === userId
+    if (!isOwner && (parent.visibility !== "PUBLIC" || !parent.allowForking)) {
+      return { error: "Parent language is not authorized to be forked" }
     }
 
     // Start a transaction to ensure all cloning succeeds together

@@ -108,10 +108,14 @@ model Language {
   // Diacritics support - when enabled, allows diacritical variants of base letters
   allowsDiacritics Boolean @default(false)
 
+  // Whether other users can fork/evolve this language
+  allowForking Boolean @default(false)
+
   // Language Family Tree
   parentLanguageId String?
   parentLanguage   Language?  @relation("LanguageFamily", fields: [parentLanguageId], references: [id], onDelete: SetNull)
   childLanguages   Language[] @relation("LanguageFamily")
+  externalAncestry String?    // Free-text ancestry label (e.g. "Proto-Indo-European")
 
   ownerId     String
   createdAt   DateTime @default(now())
@@ -203,6 +207,11 @@ model DictionaryEntry {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Cognate tracking — traces word lineage across evolved languages
+  sourceEntryId String?  // The ancestor word this entry evolved from
+  sourceEntry   DictionaryEntry?  @relation("CognateChain", fields: [sourceEntryId], references: [id], onDelete: SetNull)
+  derivedEntries DictionaryEntry[] @relation("CognateChain")
+
   language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
   paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
   exampleSentences ExampleSentence[]
@@ -210,6 +219,7 @@ model DictionaryEntry {
   @@index([languageId])
   @@index([languageId, lemma])
   @@index([paradigmId])
+  @@index([sourceEntryId])
   @@map("dictionary_entries")
 }
 

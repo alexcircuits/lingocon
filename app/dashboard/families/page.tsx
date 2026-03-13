@@ -3,8 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getDevUserId } from "@/lib/dev-auth"
 import { redirect } from "next/navigation"
 import { Navbar } from "@/components/navbar"
-import { LanguageFamilyBuilder } from "./components/language-family-builder"
-import { getLanguageFamilyTree } from "@/app/actions/language-family"
+import { FamilyViewSwitcher } from "./components/family-view-switcher"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
 
 export const metadata = {
@@ -27,13 +26,16 @@ export default async function FamiliesDashboardPage() {
   const userId = session?.user?.id || (await getDevUserId())
 
   // Get all user's languages
-  const languages = await prisma.language.findMany({
+  const userLanguages = await prisma.language.findMany({
     where: { ownerId: userId },
     select: {
       id: true,
       name: true,
       slug: true,
       parentLanguageId: true,
+      externalAncestry: true,
+      ownerId: true,
+      createdAt: true,
       _count: {
         select: {
           dictionaryEntries: true,
@@ -43,14 +45,45 @@ export default async function FamiliesDashboardPage() {
     orderBy: { createdAt: "asc" }
   })
 
-  // Group languages into independent trees
-  // 1. Find all root languages (those without a parent)
-  const rootLanguages = languages.filter(l => !l.parentLanguageId)
-  
-  // 2. We'll pass the flat list to the client to let React Flow arrange them
-  // Or if we want pre-built trees we can fetch them here.
-  // For the builder canvas, a flat array with parentIds is actually perfect 
-  // because React Flow computes nodes and edges from flat lists.
+  // Iteratively fetch all missing ancestors
+  const languageMap = new Map<string, any>()
+  userLanguages.forEach(l => languageMap.set(l.id, l))
+
+  const ancestorsToFetch = new Set<string>()
+  userLanguages.forEach(l => {
+    if (l.parentLanguageId && !languageMap.has(l.parentLanguageId)) {
+      ancestorsToFetch.add(l.parentLanguageId)
+    }
+  })
+
+  while (ancestorsToFetch.size > 0) {
+    const ids = Array.from(ancestorsToFetch)
+    ancestorsToFetch.clear()
+
+    const ancestors = await prisma.language.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        parentLanguageId: true,
+        externalAncestry: true,
+        ownerId: true,
+        createdAt: true,
+        owner: { select: { id: true, name: true, image: true } },
+        _count: { select: { dictionaryEntries: true } }
+      }
+    })
+
+    ancestors.forEach(a => {
+      languageMap.set(a.id, a)
+      if (a.parentLanguageId && !languageMap.has(a.parentLanguageId)) {
+        ancestorsToFetch.add(a.parentLanguageId)
+      }
+    })
+  }
+
+  const allLanguages = Array.from(languageMap.values())
 
   const isDevMode = process.env.DEV_MODE === "true"
   const user = session?.user ? {
@@ -69,7 +102,7 @@ export default async function FamiliesDashboardPage() {
       {/* Full bleed canvas area */}
       <main className="flex-1 relative flex flex-col">
         <div className="absolute inset-0">
-          <LanguageFamilyBuilder initialLanguages={languages} />
+          <FamilyViewSwitcher initialLanguages={allLanguages} currentUserId={userId} />
         </div>
       </main>
     </div>

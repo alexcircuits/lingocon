@@ -23,6 +23,14 @@ async function getLanguage(slug: string, userId: string | null) {
         ownerId: true,
         metadata: true,
         parentLanguageId: true,
+        parentLanguage: {
+          select: {
+            id: true,
+            name: true,
+            owner: { select: { name: true } }
+          }
+        },
+        externalAncestry: true,
       },
     }),
     prisma.dictionaryEntry.findMany({
@@ -60,7 +68,25 @@ async function getLanguage(slug: string, userId: string | null) {
     orderBy: { name: "asc" },
   }) : []
 
-  return { language, dictionaryEntries, userLanguages }
+  // Collect descendant IDs to exclude from parent selector (batched BFS)
+  const descendantIds = new Set<string>()
+  let currentBatch = [language.id]
+  let safetyLimit = 20
+  while (currentBatch.length > 0 && safetyLimit-- > 0) {
+    const kids = await prisma.language.findMany({
+      where: { parentLanguageId: { in: currentBatch } },
+      select: { id: true },
+    })
+    currentBatch = []
+    for (const kid of kids) {
+      if (!descendantIds.has(kid.id)) {
+        descendantIds.add(kid.id)
+        currentBatch.push(kid.id)
+      }
+    }
+  }
+
+  return { language, dictionaryEntries, userLanguages, descendantIds: Array.from(descendantIds) }
 }
 
 export default async function SettingsPage({
@@ -82,7 +108,7 @@ export default async function SettingsPage({
     notFound()
   }
 
-  const { language, dictionaryEntries, userLanguages } = data
+  const { language, dictionaryEntries, userLanguages, descendantIds } = data
   const owner = userId ? await isLanguageOwner(language.id, userId) : false
   
   // Get family tree if language has a parent or children
@@ -104,7 +130,10 @@ export default async function SettingsPage({
       <ParentLanguageCard
         languageId={language.id}
         currentParentId={language.parentLanguageId || null}
+        initialParent={language.parentLanguage}
+        initialExternalAncestry={language.externalAncestry}
         userLanguages={userLanguages}
+        descendantIds={descendantIds}
         familyTree={familyTree}
         currentSlug={slug}
       />

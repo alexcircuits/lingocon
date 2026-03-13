@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, GitFork, ChevronDown, ChevronRight, BookOpen, Tag } from "lucide-react"
+import { Pencil, Trash2, GitFork, ChevronDown, ChevronRight, BookOpen, Tag, Link2 } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { ContextualHelp } from "@/components/contextual-help"
@@ -21,7 +21,9 @@ import { Badge } from "@/components/ui/badge"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryTableProps {
-  entries: DictionaryEntry[]
+  entries: (DictionaryEntry & {
+    sourceEntry?: { id: string; lemma: string; language?: { name: string; slug: string } } | null
+  })[]
   selectedEntries: Set<string>
   onSelectChange: (selected: Set<string>) => void
   onEdit: (entry: DictionaryEntry) => void
@@ -167,6 +169,17 @@ export function DictionaryTable({
                     <span className="text-xs text-muted-foreground block mt-1 line-clamp-1">
                       {entry.etymology}
                     </span>
+                  )}
+                  {entry.sourceEntryId && entry.sourceEntry && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Link2 className="h-2.5 w-2.5 text-purple-500" />
+                      <span className="text-[10px] text-purple-500/80">
+                        from <span className="font-serif font-medium">{entry.sourceEntry.lemma}</span>
+                        {entry.sourceEntry.language && (
+                          <span className="text-muted-foreground"> ({entry.sourceEntry.language.name})</span>
+                        )}
+                      </span>
+                    </div>
                   )}
                   {Array.isArray(entry.relatedWords) && (entry.relatedWords as string[]).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">

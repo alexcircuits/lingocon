@@ -19,9 +19,10 @@ import {
 import { Label } from "@/components/ui/label"
 interface CreateLanguageFormProps {
   userLanguages?: { id: string; name: string }[]
+  initialParentId?: string
 }
 
-export function CreateLanguageForm({ userLanguages = [] }: CreateLanguageFormProps) {
+export function CreateLanguageForm({ userLanguages = [], initialParentId = "none" }: CreateLanguageFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +30,7 @@ export function CreateLanguageForm({ userLanguages = [] }: CreateLanguageFormPro
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
   const [visibility, setVisibility] = useState<"PRIVATE" | "UNLISTED" | "PUBLIC">("PRIVATE")
-  const [parentId, setParentId] = useState<string>("none")
+  const [parentId, setParentId] = useState<string>(initialParentId)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value

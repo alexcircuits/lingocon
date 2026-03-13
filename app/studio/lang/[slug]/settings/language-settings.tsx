@@ -54,6 +54,7 @@ interface LanguageSettingsProps {
     fontFamily?: string | null
     fontScale: number
     allowsDiacritics?: boolean
+    allowForking?: boolean
   }
   languageSlug: string
   dictionaryEntries: {
@@ -123,6 +124,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
     fontFamily: language.fontFamily || "",
     fontScale: language.fontScale || 1.0,
     allowsDiacritics: (language as any).allowsDiacritics ?? false,
+    allowForking: (language as any).allowForking ?? false,
     ttsVoice: typedLanguage.metadata?.tts?.voiceId || "Joanna",
     ttsSpeed: typedLanguage.metadata?.tts?.speed || "slow",
   })
@@ -146,6 +148,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         ...(formData.fontFamily ? { fontFamily: formData.fontFamily } : {}),
         fontScale: Number(formData.fontScale),
         allowsDiacritics: Boolean(formData.allowsDiacritics),
+        allowForking: Boolean(formData.allowForking),
         metadata: {
           ...(typedLanguage.metadata || {}),
           tts: {
@@ -253,6 +256,23 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="allowsDiacritics"
               checked={formData.allowsDiacritics}
               onCheckedChange={(checked) => setFormData({ ...formData, allowsDiacritics: checked })}
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="allowForking" className="text-base font-medium">
+                Allow Forking
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Let other users evolve new daughter languages from yours
+              </p>
+            </div>
+            <Switch
+              id="allowForking"
+              checked={formData.allowForking}
+              onCheckedChange={(checked) => setFormData({ ...formData, allowForking: checked })}
               disabled={isPending}
             />
           </div>

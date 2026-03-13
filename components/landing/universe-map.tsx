@@ -11,10 +11,26 @@ import ReactFlow, {
 import "reactflow/dist/style.css"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
-import { Globe, BookOpen } from "lucide-react"
+import { Globe, BookOpen, Sparkles } from "lucide-react"
 
 // A simplified node for the public universe map
 function UniverseNode({ data }: { data: any }) {
+  if (data.isVirtual) {
+    return (
+      <Card className="min-w-[160px] p-4 bg-background/50 border-dashed border-2 border-border/60 hover:border-primary/50 transition-colors pointer-events-none rounded-xl shadow-sm text-center flex flex-col items-center gap-2">
+        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+          <Sparkles className="h-4 w-4 text-primary/60" />
+        </div>
+        <div className="font-serif italic font-medium text-lg leading-tight text-muted-foreground">
+          {data.label}
+        </div>
+        <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/50">
+          Shared Ancestry
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="min-w-[140px] p-3 bg-background/80 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-colors cursor-pointer group rounded-xl shadow-sm hover:shadow-primary/10">
       <div className="flex flex-col items-center text-center gap-1.5 pointer-events-none">
@@ -47,6 +63,7 @@ interface LanguageData {
   slug: string
   flagUrl: string | null
   parentLanguageId: string | null
+  externalAncestry?: string | null
   owner: { name: string }
   _count: { dictionaryEntries: number }
 }
@@ -59,15 +76,35 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
     const eds: Edge[] = []
     
     // We want a cool constellation layout.
-    // For MVP, we'll use a circular/radial layout for each family tree family.
-    // Group by families: 
-    const roots = languages.filter(l => !l.parentLanguageId)
+    // Group by families and canonical ancestries: 
+    const pureRoots = languages.filter(l => !l.parentLanguageId);
+    
+    const virtualRootsMap = new Map<string, any>()
+    pureRoots.forEach(r => {
+      if (r.externalAncestry && !virtualRootsMap.has(r.externalAncestry)) {
+        virtualRootsMap.set(r.externalAncestry, {
+          id: `virtual-${r.externalAncestry}`,
+          name: r.externalAncestry,
+          slug: "",
+          flagUrl: null,
+          parentLanguageId: null,
+          isVirtual: true,
+          owner: { name: "Canonical Ancestry" },
+          _count: { dictionaryEntries: 0 }
+        })
+      }
+    })
+
+    const trueRoots = [
+      ...Array.from(virtualRootsMap.values()),
+      ...pureRoots.filter(r => !r.externalAncestry)
+    ]
     
     // Place roots in a large circle
-    const numRoots = roots.length
+    const numRoots = trueRoots.length
     const radius = Math.max(numRoots * 150, 400)
     
-    roots.forEach((root, i) => {
+    trueRoots.forEach((root, i) => {
       const angle = (i / numRoots) * Math.PI * 2
       const x = Math.cos(angle) * radius
       const y = Math.sin(angle) * radius
@@ -82,19 +119,28 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
           count: root._count.dictionaryEntries,
           flagUrl: root.flagUrl,
           ownerName: root.owner.name,
+          isVirtual: root.isVirtual
         },
       })
       
       // BFS to place daughters in concentric circles around their parent
-      let queue = [{ id: root.id, x, y, level: 1 }]
+      let queue = [{ id: root.id, isVirtual: root.isVirtual, name: root.name, x, y, level: 1 }]
       while (queue.length > 0) {
         const parent = queue.shift()!
         
-        const daughters = languages.filter(l => l.parentLanguageId === parent.id)
-        const dRadius = 200 / parent.level 
+        let daughters: LanguageData[] = []
+        if (parent.isVirtual) {
+          daughters = languages.filter(l => !l.parentLanguageId && l.externalAncestry === parent.name)
+        } else {
+          daughters = languages.filter(l => l.parentLanguageId === parent.id)
+        }
+
+        const dRadius = 180 + parent.level * 40
         
         daughters.forEach((d, di) => {
-          const dAngle = (di / daughters.length) * Math.PI * 2 + (Math.PI / 4 * parent.level) // offsets
+          const spreadAngle = daughters.length > 1 ? Math.PI / Math.max(daughters.length - 1, 1) : 0
+          const startAngle = (Math.PI / 4) * parent.level - spreadAngle * (daughters.length - 1) / 2
+          const dAngle = daughters.length === 1 ? (Math.PI / 4) * parent.level : startAngle + spreadAngle * di
           const dx = parent.x + Math.cos(dAngle) * dRadius
           const dy = parent.y + Math.sin(dAngle) * dRadius
           
@@ -117,7 +163,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
             target: d.id,
             type: "straight",
             animated: true,
-            style: { stroke: "hsl(var(--primary))", strokeWidth: 1.5, strokeDasharray: "4 4", opacity: 0.5 },
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 1.5, strokeDasharray: parent.isVirtual ? "4 4" : "none", opacity: 0.5 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
               color: "hsl(var(--primary))",
@@ -126,7 +172,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
             },
           })
           
-          queue.push({ id: d.id, x: dx, y: dy, level: parent.level + 1 })
+          queue.push({ id: d.id, isVirtual: false, name: d.name, x: dx, y: dy, level: parent.level + 1 })
         })
       }
     })

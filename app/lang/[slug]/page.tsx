@@ -28,6 +28,7 @@ async function getLanguage(slug: string) {
       slug: true,
       description: true,
       visibility: true,
+      ownerId: true,
       flagUrl: true,
       discordUrl: true,
       telegramUrl: true,
@@ -111,6 +112,8 @@ export async function generateMetadata({
     description = `Explore ${language.name} language documentation${contentSummary} on LingoCon.`
   }
 
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://lingocon.com"}/api/og/family-tree/${language.id}`
+
   return {
     title,
     description,
@@ -121,11 +124,20 @@ export async function generateMetadata({
       siteName: "LingoCon",
       type: "website",
       locale: "en_US",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${language.name} language family tree`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [ogImageUrl],
     },
     alternates: {
       canonical: url,
@@ -205,7 +217,7 @@ export default async function PublicLanguagePage({
 
   return (
     <div className="space-y-12 pb-20">
-      <LanguageHero language={language} isFavorite={isFavorite} />
+      <LanguageHero language={language} isFavorite={isFavorite} userId={userId} />
 
       {/* Language Family */}
       {familyTree && (

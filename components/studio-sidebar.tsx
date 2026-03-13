@@ -15,6 +15,7 @@ import {
   Settings,
   Clock,
   AudioWaveform,
+  GraduationCap,
 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 
@@ -48,6 +49,7 @@ export function StudioSidebar({ language, basePath }: StudioSidebarProps) {
     { name: "Paradigms", href: `${basePath}/paradigms`, icon: Table2, color: "text-rose-500" },
     { name: "Articles", href: `${basePath}/articles`, icon: Newspaper, color: "text-amber-500" },
     { name: "Texts", href: `${basePath}/texts`, icon: BookMarked, color: "text-indigo-500" },
+    { name: "Flashcards", href: `${basePath}/flashcards`, icon: GraduationCap, color: "text-orange-500" },
     { name: "Settings", href: `${basePath}/settings`, icon: Settings, color: "text-muted-foreground" },
   ]
 
