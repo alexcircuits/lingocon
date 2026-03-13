@@ -29,14 +29,33 @@ function computeStats(languages: LanguageData[]) {
     }
   })
 
-  // Find roots
+  // Find roots (including missing parents)
   const roots = languages.filter(l => !l.parentLanguageId || !byId.has(l.parentLanguageId))
 
+  // Cycle recovery
+  const reachable = new Set<string>()
+  function markReachable(id: string) {
+    if (reachable.has(id)) return
+    reachable.add(id)
+    ;(childrenMap.get(id) || []).forEach(markReachable)
+  }
+  roots.forEach(r => markReachable(r.id))
+  
+  languages.forEach(l => {
+    if (!reachable.has(l.id)) {
+      roots.push(l)
+      markReachable(l.id)
+    }
+  })
+
   // Compute max depth via DFS
-  function maxDepth(id: string): number {
+  function maxDepth(id: string, visited = new Set<string>()): number {
+    if (visited.has(id)) return 0
+    visited.add(id)
     const kids = childrenMap.get(id) || []
     if (kids.length === 0) return 1
-    return 1 + Math.max(...kids.map(maxDepth))
+    const childDepths = kids.map(k => maxDepth(k, new Set(visited)))
+    return 1 + Math.max(0, ...childDepths)
   }
 
   const depth = roots.length > 0 ? Math.max(...roots.map(r => maxDepth(r.id))) : 0
@@ -51,10 +70,12 @@ function computeStats(languages: LanguageData[]) {
     : 0
 
   // Widest level (max siblings at any depth)
-  function countAtDepth(id: string, d: number, target: number): number {
+  function countAtDepth(id: string, d: number, target: number, visited = new Set<string>()): number {
+    if (visited.has(id)) return 0
+    visited.add(id)
     if (d === target) return 1
     const kids = childrenMap.get(id) || []
-    return kids.reduce((sum, kid) => sum + countAtDepth(kid, d + 1, target), 0)
+    return kids.reduce((sum, kid) => sum + countAtDepth(kid, d + 1, target, new Set(visited)), 0)
   }
   
   let maxBreadth = 0

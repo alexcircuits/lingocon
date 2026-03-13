@@ -113,29 +113,63 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
 
   const roots = Array.from(byId.values()).filter(l => {
     if (l.isVirtual) return true;
-    if (l.parentLanguageId) return false;
+    if (l.parentLanguageId && byId.has(l.parentLanguageId)) return false;
     if (l.externalAncestry && virtualMap.has(l.externalAncestry)) return false;
     return true;
   }).sort((a, b) => a.name.localeCompare(b.name))
 
+  // Find disconnected cycles and promote them to roots
+  const reachable = new Set<string>()
+  function markReachable(id: string) {
+    if (reachable.has(id)) return
+    reachable.add(id)
+    ;(childrenMap.get(id) || []).forEach(markReachable)
+  }
+  roots.forEach(r => markReachable(r.id))
+  
+  // Sort remaining to ensure determinism
+  const unreached = Array.from(byId.values())
+    .filter(l => !reachable.has(l.id))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  unreached.forEach(l => {
+    if (!reachable.has(l.id)) {
+      roots.push(l)
+      markReachable(l.id)
+    }
+  })
+
   // Count leaf-width of each subtree (min 1)
   const subtreeWidth = new Map<string, number>()
+  const measuring = new Set<string>()
   function measureWidth(id: string): number {
+    if (measuring.has(id)) return 1 // break cycle
+    if (subtreeWidth.has(id)) return subtreeWidth.get(id)!
+
+    measuring.add(id)
     const kids = childrenMap.get(id) || []
     if (kids.length === 0) {
       subtreeWidth.set(id, 1)
+      measuring.delete(id)
       return 1
     }
     const w = kids.reduce((sum, kid) => sum + measureWidth(kid), 0)
-    subtreeWidth.set(id, w)
-    return w
+    const finalW = Math.max(1, w)
+    subtreeWidth.set(id, finalW)
+    measuring.delete(id)
+    return finalW
   }
+
+  const globalPlaced = new Set<string>()
 
   // Assign positions with DFS
   function layoutTree(rootId: string, offsetX: number) {
     measureWidth(rootId)
 
     function place(id: string, depth: number, leftX: number) {
+      if (globalPlaced.has(id)) return // break cycle or duplicate
+      globalPlaced.add(id)
+
       const lang = byId.get(id)!;
       const w = subtreeWidth.get(id) || 1
       const x = leftX + (w * (NODE_WIDTH + H_GAP)) / 2 - NODE_WIDTH / 2
@@ -161,30 +195,32 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
       // Add edges for children
       let childLeft = leftX
       for (const kid of childrenMap.get(id) || []) {
-        const kidLang = byId.get(kid)!;
-        const isKidReadOnly = kidLang.ownerId !== currentUserId;
-        
-        edges.push({
-          id: `e-${id}-${kid}`,
-          source: id,
-          target: kid,
-          animated: true,
-          label: "evolved",
-          labelStyle: { fontSize: 10, fill: "hsl(var(--muted-foreground))", fontStyle: "italic" },
-          labelBgStyle: { fill: "hsl(var(--card))", fillOpacity: 0.8 },
-          labelBgPadding: [4, 2] as [number, number],
-          labelBgBorderRadius: 4,
-          style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
-          deletable: !isKidReadOnly,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: "hsl(var(--primary))",
-          },
-        })
+        // Only draw edge if we haven't placed target yet in this pass to prevent looping lines
+        if (!globalPlaced.has(kid)) {
+          const isKidReadOnly = byId.get(kid)?.ownerId !== currentUserId
+          
+          edges.push({
+            id: `e-${id}-${kid}`,
+            source: id,
+            target: kid,
+            animated: true,
+            label: "evolved",
+            labelStyle: { fontSize: 10, fill: "hsl(var(--muted-foreground))", fontStyle: "italic" },
+            labelBgStyle: { fill: "hsl(var(--card))", fillOpacity: 0.8 },
+            labelBgPadding: [4, 2] as [number, number],
+            labelBgBorderRadius: 4,
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+            deletable: !isKidReadOnly,
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: "hsl(var(--primary))",
+            },
+          })
 
-        const kidW = subtreeWidth.get(kid) || 1
-        place(kid, depth + 1, childLeft)
-        childLeft += kidW * (NODE_WIDTH + H_GAP)
+          const kidW = subtreeWidth.get(kid) || 1
+          place(kid, depth + 1, childLeft)
+          childLeft += kidW * (NODE_WIDTH + H_GAP)
+        }
       }
     }
 
