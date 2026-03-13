@@ -14,6 +14,7 @@ import dynamic from "next/dynamic"
 const PosDistributionChart = dynamic(() => import("@/components/analytics/pos-distribution-chart").then(mod => mod.PosDistributionChart), { ssr: false })
 const ActivityChart = dynamic(() => import("@/components/analytics/activity-chart").then(mod => mod.ActivityChart), { ssr: false })
 import { CompletenessCard } from "@/components/analytics/completeness-card"
+import { SwadeshTracker } from "@/components/analytics/swadesh-tracker"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -151,6 +152,7 @@ export default async function OverviewPage({
         </div>
         <PosDistributionChart data={posData} />
         <CompletenessCard stats={completenessStats} />
+        <SwadeshTracker glosses={language.dictionaryEntries.map(e => e.gloss)} />
       </div>
 
       {/* Details & Activity Grid */}

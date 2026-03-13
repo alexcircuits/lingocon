@@ -25,7 +25,8 @@ import {
   Home,
   Search,
   Plus,
-  Shield
+  Shield,
+  GitBranch
 } from "lucide-react"
 import { SearchBar } from "@/components/search/search-bar"
 import { cn } from "@/lib/utils"
@@ -57,6 +58,7 @@ const mainNavItems = [
   { name: "Browse", href: "/browse", icon: Globe },
   { name: "Favorites", href: "/favorites", icon: Heart, requiresAuth: true },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
+  { name: "Families", href: "/dashboard/families", icon: GitBranch, requiresAuth: true },
 ]
 
 export function Navbar({ user, isDevMode = false }: NavbarProps) {

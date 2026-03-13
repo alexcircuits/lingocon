@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card"
 import { CreateLanguageForm } from "./form"
 import { LanguageWizard } from "./wizard"
 import { WizardEntry } from "./wizard-entry"
+import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
 export default async function NewLanguagePage({
   searchParams,
 }: {
-  searchParams: { wizard?: string }
+  searchParams: Promise<{ wizard?: string }>
 }) {
   const userId = await getUserId()
 
@@ -19,7 +20,14 @@ export default async function NewLanguagePage({
     redirect("/login")
   }
 
-  const useWizard = searchParams.wizard === "true"
+  const userLanguages = userId ? await prisma.language.findMany({
+    where: { ownerId: userId },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" }
+  }) : []
+
+  const params = await searchParams
+  const useWizard = params.wizard === "true"
 
   return (
     <div className="container mx-auto py-8">
@@ -36,7 +44,7 @@ export default async function NewLanguagePage({
         <Card className="p-6">
           <WizardEntry />
           <div className="mt-6 pt-6 border-t">
-            <CreateLanguageForm />
+            <CreateLanguageForm userLanguages={userLanguages} />
           </div>
         </Card>
       )}

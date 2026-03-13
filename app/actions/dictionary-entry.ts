@@ -44,6 +44,7 @@ export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
         etymology: validated.etymology || null,
         relatedWords: validated.relatedWords ? (validated.relatedWords as any) : null,
         notes: validated.notes || null,
+        tags: validated.tags ? (validated.tags as any) : null,
         languageId: validated.languageId,
       },
       include: {
@@ -122,6 +123,8 @@ export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
     if (validated.relatedWords !== undefined)
       updateData.relatedWords = validated.relatedWords ? (validated.relatedWords as any) : null
     if (validated.notes !== undefined) updateData.notes = validated.notes || null
+    if (validated.tags !== undefined)
+      updateData.tags = validated.tags ? (validated.tags as any) : null
 
     const entry = await prisma.dictionaryEntry.update({
       where: { id: validated.id },

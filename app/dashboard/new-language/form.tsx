@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createLanguage } from "@/app/actions/language"
+import { evolveLanguage } from "@/app/actions/evolve-language"
 import { generateSlug } from "@/lib/utils/slug"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,8 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+interface CreateLanguageFormProps {
+  userLanguages?: { id: string; name: string }[]
+}
 
-export function CreateLanguageForm() {
+export function CreateLanguageForm({ userLanguages = [] }: CreateLanguageFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +29,7 @@ export function CreateLanguageForm() {
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
   const [visibility, setVisibility] = useState<"PRIVATE" | "UNLISTED" | "PUBLIC">("PRIVATE")
+  const [parentId, setParentId] = useState<string>("none")
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value
@@ -39,19 +44,38 @@ export function CreateLanguageForm() {
     setError(null)
 
     startTransition(async () => {
-      const result = await createLanguage({
-        name,
-        slug,
-        description: description || undefined,
-        visibility,
-      })
+      let result
+
+      if (parentId !== "none") {
+        result = await evolveLanguage({
+          parentId,
+          name,
+          slug,
+          description: description || undefined,
+          visibility: visibility === "UNLISTED" ? "PRIVATE" : visibility,
+        })
+      } else {
+        result = await createLanguage({
+          name,
+          slug,
+          description: description || undefined,
+          visibility: visibility as any,
+        })
+      }
 
       if (result.error) {
         setError(result.error)
         toast.error(result.error)
       } else {
-        toast.success("Language created successfully")
-        router.push("/dashboard")
+        toast.success(parentId !== "none" ? "Language evolved successfully" : "Language created successfully")
+        
+        if (parentId !== "none") {
+          // If evolved, take them straight to sound changes to derive the daughter!
+          router.push(`/studio/lang/${slug}/sound-changes`)
+        } else {
+          router.push("/dashboard")
+        }
+        
         router.refresh()
       }
     })
@@ -62,6 +86,30 @@ export function CreateLanguageForm() {
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
+        </div>
+      )}
+
+      {userLanguages.length > 0 && (
+        <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border/50">
+          <Label htmlFor="parentId" className="text-primary font-medium">Evolve from Parent Language (Optional)</Label>
+          <Select
+            value={parentId}
+            onValueChange={setParentId}
+            disabled={isPending}
+          >
+            <SelectTrigger id="parentId" className="bg-background">
+              <SelectValue placeholder="None (Create from scratch)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None (Create from scratch)</SelectItem>
+              {userLanguages.map(lang => (
+                <SelectItem key={lang.id} value={lang.id}>{lang.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            If selected, this new daughter language will automatically inherit the parent&apos;s dictionary, script, and phonology!
+          </p>
         </div>
       )}
 

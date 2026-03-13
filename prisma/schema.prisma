@@ -108,6 +108,11 @@ model Language {
   // Diacritics support - when enabled, allows diacritical variants of base letters
   allowsDiacritics Boolean @default(false)
 
+  // Language Family Tree
+  parentLanguageId String?
+  parentLanguage   Language?  @relation("LanguageFamily", fields: [parentLanguageId], references: [id], onDelete: SetNull)
+  childLanguages   Language[] @relation("LanguageFamily")
+
   ownerId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -126,6 +131,7 @@ model Language {
 
   @@index([ownerId])
   @@index([slug])
+  @@index([parentLanguageId])
   @@map("languages")
 }
 
@@ -191,6 +197,7 @@ model DictionaryEntry {
   etymology   String?  @db.Text // Word origin/etymology
   relatedWords Json?   // Array of related word IDs: ["id1", "id2"]
   notes       String?  @db.Text
+  tags        Json?    // Array of tag strings: ["body", "food", "kinship"]
   paradigmId  String?  // Optional link to paradigm table
   languageId  String
   createdAt   DateTime @default(now())

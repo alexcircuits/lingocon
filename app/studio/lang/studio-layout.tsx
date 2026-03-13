@@ -18,7 +18,8 @@ import {
   ExternalLink,
   ChevronRight,
   Menu,
-  AudioWaveform
+  AudioWaveform,
+  Workflow,
 } from "lucide-react"
 import type { Language } from "@prisma/client"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -53,6 +54,7 @@ export function StudioLayout({ language, children }: StudioLayoutProps) {
     { name: "Overview", href: basePath, icon: LayoutDashboard },
     { name: "Alphabet", href: `${basePath}/alphabet`, icon: Languages },
     { name: "Phonology", href: `${basePath}/phonology`, icon: AudioWaveform },
+    { name: "Sound Changes", href: `${basePath}/sound-changes`, icon: Workflow },
     { name: "Grammar", href: `${basePath}/grammar`, icon: BookOpen },
     { name: "Dictionary", href: `${basePath}/dictionary`, icon: FileText },
     { name: "Paradigms", href: `${basePath}/paradigms`, icon: Table2 },

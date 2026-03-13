@@ -199,3 +199,42 @@ export async function deleteLanguage(languageId: string) {
     }
   }
 }
+
+/**
+ * Update specific keys in language metadata (shallow merge).
+ */
+export async function updateLanguageMetadata(
+  languageId: string,
+  updates: Record<string, any>
+) {
+  const userId = await getUserId()
+
+  if (!userId) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    const language = await prisma.language.findUnique({
+      where: { id: languageId },
+      select: { ownerId: true, metadata: true },
+    })
+
+    if (!language || language.ownerId !== userId) {
+      return { error: "Unauthorized" }
+    }
+
+    const existing = (language.metadata as Record<string, any>) || {}
+    const merged = { ...existing, ...updates }
+
+    await prisma.language.update({
+      where: { id: languageId },
+      data: { metadata: merged },
+    })
+
+    revalidatePath(`/studio`)
+
+    return { success: true }
+  } catch {
+    return { error: "Failed to update metadata" }
+  }
+}

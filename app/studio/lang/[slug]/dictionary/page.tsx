@@ -137,6 +137,7 @@ export default async function DictionaryPage({
           ttsSettings={(language.metadata as any)?.tts}
           allowsDiacritics={language.allowsDiacritics}
           metadata={(language.metadata as Record<string, any>) || {}}
+          languageName={language.name}
         />
       </Suspense>
     </div>

@@ -53,6 +53,7 @@ export function DictionaryEntryDialog({
     etymology: "",
     relatedWords: [] as string[],
     notes: "",
+    tags: [] as string[],
   })
 
   // Calculate alphabet warnings (non-blocking validation)
@@ -88,6 +89,9 @@ export function DictionaryEntryDialog({
           ? (initialData.relatedWords as string[])
           : [],
         notes: initialData.notes || "",
+        tags: Array.isArray(initialData.tags)
+          ? (initialData.tags as string[])
+          : [],
       })
     } else {
       setFormData({
@@ -98,6 +102,7 @@ export function DictionaryEntryDialog({
         etymology: "",
         relatedWords: [],
         notes: "",
+        tags: [],
       })
     }
   }, [initialData, open])
@@ -158,6 +163,43 @@ export function DictionaryEntryDialog({
     setFormData((prev) => ({
       ...prev,
       relatedWords: prev.relatedWords.filter((w) => w !== word),
+    }))
+  }
+
+  // Tags handling
+  const [tagInput, setTagInput] = useState("")
+  const SUGGESTED_TAGS = [
+    "body", "food", "animal", "color", "number", "kinship",
+    "nature", "emotion", "time", "weather", "tool", "clothing",
+  ]
+
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault()
+      const tag = tagInput.trim().toLowerCase().replace(/,$/, "")
+      if (tag && !formData.tags.includes(tag)) {
+        setFormData((prev) => ({
+          ...prev,
+          tags: [...prev.tags, tag],
+        }))
+        setTagInput("")
+      }
+    }
+  }
+
+  const addTag = (tag: string) => {
+    if (!formData.tags.includes(tag)) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, tag],
+      }))
+    }
+  }
+
+  const removeTag = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
     }))
   }
 
@@ -370,6 +412,47 @@ export function DictionaryEntryDialog({
                   errors.notes && touched.notes && "border-destructive focus-visible:ring-destructive"
                 )}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {formData.tags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs border"
+                  >
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="hover:text-destructive transition-colors"
+                    >
+                      <AlertCircle className="h-3 w-3 rotate-45" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Input
+                id="tags"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                placeholder="Type tag and press Enter..."
+                disabled={isPending}
+              />
+              <div className="flex flex-wrap gap-1 mt-1">
+                {SUGGESTED_TAGS.filter(t => !formData.tags.includes(t)).slice(0, 8).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => addTag(tag)}
+                    className="text-xs px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

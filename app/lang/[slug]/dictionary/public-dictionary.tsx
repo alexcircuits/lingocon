@@ -17,12 +17,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { Search, BookOpen, Link2, StickyNote, ArrowLeftRight } from "lucide-react"
+import { Search, BookOpen, Link2, StickyNote, ArrowLeftRight, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { ExampleSentences } from "@/components/dictionary/example-sentences"
+import { EtymologyTree } from "@/components/dictionary/etymology-tree"
 import type { DictionaryEntry, ScriptSymbol, ExampleSentence } from "@prisma/client"
 
 type DictionaryEntryWithExamples = DictionaryEntry & {
@@ -293,6 +294,33 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
                     </p>
                   </div>
                 )}
+
+                {/* Tags */}
+                {Array.isArray(selectedEntry.tags) && (selectedEntry.tags as string[]).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(selectedEntry.tags as string[]).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Etymology Tree */}
+                <EtymologyTree
+                  entry={selectedEntry}
+                  allEntries={entries}
+                  onSelectEntry={(e) => {
+                    const fullEntry = entries.find(x => x.id === e.id)
+                    if (fullEntry) setSelectedEntry(fullEntry)
+                  }}
+                />
 
                 {/* Example Sentences */}
                 {selectedEntry.exampleSentences.length > 0 && (

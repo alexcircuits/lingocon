@@ -8,6 +8,7 @@ export const createDictionaryEntrySchema = z.object({
   etymology: z.string().max(1000).optional().nullable(),
   relatedWords: z.array(z.string()).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
+  tags: z.array(z.string().max(50)).max(20).optional().nullable(),
   languageId: z.string().min(1),
 })
 
@@ -20,6 +21,7 @@ export const updateDictionaryEntrySchema = z.object({
   etymology: z.string().max(1000).optional().nullable(),
   relatedWords: z.array(z.string()).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
+  tags: z.array(z.string().max(50)).max(20).optional().nullable(),
   languageId: z.string().min(1),
 })
 

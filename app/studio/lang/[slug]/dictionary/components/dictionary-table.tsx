@@ -1,5 +1,7 @@
 "use client"
 
+import React, { useState } from "react"
+
 import {
   Table,
   TableBody,
@@ -10,10 +12,12 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, GitFork } from "lucide-react"
+import { Pencil, Trash2, GitFork, ChevronDown, ChevronRight, BookOpen, Tag } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import { ContextualHelp } from "@/components/contextual-help"
+import { EtymologyTree } from "@/components/dictionary/etymology-tree"
+import { Badge } from "@/components/ui/badge"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryTableProps {
@@ -30,6 +34,7 @@ interface DictionaryTableProps {
     voiceId: string
     speed: string
   }
+  allEntries?: DictionaryEntry[]
 }
 
 export function DictionaryTable({
@@ -43,7 +48,9 @@ export function DictionaryTable({
   symbols,
   isPending,
   ttsSettings,
+  allEntries = [],
 }: DictionaryTableProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       onSelectChange(new Set(entries.map((e) => e.id)))
@@ -128,7 +135,8 @@ export function DictionaryTable({
             const isSelected = selectedEntries.has(entry.id)
 
             return (
-              <TableRow key={entry.id} className={isSelected ? "bg-muted/50" : ""}>
+              <React.Fragment key={entry.id}>
+              <TableRow className={isSelected ? "bg-muted/50" : ""}>
                 <TableCell>
                   <Checkbox
                     checked={isSelected}
@@ -136,9 +144,20 @@ export function DictionaryTable({
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  <span className={!showLatin ? "font-custom-script text-base" : ""}>
-                    {displayLemma}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+                    className="flex items-center gap-1 text-left hover:text-primary transition-colors group"
+                  >
+                    {expandedId === entry.id ? (
+                      <ChevronDown className="h-3 w-3 text-primary shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary shrink-0" />
+                    )}
+                    <span className={!showLatin ? "font-custom-script text-base" : ""}>
+                      {displayLemma}
+                    </span>
+                  </button>
                   {showLatin && displayLemma !== entry.lemma && (
                     <span className="text-xs text-muted-foreground ml-2 font-custom-script">
                       ({entry.lemma})
@@ -157,6 +176,18 @@ export function DictionaryTable({
                           className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border/50"
                         >
                           {word}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {Array.isArray(entry.tags) && (entry.tags as string[]).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(entry.tags as string[]).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20"
+                        >
+                          {tag}
                         </span>
                       ))}
                     </div>
@@ -215,6 +246,66 @@ export function DictionaryTable({
                   </div>
                 </TableCell>
               </TableRow>
+              {expandedId === entry.id && (
+                <TableRow className="bg-muted/20 hover:bg-muted/20">
+                  <TableCell colSpan={6} className="p-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {/* Left: Etymology & Notes */}
+                      <div className="space-y-3">
+                        {entry.etymology && (
+                          <div>
+                            <h4 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                              <BookOpen className="h-3 w-3" />
+                              Etymology
+                            </h4>
+                            <p className="text-sm italic text-foreground/80">
+                              {entry.etymology}
+                            </p>
+                          </div>
+                        )}
+                        {entry.notes && (
+                          <div>
+                            <h4 className="text-xs font-medium text-muted-foreground mb-1">Notes</h4>
+                            <p className="text-sm text-foreground/80 whitespace-pre-wrap line-clamp-3">
+                              {entry.notes}
+                            </p>
+                          </div>
+                        )}
+                        {Array.isArray(entry.tags) && (entry.tags as string[]).length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                              <Tag className="h-3 w-3" />
+                              Tags
+                            </h4>
+                            <div className="flex flex-wrap gap-1">
+                              {(entry.tags as string[]).map((tag) => (
+                                <Badge key={tag} variant="outline" className="text-[10px]">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {!entry.etymology && !entry.notes && (!Array.isArray(entry.tags) || (entry.tags as string[]).length === 0) && (
+                          <p className="text-sm text-muted-foreground italic">No etymology or notes recorded.</p>
+                        )}
+                      </div>
+
+                      {/* Right: Derivation Tree */}
+                      <div>
+                        <EtymologyTree
+                          entry={entry}
+                          allEntries={allEntries.length > 0 ? allEntries : entries}
+                          onSelectEntry={(e) => {
+                            setExpandedId(e.id)
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              </React.Fragment>
             )
           })}
         </TableBody>

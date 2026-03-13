@@ -3,6 +3,8 @@ import { getUserId, isLanguageOwner } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { LanguageSettings } from "./language-settings"
 import { Collaborators } from "./collaborators"
+import { ParentLanguageCard } from "./parent-language-card"
+import { getLanguageFamilyTree } from "@/app/actions/language-family"
 
 async function getLanguage(slug: string, userId: string | null) {
   const [language, dictionaryEntries] = await Promise.all([
@@ -20,6 +22,7 @@ async function getLanguage(slug: string, userId: string | null) {
         fontScale: true,
         ownerId: true,
         metadata: true,
+        parentLanguageId: true,
       },
     }),
     prisma.dictionaryEntry.findMany({
@@ -47,7 +50,17 @@ async function getLanguage(slug: string, userId: string | null) {
     }
   }
 
-  return { language, dictionaryEntries }
+  // Get user's other languages for parent selector
+  const userLanguages = userId ? await prisma.language.findMany({
+    where: {
+      ownerId: userId,
+      id: { not: language.id },
+    },
+    select: { id: true, name: true, slug: true },
+    orderBy: { name: "asc" },
+  }) : []
+
+  return { language, dictionaryEntries, userLanguages }
 }
 
 export default async function SettingsPage({
@@ -69,8 +82,14 @@ export default async function SettingsPage({
     notFound()
   }
 
-  const { language, dictionaryEntries } = data
+  const { language, dictionaryEntries, userLanguages } = data
   const owner = userId ? await isLanguageOwner(language.id, userId) : false
+  
+  // Get family tree if language has a parent or children
+  let familyTree = null
+  try {
+    familyTree = await getLanguageFamilyTree(language.id)
+  } catch {}
 
   return (
     <div className="space-y-8">
@@ -82,6 +101,13 @@ export default async function SettingsPage({
       </div>
 
       <LanguageSettings language={language} languageSlug={slug} dictionaryEntries={dictionaryEntries} isOwner={owner} />
+      <ParentLanguageCard
+        languageId={language.id}
+        currentParentId={language.parentLanguageId || null}
+        userLanguages={userLanguages}
+        familyTree={familyTree}
+        currentSlug={slug}
+      />
       <Collaborators languageId={language.id} isOwner={owner} />
     </div>
   )

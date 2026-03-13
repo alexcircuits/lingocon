@@ -28,6 +28,7 @@ import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Footer } from "@/components/footer"
 import { WordOfTheDay } from "@/components/word-of-the-day"
 import { SurveyBanner } from "@/components/survey-banner"
+import { LingoConUniverseMap } from "@/components/landing/universe-map"
 
 export const dynamic = "force-dynamic"
 
@@ -146,12 +147,28 @@ const DiscordIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+async function getUniverseLanguages() {
+  return prisma.language.findMany({
+    where: { visibility: "PUBLIC" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      flagUrl: true,
+      parentLanguageId: true,
+      owner: { select: { name: true } },
+      _count: { select: { dictionaryEntries: true } }
+    }
+  })
+}
+
 export default async function Home() {
   const session = await auth()
   const isDevMode = process.env.DEV_MODE === "true"
-  const [featuredLanguages, topLanguages] = await Promise.all([
+  const [featuredLanguages, topLanguages, universeLanguages] = await Promise.all([
     getFeaturedLanguages(),
     getTopLanguages(),
+    getUniverseLanguages(),
   ])
   const isAuthenticated = session || isDevMode
 
@@ -254,29 +271,28 @@ export default async function Home() {
             Define grammar, build structured dictionaries, and visualize your syntax.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-24 items-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
             {isAuthenticated ? (
-              <Link href="/dashboard">
-                <MagneticButton size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all bg-primary text-primary-foreground">
-                  Open Dashboard
-                  <ArrowRight className="ml-2 h-5 w-5" />
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-full hover:scale-105 transition-all shadow-lg hover:shadow-primary/25">
+                  Go to Dashboard <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
                 </MagneticButton>
               </Link>
             ) : (
-              <>
-                <Link href="/login">
-                  <MagneticButton size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all bg-primary text-primary-foreground">
-                    Start Building
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </MagneticButton>
-                </Link>
-                <Link href="/browse">
-                  <MagneticButton size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-secondary/50">
-                    Explore Corpus
-                  </MagneticButton>
-                </Link>
-              </>
+              <Link href="/login" className="w-full sm:w-auto">
+                <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-full hover:scale-105 transition-all shadow-lg hover:shadow-primary/25">
+                  Start Building <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
+                </MagneticButton>
+              </Link>
             )}
+            <Link href="/browse" className="w-full sm:w-auto">
+              <MagneticButton
+                variant="outline"
+                className="h-14 px-8 text-base font-medium rounded-full border-2 border-primary/20 hover:border-primary/50 bg-background/50 backdrop-blur-sm w-full transition-all"
+              >
+                Browse Languages
+              </MagneticButton>
+            </Link>
           </div>
 
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 border-t border-border/40 pt-12">

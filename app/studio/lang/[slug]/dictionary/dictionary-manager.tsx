@@ -11,7 +11,7 @@ import {
   deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus, Trash2, Sparkles } from "lucide-react"
+import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages } from "lucide-react"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { DictionarySearch } from "./components/dictionary-search"
@@ -23,6 +23,7 @@ import { ImportDialog } from "./components/import-dialog"
 import { DictionaryPagination } from "./components/dictionary-pagination"
 import { DerivationWizard } from "./components/derivation-wizard"
 import { WordGeneratorDialog } from "./components/word-generator-dialog"
+import { BorrowWordDialog } from "./components/borrow-word-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
@@ -48,6 +49,7 @@ interface DictionaryManagerProps {
   }
   allowsDiacritics?: boolean
   metadata?: Record<string, any>
+  languageName?: string
 }
 
 export function DictionaryManager({
@@ -63,6 +65,7 @@ export function DictionaryManager({
   ttsSettings,
   allowsDiacritics = false,
   metadata = {},
+  languageName = "Language",
 }: DictionaryManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -82,6 +85,7 @@ export function DictionaryManager({
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false)
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
+  const [isBorrowOpen, setIsBorrowOpen] = useState(false)
   const [prefillLemma, setPrefillLemma] = useState<string | null>(null)
 
   // Selection State
@@ -172,6 +176,7 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
+      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
     }))
 
     const result = await createDictionaryEntry(sterilizedData)
@@ -429,6 +434,16 @@ export function DictionaryManager({
             <Sparkles className="h-4 w-4" />
           </Button>
 
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsBorrowOpen(true)}
+            disabled={isPending}
+            title="Borrow Word"
+          >
+            <Languages className="h-4 w-4" />
+          </Button>
+
           <ContextualHelp
             content="Use Cmd+N to quickly add a new entry. Cmd+/ shows all keyboard shortcuts."
             shortcut="⌘N"
@@ -652,6 +667,14 @@ export function DictionaryManager({
           setPrefillLemma(word)
           setIsAddOpen(true)
         }}
+      />
+
+      <BorrowWordDialog
+        open={isBorrowOpen}
+        onOpenChange={setIsBorrowOpen}
+        languageId={languageId}
+        languageName={languageName}
+        onBorrow={(data) => handleCreate(data)}
       />
 
       {isBulkEditOpen && (
