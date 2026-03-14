@@ -8,7 +8,8 @@ import ReactFlow, {
   Node,
   MarkerType,
   Handle,
-  Position
+  Position,
+  MiniMap
 } from "reactflow"
 import "reactflow/dist/style.css"
 import { useRouter } from "next/navigation"
@@ -45,10 +46,9 @@ function UniverseNode({ data }: { data: any }) {
     )
   }
 
-  // real languages scale from both entries and family size
-  const entryScale = Math.min(0.4, Math.log10(Math.max(1, count)) * 0.1);
-  const familyScale = Math.min(0.8, Math.log10(Math.max(1, familySize)) * 0.3);
-  const scale = 1 + entryScale + familyScale;
+  // make it scale aggressively based on dictionary entries
+  // e.g. 1 entry = ~1x, 100 entries = ~1.6x, 10,000 entries = 2.2x
+  const scale = 1 + Math.max(0, Math.log10(Math.max(1, count)) * 0.3) + Math.min(0.5, familySize * 0.05);
 
   return (
     <>
@@ -68,14 +68,9 @@ function UniverseNode({ data }: { data: any }) {
           </div>
           
           <div className="flex flex-col items-center">
-            <div className="font-serif font-bold text-base leading-tight group-hover:text-primary transition-colors text-foreground">
+            <div className="font-serif font-bold text-lg leading-tight group-hover:text-primary transition-colors text-foreground">
               {data.label}
             </div>
-            {data.familyName && (
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground/80 mt-1 max-w-[120px] truncate">
-                {data.familyName}
-              </div>
-            )}
           </div>
           
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full mt-1">
@@ -270,15 +265,25 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
         fitView
         onNodeClick={(_, node) => router.push(`/lang/${node.data.slug}`)}
         className="[&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
-        minZoom={0.01}
+        minZoom={0.05}
         maxZoom={1.5}
-        elementsSelectable={false}
+        elementsSelectable={true}
         nodesConnectable={false}
         nodesDraggable={false}
-        panOnScroll={true}
+        panOnScroll={false}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        preventScrolling={false}
+        onlyRenderVisibleElements={true} // Boosts performance when zoomed in
       >
-        <Background color="hsl(var(--muted-foreground)/0.2)" gap={32} size={2} />
+        <Background color="hsl(var(--muted-foreground)/0.2)" gap={32} size={1} />
         <Controls showInteractive={false} className="z-20 bg-background/80 backdrop-blur-sm border-border fill-foreground" />
+        <MiniMap 
+          className="z-20 bg-background/80 backdrop-blur-sm border-border"
+          maskColor="hsl(var(--background)/0.6)"
+          nodeColor="hsl(var(--primary)/0.5)"
+          position="bottom-right"
+        />
       </ReactFlow>
       
       {/* Decorative Legend */}
