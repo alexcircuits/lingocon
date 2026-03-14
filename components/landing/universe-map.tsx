@@ -100,14 +100,16 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
       ...pureRoots.filter(r => !r.externalAncestry)
     ]
     
-    // Place roots in a large circle
-    const numRoots = trueRoots.length
-    const radius = Math.max(numRoots * 150, 400)
+    // Place roots using Vogel's Spiral layout for a denser format
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+    const spread = 250 // Scaling factor for spread
     
     trueRoots.forEach((root, i) => {
-      const angle = (i / numRoots) * Math.PI * 2
-      const x = Math.cos(angle) * radius
-      const y = Math.sin(angle) * radius
+      // i + 1 so we don't overlap perfectly at 0,0
+      const r = spread * Math.sqrt(i + 1)
+      const theta = i * goldenAngle
+      const x = Math.cos(theta) * r
+      const y = Math.sin(theta) * r
       
       nds.push({
         id: root.id,
@@ -193,7 +195,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
         fitView
         onNodeClick={(_, node) => router.push(`/lang/${node.data.slug}`)}
         className="[&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
-        minZoom={0.1}
+        minZoom={0.01}
         maxZoom={1.5}
         elementsSelectable={false}
         nodesConnectable={false}
