@@ -29,14 +29,14 @@ interface DictionaryResult extends BaseResult {
     lemma: string
     gloss: string
     ipa: string | null
-    language: { id: string; name: string; slug: string }
+    language: { id: string; name: string; slug: string; fontFamily: string | null }
 }
 
 interface GrammarResult extends BaseResult {
     type: "grammar"
     title: string
     slug: string
-    language: { id: string; name: string; slug: string }
+    language: { id: string; name: string; slug: string; fontFamily: string | null }
 }
 
 type SearchResultItem = LanguageResult | DictionaryResult | GrammarResult
@@ -110,7 +110,12 @@ export function ResultCard({ result }: ResultCardProps) {
                             </div>
                             <div>
                                 <div className="flex items-baseline gap-2">
-                                    <h3 className="font-bold text-foreground">{result.lemma}</h3>
+                                    <h3 
+                                        className="font-bold text-foreground font-custom-script"
+                                        style={result.language.fontFamily ? { fontFamily: result.language.fontFamily } : undefined}
+                                    >
+                                        {result.lemma}
+                                    </h3>
                                     {result.ipa && (
                                         <span className="font-mono text-xs text-muted-foreground">/{result.ipa}/</span>
                                     )}

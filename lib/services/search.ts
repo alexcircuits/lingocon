@@ -21,13 +21,13 @@ export interface SearchResult {
         lemma: string
         gloss: string
         ipa: string | null
-        language: { id: string; name: string; slug: string }
+        language: { id: string; name: string; slug: string; fontFamily: string | null }
     }>
     grammarPages: Array<{
         id: string
         title: string
         slug: string
-        language: { id: string; name: string; slug: string }
+        language: { id: string; name: string; slug: string; fontFamily: string | null }
     }>
 }
 
@@ -90,6 +90,7 @@ export async function search(query: string, scope: SearchScope = "all"): Promise
                             id: true,
                             name: true,
                             slug: true,
+                            fontFamily: true,
                         },
                     },
                 },
@@ -110,6 +111,7 @@ export async function search(query: string, scope: SearchScope = "all"): Promise
                             id: true,
                             name: true,
                             slug: true,
+                            fontFamily: true,
                         },
                     },
                 },

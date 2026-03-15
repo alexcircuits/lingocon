@@ -44,6 +44,7 @@ export function StudioSidebar({ language, basePath }: StudioSidebarProps) {
     { name: "Overview", href: basePath, icon: LayoutDashboard, color: "text-primary" },
     { name: "Alphabet", href: `${basePath}/alphabet`, icon: Languages, color: "text-blue-500" },
     { name: "Phonology", href: `${basePath}/phonology`, icon: AudioWaveform, color: "text-cyan-500" },
+    { name: "Sound Changes", href: `${basePath}/sound-changes`, icon: AudioWaveform, color: "text-teal-500" },
     { name: "Grammar", href: `${basePath}/grammar`, icon: BookOpen, color: "text-violet-500" },
     { name: "Dictionary", href: `${basePath}/dictionary`, icon: FileText, color: "text-emerald-500" },
     { name: "Paradigms", href: `${basePath}/paradigms`, icon: Table2, color: "text-rose-500" },

@@ -270,11 +270,32 @@ export function matchSwadeshList(glosses: string[]): {
   // e.g. "to eat" should match "eat", "big, large" should match "big"
   const expandedGlosses = new Set<string>()
   for (const g of normalizedGlosses) {
+    if (!g) continue
     expandedGlosses.add(g)
-    // Split by comma, semicolon, slash, "to "
-    const parts = g.split(/[,;/]/).map(p => p.trim().replace(/^to\s+/, ""))
+    
+    // Help match user glosses with explanations, e.g. "big (in size)" -> "big"
+    const noParensG = g.replace(/\([^)]*\)/g, "").trim()
+    if (noParensG) {
+      expandedGlosses.add(noParensG)
+      const noParensNoTo = noParensG.replace(/^to\s+/, "").trim()
+      if (noParensNoTo) expandedGlosses.add(noParensNoTo)
+    }
+
+    // Split by comma, semicolon, slash
+    const parts = g.split(/[,;/]/).map(p => p.trim())
     for (const p of parts) {
+      if (!p) continue
       expandedGlosses.add(p)
+      
+      const pNoTo = p.replace(/^to\s+/, "").trim()
+      if (pNoTo) expandedGlosses.add(pNoTo)
+      
+      const pNoParens = p.replace(/\([^)]*\)/g, "").trim()
+      if (pNoParens) {
+        expandedGlosses.add(pNoParens)
+        const pNoParensNoTo = pNoParens.replace(/^to\s+/, "").trim()
+        if (pNoParensNoTo) expandedGlosses.add(pNoParensNoTo)
+      }
     }
   }
 
@@ -282,7 +303,15 @@ export function matchSwadeshList(glosses: string[]): {
 
   for (const concept of SWADESH_LIST) {
     const cEnglish = concept.english.toLowerCase()
-    if (expandedGlosses.has(cEnglish)) {
+    
+    // Some Swadesh concepts have parentheticals, e.g. "you (singular)"
+    // Allow matching the stripped version "you" as well.
+    const cEnglishNoParens = cEnglish.replace(/\([^)]*\)/g, "").trim()
+    
+    if (
+      expandedGlosses.has(cEnglish) || 
+      (cEnglishNoParens && expandedGlosses.has(cEnglishNoParens))
+    ) {
       matched.add(concept.id)
     }
   }

@@ -29,7 +29,7 @@ export function Footer() {
                     </nav>
 
                     <div className="text-sm text-muted-foreground/60 text-center md:text-right">
-                        <p className="mb-1">v1.2 Public Beta © {new Date().getFullYear()} LingoCon.</p>
+                        <p className="mb-1">v1.3 Public Beta © {new Date().getFullYear()} LingoCon.</p>
                     </div>
                 </div>
             </div>
