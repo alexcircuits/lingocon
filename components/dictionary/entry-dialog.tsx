@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { IPAInput } from "@/components/ui/ipa-input"
 import { Label } from "@/components/ui/label"
+import { TagsInput } from "@/components/ui/tags-input"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
@@ -49,6 +50,7 @@ export function EntryDialog({
     etymology: "",
     relatedWords: [] as string[],
     notes: "",
+    tags: [] as string[],
   })
 
   // Reset form when opening/closing or switching entries
@@ -65,6 +67,9 @@ export function EntryDialog({
             ? (entryToEdit.relatedWords as string[])
             : [],
           notes: entryToEdit.notes || "",
+          tags: Array.isArray(entryToEdit.tags)
+            ? (entryToEdit.tags as string[])
+            : [],
         })
       } else {
         setFormData({
@@ -75,6 +80,7 @@ export function EntryDialog({
           etymology: "",
           relatedWords: [],
           notes: "",
+          tags: [],
         })
       }
       setError(null)
@@ -93,12 +99,14 @@ export function EntryDialog({
           id: entryToEdit.id,
           ...formData,
           relatedWords: formData.relatedWords.length > 0 ? formData.relatedWords : undefined,
+          tags: formData.tags.length > 0 ? formData.tags : undefined,
           languageId,
         })
       } else {
         result = await createDictionaryEntry({
           ...formData,
           relatedWords: formData.relatedWords.length > 0 ? formData.relatedWords : undefined,
+          tags: formData.tags.length > 0 ? formData.tags : undefined,
           languageId,
         })
       }
@@ -238,6 +246,16 @@ export function EntryDialog({
                 rows={3}
                 maxLength={2000}
                 className="input-focus resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <TagsInput
+                value={formData.tags}
+                onChange={(tags) => setFormData({ ...formData, tags })}
+                placeholder="Add tags (e.g. archaic, formal)..."
+                maxTags={10}
               />
             </div>
           </div>
