@@ -3,6 +3,12 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
+import { unstable_cache } from "next/cache"
+import {
+  findRootId,
+  getDescendantIds,
+  hasCircularReference,
+} from "@/lib/utils/family-graph"
 
 /**
  * Set or remove the parent language for a given language.
@@ -42,22 +48,10 @@ export async function setParentLanguage(
         return { error: "Can only set a public language or your own language as parent" }
       }
 
-      // Prevent circular references — walk up the parent chain
-      let currentId: string | null = parentLanguageId
-      let maxDepth = 100
-      while (currentId && maxDepth-- > 0) {
-        if (currentId === languageId) {
-          return { error: "Cannot create circular family tree" }
-        }
-        const parent: { parentLanguageId: string | null } | null = await prisma.language.findUnique({
-          where: { id: currentId },
-          select: { parentLanguageId: true },
-        })
-        currentId = parent?.parentLanguageId || null
-      }
-
-      if (maxDepth <= 0) {
-        return { error: "Family tree depth limit exceeded — possible circular reference" }
+      // Prevent circular references — single CTE query instead of N serial queries
+      const isCircular = await hasCircularReference(languageId, parentLanguageId)
+      if (isCircular) {
+        return { error: "Cannot create circular family tree" }
       }
     }
 
@@ -110,6 +104,7 @@ export async function setExternalAncestry(
 /**
  * Get the full family tree for a language (from root down).
  * Includes owner info for cross-user trees and external ancestry.
+ * Cached with unstable_cache for SSR performance.
  */
 export async function getLanguageFamilyTree(languageId: string) {
   // Verify the initial language exists and is accessible
@@ -125,86 +120,80 @@ export async function getLanguageFamilyTree(languageId: string) {
     if (!userId || userId !== initialLang.ownerId) return null
   }
 
-  // First, find the root by walking up (across users)
-  let rootId = languageId
-  let maxDepth = 100
+  // Use cached inner function for the expensive tree-building part
+  return getCachedFamilyTree(languageId)
+}
 
-  while (maxDepth-- > 0) {
-    const lang = await prisma.language.findUnique({
-      where: { id: rootId },
-      select: { parentLanguageId: true },
-    })
-    if (!lang?.parentLanguageId) break
-    rootId = lang.parentLanguageId
-  }
+const getCachedFamilyTree = unstable_cache(
+  async (languageId: string) => {
+    // Find the root using a single CTE query
+    const rootId = await findRootId(languageId)
 
-  if (maxDepth <= 0) {
-    // Depth limit exceeded — return null rather than a partial tree
-    return null
-  }
+    // Build tree from root downward with owner info
+    const childSelect = {
+      id: true,
+      name: true,
+      slug: true,
+      visibility: true,
+      externalAncestry: true,
+      owner: { select: { id: true, name: true, image: true } },
+      _count: { select: { dictionaryEntries: true } },
+    } as const
 
-  // Build tree from root downward with owner info
-  const childSelect = {
-    id: true,
-    name: true,
-    slug: true,
-    visibility: true,
-    externalAncestry: true,
-    owner: { select: { id: true, name: true, image: true } },
-    _count: { select: { dictionaryEntries: true } },
-  } as const
-
-  const childInclude = (depth: number): any => {
-    if (depth <= 0) return { select: childSelect }
-    return {
-      select: {
-        ...childSelect,
-        childLanguages: childInclude(depth - 1),
-      },
+    const childInclude = (depth: number): any => {
+      if (depth <= 0) return { select: childSelect }
+      return {
+        select: {
+          ...childSelect,
+          childLanguages: childInclude(depth - 1),
+        },
+      }
     }
-  }
 
-  const rootTree = await prisma.language.findUnique({
-    where: { id: rootId },
-    select: {
-      ...childSelect,
-      childLanguages: childInclude(5),
-    },
-  })
-
-  if (!rootTree) return null;
-
-  // If this root has external ancestry, fetch ALL roots with the same external ancestry
-  if (rootTree.externalAncestry) {
-    const siblingRoots = await prisma.language.findMany({
-      where: {
-        externalAncestry: rootTree.externalAncestry,
-        parentLanguageId: null, // Only top-level languages
-        id: { not: rootId } // Don't fetch the one we already have
-      },
+    const rootTree = await prisma.language.findUnique({
+      where: { id: rootId },
       select: {
         ...childSelect,
         childLanguages: childInclude(5),
       },
-      take: 50, // Prevent unbounded results
-    });
+    })
 
-    if (siblingRoots.length > 0) {
-      const safeId = encodeURIComponent(rootTree.externalAncestry)
-      // Create a virtual root node wrapping all these families
-      return {
-        id: `virtual-${safeId}`,
-        name: rootTree.externalAncestry,
-        slug: "",
-        externalAncestry: rootTree.externalAncestry,
-        isVirtual: true,
-        childLanguages: [rootTree, ...siblingRoots]
-      } as any;
+    if (!rootTree) return null;
+
+    // If this root has external ancestry, fetch ALL roots with the same external ancestry
+    if (rootTree.externalAncestry) {
+      const siblingRoots = await prisma.language.findMany({
+        where: {
+          externalAncestry: rootTree.externalAncestry,
+          parentLanguageId: null, // Only top-level languages
+          id: { not: rootId } // Don't fetch the one we already have
+        },
+        select: {
+          ...childSelect,
+          childLanguages: childInclude(5),
+        },
+        take: 50, // Prevent unbounded results
+      });
+
+      if (siblingRoots.length > 0) {
+        const safeId = encodeURIComponent(rootTree.externalAncestry)
+        // Create a virtual root node wrapping all these families
+        return {
+          id: `virtual-${safeId}`,
+          name: rootTree.externalAncestry,
+          slug: "",
+          externalAncestry: rootTree.externalAncestry,
+          isVirtual: true,
+          childLanguages: [rootTree, ...siblingRoots]
+        } as any;
+      }
     }
-  }
 
-  return rootTree
-}
+    return rootTree
+  },
+  ["family-tree"],
+  { revalidate: 60, tags: ["family-tree"] }
+)
 
 /**
  * Search languages that could be set as parent.
@@ -217,24 +206,9 @@ export async function searchParentLanguages(
   const userId = await getUserId()
   if (!userId) return { own: [], public: [] }
 
-  // Collect descendant IDs to exclude (batched BFS to avoid N+1 queries)
-  const descendantIds = new Set<string>()
-  let currentBatch = [languageId]
-  let safetyLimit = 20
-  while (currentBatch.length > 0 && safetyLimit-- > 0) {
-    const kids = await prisma.language.findMany({
-      where: { parentLanguageId: { in: currentBatch } },
-      select: { id: true },
-    })
-    currentBatch = []
-    for (const kid of kids) {
-      if (!descendantIds.has(kid.id)) {
-        descendantIds.add(kid.id)
-        currentBatch.push(kid.id)
-      }
-    }
-  }
-  const excludeIds = [languageId, ...Array.from(descendantIds)]
+  // Single CTE query to collect all descendant IDs (instead of BFS loop)
+  const descendantIdList = await getDescendantIds(languageId)
+  const excludeIds = [languageId, ...descendantIdList]
 
   const baseWhere = {
     id: { notIn: excludeIds },
@@ -271,4 +245,22 @@ export async function searchParentLanguages(
   ])
 
   return { own, public: publicLangs }
+}
+
+/**
+ * Get all distinct externalAncestry values from the database.
+ * Used for autocomplete in the parent language card.
+ */
+export async function getExternalAncestries(): Promise<string[]> {
+  const result = await prisma.language.findMany({
+    where: {
+      externalAncestry: { not: null },
+    },
+    select: { externalAncestry: true },
+    distinct: ["externalAncestry"],
+    orderBy: { externalAncestry: "asc" },
+  })
+  return result
+    .map((r) => r.externalAncestry)
+    .filter((v): v is string => v !== null)
 }

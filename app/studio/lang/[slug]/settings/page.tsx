@@ -5,6 +5,7 @@ import { LanguageSettings } from "./language-settings"
 import { Collaborators } from "./collaborators"
 import { ParentLanguageCard } from "./parent-language-card"
 import { getLanguageFamilyTree } from "@/app/actions/language-family"
+import { getDescendantIds } from "@/lib/utils/family-graph"
 
 async function getLanguage(slug: string, userId: string | null) {
   const [language, dictionaryEntries] = await Promise.all([
@@ -68,25 +69,10 @@ async function getLanguage(slug: string, userId: string | null) {
     orderBy: { name: "asc" },
   }) : []
 
-  // Collect descendant IDs to exclude from parent selector (batched BFS)
-  const descendantIds = new Set<string>()
-  let currentBatch = [language.id]
-  let safetyLimit = 20
-  while (currentBatch.length > 0 && safetyLimit-- > 0) {
-    const kids = await prisma.language.findMany({
-      where: { parentLanguageId: { in: currentBatch } },
-      select: { id: true },
-    })
-    currentBatch = []
-    for (const kid of kids) {
-      if (!descendantIds.has(kid.id)) {
-        descendantIds.add(kid.id)
-        currentBatch.push(kid.id)
-      }
-    }
-  }
+  // Single CTE query to collect all descendant IDs (replaces BFS loop)
+  const descendantIdList = await getDescendantIds(language.id)
 
-  return { language, dictionaryEntries, userLanguages, descendantIds: Array.from(descendantIds) }
+  return { language, dictionaryEntries, userLanguages, descendantIds: descendantIdList }
 }
 
 export default async function SettingsPage({

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { GitBranch, Crown, ChevronRight, ChevronDown, Share2, Check } from "lucide-react"
+import { GitBranch, Crown, ChevronRight, ChevronDown, Share2, Check, Maximize2, Minimize2 } from "lucide-react"
 
 interface LanguageNode {
   id: string
@@ -30,13 +30,22 @@ function TreeNode({
   currentSlug,
   linkPrefix,
   depth = 0,
+  lineagePath,
+  expandAction,
+  collapseAction,
 }: {
   node: LanguageNode
   currentSlug?: string
   linkPrefix?: string
   depth?: number
+  lineagePath?: string[]
+  expandAction?: number
+  collapseAction?: number
 }) {
   const isCurrent = node.slug === currentSlug
+  const inLineage = lineagePath?.includes(node.id)
+  const isLineageParent = inLineage && !isCurrent
+
   const hasChildren = node.childLanguages && node.childLanguages.length > 0
   const sortedChildren = hasChildren
     ? [...node.childLanguages!].sort((a, b) => a.name.localeCompare(b.name))
@@ -46,8 +55,16 @@ function TreeNode({
       ? `/studio/lang/${node.slug}`
       : `/lang/${node.slug}`
 
-  // Collapse/expand: default expanded for shallow trees, collapsed for deep
-  const [isExpanded, setIsExpanded] = useState(depth < 3)
+  // Collapse/expand: default expanded for lineage, shallow trees
+  const [isExpanded, setIsExpanded] = useState(inLineage || depth < 3)
+
+  useEffect(() => {
+    if (expandAction && expandAction > 0) setIsExpanded(true)
+  }, [expandAction])
+
+  useEffect(() => {
+    if (collapseAction && collapseAction > 0) setIsExpanded(false)
+  }, [collapseAction])
 
   if (node.isVirtual) {
     return (
@@ -89,6 +106,9 @@ function TreeNode({
                     currentSlug={currentSlug}
                     linkPrefix={linkPrefix}
                     depth={depth + 1}
+                    lineagePath={lineagePath}
+                    expandAction={expandAction}
+                    collapseAction={collapseAction}
                   />
                 </div>
               </div>
@@ -121,6 +141,8 @@ function TreeNode({
           className={`group flex flex-1 flex-col md:flex-row md:items-center gap-2 rounded-lg border px-3 py-2 transition-all hover:border-primary/50 hover:shadow-sm ${
             isCurrent
               ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+              : isLineageParent
+              ? "border-primary/40 bg-primary/5 hover:bg-primary/10"
               : "border-border/50 bg-card hover:bg-muted/30"
           }`}
         >
@@ -170,6 +192,9 @@ function TreeNode({
                   currentSlug={currentSlug}
                   linkPrefix={linkPrefix}
                   depth={depth + 1}
+                  lineagePath={lineagePath}
+                  expandAction={expandAction}
+                  collapseAction={collapseAction}
                 />
               </div>
             </div>
@@ -186,6 +211,25 @@ export function LanguageFamilyTree({
   linkPrefix = "studio",
 }: LanguageFamilyTreeProps) {
   const [copied, setCopied] = useState(false)
+  const [expandAction, setExpandAction] = useState(0)
+  const [collapseAction, setCollapseAction] = useState(0)
+
+  // Compute the lineage path from root to current language
+  const lineagePath = useMemo(() => {
+    if (!currentSlug) return []
+    const findPath = (n: LanguageNode, targetSlug: string, path: string[]): string[] | null => {
+      const p = [...path, n.id]
+      if (n.slug === targetSlug) return p
+      if (n.childLanguages) {
+        for (const child of n.childLanguages) {
+          const res = findPath(child, targetSlug, p)
+          if (res) return res
+        }
+      }
+      return null
+    }
+    return findPath(tree, currentSlug, []) || []
+  }, [tree, currentSlug])
 
   const handleShare = async () => {
     const slug = currentSlug || tree.slug
@@ -207,17 +251,35 @@ export function LanguageFamilyTree({
           <GitBranch className="h-4 w-4" />
           Language Family
         </h4>
-        <button
-          type="button"
-          onClick={handleShare}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
-        >
-          {copied ? (
-            <><Check className="h-3 w-3 text-emerald-500" /> Copied!</>
-          ) : (
-            <><Share2 className="h-3 w-3" /> Share</>
-          )}
-        </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setExpandAction(a => a + 1)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+              title="Expand All"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollapseAction(a => a + 1)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+              title="Collapse All"
+            >
+              <Minimize2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+          >
+            {copied ? (
+              <><Check className="h-3 w-3 text-emerald-500" /> Copied!</>
+            ) : (
+              <><Share2 className="h-3 w-3" /> Share</>
+            )}
+          </button>
       </div>
       <div className="rounded-lg border bg-muted/20 p-2 sm:p-3 overflow-x-auto min-w-0">
         {tree.externalAncestry && !tree.isVirtual && (
@@ -234,6 +296,9 @@ export function LanguageFamilyTree({
           node={tree}
           currentSlug={currentSlug}
           linkPrefix={linkPrefix}
+          lineagePath={lineagePath}
+          expandAction={expandAction}
+          collapseAction={collapseAction}
         />
       </div>
     </div>

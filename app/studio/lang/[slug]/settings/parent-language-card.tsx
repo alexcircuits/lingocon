@@ -8,11 +8,19 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { GitBranch, X, Check, ChevronsUpDown, Loader2 } from "lucide-react"
-import { setParentLanguage, setExternalAncestry, searchParentLanguages } from "@/app/actions/language-family"
+import { setParentLanguage, setExternalAncestry, searchParentLanguages, getExternalAncestries } from "@/app/actions/language-family"
 import { LanguageFamilyTree } from "@/components/language-family-tree"
+import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+
+interface SearchResult {
+  id: string
+  name: string
+  slug: string
+  owner: { name: string | null }
+}
 
 interface ParentLanguageCardProps {
   languageId: string
@@ -43,12 +51,18 @@ export function ParentLanguageCard({
   // Combobox State
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [ownLangs, setOwnLangs] = useState<any[]>([])
-  const [publicLangs, setPublicLangs] = useState<any[]>([])
+  const [ownLangs, setOwnLangs] = useState<SearchResult[]>([])
+  const [publicLangs, setPublicLangs] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   // External Ancestry State
   const [externalAncestry, setExternalAncestryState] = useState(initialExternalAncestry || "")
+  const [ancestrySuggestions, setAncestrySuggestions] = useState<string[]>([])
+
+  // Fetch autocomplete suggestions for external ancestry on mount
+  useEffect(() => {
+    getExternalAncestries().then(setAncestrySuggestions)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -191,28 +205,40 @@ export function ParentLanguageCard({
           <div className="space-y-2">
             <Label>External Ancestry (Proto-language)</Label>
             <div className="flex gap-2">
-              <Input 
-                value={externalAncestry} 
-                onChange={(e) => setExternalAncestryState(e.target.value)}
-                placeholder="e.g. Proto-Indo-European"
-                disabled={isPending}
-              />
+              <div className="relative flex-1">
+                <Input 
+                  value={externalAncestry} 
+                  onChange={(e) => setExternalAncestryState(e.target.value)}
+                  placeholder="e.g. Proto-Indo-European"
+                  disabled={isPending}
+                  list="ancestry-suggestions"
+                />
+                <datalist id="ancestry-suggestions">
+                  {ancestrySuggestions
+                    .filter(s => s !== externalAncestry)
+                    .map(s => (
+                      <option key={s} value={s} />
+                    ))}
+                </datalist>
+              </div>
               <Button onClick={handleSaveExternalAncestry} disabled={isPending || externalAncestry === (initialExternalAncestry || "")}>
                 Save
-              </Button>
+                </Button>
             </div>
-            <p className="text-xs text-muted-foreground">For real-world proto-languages that don&apos;t exist in LingoCon.</p>
+            <p className="text-xs text-muted-foreground">For real-world proto-languages that don&apos;t exist in LingoCon. Existing values will appear as suggestions.</p>
           </div>
         </div>
 
         {/* Show family tree if available */}
         {familyTree && (
           <div className="pt-4 border-t border-border/40">
-            <LanguageFamilyTree
-              tree={familyTree}
-              currentSlug={currentSlug}
-              linkPrefix="studio"
-            />
+            <FamilyTreeErrorBoundary>
+              <LanguageFamilyTree
+                tree={familyTree}
+                currentSlug={currentSlug}
+                linkPrefix="studio"
+              />
+            </FamilyTreeErrorBoundary>
           </div>
         )}
       </div>

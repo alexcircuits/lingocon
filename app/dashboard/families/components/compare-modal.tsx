@@ -5,7 +5,7 @@ import { compareLanguages } from "@/app/actions/compare-languages"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { GitCompareArrows, Loader2, ArrowLeftRight } from "lucide-react"
+import { GitCompareArrows, Loader2, ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface LanguageOption {
   id: string
@@ -26,9 +26,14 @@ export function CompareModal({ languages, isOpen, onClose }: CompareModalProps) 
   const [langB, setLangB] = useState("")
   const [result, setResult] = useState<CompareResult | null>(null)
   const [isPending, startTransition] = useTransition()
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 50
 
   const handleCompare = () => {
     if (!langA || !langB || langA === langB) return
+    setCurrentPage(1)
     startTransition(async () => {
       const res = await compareLanguages(langA, langB)
       setResult(res)
@@ -142,7 +147,9 @@ export function CompareModal({ languages, isOpen, onClose }: CompareModalProps) 
                       </tr>
                     </thead>
                     <tbody>
-                      {result.sharedGlosses.map((row, i) => (
+                      {result.sharedGlosses
+                        .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                        .map((row, i) => (
                         <tr key={i} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                           <td className="px-3 py-1.5 text-muted-foreground text-xs">{row.gloss}</td>
                           <td className="px-3 py-1.5">
@@ -162,10 +169,36 @@ export function CompareModal({ languages, isOpen, onClose }: CompareModalProps) 
                     </tbody>
                   </table>
                 </div>
-                {result.sharedGlosses.length >= 100 && (
-                  <p className="text-[10px] text-muted-foreground mt-1 italic">
-                    Showing first 100 of {result.sharedGlosses.length} shared meanings
-                  </p>
+                
+                {/* Pagination Controls */}
+                {result.sharedGlosses.length > ITEMS_PER_PAGE && (
+                  <div className="flex items-center justify-between mt-3 px-1">
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, result.sharedGlosses.length)} of {result.sharedGlosses.length} shared meanings
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                        Prev
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(result.sharedGlosses.length / ITEMS_PER_PAGE), p + 1))}
+                        disabled={currentPage >= Math.ceil(result.sharedGlosses.length / ITEMS_PER_PAGE)}
+                      >
+                        Next
+                        <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}

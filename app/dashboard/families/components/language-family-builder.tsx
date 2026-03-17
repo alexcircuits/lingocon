@@ -22,9 +22,10 @@ import { TreeStats } from "./tree-stats"
 import { CompareModal } from "./compare-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Save, Plus, ArrowRight, X, Undo2, Redo2, Search, Focus, GitCompareArrows } from "lucide-react"
+import { Save, Plus, ArrowRight, X, Undo2, Redo2, Search, Focus, GitCompareArrows, Network } from "lucide-react"
 import { toast } from "sonner"
 import { setParentLanguage } from "@/app/actions/language-family"
+import { buildFamilyGraph } from "@/lib/utils/family-graph"
 import { useRouter } from "next/navigation"
 
 interface LanguageData {
@@ -43,6 +44,7 @@ interface LanguageData {
 interface LanguageFamilyBuilderProps {
   initialLanguages: LanguageData[]
   currentUserId: string
+  onPendingChangesChange?: (count: number) => void
 }
 
 const nodeTypes = {
@@ -58,86 +60,16 @@ const TREE_GAP = 120
 
 /**
  * Proper hierarchical tree layout.
- * 1. Build adjacency map  2. Find roots  3. DFS to measure subtree widths
- * 4. DFS again to assign positions  5. Separate independent trees horizontally
+ * Uses shared buildFamilyGraph for graph structure, then applies
+ * DFS to measure subtree widths and assign node positions.
  */
 function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: string) {
   const nodes: Node[] = []
   const edges: Edge[] = []
 
-  // Create virtual nodes for unique external ancestries
-  const virtualMap = new Map<string, string>() // ancestryName -> virtualId
-  languages.forEach((l) => {
-    if (!l.parentLanguageId && l.externalAncestry && !virtualMap.has(l.externalAncestry)) {
-      virtualMap.set(l.externalAncestry, `virtual-${encodeURIComponent(l.externalAncestry)}`)
-    }
-  })
-
-  // Combine real languages and virtual nodes
-  const byId = new Map(languages.map(l => [l.id, l as LanguageData & { isVirtual?: boolean }]))
-  
-  virtualMap.forEach((virtualId, ancestryName) => {
-    byId.set(virtualId, {
-      id: virtualId,
-      name: ancestryName,
-      slug: "",
-      parentLanguageId: null,
-      externalAncestry: null,
-      ownerId: "system", // read only
-      _count: { dictionaryEntries: 0 },
-      isVirtual: true
-    } as any)
-  })
-
-  // Build children map
-  const childrenMap = new Map<string, string[]>()
-  byId.forEach((_, id) => childrenMap.set(id, []))
-
-  // Populate children map
-  languages.forEach(l => {
-    if (l.parentLanguageId && childrenMap.has(l.parentLanguageId)) {
-      childrenMap.get(l.parentLanguageId)!.push(l.id)
-    } else if (!l.parentLanguageId && l.externalAncestry && virtualMap.has(l.externalAncestry)) {
-      childrenMap.get(virtualMap.get(l.externalAncestry)!)!.push(l.id)
-    }
-  })
-
-  // Sort children alphabetically by name for consistent ordering
-  childrenMap.forEach((kids, _parentId) => {
-    kids.sort((a, b) => {
-      const nameA = byId.get(a)?.name || ""
-      const nameB = byId.get(b)?.name || ""
-      return nameA.localeCompare(nameB)
-    })
-  })
-
-  const roots = Array.from(byId.values()).filter(l => {
-    if (l.isVirtual) return true;
-    if (l.parentLanguageId && byId.has(l.parentLanguageId)) return false;
-    if (l.externalAncestry && virtualMap.has(l.externalAncestry)) return false;
-    return true;
-  }).sort((a, b) => a.name.localeCompare(b.name))
-
-  // Find disconnected cycles and promote them to roots
-  const reachable = new Set<string>()
-  function markReachable(id: string) {
-    if (reachable.has(id)) return
-    reachable.add(id)
-    ;(childrenMap.get(id) || []).forEach(markReachable)
-  }
-  roots.forEach(r => markReachable(r.id))
-  
-  // Sort remaining to ensure determinism
-  const unreached = Array.from(byId.values())
-    .filter(l => !reachable.has(l.id))
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  unreached.forEach(l => {
-    if (!reachable.has(l.id)) {
-      roots.push(l)
-      markReachable(l.id)
-    }
-  })
+  // Use shared graph builder for virtual nodes, children map, and root detection
+  const graph = buildFamilyGraph(languages)
+  const { byId, childrenMap, rootIds } = graph
 
   // Count leaf-width of each subtree (min 1)
   const subtreeWidth = new Map<string, number>()
@@ -153,7 +85,7 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
       measuring.delete(id)
       return 1
     }
-    const w = kids.reduce((sum, kid) => sum + measureWidth(kid), 0)
+    const w = kids.reduce((sum: number, kid: string) => sum + measureWidth(kid), 0)
     const finalW = Math.max(1, w)
     subtreeWidth.set(id, finalW)
     measuring.delete(id)
@@ -229,15 +161,15 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
   }
 
   let cursor = 0
-  roots.forEach(root => {
-    const usedWidth = layoutTree(root.id, cursor)
+  rootIds.forEach(rootId => {
+    const usedWidth = layoutTree(rootId, cursor)
     cursor += usedWidth + TREE_GAP
   })
 
   return { nodes, edges }
 }
 
-function LanguageFamilyBuilderInner({ initialLanguages, currentUserId }: LanguageFamilyBuilderProps) {
+function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPendingChangesChange }: LanguageFamilyBuilderProps) {
   const router = useRouter()
   const reactFlowInstance = useReactFlow()
   const { nodes: initNodes, edges: initEdges } = useMemo(() => getInitialNodesAndEdges(initialLanguages, currentUserId), [initialLanguages, currentUserId])
@@ -286,6 +218,21 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId }: Languag
     setCanRedo(redoStack.current.length > 0)
   }, [edges, nodes, pendingChanges, setEdges, setNodes])
 
+  // Notify parent about pending changes count
+  useEffect(() => {
+    onPendingChangesChange?.(pendingChanges.length)
+  }, [pendingChanges.length, onPendingChangesChange])
+
+  // Warn about unsaved changes on navigation/tab close
+  useEffect(() => {
+    if (pendingChanges.length === 0) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [pendingChanges.length])
+
   // Keyboard shortcuts: Ctrl+Z / Ctrl+Shift+Z
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -301,6 +248,32 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId }: Languag
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [handleUndo, handleRedo])
+
+  // Auto-Layout based on current topology (initial + pending changes)
+  const handleAutoLayout = useCallback(() => {
+    // Reconstruct current language tree state
+    const currentLangs = initialLanguages.map(l => ({ ...l }))
+    for (const change of pendingChanges) {
+      const lang = currentLangs.find(l => l.id === change.id)
+      if (lang) {
+        lang.parentLanguageId = change.parentId
+      }
+    }
+
+    // Run layout engine
+    const { nodes: autoNodes } = getInitialNodesAndEdges(currentLangs, currentUserId)
+    
+    // Update node positions smoothly
+    setNodes(nds => nds.map(n => {
+      const autoNode = autoNodes.find(an => an.id === n.id)
+      return autoNode ? { ...n, position: autoNode.position } : n
+    }))
+
+    // Refit view
+    setTimeout(() => {
+      reactFlowInstance.fitView({ duration: 800, padding: 0.2 })
+    }, 50)
+  }, [initialLanguages, pendingChanges, currentUserId, setNodes, reactFlowInstance])
 
   const onConnect = useCallback(
     (params: Connection | Edge) => {
@@ -502,10 +475,18 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId }: Languag
                 size="sm"
                 onClick={handleRedo}
                 disabled={!canRedo || isSaving}
-                className="flex-1 gap-1.5 text-xs"
+                className="flex-[0.5] gap-1.5 text-xs px-2"
               >
                 <Redo2 className="h-3.5 w-3.5" />
-                Redo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAutoLayout}
+                className="flex-1 gap-1.5 text-xs border-primary/20 bg-primary/5 hover:bg-primary/10 hover:text-primary transition-colors"
+              >
+                <Network className="h-3.5 w-3.5" />
+                Auto-Layout
               </Button>
             </div>
 

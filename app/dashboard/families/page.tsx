@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { FamilyViewSwitcher } from "./components/family-view-switcher"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
+import { getAncestorIds } from "@/lib/utils/family-graph"
 
 export const metadata = {
   title: "Language Families | Dashboard",
@@ -45,23 +46,14 @@ export default async function FamiliesDashboardPage() {
     orderBy: { createdAt: "asc" }
   })
 
-  // Iteratively fetch all missing ancestors
-  const languageMap = new Map<string, any>()
-  userLanguages.forEach(l => languageMap.set(l.id, l))
+  // Batch-fetch all missing ancestors in a single CTE query
+  const userLanguageIds = userLanguages.map(l => l.id)
+  const missingAncestorIds = await getAncestorIds(userLanguageIds)
 
-  const ancestorsToFetch = new Set<string>()
-  userLanguages.forEach(l => {
-    if (l.parentLanguageId && !languageMap.has(l.parentLanguageId)) {
-      ancestorsToFetch.add(l.parentLanguageId)
-    }
-  })
-
-  while (ancestorsToFetch.size > 0) {
-    const ids = Array.from(ancestorsToFetch)
-    ancestorsToFetch.clear()
-
-    const ancestors = await prisma.language.findMany({
-      where: { id: { in: ids } },
+  let ancestors: typeof userLanguages & { owner?: any }[] = []
+  if (missingAncestorIds.length > 0) {
+    ancestors = await prisma.language.findMany({
+      where: { id: { in: missingAncestorIds } },
       select: {
         id: true,
         name: true,
@@ -74,16 +66,9 @@ export default async function FamiliesDashboardPage() {
         _count: { select: { dictionaryEntries: true } }
       }
     })
-
-    ancestors.forEach(a => {
-      languageMap.set(a.id, a)
-      if (a.parentLanguageId && !languageMap.has(a.parentLanguageId)) {
-        ancestorsToFetch.add(a.parentLanguageId)
-      }
-    })
   }
 
-  const allLanguages = Array.from(languageMap.values())
+  const allLanguages = [...userLanguages, ...ancestors]
 
   const isDevMode = process.env.DEV_MODE === "true"
   const user = session?.user ? {

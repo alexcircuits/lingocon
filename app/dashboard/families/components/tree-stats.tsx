@@ -1,64 +1,32 @@
 "use client"
 
+import { useMemo } from "react"
 import { BarChart3, GitFork, BookOpen, Layers, TrendingUp } from "lucide-react"
-
-interface LanguageData {
-  id: string
-  name: string
-  slug: string
-  parentLanguageId: string | null
-  externalAncestry: string | null
-  ownerId: string
-  _count: {
-    dictionaryEntries: number
-  }
-}
+import { buildFamilyGraph, type FamilyLanguageData } from "@/lib/utils/family-graph"
 
 interface TreeStatsProps {
-  languages: LanguageData[]
+  languages: FamilyLanguageData[]
 }
 
-function computeStats(languages: LanguageData[]) {
-  const byId = new Map(languages.map(l => [l.id, l]))
-  const childrenMap = new Map<string, string[]>()
-  byId.forEach((_, id) => childrenMap.set(id, []))
-  
-  languages.forEach(l => {
-    if (l.parentLanguageId && childrenMap.has(l.parentLanguageId)) {
-      childrenMap.get(l.parentLanguageId)!.push(l.id)
-    }
-  })
+function computeStats(languages: FamilyLanguageData[]) {
+  const { childrenMap, rootIds } = buildFamilyGraph(languages)
 
-  // Find roots (including missing parents)
-  const roots = languages.filter(l => !l.parentLanguageId || !byId.has(l.parentLanguageId))
-
-  // Cycle recovery
-  const reachable = new Set<string>()
-  function markReachable(id: string) {
-    if (reachable.has(id)) return
-    reachable.add(id)
-    ;(childrenMap.get(id) || []).forEach(markReachable)
-  }
-  roots.forEach(r => markReachable(r.id))
-  
-  languages.forEach(l => {
-    if (!reachable.has(l.id)) {
-      roots.push(l)
-      markReachable(l.id)
-    }
-  })
-
-  // Compute max depth via DFS
-  function maxDepth(id: string, visited = new Set<string>()): number {
+  // Compute max depth via DFS (uses single shared visited set — O(n) instead of O(n²))
+  function maxDepth(id: string, visited: Set<string>): number {
     if (visited.has(id)) return 0
     visited.add(id)
     const kids = childrenMap.get(id) || []
     if (kids.length === 0) return 1
-    const childDepths = kids.map(k => maxDepth(k, new Set(visited)))
-    return 1 + Math.max(0, ...childDepths)
+    let deepest = 0
+    for (const kid of kids) {
+      deepest = Math.max(deepest, maxDepth(kid, visited))
+    }
+    return 1 + deepest
   }
 
-  const depth = roots.length > 0 ? Math.max(...roots.map(r => maxDepth(r.id))) : 0
+  const depth = rootIds.length > 0
+    ? Math.max(...rootIds.map(r => maxDepth(r, new Set<string>())))
+    : 0
 
   // Total words
   const totalWords = languages.reduce((sum, l) => sum + (l._count.dictionaryEntries || 0), 0)
@@ -69,25 +37,26 @@ function computeStats(languages: LanguageData[]) {
     ? Math.round(totalWords / langsWithWords.length)
     : 0
 
-  // Widest level (max siblings at any depth)
-  function countAtDepth(id: string, d: number, target: number, visited = new Set<string>()): number {
+  // Widest level (max nodes at any depth)
+  function countAtDepth(id: string, d: number, target: number, visited: Set<string>): number {
     if (visited.has(id)) return 0
     visited.add(id)
     if (d === target) return 1
     const kids = childrenMap.get(id) || []
-    return kids.reduce((sum, kid) => sum + countAtDepth(kid, d + 1, target, new Set(visited)), 0)
+    return kids.reduce((sum, kid) => sum + countAtDepth(kid, d + 1, target, visited), 0)
   }
   
   let maxBreadth = 0
   for (let d = 0; d < depth; d++) {
-    const breadth = roots.reduce((sum, r) => sum + countAtDepth(r.id, 0, d), 0)
+    const breadth = rootIds.reduce((sum, r) => sum + countAtDepth(r, 0, d, new Set<string>()), 0)
     maxBreadth = Math.max(maxBreadth, breadth)
   }
 
   // Count distinct family trees
   const familyGroups = new Set<string>()
-  roots.forEach(r => {
-    familyGroups.add(r.externalAncestry || r.id)
+  rootIds.forEach(r => {
+    const lang = languages.find(l => l.id === r)
+    familyGroups.add(lang?.externalAncestry || r)
   })
 
   return {
@@ -97,7 +66,7 @@ function computeStats(languages: LanguageData[]) {
     maxBreadth,
     totalWords,
     avgWords,
-    rootCount: roots.length,
+    rootCount: rootIds.length,
   }
 }
 

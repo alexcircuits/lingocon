@@ -9,7 +9,7 @@ interface LanguageData {
   parentLanguageId: string | null
   externalAncestry: string | null
   ownerId: string
-  createdAt: string | Date
+  createdAt?: string | Date
   _count: { dictionaryEntries: number }
 }
 
@@ -44,11 +44,11 @@ export function FamilyTimeline({ languages, currentUserId }: TimelineProps) {
 
     // Sort by createdAt
     const sorted = [...languages].sort((a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      new Date(a.createdAt || Date.now()).getTime() - new Date(b.createdAt || Date.now()).getTime()
     )
 
-    const earliest = new Date(sorted[0].createdAt)
-    const latest = new Date(sorted[sorted.length - 1].createdAt)
+    const earliest = new Date(sorted[0].createdAt || Date.now())
+    const latest = new Date(sorted[sorted.length - 1].createdAt || Date.now())
 
     // Pad dates by 1 day on each side
     const minD = new Date(earliest.getTime() - 86400000)
@@ -86,7 +86,7 @@ export function FamilyTimeline({ languages, currentUserId }: TimelineProps) {
     const occupiedPositions: { px: number; lane: number }[] = []
 
     const nodeList: TimelineNode[] = sorted.map((lang) => {
-      const date = new Date(lang.createdAt)
+      const date = new Date(lang.createdAt || Date.now())
       const x = (date.getTime() - minD.getTime()) / range
       const px = 60 + x * usableWidth
       const depth = getDepth(lang.id)
@@ -225,7 +225,11 @@ export function FamilyTimeline({ languages, currentUserId }: TimelineProps) {
               key={node.lang.id}
               onMouseEnter={() => setHoveredId(node.lang.id)}
               onMouseLeave={() => setHoveredId(null)}
-              onClick={() => window.open(`/studio/lang/${node.lang.slug}`, "_blank")}
+              onClick={() => {
+                const isOwn = node.lang.ownerId === currentUserId
+                const prefix = isOwn ? "/studio/lang" : "/lang"
+                window.open(`${prefix}/${node.lang.slug}`, "_blank")
+              }}
               className="cursor-pointer"
             >
               {/* Glow on hover */}

@@ -18,6 +18,7 @@ import { getComments } from "@/app/actions/comment"
 import { CommentSection } from "@/components/comments/comment-section"
 import { getLanguageFamilyTree } from "@/app/actions/language-family"
 import { LanguageFamilyTree } from "@/components/language-family-tree"
+import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary"
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({
@@ -227,11 +228,13 @@ export default async function PublicLanguagePage({
             <div className="h-px bg-border flex-1 ml-4" />
           </h2>
           <div className="bg-card border-none rounded-2xl p-6 lg:p-10 shadow-sm ring-1 ring-border/50">
-            <LanguageFamilyTree
-              tree={familyTree}
-              currentSlug={slug}
-              linkPrefix="public"
-            />
+            <FamilyTreeErrorBoundary>
+              <LanguageFamilyTree
+                tree={familyTree}
+                currentSlug={slug}
+                linkPrefix="public"
+              />
+            </FamilyTreeErrorBoundary>
           </div>
         </section>
       )}

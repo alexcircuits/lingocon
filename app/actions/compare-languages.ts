@@ -32,17 +32,19 @@ export async function compareLanguages(langIdA: string, langIdB: string) {
     return { error: "One or both languages not found" }
   }
 
-  // Fetch dictionaries
+  // Fetch dictionaries (capped to prevent unbounded memory usage)
   const [entriesA, entriesB] = await Promise.all([
     prisma.dictionaryEntry.findMany({
       where: { languageId: langIdA },
       select: { lemma: true, gloss: true, ipa: true, partOfSpeech: true },
       orderBy: { lemma: "asc" },
+      take: 10000,
     }),
     prisma.dictionaryEntry.findMany({
       where: { languageId: langIdB },
       select: { lemma: true, gloss: true, ipa: true, partOfSpeech: true },
       orderBy: { lemma: "asc" },
+      take: 10000,
     }),
   ])
 
@@ -54,11 +56,13 @@ export async function compareLanguages(langIdA: string, langIdB: string) {
   const sharedGlosses: { gloss: string; lemmaA: string; lemmaB: string; ipaA?: string | null; ipaB?: string | null }[] = []
   const glossMapA = new Map<string, typeof entriesA[0]>()
   entriesA.forEach(e => glossMapA.set(e.gloss.toLowerCase().trim(), e))
+  const glossMapB = new Map<string, typeof entriesB[0]>()
+  entriesB.forEach(e => glossMapB.set(e.gloss.toLowerCase().trim(), e))
 
   glossesB.forEach(g => {
     if (glossMapA.has(g)) {
       const a = glossMapA.get(g)!
-      const b = entriesB.find(e => e.gloss.toLowerCase().trim() === g)!
+      const b = glossMapB.get(g)!
       sharedGlosses.push({
         gloss: g,
         lemmaA: a.lemma,
