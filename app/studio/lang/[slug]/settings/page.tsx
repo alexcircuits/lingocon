@@ -6,6 +6,7 @@ import { Collaborators } from "./collaborators"
 import { ParentLanguageCard } from "./parent-language-card"
 import { getLanguageFamilyTree } from "@/app/actions/language-family"
 import { getDescendantIds } from "@/lib/utils/family-graph"
+import { getUserFamilies } from "@/app/actions/language-family"
 
 async function getLanguage(slug: string, userId: string | null) {
   const [language, dictionaryEntries] = await Promise.all([
@@ -21,6 +22,11 @@ async function getLanguage(slug: string, userId: string | null) {
         fontUrl: true,
         fontFamily: true,
         fontScale: true,
+        allowsDiacritics: true,
+        allowForking: true,
+        discordUrl: true,
+        telegramUrl: true,
+        websiteUrl: true,
         ownerId: true,
         metadata: true,
         parentLanguageId: true,
@@ -32,6 +38,14 @@ async function getLanguage(slug: string, userId: string | null) {
           }
         },
         externalAncestry: true,
+        familyId: true,
+        family: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          }
+        },
       },
     }),
     prisma.dictionaryEntry.findMany({
@@ -72,7 +86,10 @@ async function getLanguage(slug: string, userId: string | null) {
   // Single CTE query to collect all descendant IDs (replaces BFS loop)
   const descendantIdList = await getDescendantIds(language.id)
 
-  return { language, dictionaryEntries, userLanguages, descendantIds: descendantIdList }
+  // Get user's families for family selector
+  const families = userId ? await getUserFamilies() : []
+
+  return { language, dictionaryEntries, userLanguages, descendantIds: descendantIdList, families }
 }
 
 export default async function SettingsPage({
@@ -94,7 +111,7 @@ export default async function SettingsPage({
     notFound()
   }
 
-  const { language, dictionaryEntries, userLanguages, descendantIds } = data
+  const { language, dictionaryEntries, userLanguages, descendantIds, families } = data
   const owner = userId ? await isLanguageOwner(language.id, userId) : false
   
   // Get family tree if language has a parent or children
@@ -116,8 +133,11 @@ export default async function SettingsPage({
       <ParentLanguageCard
         languageId={language.id}
         currentParentId={language.parentLanguageId || null}
-        initialParent={language.parentLanguage}
+        initialParent={(language as any).parentLanguage}
         initialExternalAncestry={language.externalAncestry}
+        initialFamilyId={(language as any).familyId || null}
+        initialFamily={(language as any).family || null}
+        families={families}
         userLanguages={userLanguages}
         descendantIds={descendantIds}
         familyTree={familyTree}

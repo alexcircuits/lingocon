@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
       ipa: string | null
       partOfSpeech: string | null
       notes: string | null
+      etymology: string | null
+      tags: string[] | null
+      relatedWords: string[] | null
     }[] = []
 
     for (const row of rows) {
@@ -96,6 +99,18 @@ export async function POST(request: NextRequest) {
 
       seenInFile.add(lemma)
       created.push(lemma)
+
+      // Parse tags & relatedWords from semicolon-separated strings
+      const rawTags = row.tags?.trim()
+      const parsedTags = rawTags
+        ? rawTags.split(/[;|]/).map((t: string) => t.trim().toLowerCase()).filter(Boolean)
+        : null
+
+      const rawRelated = row.relatedWords?.trim()
+      const parsedRelated = rawRelated
+        ? rawRelated.split(/[;|]/).map((w: string) => w.trim()).filter(Boolean)
+        : null
+
       toInsert.push({
         languageId,
         lemma,
@@ -103,6 +118,9 @@ export async function POST(request: NextRequest) {
         ipa: row.ipa?.trim() || null,
         partOfSpeech: row.partOfSpeech?.trim() || null,
         notes: row.notes?.trim() || null,
+        etymology: row.etymology?.trim() || null,
+        tags: parsedTags && parsedTags.length > 0 ? parsedTags : null,
+        relatedWords: parsedRelated && parsedRelated.length > 0 ? parsedRelated : null,
       })
     }
 
@@ -114,7 +132,7 @@ export async function POST(request: NextRequest) {
       const batch = toInsert.slice(i, i + BATCH_SIZE)
       try {
         await prisma.dictionaryEntry.createMany({
-          data: batch,
+          data: batch as any,
           skipDuplicates: true,
         })
       } catch (error) {

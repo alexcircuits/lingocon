@@ -244,6 +244,7 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
+      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
     }))
 
     const result = await updateDictionaryEntry(sterilizedData)

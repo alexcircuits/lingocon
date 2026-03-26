@@ -32,6 +32,7 @@ model User {
   accounts Account[]
   sessions Session[]
   languages Language[]
+  families  LanguageFamily[]
   collaborations LanguageCollaborator[]
   activities Activity[]
   favorites Favorite[]
@@ -115,7 +116,11 @@ model Language {
   parentLanguageId String?
   parentLanguage   Language?  @relation("LanguageFamily", fields: [parentLanguageId], references: [id], onDelete: SetNull)
   childLanguages   Language[] @relation("LanguageFamily")
-  externalAncestry String?    // Free-text ancestry label (e.g. "Proto-Indo-European")
+  externalAncestry String?    // Legacy: free-text ancestry label (kept for backward compat)
+
+  // Language Family (proper model)
+  familyId    String?
+  family      LanguageFamily? @relation(fields: [familyId], references: [id], onDelete: SetNull)
 
   ownerId     String
   createdAt   DateTime @default(now())
@@ -136,6 +141,7 @@ model Language {
   @@index([ownerId])
   @@index([slug])
   @@index([parentLanguageId])
+  @@index([familyId])
   @@map("languages")
 }
 
@@ -143,6 +149,24 @@ enum Visibility {
   PRIVATE
   UNLISTED
   PUBLIC
+}
+
+model LanguageFamily {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?    @db.Text
+  visibility  Visibility @default(PRIVATE)
+  ownerId     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  languages   Language[]
+
+  @@index([ownerId])
+  @@index([slug])
+  @@map("language_families")
 }
 
 enum CollaboratorRole {

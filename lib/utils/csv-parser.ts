@@ -28,7 +28,16 @@ export function parseCSV(csv: string): Array<Record<string, string>> {
     partofspeech: "partOfSpeech",
     notes: "notes",
     note: "notes",
-    etymology: "notes",
+    etymology: "etymology",
+    origin: "etymology",
+    tags: "tags",
+    tag: "tags",
+    category: "tags",
+    categories: "tags",
+    "related words": "relatedWords",
+    relatedwords: "relatedWords",
+    related: "relatedWords",
+    synonyms: "relatedWords",
   }
 
   // Find column indices

@@ -84,7 +84,7 @@ export function ImportDialog({
         <DialogHeader>
           <DialogTitle>Import Dictionary from CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file with columns: Lemma, Gloss, IPA (optional), Part of Speech (optional), Notes (optional)
+            Upload a CSV file with columns: Lemma, Gloss, IPA, Part of Speech, Etymology, Notes, Tags, Related Words (all optional except Lemma and Gloss). Tags and Related Words use semicolons to separate values.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,7 +99,7 @@ export function ImportDialog({
               disabled={isPending}
             />
             <p className="text-xs text-muted-foreground">
-              CSV should have headers: Lemma, Gloss, IPA, Part of Speech, Notes
+              CSV should have headers: Lemma, Gloss, IPA, Part of Speech, Etymology, Notes, Tags, Related Words
             </p>
           </div>
 
@@ -113,7 +113,10 @@ export function ImportDialog({
                       <TableHead>Lemma</TableHead>
                       <TableHead>Gloss</TableHead>
                       <TableHead>IPA</TableHead>
-                      <TableHead>Part of Speech</TableHead>
+                      <TableHead>POS</TableHead>
+                      <TableHead>Etymology</TableHead>
+                      <TableHead>Tags</TableHead>
+                      <TableHead>Related</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -126,6 +129,15 @@ export function ImportDialog({
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {row.partOfSpeech || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {row.etymology || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {row.tags || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {row.relatedWords || "-"}
                         </TableCell>
                       </TableRow>
                     ))}

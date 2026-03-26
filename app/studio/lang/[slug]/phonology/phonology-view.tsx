@@ -90,6 +90,14 @@ const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; voiced:
     "ɦ": { place: "Glottal", manner: "Fricative", voiced: true },
     "ɬ": { place: "Alveolar", manner: "Lateral fricative", voiced: false },
     "ɮ": { place: "Alveolar", manner: "Lateral fricative", voiced: true },
+    // Alveolo-palatal fricatives (mapped to Postalveolar for chart placement)
+    "ɕ": { place: "Postalveolar", manner: "Fricative", voiced: false },
+    "ʑ": { place: "Postalveolar", manner: "Fricative", voiced: true },
+    // Epiglottal (mapped to Pharyngeal for chart placement)
+    "ʜ": { place: "Pharyngeal", manner: "Trill", voiced: false },
+    "ʢ": { place: "Pharyngeal", manner: "Trill", voiced: true },
+    "ʡ": { place: "Pharyngeal", manner: "Plosive", voiced: false },
+    // Approximants
     "ʋ": { place: "Labiodental", manner: "Approximant", voiced: true },
     "ɹ": { place: "Alveolar", manner: "Approximant", voiced: true },
     "ɻ": { place: "Retroflex", manner: "Approximant", voiced: true },
@@ -100,6 +108,8 @@ const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; voiced:
     "ʎ": { place: "Palatal", manner: "Lateral approximant", voiced: true },
     "ʟ": { place: "Velar", manner: "Lateral approximant", voiced: true },
     "w": { place: "Velar", manner: "Approximant", voiced: true },
+    "ʍ": { place: "Velar", manner: "Fricative", voiced: false },
+    "ɥ": { place: "Palatal", manner: "Approximant", voiced: true },
     // Affricates
     "ts": { place: "Alveolar", manner: "Affricate", voiced: false },
     "dz": { place: "Alveolar", manner: "Affricate", voiced: true },
@@ -134,7 +144,13 @@ const IPA_VOWEL_MAP: Record<string, { height: string; backness: string; rounded:
     "ɵ": { height: "Close-mid", backness: "Central", rounded: true },
     "ɤ": { height: "Close-mid", backness: "Back", rounded: false },
     "o": { height: "Close-mid", backness: "Back", rounded: true },
+    // Mid vowels (no dedicated IPA symbol — use diacriticized forms)
     "ə": { height: "Mid", backness: "Central", rounded: false },
+    "e̞": { height: "Mid", backness: "Front", rounded: false },
+    "ø̞": { height: "Mid", backness: "Front", rounded: true },
+    "ɤ̞": { height: "Mid", backness: "Back", rounded: false },
+    "o̞": { height: "Mid", backness: "Back", rounded: true },
+    // Open-mid vowels
     "ɛ": { height: "Open-mid", backness: "Front", rounded: false },
     "œ": { height: "Open-mid", backness: "Front", rounded: true },
     "ɜ": { height: "Open-mid", backness: "Central", rounded: false },
@@ -145,6 +161,7 @@ const IPA_VOWEL_MAP: Record<string, { height: string; backness: string; rounded:
     "ɐ": { height: "Near-open", backness: "Central", rounded: false },
     "a": { height: "Open", backness: "Front", rounded: false },
     "ɶ": { height: "Open", backness: "Front", rounded: true },
+    "ä": { height: "Open", backness: "Central", rounded: false },
     "ɑ": { height: "Open", backness: "Back", rounded: false },
     "ɒ": { height: "Open", backness: "Back", rounded: true },
 }
@@ -564,9 +581,9 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                         {height}
                                                     </td>
                                                     {VOWEL_BACKNESS.map((backness) => {
-                                                        const vowels = vowelChart.filter(
-                                                            (v) => v.height === height && v.backness === backness
-                                                        )
+                                                        const vowels = vowelChart
+                                                            .filter((v) => v.height === height && v.backness === backness)
+                                                            .sort((a, b) => Number(a.rounded) - Number(b.rounded)) // unrounded first, then rounded
                                                         return (
                                                             <td key={`${height}-${backness}`} className="p-2 text-center">
                                                                 {vowels.length > 0 ? (

@@ -64,6 +64,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         allowForking: true,
         parentLanguageId: true,
         externalAncestry: true,
+        familyId: true,
         owner: {
           select: {
             id: true,
@@ -124,6 +125,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
         allowForking: true,
         parentLanguageId: true,
         externalAncestry: true,
+        familyId: true,
         owner: {
           select: {
             id: true,

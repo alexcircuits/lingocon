@@ -22,12 +22,15 @@ export async function GET(request: NextRequest) {
     const language = await fetchLanguageForExport(languageId, userId)
 
     // Prepare data for CSV - We focus on Dictionary Entries
-    const csvData = language.dictionaryEntries.map((entry) => ({
+    const csvData = language.dictionaryEntries.map((entry: any) => ({
       Lemma: entry.lemma,
       Gloss: entry.gloss,
       IPA: entry.ipa || "",
       "Part of Speech": entry.partOfSpeech || "",
+      Etymology: entry.etymology || "",
       Notes: entry.notes || "",
+      Tags: Array.isArray(entry.tags) ? (entry.tags as string[]).join("; ") : "",
+      "Related Words": Array.isArray(entry.relatedWords) ? (entry.relatedWords as string[]).join("; ") : "",
     }))
 
     const csvString = stringify(csvData, {
@@ -37,7 +40,10 @@ export async function GET(request: NextRequest) {
         "Gloss",
         "IPA",
         "Part of Speech",
+        "Etymology",
         "Notes",
+        "Tags",
+        "Related Words",
       ],
     })
 

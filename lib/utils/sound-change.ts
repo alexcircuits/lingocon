@@ -18,22 +18,53 @@
  *   _ = position of the target
  */
 
-// Default phoneme classes
+// Default phoneme classes — comprehensive IPA inventory
 const DEFAULT_VOWELS = new Set([
-  "a", "e", "i", "o", "u",
-  "ɑ", "æ", "ɛ", "ɪ", "ɔ", "ʊ", "ʌ", "ə", "ɵ",
-  "y", "ø", "ɯ", "ɤ", "œ", "ɶ", "ɒ",
+  // Close
+  "i", "y", "ɨ", "ʉ", "ɯ", "u",
+  // Near-close
+  "ɪ", "ʏ", "ʊ",
+  // Close-mid
+  "e", "ø", "ɘ", "ɵ", "ɤ", "o",
+  // Mid
+  "ə", "e̞", "ø̞", "ɤ̞", "o̞",
+  // Open-mid
+  "ɛ", "œ", "ɜ", "ɞ", "ʌ", "ɔ",
+  // Near-open
+  "æ", "ɐ",
+  // Open
+  "a", "ɶ", "ä", "ɑ", "ɒ",
+  // Nasalized
   "ã", "ẽ", "ĩ", "õ", "ũ",
-  "aː", "eː", "iː", "oː", "uː",
+  // Long
+  "aː", "eː", "iː", "oː", "uː", "ɛː", "ɔː", "æː", "ɑː",
+  // Rhoticized
+  "ɚ", "ɝ",
 ])
 
 const DEFAULT_CONSONANTS = new Set([
-  "p", "b", "t", "d", "k", "g", "q", "ʔ",
-  "m", "n", "ɲ", "ŋ", "ɴ",
-  "f", "v", "θ", "ð", "s", "z", "ʃ", "ʒ", "ç", "x", "ɣ", "χ", "ʁ", "h", "ɦ",
-  "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ",
-  "ɹ", "r", "ɾ", "ʀ", "l", "ɬ", "ɮ", "ʎ", "ʟ",
-  "w", "j", "ɥ",
+  // Plosives
+  "p", "b", "t", "d", "ʈ", "ɖ", "c", "ɟ", "k", "g", "ɡ", "q", "ɢ", "ʔ", "ʡ",
+  // Nasals
+  "m", "ɱ", "n", "ɳ", "ɲ", "ŋ", "ɴ",
+  // Trills
+  "ʙ", "r", "ʀ", "ʜ", "ʢ",
+  // Taps/Flaps
+  "ⱱ", "ɾ", "ɽ",
+  // Fricatives
+  "ɸ", "β", "f", "v", "θ", "ð", "s", "z", "ʃ", "ʒ", "ʂ", "ʐ",
+  "ç", "ʝ", "x", "ɣ", "χ", "ʁ", "ħ", "ʕ", "h", "ɦ",
+  "ɕ", "ʑ", "ʍ", "ɧ",
+  // Lateral fricatives
+  "ɬ", "ɮ",
+  // Affricates
+  "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ", "ʈʂ", "ɖʐ", "pf", "bv", "kx",
+  // Approximants
+  "ʋ", "ɹ", "ɻ", "j", "ɰ", "w", "ɥ",
+  // Lateral approximants
+  "l", "ɭ", "ʎ", "ʟ",
+  // Implosives
+  "ɓ", "ɗ", "ʄ", "ɠ", "ʛ",
 ])
 
 export interface SoundChangeRule {
