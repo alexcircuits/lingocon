@@ -22,11 +22,12 @@ import { TreeStats } from "./tree-stats"
 import { CompareModal } from "./compare-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Save, Plus, ArrowRight, X, Undo2, Redo2, Search, Focus, GitCompareArrows, Network } from "lucide-react"
+import { Save, Plus, ArrowRight, X, Undo2, Redo2, Search, Focus, GitCompareArrows, Network, BookCopy } from "lucide-react"
 import { toast } from "sonner"
 import { setParentLanguage } from "@/app/actions/language-family"
 import { buildFamilyGraph } from "@/lib/utils/family-graph"
 import { useRouter } from "next/navigation"
+import { DerivationPanel } from "./derivation-panel"
 
 interface LanguageData {
   id: string
@@ -108,6 +109,7 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
       const y = depth * (NODE_HEIGHT + V_GAP)
       const isRoot = depth === 0
 
+      const kids = childrenMap.get(id) || []
       nodes.push({
         id: lang.id,
         type: lang.isVirtual ? "virtualNode" : "languageNode",
@@ -120,6 +122,7 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
           count: lang._count.dictionaryEntries,
           isRoot,
           isReadOnly: lang.ownerId !== currentUserId,
+          hasChildren: kids.length > 0,
           owner: lang.owner,
         },
       })
@@ -181,6 +184,42 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
   const [pendingChanges, setPendingChanges] = useState<{ id: string; parentId: string | null }[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [showCompare, setShowCompare] = useState(false)
+
+  // Derivation state
+  const [derivation, setDerivation] = useState<{
+    sourceId: string
+    sourceName: string
+    targetId: string
+    targetName: string
+  } | null>(null)
+
+  // Wire up derive callbacks into node data
+  const handleDeriveFromNode = useCallback((nodeId: string) => {
+    // Find the first child of this node that the current user owns
+    const childEdge = edges.find(e => e.source === nodeId)
+    if (!childEdge) return
+    const sourceNode = nodes.find(n => n.id === nodeId)
+    const targetNode = nodes.find(n => n.id === childEdge.target)
+    if (!sourceNode || !targetNode) return
+
+    setDerivation({
+      sourceId: nodeId,
+      sourceName: sourceNode.data.label,
+      targetId: childEdge.target,
+      targetName: targetNode.data.label,
+    })
+  }, [edges, nodes])
+
+  // Update node data to include derive callback
+  useEffect(() => {
+    setNodes(nds => nds.map(n => ({
+      ...n,
+      data: {
+        ...n.data,
+        onDeriveWords: n.data.hasChildren ? () => handleDeriveFromNode(n.id) : undefined,
+      },
+    })))
+  }, [handleDeriveFromNode, setNodes])
 
   // Undo/Redo stack
   type Snapshot = { edges: Edge[]; nodes: Node[]; pending: { id: string; parentId: string | null }[] }
@@ -527,6 +566,11 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
               <GitCompareArrows className="h-3.5 w-3.5" />
               Compare Languages
             </Button>
+
+            {/* Derive words hint */}
+            <p className="text-[10px] text-muted-foreground/60 text-center">
+              Click a parent node, then &ldquo;Derive Words&rdquo; to copy words to a child.
+            </p>
           </div>
         </Panel>
       </ReactFlow>
@@ -543,6 +587,19 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
         isOpen={showCompare}
         onClose={() => setShowCompare(false)}
       />
+
+      {/* Derivation side panel */}
+      {derivation && (
+        <div className="absolute top-0 right-0 bottom-0 w-[340px] z-30 bg-card border-l border-border shadow-lg flex flex-col">
+          <DerivationPanel
+            sourceLanguageId={derivation.sourceId}
+            sourceLanguageName={derivation.sourceName}
+            targetLanguageId={derivation.targetId}
+            targetLanguageName={derivation.targetName}
+            onClose={() => setDerivation(null)}
+          />
+        </div>
+      )}
     </div>
   )
 }

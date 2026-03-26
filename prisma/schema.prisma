@@ -151,12 +151,18 @@ enum Visibility {
   PUBLIC
 }
 
+enum FamilyType {
+  SYSTEM
+  USER
+}
+
 model LanguageFamily {
   id          String     @id @default(cuid())
   name        String
   slug        String     @unique
   description String?    @db.Text
   visibility  Visibility @default(PRIVATE)
+  type        FamilyType @default(USER)
   ownerId     String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -166,6 +172,7 @@ model LanguageFamily {
 
   @@index([ownerId])
   @@index([slug])
+  @@index([type])
   @@map("language_families")
 }
 

@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { GitBranch, X, Check, ChevronsUpDown, Loader2, Plus, FolderTree } from "lucide-react"
-import { setParentLanguage, setExternalAncestry, searchParentLanguages, getExternalAncestries, setLanguageFamily, createFamily, searchFamilies } from "@/app/actions/language-family"
+import { setParentLanguage, setLanguageFamily, createFamily, searchFamilies, searchParentLanguages } from "@/app/actions/language-family"
 import { LanguageFamilyTree } from "@/components/language-family-tree"
 import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
 interface SearchResult {
@@ -27,6 +27,7 @@ interface FamilyResult {
   name: string
   slug: string
   description: string | null
+  type?: string
   owner?: { name: string | null }
   _count: { languages: number }
 }
@@ -49,20 +50,18 @@ export function ParentLanguageCard({
   languageId,
   currentParentId,
   initialParent,
-  initialExternalAncestry,
   initialFamilyId,
   initialFamily,
-  families: initialFamilies,
   familyTree,
   currentSlug,
 }: ParentLanguageCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  
+
   // Parent Selection State
   const [parentId, setParentId] = useState(currentParentId || "")
   const [parentName, setParentName] = useState(initialParent?.name || "")
-  
+
   // Parent Combobox State
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -70,25 +69,17 @@ export function ParentLanguageCard({
   const [publicLangs, setPublicLangs] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // External Ancestry State (legacy, kept for backward compat)
-  const [externalAncestry, setExternalAncestryState] = useState(initialExternalAncestry || "")
-  const [ancestrySuggestions, setAncestrySuggestions] = useState<string[]>([])
-
-  // Family State
+  // Unified Family State
   const [familyId, setFamilyIdState] = useState(initialFamilyId || "")
   const [familyName, setFamilyNameState] = useState(initialFamily?.name || "")
   const [familyOpen, setFamilyOpen] = useState(false)
   const [familySearch, setFamilySearch] = useState("")
+  const [systemFamilies, setSystemFamilies] = useState<FamilyResult[]>([])
   const [ownFamilies, setOwnFamilies] = useState<FamilyResult[]>([])
   const [publicFamilies, setPublicFamilies] = useState<FamilyResult[]>([])
   const [isFamilyLoading, setIsFamilyLoading] = useState(false)
   const [showNewFamily, setShowNewFamily] = useState(false)
   const [newFamilyName, setNewFamilyName] = useState("")
-
-  // Fetch ancestry suggestions on mount
-  useEffect(() => {
-    getExternalAncestries().then(setAncestrySuggestions)
-  }, [])
 
   // Parent language search
   useEffect(() => {
@@ -104,12 +95,13 @@ export function ParentLanguageCard({
     return () => clearTimeout(timer)
   }, [searchQuery, open, languageId])
 
-  // Family search
+  // Family search (unified: system + own + public)
   useEffect(() => {
     if (!familyOpen) return
     const timer = setTimeout(() => {
       setIsFamilyLoading(true)
       searchFamilies(familySearch).then(res => {
+        setSystemFamilies(res.system as FamilyResult[])
         setOwnFamilies(res.own as FamilyResult[])
         setPublicFamilies(res.public as FamilyResult[])
         setIsFamilyLoading(false)
@@ -137,18 +129,6 @@ export function ParentLanguageCard({
 
   const handleClearParent = () => {
     handleSetParent("", "")
-  }
-
-  const handleSaveExternalAncestry = () => {
-    startTransition(async () => {
-      const result = await setExternalAncestry(languageId, externalAncestry)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success("External ancestry updated!")
-        router.refresh()
-      }
-    })
   }
 
   const handleSetFamily = (newFamilyId: string, newFamilyName: string) => {
@@ -196,12 +176,12 @@ export function ParentLanguageCard({
             Language Family
           </h3>
           <p className="text-sm text-muted-foreground">
-            Group your language into a family, connect it to a parent, or declare its real-world ancestry.
+            Group your language into a family and connect it to a parent language.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Family Selector */}
+          {/* Unified Family Selector */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
               <FolderTree className="h-3.5 w-3.5" />
@@ -221,10 +201,10 @@ export function ParentLanguageCard({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0" align="start">
+                <PopoverContent className="w-[320px] p-0" align="start">
                   <Command shouldFilter={false}>
-                    <CommandInput 
-                      placeholder="Search families..." 
+                    <CommandInput
+                      placeholder="Search families..."
                       value={familySearch}
                       onValueChange={setFamilySearch}
                     />
@@ -237,10 +217,10 @@ export function ParentLanguageCard({
                           </div>
                         ) : "No families found."}
                       </CommandEmpty>
-                      
-                      {ownFamilies.length > 0 && (
-                        <CommandGroup heading="Your Families">
-                          {ownFamilies.map((fam) => (
+
+                      {systemFamilies.length > 0 && (
+                        <CommandGroup heading="Real-World Families">
+                          {systemFamilies.map((fam) => (
                             <CommandItem
                               key={fam.id}
                               value={fam.name}
@@ -256,24 +236,49 @@ export function ParentLanguageCard({
                         </CommandGroup>
                       )}
 
-                      {publicFamilies.length > 0 && (
-                        <CommandGroup heading="Public Families">
-                          {publicFamilies.map((fam) => (
-                            <CommandItem
-                              key={fam.id}
-                              value={fam.name}
-                              onSelect={() => handleSetFamily(fam.id, fam.name)}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", familyId === fam.id ? "opacity-100" : "opacity-0")} />
-                              <div className="flex flex-col">
-                                <span>{fam.name}</span>
-                                <span className="text-xs text-muted-foreground">by {fam.owner?.name} • {fam._count.languages} lang{fam._count.languages !== 1 ? "s" : ""}</span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                      {ownFamilies.length > 0 && (
+                        <>
+                          {systemFamilies.length > 0 && <CommandSeparator />}
+                          <CommandGroup heading="Your Families">
+                            {ownFamilies.map((fam) => (
+                              <CommandItem
+                                key={fam.id}
+                                value={fam.name}
+                                onSelect={() => handleSetFamily(fam.id, fam.name)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", familyId === fam.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex flex-col">
+                                  <span>{fam.name}</span>
+                                  <span className="text-xs text-muted-foreground">{fam._count.languages} language{fam._count.languages !== 1 ? "s" : ""}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </>
                       )}
 
+                      {publicFamilies.length > 0 && (
+                        <>
+                          <CommandSeparator />
+                          <CommandGroup heading="Public Families">
+                            {publicFamilies.map((fam) => (
+                              <CommandItem
+                                key={fam.id}
+                                value={fam.name}
+                                onSelect={() => handleSetFamily(fam.id, fam.name)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", familyId === fam.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex flex-col">
+                                  <span>{fam.name}</span>
+                                  <span className="text-xs text-muted-foreground">by {fam.owner?.name} · {fam._count.languages} lang{fam._count.languages !== 1 ? "s" : ""}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </>
+                      )}
+
+                      <CommandSeparator />
                       <CommandGroup>
                         <CommandItem onSelect={() => { setFamilyOpen(false); setShowNewFamily(true) }}>
                           <Plus className="mr-2 h-4 w-4" />
@@ -290,7 +295,7 @@ export function ParentLanguageCard({
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Group related languages into a named family.</p>
+            <p className="text-xs text-muted-foreground">Choose a real-world proto-language, your own family, or a public one.</p>
 
             {/* Inline create family */}
             {showNewFamily && (
@@ -331,8 +336,8 @@ export function ParentLanguageCard({
                 </PopoverTrigger>
                 <PopoverContent className="w-[300px] p-0" align="start">
                   <Command shouldFilter={false}>
-                    <CommandInput 
-                      placeholder="Search languages..." 
+                    <CommandInput
+                      placeholder="Search languages..."
                       value={searchQuery}
                       onValueChange={setSearchQuery}
                     />
@@ -345,7 +350,7 @@ export function ParentLanguageCard({
                           </div>
                         ) : "No languages found."}
                       </CommandEmpty>
-                      
+
                       {ownLangs.length > 0 && (
                         <CommandGroup heading="Your Languages">
                           {ownLangs.map((lang) => (
@@ -390,33 +395,6 @@ export function ParentLanguageCard({
             </div>
             <p className="text-xs text-muted-foreground">Search to link with public languages from any user.</p>
           </div>
-        </div>
-
-        {/* External Ancestry (legacy but kept) */}
-        <div className="space-y-2 pt-2 border-t border-border/40">
-          <Label>External Ancestry (Proto-language)</Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input 
-                value={externalAncestry} 
-                onChange={(e) => setExternalAncestryState(e.target.value)}
-                placeholder="e.g. Proto-Indo-European"
-                disabled={isPending}
-                list="ancestry-suggestions"
-              />
-              <datalist id="ancestry-suggestions">
-                {ancestrySuggestions
-                  .filter(s => s !== externalAncestry)
-                  .map(s => (
-                    <option key={s} value={s} />
-                  ))}
-              </datalist>
-            </div>
-            <Button onClick={handleSaveExternalAncestry} disabled={isPending || externalAncestry === (initialExternalAncestry || "")}>
-              Save
-              </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">For real-world proto-languages that don&apos;t exist in LingoCon. Existing values will appear as suggestions.</p>
         </div>
 
         {/* Show family tree if available */}

@@ -23,6 +23,8 @@ export default async function PublicFamiliesPage() {
       flagUrl: true,
       parentLanguageId: true,
       externalAncestry: true,
+      familyId: true,
+      family: { select: { id: true, name: true } },
       owner: { select: { name: true } },
       _count: { select: { dictionaryEntries: true } },
     },

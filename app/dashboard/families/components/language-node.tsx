@@ -1,7 +1,7 @@
 import { memo } from "react"
 import { Handle, Position } from "reactflow"
 import { Card } from "@/components/ui/card"
-import { Crown, BookOpen, ExternalLink } from "lucide-react"
+import { Crown, BookOpen, ExternalLink, BookCopy } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface LanguageNodeProps {
@@ -11,7 +11,9 @@ interface LanguageNodeProps {
     count: number
     isRoot: boolean
     isReadOnly?: boolean
+    hasChildren?: boolean
     owner?: { id: string; name: string | null; image: string | null }
+    onDeriveWords?: () => void
   }
   selected: boolean
 }
@@ -65,20 +67,35 @@ export const LanguageNode = memo(({ data, selected }: LanguageNodeProps) => {
           <span>{data.count} words</span>
         </div>
 
-        {/* Open in Studio link */}
-        {data.slug && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              window.open(`/studio/lang/${data.slug}`, "_blank")
-            }}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 mt-0.5"
-          >
-            <ExternalLink className="h-2.5 w-2.5" />
-            Open in Studio
-          </button>
-        )}
+        {/* Action links */}
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 mt-0.5">
+          {data.slug && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(`/studio/lang/${data.slug}`, "_blank")
+              }}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+            >
+              <ExternalLink className="h-2.5 w-2.5" />
+              Studio
+            </button>
+          )}
+          {data.hasChildren && data.onDeriveWords && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                data.onDeriveWords?.()
+              }}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-emerald-500 transition-colors"
+            >
+              <BookCopy className="h-2.5 w-2.5" />
+              Derive
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Source handle (can connect FROM) */}
