@@ -167,13 +167,40 @@ model LanguageFamily {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  // Hierarchical family tree
+  parentFamilyId String?
+  parentFamily   LanguageFamily?  @relation("FamilyHierarchy", fields: [parentFamilyId], references: [id], onDelete: SetNull)
+  childFamilies  LanguageFamily[] @relation("FamilyHierarchy")
+
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   languages   Language[]
 
+  // Shared proto-vocabulary for this family node
+  protoWords  ProtoWord[]
+
+  @@index([parentFamilyId])
   @@index([ownerId])
   @@index([slug])
   @@index([type])
   @@map("language_families")
+}
+
+model ProtoWord {
+  id          String   @id @default(cuid())
+  lemma       String   // e.g. "*wódr̥" (water)
+  gloss       String   // "water"
+  ipa         String?
+  notes       String?  @db.Text
+  familyId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  family      LanguageFamily @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  derivations DictionaryEntry[] @relation("ProtoDerivation")
+
+  @@index([familyId])
+  @@index([familyId, lemma])
+  @@map("proto_words")
 }
 
 enum CollaboratorRole {
@@ -243,6 +270,10 @@ model DictionaryEntry {
   sourceEntry   DictionaryEntry?  @relation("CognateChain", fields: [sourceEntryId], references: [id], onDelete: SetNull)
   derivedEntries DictionaryEntry[] @relation("CognateChain")
 
+  // Link to proto-language vocabulary
+  protoSourceId String?
+  protoSource   ProtoWord? @relation("ProtoDerivation", fields: [protoSourceId], references: [id], onDelete: SetNull)
+
   language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
   paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
   exampleSentences ExampleSentence[]
@@ -251,6 +282,7 @@ model DictionaryEntry {
   @@index([languageId, lemma])
   @@index([paradigmId])
   @@index([sourceEntryId])
+  @@index([protoSourceId])
   @@map("dictionary_entries")
 }
 

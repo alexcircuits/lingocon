@@ -16,6 +16,7 @@ import { Navbar } from "@/components/navbar"
 import { BadgeProgress } from "@/components/badges"
 import { cn } from "@/lib/utils"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
+import { SupportWidget } from "@/components/support-widget"
 
 
 export const metadata = {
@@ -246,6 +247,9 @@ export default async function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Donation Widget */}
+            <SupportWidget />
 
             <div className="space-y-4">
               <h2 className="text-lg font-medium flex items-center gap-2">

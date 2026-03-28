@@ -142,6 +142,7 @@ export default async function SettingsPage({
         descendantIds={descendantIds}
         familyTree={familyTree}
         currentSlug={slug}
+        isOwner={owner}
       />
       <Collaborators languageId={language.id} isOwner={owner} />
     </div>

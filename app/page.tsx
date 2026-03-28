@@ -14,7 +14,8 @@ import {
   PenTool,
   Library,
   Github,
-  Construction
+  Construction,
+  Heart
 } from "lucide-react"
 import { FeaturedLanguages } from "@/components/featured-languages"
 import { Navbar } from "@/components/navbar"
@@ -503,6 +504,32 @@ export default async function Home() {
           </section>
         )
       }
+
+      {/* Support Section */}
+      <section className="py-24 bg-rose-500/5 border-t border-rose-500/10 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.03)_0,transparent_100%)] pointer-events-none" />
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 mb-6 shadow-sm ring-1 ring-rose-500/20">
+            <Heart className="w-8 h-8 fill-rose-500/20" />
+          </div>
+          <h2 className="text-3xl md:text-5xl font-serif mb-6 tracking-tight text-foreground">
+            Support Our Mission
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            LingoCon is built by language lovers, for language lovers. If our platform helps your worlds come alive, consider helping us keep the lights on and the servers running.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/donate">
+              <Button size="lg" className="rounded-full h-14 px-8 bg-rose-500 hover:bg-rose-600 text-white gap-2 shadow-xl shadow-rose-500/20 transition-all hover:scale-105">
+                <Heart className="w-5 h-5 fill-current" />
+                Donate via OpenCollective
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Survey Notification */}
       <SurveyBanner />

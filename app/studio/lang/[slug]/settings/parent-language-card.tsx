@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GitBranch, X, Check, ChevronsUpDown, Loader2, Plus, FolderTree } from "lucide-react"
-import { setParentLanguage, setLanguageFamily, createFamily, searchFamilies, searchParentLanguages } from "@/app/actions/language-family"
+import { GitBranch, X, Check, ChevronsUpDown, Loader2, Plus, FolderTree, ChevronRight } from "lucide-react"
+import { setParentLanguage, setLanguageFamily, createFamily, searchFamilies, searchParentLanguages, getFamilyAncestryPath, getFamilyChildren } from "@/app/actions/language-family"
 import { LanguageFamilyTree } from "@/components/language-family-tree"
 import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -44,6 +44,7 @@ interface ParentLanguageCardProps {
   descendantIds: string[]
   familyTree: any
   currentSlug: string
+  isOwner?: boolean
 }
 
 export function ParentLanguageCard({
@@ -54,6 +55,7 @@ export function ParentLanguageCard({
   initialFamily,
   familyTree,
   currentSlug,
+  isOwner = true,
 }: ParentLanguageCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -80,6 +82,11 @@ export function ParentLanguageCard({
   const [isFamilyLoading, setIsFamilyLoading] = useState(false)
   const [showNewFamily, setShowNewFamily] = useState(false)
   const [newFamilyName, setNewFamilyName] = useState("")
+
+  // Ancestry breadcrumb state
+  const [ancestryPath, setAncestryPath] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [childFamilies, setChildFamilies] = useState<{ id: string; name: string; slug: string; _count: { languages: number; childFamilies: number } }[]>([])
+  const [showSubFamilies, setShowSubFamilies] = useState(false)
 
   // Parent language search
   useEffect(() => {
@@ -109,6 +116,20 @@ export function ParentLanguageCard({
     }, 300)
     return () => clearTimeout(timer)
   }, [familySearch, familyOpen])
+
+  // Fetch ancestry path and children when family is selected
+  useEffect(() => {
+    if (!familyId) {
+      setAncestryPath([])
+      setChildFamilies([])
+      return
+    }
+    getFamilyAncestryPath(familyId).then(setAncestryPath)
+    getFamilyChildren(familyId).then((children) => {
+      setChildFamilies(children as any)
+      setShowSubFamilies(children.length > 0)
+    })
+  }, [familyId])
 
   const handleSetParent = (newParentId: string, newParentName: string) => {
     setParentId(newParentId)
@@ -195,7 +216,7 @@ export function ParentLanguageCard({
                     role="combobox"
                     aria-expanded={familyOpen}
                     className="w-full justify-between"
-                    disabled={isPending}
+                    disabled={isPending || !isOwner}
                   >
                     {familyId ? familyName : "None (independent)"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -315,6 +336,53 @@ export function ParentLanguageCard({
                 </Button>
               </div>
             )}
+
+            {/* Ancestry breadcrumb + sub-family drill-down */}
+            {familyId && ancestryPath.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {/* Breadcrumb path */}
+                <div className="flex items-center gap-0.5 flex-wrap text-xs">
+                  {ancestryPath.map((node, i) => (
+                    <span key={node.id} className="flex items-center gap-0.5">
+                      {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                      <button
+                        onClick={() => {
+                          if (node.id !== familyId) {
+                            handleSetFamily(node.id, node.name)
+                          }
+                        }}
+                        className={`px-1.5 py-0.5 rounded transition-colors ${
+                          node.id === familyId
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        }`}
+                      >
+                        {node.name.replace("Proto-", "P-")}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Child sub-families */}
+                {showSubFamilies && childFamilies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-xs text-muted-foreground py-1">Sub-families:</span>
+                    {childFamilies.map((child) => (
+                      <button
+                        key={child.id}
+                        onClick={() => handleSetFamily(child.id, child.name)}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-secondary/50 hover:bg-secondary transition-colors text-foreground"
+                      >
+                        {child.name}
+                        {child._count.childFamilies > 0 && (
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Parent Language Selector */}
@@ -328,7 +396,7 @@ export function ParentLanguageCard({
                     role="combobox"
                     aria-expanded={open}
                     className="w-full justify-between"
-                    disabled={isPending}
+                    disabled={isPending || !isOwner}
                   >
                     {parentId ? parentName : "None (root language)"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

@@ -23,6 +23,9 @@ export function Footer() {
                         <Link href="/contact" className="hover:text-primary transition-colors">
                             Contact
                         </Link>
+                        <Link href="/donate" className="hover:text-primary transition-colors flex items-center gap-1.5 text-rose-500/80 hover:text-rose-500">
+                            Donate
+                        </Link>
                         <Link href="/login" className="hover:text-primary transition-colors">
                             Login
                         </Link>

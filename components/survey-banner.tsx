@@ -12,7 +12,8 @@ export function SurveyBanner() {
 
     useEffect(() => {
         const dismissed = localStorage.getItem(DISMISS_KEY)
-        if (!dismissed) {
+        const completed = localStorage.getItem("lingocon-survey-completed")
+        if (!dismissed && !completed) {
             // Small delay for a nicer entrance on page load
             const timer = setTimeout(() => setIsVisible(true), 1500)
             return () => clearTimeout(timer)
@@ -32,7 +33,7 @@ export function SurveyBanner() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 40, transition: { duration: 0.2 } }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg"
+                    className="fixed bottom-8 left-0 right-0 mx-4 sm:mx-auto max-w-lg z-[999]"
                 >
                     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl shadow-primary/10">
                         {/* Gradient accent */}
@@ -41,7 +42,7 @@ export function SurveyBanner() {
                         <div className="p-5">
                             <button
                                 onClick={handleDismiss}
-                                className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground/60 hover:text-foreground"
+                                className="absolute top-3 right-3 z-20 p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground/60 hover:text-foreground"
                                 aria-label="Dismiss"
                             >
                                 <X className="h-4 w-4" />

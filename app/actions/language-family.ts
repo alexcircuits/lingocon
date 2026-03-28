@@ -214,11 +214,25 @@ export async function createFamily(data: {
   name: string
   description?: string
   visibility?: "PRIVATE" | "UNLISTED" | "PUBLIC"
+  parentFamilyId?: string
 }) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
+    // If parentFamilyId is given, verify it exists and is accessible
+    if (data.parentFamilyId) {
+      const parentFamily = await prisma.languageFamily.findUnique({
+        where: { id: data.parentFamilyId },
+        select: { id: true, ownerId: true, visibility: true, type: true },
+      })
+      if (!parentFamily) return { error: "Parent family not found" }
+      // Must own the parent or parent must be PUBLIC/SYSTEM
+      if (parentFamily.ownerId !== userId && parentFamily.visibility !== "PUBLIC" && parentFamily.type !== "SYSTEM") {
+        return { error: "Cannot create sub-family under a private family you don't own" }
+      }
+    }
+
     const slug = await generateFamilySlug(data.name)
     const family = await prisma.languageFamily.create({
       data: {
@@ -227,6 +241,7 @@ export async function createFamily(data: {
         description: data.description?.trim() || null,
         visibility: data.visibility || "PRIVATE",
         ownerId: userId,
+        parentFamilyId: data.parentFamilyId || null,
       },
     })
     revalidatePath("/studio")
@@ -377,6 +392,7 @@ export async function searchFamilies(query: string) {
     slug: true,
     description: true,
     type: true,
+    parentFamilyId: true,
     owner: { select: { name: true } },
     _count: { select: { languages: true } },
   }
@@ -595,3 +611,266 @@ export async function getLanguageDictionary(
 
   return { entries, total }
 }
+
+// ─── Hierarchical Family Actions ─────────────────────────────────────────────
+
+/**
+ * Get the ancestry path for a family — from root down to this family.
+ * Returns an array of { id, name, slug } from the top-level ancestor to the given family.
+ */
+export async function getFamilyAncestryPath(familyId: string) {
+  const path: { id: string; name: string; slug: string }[] = []
+
+  let currentId: string | null = familyId
+  const visited = new Set<string>()
+
+  while (currentId && !visited.has(currentId)) {
+    visited.add(currentId)
+    const family = await prisma.languageFamily.findUnique({
+      where: { id: currentId },
+      select: { id: true, name: true, slug: true, parentFamilyId: true },
+    })
+    if (!family) break
+    path.unshift({ id: family.id, name: family.name, slug: family.slug })
+    currentId = family.parentFamilyId
+  }
+
+  return path
+}
+
+/**
+ * Get direct child sub-families of a given family.
+ */
+export async function getFamilyChildren(familyId: string) {
+  return prisma.languageFamily.findMany({
+    where: { parentFamilyId: familyId },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      type: true,
+      visibility: true,
+      _count: { select: { languages: true, childFamilies: true } },
+    },
+    orderBy: { name: "asc" },
+  })
+}
+
+/**
+ * Set or remove the parent family for a given family.
+ * Only the owner of the family can change its parent.
+ */
+export async function setFamilyParent(familyId: string, parentFamilyId: string | null) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+
+  try {
+    const family = await prisma.languageFamily.findUnique({
+      where: { id: familyId },
+      select: { ownerId: true, type: true },
+    })
+    if (!family || family.ownerId !== userId) return { error: "Unauthorized" }
+    if (family.type === "SYSTEM") return { error: "Cannot modify system families" }
+
+    if (parentFamilyId) {
+      // Prevent self-referencing
+      if (familyId === parentFamilyId) return { error: "Cannot set family as its own parent" }
+
+      // Verify parent exists
+      const parent = await prisma.languageFamily.findUnique({
+        where: { id: parentFamilyId },
+        select: { id: true, ownerId: true, visibility: true, type: true },
+      })
+      if (!parent) return { error: "Parent family not found" }
+      if (parent.ownerId !== userId && parent.visibility !== "PUBLIC" && parent.type !== "SYSTEM") {
+        return { error: "Cannot link to a private family you don't own" }
+      }
+
+      // Prevent circular reference: walk up from parentFamilyId to see if we hit familyId
+      let currentId: string | null = parentFamilyId
+      const visited = new Set<string>()
+      while (currentId && !visited.has(currentId)) {
+        if (currentId === familyId) return { error: "Cannot create circular family hierarchy" }
+        visited.add(currentId)
+        const f = await prisma.languageFamily.findUnique({
+          where: { id: currentId },
+          select: { parentFamilyId: true },
+        })
+        currentId = f?.parentFamilyId || null
+      }
+    }
+
+    await prisma.languageFamily.update({
+      where: { id: familyId },
+      data: { parentFamilyId },
+    })
+
+    revalidatePath("/dashboard/families")
+    return { success: true }
+  } catch {
+    return { error: "Failed to update family parent" }
+  }
+}
+
+// ─── Proto-Vocabulary Actions ────────────────────────────────────────────────
+
+/**
+ * Create a proto-word in a family's vocabulary.
+ * Only the family owner can add proto-words (USER families only).
+ */
+export async function createProtoWord(
+  familyId: string,
+  data: { lemma: string; gloss: string; ipa?: string; notes?: string }
+) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+
+  try {
+    const family = await prisma.languageFamily.findUnique({
+      where: { id: familyId },
+      select: { ownerId: true, type: true },
+    })
+    if (!family) return { error: "Family not found" }
+    if (family.type === "SYSTEM") return { error: "Cannot add proto-words to system families" }
+    if (family.ownerId !== userId) return { error: "Unauthorized" }
+
+    const word = await prisma.protoWord.create({
+      data: {
+        lemma: data.lemma.trim(),
+        gloss: data.gloss.trim(),
+        ipa: data.ipa?.trim() || null,
+        notes: data.notes?.trim() || null,
+        familyId,
+      },
+    })
+
+    revalidatePath("/dashboard/families")
+    return { success: true, word }
+  } catch {
+    return { error: "Failed to create proto-word" }
+  }
+}
+
+/**
+ * Delete a proto-word.
+ * Only the family owner can delete proto-words.
+ */
+export async function deleteProtoWord(protoWordId: string) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+
+  try {
+    const word = await prisma.protoWord.findUnique({
+      where: { id: protoWordId },
+      select: { family: { select: { ownerId: true, type: true } } },
+    })
+    if (!word) return { error: "Proto-word not found" }
+    if (word.family.type === "SYSTEM") return { error: "Cannot delete system proto-words" }
+    if (word.family.ownerId !== userId) return { error: "Unauthorized" }
+
+    await prisma.protoWord.delete({ where: { id: protoWordId } })
+
+    revalidatePath("/dashboard/families")
+    return { success: true }
+  } catch {
+    return { error: "Failed to delete proto-word" }
+  }
+}
+
+/**
+ * Search / list proto-words for a family.
+ */
+export async function getProtoVocabulary(
+  familyId: string,
+  query: string,
+  page: number = 1,
+  pageSize: number = 50
+) {
+  const where = {
+    familyId,
+    ...(query ? {
+      OR: [
+        { lemma: { contains: query, mode: "insensitive" as const } },
+        { gloss: { contains: query, mode: "insensitive" as const } },
+      ],
+    } : {}),
+  }
+
+  const [words, total] = await Promise.all([
+    prisma.protoWord.findMany({
+      where,
+      select: {
+        id: true,
+        lemma: true,
+        gloss: true,
+        ipa: true,
+        notes: true,
+      },
+      orderBy: { lemma: "asc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.protoWord.count({ where }),
+  ])
+
+  return { words, total }
+}
+
+/**
+ * Derive proto-words into a target language's dictionary.
+ * Creates DictionaryEntry records linked via protoSourceId.
+ */
+export async function deriveFromProto(
+  protoWordIds: string[],
+  targetLanguageId: string
+) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+
+  if (protoWordIds.length === 0) return { error: "No proto-words selected" }
+  if (protoWordIds.length > 100) return { error: "Maximum 100 proto-words at a time" }
+
+  try {
+    // Verify user owns the target language
+    const targetLang = await prisma.language.findUnique({
+      where: { id: targetLanguageId },
+      select: { ownerId: true },
+    })
+    if (!targetLang || targetLang.ownerId !== userId) {
+      return { error: "Unauthorized to modify target language" }
+    }
+
+    // Fetch proto-words and their family name
+    const protoWords = await prisma.protoWord.findMany({
+      where: { id: { in: protoWordIds } },
+      select: {
+        id: true,
+        lemma: true,
+        gloss: true,
+        ipa: true,
+        family: { select: { name: true } },
+      },
+    })
+
+    if (protoWords.length === 0) return { error: "No valid proto-words found" }
+
+    const created = await prisma.dictionaryEntry.createMany({
+      data: protoWords.map(pw => ({
+        lemma: pw.lemma.replace(/^\*/, ""), // Remove leading asterisk for the derived form
+        gloss: pw.gloss,
+        ipa: pw.ipa,
+        etymology: `From ${pw.family.name}: ${pw.lemma}`,
+        protoSourceId: pw.id,
+        languageId: targetLanguageId,
+      })),
+    })
+
+    revalidatePath("/studio")
+    revalidatePath("/dashboard/families")
+    return { success: true, count: created.count }
+  } catch {
+    return { error: "Failed to derive from proto-vocabulary" }
+  }
+}
+

@@ -74,6 +74,11 @@ export function SurveyForm({ survey }: { survey: SurveyData }) {
             setError(result.error)
         } else {
             setIsSubmitted(true)
+            try {
+                localStorage.setItem("lingocon-survey-completed", "true")
+            } catch (e) {
+                // ignore
+            }
         }
     }
 

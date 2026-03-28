@@ -125,6 +125,101 @@ const SYSTEM_FAMILIES = [
   },
 ]
 
+// Sub-families: each entry references its parent by slug
+const SUB_FAMILIES = [
+  // Indo-European sub-families
+  {
+    name: "Proto-Germanic",
+    slug: "proto-germanic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of English, German, Dutch, Swedish, Norwegian, Danish, Icelandic, and other Germanic languages.",
+  },
+  {
+    name: "Proto-Italic",
+    slug: "proto-italic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Latin, Oscan, Umbrian, and through Latin, all Romance languages.",
+  },
+  {
+    name: "Proto-Slavic",
+    slug: "proto-slavic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Russian, Polish, Czech, Serbian, Bulgarian, Ukrainian, and other Slavic languages.",
+  },
+  {
+    name: "Proto-Celtic",
+    slug: "proto-celtic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Irish, Welsh, Breton, Scottish Gaelic, and other Celtic languages.",
+  },
+  {
+    name: "Proto-Indo-Iranian",
+    slug: "proto-indo-iranian",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Sanskrit, Persian, Hindi, Urdu, Bengali, Kurdish, Pashto, and other Indo-Iranian languages.",
+  },
+  {
+    name: "Proto-Hellenic",
+    slug: "proto-hellenic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Ancient Greek, Modern Greek, and other Hellenic varieties.",
+  },
+  {
+    name: "Proto-Baltic",
+    slug: "proto-baltic",
+    parentSlug: "proto-indo-european",
+    description:
+      "Reconstructed ancestor of Lithuanian, Latvian, and the extinct Old Prussian language.",
+  },
+
+  // Niger-Congo sub-family
+  {
+    name: "Proto-Bantu",
+    slug: "proto-bantu",
+    parentSlug: "proto-niger-congo",
+    description:
+      "Reconstructed ancestor of Swahili, Zulu, Xhosa, Shona, Lingala, and hundreds of other Bantu languages.",
+  },
+
+  // Austronesian sub-families
+  {
+    name: "Proto-Malayo-Polynesian",
+    slug: "proto-malayo-polynesian",
+    parentSlug: "proto-austronesian",
+    description:
+      "Reconstructed ancestor of Malay, Indonesian, Tagalog, Hawaiian, Maori, Samoan, and most Austronesian languages.",
+  },
+  {
+    name: "Proto-Oceanic",
+    slug: "proto-oceanic",
+    parentSlug: "proto-austronesian",
+    description:
+      "Reconstructed ancestor of Fijian, Tongan, Hawaiian, Maori, and other Oceanic languages of the Pacific.",
+  },
+
+  // Sino-Tibetan sub-families
+  {
+    name: "Proto-Sinitic",
+    slug: "proto-sinitic",
+    parentSlug: "proto-sino-tibetan",
+    description:
+      "Reconstructed ancestor of Mandarin, Cantonese, Wu, Min, Hakka, and other Chinese language varieties.",
+  },
+  {
+    name: "Proto-Tibeto-Burman",
+    slug: "proto-tibeto-burman",
+    parentSlug: "proto-sino-tibetan",
+    description:
+      "Reconstructed ancestor of Tibetan, Burmese, Newari, Bodo, and hundreds of other Tibeto-Burman languages.",
+  },
+]
+
 async function main() {
   console.log("Seeding system language families...")
 
@@ -143,6 +238,7 @@ async function main() {
     console.log("Created system user:", systemUser.email)
   }
 
+  // --- Seed top-level families ---
   let created = 0
   let skipped = 0
 
@@ -179,6 +275,72 @@ async function main() {
   }
 
   console.log(`Created ${created} system families, updated ${skipped} existing`)
+
+  // --- Seed sub-families ---
+  console.log("\nSeeding sub-families...")
+  let subCreated = 0
+  let subSkipped = 0
+  let subLinked = 0
+
+  for (const sub of SUB_FAMILIES) {
+    // Find the parent family
+    const parentFamily = await prisma.languageFamily.findUnique({
+      where: { slug: sub.parentSlug },
+    })
+    if (!parentFamily) {
+      console.warn(`  ⚠ Parent "${sub.parentSlug}" not found for "${sub.name}", skipping`)
+      continue
+    }
+
+    const existing = await prisma.languageFamily.findUnique({
+      where: { slug: sub.slug },
+    })
+
+    if (existing) {
+      // If it exists but isn't linked to its parent, link it
+      if (!existing.parentFamilyId) {
+        await prisma.languageFamily.update({
+          where: { slug: sub.slug },
+          data: {
+            parentFamilyId: parentFamily.id,
+            type: "SYSTEM",
+            visibility: "PUBLIC",
+            description: sub.description,
+          },
+        })
+        subLinked++
+        console.log(`  ✓ Linked existing "${sub.name}" under "${parentFamily.name}"`)
+      } else {
+        // Already exists and already linked, just update metadata
+        await prisma.languageFamily.update({
+          where: { slug: sub.slug },
+          data: {
+            type: "SYSTEM",
+            visibility: "PUBLIC",
+            description: sub.description,
+          },
+        })
+        subSkipped++
+      }
+      continue
+    }
+
+    await prisma.languageFamily.create({
+      data: {
+        name: sub.name,
+        slug: sub.slug,
+        description: sub.description,
+        visibility: "PUBLIC",
+        type: "SYSTEM",
+        ownerId: systemUser.id,
+        parentFamilyId: parentFamily.id,
+      },
+    })
+    subCreated++
+    console.log(`  + Created "${sub.name}" under "${parentFamily.name}"`)
+  }
+
+  console.log(`Sub-families: ${subCreated} created, ${subLinked} linked, ${subSkipped} already existed`)
 
   // Migrate existing externalAncestry values to matching LanguageFamily records
   console.log("\nMigrating externalAncestry values...")
