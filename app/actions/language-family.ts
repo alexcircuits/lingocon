@@ -626,7 +626,7 @@ export async function getFamilyAncestryPath(familyId: string) {
 
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId)
-    const family = await prisma.languageFamily.findUnique({
+    const family: { id: string; name: string; slug: string; parentFamilyId: string | null } | null = await prisma.languageFamily.findUnique({
       where: { id: currentId },
       select: { id: true, name: true, slug: true, parentFamilyId: true },
     })
@@ -693,7 +693,7 @@ export async function setFamilyParent(familyId: string, parentFamilyId: string |
       while (currentId && !visited.has(currentId)) {
         if (currentId === familyId) return { error: "Cannot create circular family hierarchy" }
         visited.add(currentId)
-        const f = await prisma.languageFamily.findUnique({
+        const f: { parentFamilyId: string | null } | null = await prisma.languageFamily.findUnique({
           where: { id: currentId },
           select: { parentFamilyId: true },
         })
