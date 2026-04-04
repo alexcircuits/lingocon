@@ -97,7 +97,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         })
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Paradigm created successfully")
@@ -158,7 +158,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         })
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Paradigm updated successfully")
@@ -206,7 +206,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
       const result = await deleteParadigm(deletingId, languageId)
 
       if (result.error) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Paradigm deleted successfully")

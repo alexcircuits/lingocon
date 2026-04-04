@@ -71,7 +71,7 @@ export function SurveyForm({ survey }: { survey: SurveyData }) {
         setIsSubmitting(false)
 
         if (result.error) {
-            setError(result.error)
+            setError(result.error ?? null)
         } else {
             setIsSubmitted(true)
             try {

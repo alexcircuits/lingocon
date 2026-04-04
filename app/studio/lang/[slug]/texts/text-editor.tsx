@@ -136,7 +136,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         const result = await updateText(String(text.id), sterilizedData)
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Text updated successfully")
@@ -157,7 +157,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         const result = await createText(sterilizedData)
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Text created successfully")
@@ -174,7 +174,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
       const result = await deleteText(text.id)
 
       if (result.error) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Text deleted")

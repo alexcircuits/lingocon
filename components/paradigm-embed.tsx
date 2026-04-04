@@ -25,7 +25,7 @@ export function ParadigmEmbed({ paradigmId, paradigmName, className }: ParadigmE
       setError(null)
       const result = await getParadigmById(paradigmId)
       if (result.error) {
-        setError(result.error)
+        setError(result.error ?? null)
       } else if (result.data) {
         setParadigm(result.data)
       }

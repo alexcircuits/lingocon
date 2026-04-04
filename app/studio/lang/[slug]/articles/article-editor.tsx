@@ -138,7 +138,7 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
       const result = await deleteArticle(article.id)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Article deleted")

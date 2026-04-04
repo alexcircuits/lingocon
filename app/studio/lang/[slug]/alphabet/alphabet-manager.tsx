@@ -98,7 +98,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
       const result = await createScriptSymbol(sterilizedData)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Symbol added successfully")
@@ -143,7 +143,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
       const result = await updateScriptSymbol(sterilizedData)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Symbol updated successfully")
@@ -160,7 +160,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
       const result = await deleteScriptSymbol(symbolId, languageId)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Symbol deleted successfully")
@@ -182,7 +182,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
       const result = await saveAlphabetOrder(newSymbols.map(s => s.id), languageId)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
         setSymbols(initialSymbols)
       } else {
@@ -205,7 +205,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         const result = await saveAlphabetOrder(newSymbols.map(s => s.id), languageId)
 
         if ('error' in result) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
           setSymbols(initialSymbols)
         } else {

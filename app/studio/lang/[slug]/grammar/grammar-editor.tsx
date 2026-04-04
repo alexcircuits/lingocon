@@ -112,7 +112,7 @@ export function GrammarEditor({
         const result = await createGrammarPage(sterilizedData)
 
         if ('error' in result) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Grammar page created successfully")
@@ -129,7 +129,7 @@ export function GrammarEditor({
       const result = await deleteGrammarPage(page.id, languageId)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Grammar page deleted")

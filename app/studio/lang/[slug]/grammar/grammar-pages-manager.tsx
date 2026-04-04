@@ -47,7 +47,7 @@ export function GrammarPagesManager({
       const result = await deleteGrammarPage(pageId, languageId)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Grammar page deleted successfully")
@@ -61,7 +61,7 @@ export function GrammarPagesManager({
       const result = await reorderGrammarPages(pageId, languageId, direction)
 
       if ('error' in result) {
-        setError(result.error)
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Grammar page reordered successfully")

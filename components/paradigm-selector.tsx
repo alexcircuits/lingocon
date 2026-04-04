@@ -35,7 +35,7 @@ export function ParadigmSelector({
       setError(null)
       const result = await getParadigmsForLanguage(languageId)
       if (result.error) {
-        setError(result.error)
+        setError(result.error ?? null)
       } else if (result.data) {
         setParadigms(result.data)
       }
