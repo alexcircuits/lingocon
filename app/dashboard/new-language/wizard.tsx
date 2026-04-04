@@ -99,12 +99,12 @@ export function LanguageWizard() {
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       })
 
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
         return
       }
 
-      const languageId = result.data!.id
+      const languageId = result.data.id
 
       // Create alphabet if requested
       if (data.createAlphabet && data.alphabetType === "latin") {

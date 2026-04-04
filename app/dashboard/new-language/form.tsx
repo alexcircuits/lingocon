@@ -64,8 +64,8 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
         })
       }
 
-      if (result.error) {
-        setError(result.error)
+      if ('error' in result) {
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success(parentId !== "none" ? "Language evolved successfully" : "Language created successfully")

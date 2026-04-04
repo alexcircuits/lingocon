@@ -97,7 +97,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
 
       const result = await createScriptSymbol(sterilizedData)
 
-      if (result.error) {
+      if ('error' in result) {
         setError(result.error)
         toast.error(result.error)
       } else {

@@ -121,7 +121,7 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
         const result = await createArticle(sterilizedData)
 
         if ('error' in result) {
-          setError(result.error)
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Article created successfully")
