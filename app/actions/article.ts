@@ -1,16 +1,24 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
+import { getUserId } from "@/lib/auth-helpers"
+import { AppError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
 import { checkContentBadges } from "@/app/actions/badge"
+import * as articleService from "@/lib/services/article"
 
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 50)
+function handleError(error: unknown, fallbackMessage: string) {
+  if (error instanceof AppError) return { error: error.message }
+  if (error instanceof Error) return { error: error.message }
+  return { error: fallbackMessage }
+}
+
+function revalidateArticlePaths(langSlug: string, articleSlug?: string) {
+  revalidatePath(`/studio/lang/${langSlug}/articles`)
+  revalidatePath(`/lang/${langSlug}/articles`)
+  if (articleSlug) {
+    revalidatePath(`/studio/lang/${langSlug}/articles/${articleSlug}`)
+    revalidatePath(`/lang/${langSlug}/articles/${articleSlug}`)
+  }
 }
 
 export async function createArticle(data: {
@@ -23,62 +31,20 @@ export async function createArticle(data: {
   languageId: string
 }) {
   const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
 
-  if (!userId) {
-    return { error: "Unauthorized" }
-  }
-
-  // Verify user owns or can edit the language
-  const canEdit = await canEditLanguage(data.languageId, userId)
-  if (!canEdit) {
-    return { error: "You don't have permission to add articles to this language" }
-  }
-
-  // Get the slug as well
-  const langSlug = (await prisma.language.findUnique({
-    where: { id: data.languageId },
-    select: { slug: true }
-  }))?.slug
-
-  const baseSlug = generateSlug(data.title)
-  let slug = baseSlug
-  let counter = 1
-
-  // Ensure unique slug
-  while (true) {
-    const existing = await prisma.article.findUnique({
-      where: { languageId_slug: { languageId: data.languageId, slug } }
-    })
-    if (!existing) break
-    slug = `${baseSlug}-${counter++}`
-  }
-
-  const article = await prisma.article.create({
-    data: {
-      title: data.title,
-      slug,
-      excerpt: data.excerpt,
-      content: data.content,
-      coverImage: data.coverImage,
-      published: true,
-      publishedAt: new Date(),
-      paradigmId: data.paradigmId || null,
-      languageId: data.languageId,
-      authorId: userId,
+  try {
+    const result = await articleService.createArticle(data, userId)
+    if (result.langSlug) {
+      revalidateArticlePaths(result.langSlug, result.article.slug)
     }
-  })
-
-  revalidatePath(`/studio/lang/${langSlug}/articles`)
-  revalidatePath(`/studio/lang/${langSlug}/articles/${article.slug}`)
-  revalidatePath(`/lang/${langSlug}/articles`)
-  revalidatePath(`/lang/${langSlug}/articles/${article.slug}`)
-
-  // Check for content badges if article is published
-  if (data.published) {
-    checkContentBadges(userId).catch(console.error)
+    if (data.published) {
+      checkContentBadges(userId).catch(console.error)
+    }
+    return { article: result.article }
+  } catch (error) {
+    return handleError(error, "Failed to create article")
   }
-
-  return { article }
 }
 
 export async function updateArticle(
@@ -93,92 +59,26 @@ export async function updateArticle(
   }
 ) {
   const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
 
-  if (!userId) {
-    return { error: "Unauthorized" }
+  try {
+    const result = await articleService.updateArticle(id, data, userId)
+    revalidateArticlePaths(result.langSlug, result.article.slug)
+    return { article: result.article }
+  } catch (error) {
+    return handleError(error, "Failed to update article")
   }
-
-  const article = await prisma.article.findUnique({
-    where: { id },
-    include: { language: { select: { ownerId: true, slug: true, id: true } } }
-  })
-
-  if (!article) {
-    return { error: "Article not found" }
-  }
-
-  const canEdit = await canEditLanguage(article.language.id, userId)
-  if (!canEdit) {
-    return { error: "You don't have permission to edit this article" }
-  }
-
-  // Update slug if title changed
-  let slug = article.slug
-  if (data.title && data.title !== article.title) {
-    const baseSlug = generateSlug(data.title)
-    slug = baseSlug
-    let counter = 1
-
-    while (true) {
-      const existing = await prisma.article.findFirst({
-        where: {
-          languageId: article.languageId,
-          slug,
-          id: { not: id }
-        }
-      })
-      if (!existing) break
-      slug = `${baseSlug}-${counter++}`
-    }
-  }
-
-  const updated = await prisma.article.update({
-    where: { id },
-    data: {
-      ...data,
-      slug,
-      paradigmId: data.paradigmId !== undefined ? (data.paradigmId || null) : article.paradigmId,
-      published: true,
-      publishedAt: !article.published ? new Date() : article.publishedAt,
-    }
-  })
-
-  revalidatePath(`/studio/lang/${article.language.slug}/articles`)
-  revalidatePath(`/studio/lang/${article.language.slug}/articles/${updated.slug}`)
-  revalidatePath(`/lang/${article.language.slug}/articles`)
-  revalidatePath(`/lang/${article.language.slug}/articles/${updated.slug}`)
-
-  return { article: updated }
 }
 
 export async function deleteArticle(id: string) {
   const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
 
-  if (!userId) {
-    return { error: "Unauthorized" }
+  try {
+    const result = await articleService.deleteArticle(id, userId)
+    revalidateArticlePaths(result.langSlug, result.articleSlug)
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to delete article")
   }
-
-  const article = await prisma.article.findUnique({
-    where: { id },
-    include: { language: { select: { ownerId: true, slug: true, id: true } } }
-  })
-
-  if (!article) {
-    return { error: "Article not found" }
-  }
-
-  const canEdit = await canEditLanguage(article.language.id, userId)
-  if (!canEdit) {
-    return { error: "You don't have permission to delete this article" }
-  }
-
-  await prisma.article.delete({ where: { id } })
-
-  revalidatePath(`/studio/lang/${article.language.slug}/articles`)
-  revalidatePath(`/studio/lang/${article.language.slug}/articles/${article.slug}`)
-  revalidatePath(`/lang/${article.language.slug}/articles`)
-  revalidatePath(`/lang/${article.language.slug}/articles/${article.slug}`)
-
-  return { success: true }
 }
-

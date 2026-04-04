@@ -181,7 +181,7 @@ export function DictionaryManager({
 
     const result = await createDictionaryEntry(sterilizedData)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error, {
         action: {
           label: "Retry",
@@ -219,7 +219,7 @@ export function DictionaryManager({
 
     const result = await createDictionaryEntry(sterilizedData)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error)
     } else {
       toast.success(`derived word "${data.lemma}" created`)
@@ -249,7 +249,7 @@ export function DictionaryManager({
 
     const result = await updateDictionaryEntry(sterilizedData)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error, {
         action: {
           label: "Retry",
@@ -274,7 +274,7 @@ export function DictionaryManager({
 
     const result = await deleteDictionaryEntry(deletingId, languageId)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error, {
         action: {
           label: "Retry",
@@ -314,7 +314,7 @@ export function DictionaryManager({
     const ids = Array.from(selectedEntries)
     const result = await bulkDeleteDictionaryEntries(ids, languageId)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error)
     } else {
       toast.success(`Deleted ${result.deletedCount} entries`)
@@ -329,7 +329,7 @@ export function DictionaryManager({
   const handleDeleteAll = async () => {
     const result = await deleteAllDictionaryEntries(languageId)
 
-    if (result.error) {
+    if ('error' in result) {
       toast.error(result.error)
     } else {
       toast.success(`Deleted all ${result.deletedCount} entries`)

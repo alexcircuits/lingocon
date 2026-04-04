@@ -96,7 +96,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
         description: newDesc.trim() || undefined,
         visibility: newVisibility as "PRIVATE" | "UNLISTED" | "PUBLIC",
       })
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success(`Family "${newName}" created!`)
@@ -117,7 +117,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
         description: editDesc.trim() || undefined,
         visibility: editVisibility as "PRIVATE" | "UNLISTED" | "PUBLIC",
       })
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Family updated!")
@@ -130,7 +130,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
   const handleDelete = (familyId: string) => {
     startTransition(async () => {
       const result = await deleteFamily(familyId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Family deleted.")
@@ -142,7 +142,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
   const handleAssignLanguage = (languageId: string, familyId: string) => {
     startTransition(async () => {
       const result = await setLanguageFamily(languageId, familyId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Language assigned to family!")
@@ -154,7 +154,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
   const handleRemoveFromFamily = (languageId: string) => {
     startTransition(async () => {
       const result = await setLanguageFamily(languageId, null)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Language removed from family.")

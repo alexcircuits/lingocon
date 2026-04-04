@@ -137,7 +137,7 @@ export function ParentLanguageCard({
     setOpen(false)
     startTransition(async () => {
       const result = await setParentLanguage(languageId, newParentId || null)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
         setParentId(currentParentId || "")
         setParentName(initialParent?.name || "")
@@ -158,7 +158,7 @@ export function ParentLanguageCard({
     setFamilyOpen(false)
     startTransition(async () => {
       const result = await setLanguageFamily(languageId, newFamilyId || null)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
         setFamilyIdState(initialFamilyId || "")
         setFamilyNameState(initialFamily?.name || "")
@@ -177,9 +177,9 @@ export function ParentLanguageCard({
     if (!newFamilyName.trim()) return
     startTransition(async () => {
       const result = await createFamily({ name: newFamilyName.trim() })
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
-      } else if (result.family) {
+      } else {
         toast.success(`Family "${result.family.name}" created!`)
         handleSetFamily(result.family.id, result.family.name)
         setNewFamilyName("")

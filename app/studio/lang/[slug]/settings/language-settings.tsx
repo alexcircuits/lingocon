@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { updateLanguage, deleteLanguage } from "@/app/actions/language"
+import { updateLanguage } from "@/app/actions/language"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,14 +18,6 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -33,11 +25,11 @@ import {
 import { IPAKeyboard } from "@/components/ipa-keyboard"
 import { Card } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
-import { AlertTriangle, FileDown, Flag, Globe, Palette, MessageCircle, MessageSquare, Type, Volume2, Keyboard } from "lucide-react"
+import { Flag, Globe, Palette, MessageCircle, MessageSquare, Type, Volume2, Keyboard } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
-
-
 import { FlagGenerator } from "@/components/flag-generator"
+import { ExportDataCard } from "./export-data-card"
+import { DeleteLanguageCard } from "./delete-language-card"
 
 interface LanguageSettingsProps {
   language: {
@@ -105,8 +97,6 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState("")
   const [previewIpa, setPreviewIpa] = useState("")
 
 
@@ -160,31 +150,12 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
 
       const result = await updateLanguage(updateData)
 
-      if (result.error) {
-        setError(result.error)
+      if ('error' in result) {
+        setError(result.error ?? null)
         toast.error(result.error)
       } else {
         toast.success("Settings updated successfully")
         router.refresh()
-      }
-    })
-  }
-
-  const handleDelete = async () => {
-    if (deleteConfirm !== language.name) {
-      setError("Language name does not match")
-      return
-    }
-
-    startTransition(async () => {
-      const result = await deleteLanguage(language.id)
-
-      if (result.error) {
-        setError(result.error)
-        toast.error(result.error)
-      } else {
-        toast.success("Language deleted successfully")
-        router.push("/dashboard")
       }
     })
   }
@@ -619,172 +590,12 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         </form>
       </Card>
 
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Export Data</h3>
-            <p className="text-sm text-muted-foreground">
-              Download your language data in various formats.
-            </p>
-          </div>
+      <ExportDataCard languageId={language.id} isPending={isPending} />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {/* PDF export temporarily disabled - needs font/rendering fixes
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                window.open(`/api/export/pdf?languageId=${language.id}`, "_blank")
-              }}
-              disabled={isPending}
-              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
-            >
-              <FileDown className="h-6 w-6" />
-              <span>PDF Documentation</span>
-              <span className="text-xs text-muted-foreground font-normal">Complete Reference</span>
-            </Button>
-            */}
-
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                window.open(`/api/export/docx?languageId=${language.id}`, "_blank")
-              }}
-              disabled={isPending}
-              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
-            >
-              <FileDown className="h-6 w-6" />
-              <span>Google Docs / Word</span>
-              <span className="text-xs text-muted-foreground font-normal">Editable Document</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                window.open(`/api/export/xlsx?languageId=${language.id}`, "_blank")
-              }}
-              disabled={isPending}
-              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
-            >
-              <FileDown className="h-6 w-6" />
-              <span>Excel Spreadsheet</span>
-              <span className="text-xs text-muted-foreground font-normal">Multi-sheet Workbook</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                window.open(`/api/export/csv?languageId=${language.id}`, "_blank")
-              }}
-              disabled={isPending}
-              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
-            >
-              <FileDown className="h-6 w-6" />
-              <span>CSV (Dictionary)</span>
-              <span className="text-xs text-muted-foreground font-normal">Spreadsheet Compatible</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                window.open(`/api/export/json?languageId=${language.id}`, "_blank")
-              }}
-              disabled={isPending}
-              className="h-auto py-4 flex flex-col gap-2 items-center text-center"
-            >
-              <FileDown className="h-6 w-6" />
-              <span>JSON Data</span>
-              <span className="text-xs text-muted-foreground font-normal">Raw Database Export</span>
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-
-
-      {
-        isOwner && (
-          <Card className="p-6 border-destructive">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-destructive mb-2">
-                  Danger Zone
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Once you delete a language, there is no going back. Please be certain.
-                </p>
-              </div>
-
-              <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-destructive">
-                      <AlertTriangle className="h-5 w-5" />
-                      Delete Language
-                    </DialogTitle>
-                    <DialogDescription>
-                      This action cannot be undone. This will permanently delete the
-                      language and all associated data (alphabet, grammar pages,
-                      dictionary entries).
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="space-y-4 py-4">
-                    <p className="text-sm">
-                      To confirm, type the language name{" "}
-                      <strong>{language.name}</strong> below:
-                    </p>
-                    <Input
-                      value={deleteConfirm}
-                      onChange={(e) => setDeleteConfirm(e.target.value)}
-                      placeholder={language.name}
-                      disabled={isPending}
-                    />
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsDeleteOpen(false)
-                        setDeleteConfirm("")
-                        setError(null)
-                      }}
-                      disabled={isPending}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={handleDelete}
-                      disabled={isPending || deleteConfirm !== language.name}
-                    >
-                      {isPending ? "Deleting..." : "Delete Language"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setIsDeleteOpen(true)}
-                disabled={isPending}
-              >
-                Delete Language
-              </Button>
-            </div>
-          </Card>
-        )
-      }
-    </div >
+      {isOwner && (
+        <DeleteLanguageCard languageId={language.id} languageName={language.name} />
+      )}
+    </div>
   )
 }
 

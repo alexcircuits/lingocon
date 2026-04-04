@@ -82,7 +82,7 @@ export function DerivationPanel({
     if (selectedIds.size === 0) return
     startTransition(async () => {
       const result = await deriveWords(sourceLanguageId, targetLanguageId, Array.from(selectedIds))
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success(`Derived ${result.count} word${result.count !== 1 ? "s" : ""} into ${targetLanguageName}!`)

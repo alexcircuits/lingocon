@@ -101,7 +101,7 @@ export function ProtoVocabularyPanel({
         gloss: newGloss,
         ipa: newIpa || undefined,
       })
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Proto-word added!")
@@ -123,7 +123,7 @@ export function ProtoVocabularyPanel({
   const handleDeleteWord = (wordId: string) => {
     startTransition(async () => {
       const result = await deleteProtoWord(wordId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success("Proto-word removed")
@@ -142,7 +142,7 @@ export function ProtoVocabularyPanel({
         Array.from(selectedIds),
         selectedTarget
       )
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         const targetName =

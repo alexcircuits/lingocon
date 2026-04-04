@@ -103,8 +103,8 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
 
         const result = await updateArticle(String(article.id), sterilizedData)
 
-        if (result.error) {
-          setError(result.error)
+        if ('error' in result) {
+          setError(result.error ?? null)
           toast.error(result.error)
         } else {
           toast.success("Article updated successfully")
@@ -120,7 +120,7 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
         }))
         const result = await createArticle(sterilizedData)
 
-        if (result.error) {
+        if ('error' in result) {
           setError(result.error)
           toast.error(result.error)
         } else {
@@ -137,7 +137,7 @@ export function ArticleEditor({ languageId, languageSlug, article }: ArticleEdit
     startTransition(async () => {
       const result = await deleteArticle(article.id)
 
-      if (result.error) {
+      if ('error' in result) {
         setError(result.error)
         toast.error(result.error)
       } else {

@@ -1,240 +1,78 @@
 "use server"
 
 import { ZodError } from "zod"
-import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
+import { AppError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
-import {
-  createLanguageSchema,
-  updateLanguageSchema,
-  type CreateLanguageInput,
-  type UpdateLanguageInput,
-} from "@/lib/validations/language"
+import { revalidateBrowse, revalidateLanguage } from "@/lib/utils/revalidation"
 import { checkLanguageBadges } from "@/app/actions/badge"
+import type { CreateLanguageInput, UpdateLanguageInput } from "@/lib/validations/language"
+import * as languageService from "@/lib/services/language"
+
+function handleError(error: unknown, fallbackMessage: string) {
+  if (error instanceof ZodError) return { error: error.issues[0]?.message || "Validation failed" }
+  if (error instanceof AppError) return { error: error.message }
+  if (error instanceof Error) return { error: error.message }
+  return { error: fallbackMessage }
+}
 
 export async function createLanguage(input: CreateLanguageInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const validated = createLanguageSchema.parse(input)
-
-    // Check if slug already exists
-    const existing = await prisma.language.findUnique({
-      where: { slug: validated.slug },
-    })
-
-    if (existing) {
-      return {
-        error: "A language with this slug already exists",
-      }
-    }
-
-    const language = await prisma.language.create({
-      data: {
-        name: validated.name,
-        slug: validated.slug,
-        description: validated.description || null,
-        visibility: validated.visibility,
-        metadata: validated.metadata ? (validated.metadata as any) : null,
-        ownerId: userId,
-      },
-    })
-
+    const language = await languageService.createLanguage(input, userId)
     revalidatePath("/dashboard")
-    revalidatePath("/browse")
-
-    // Check for language-related badge achievements
+    revalidateBrowse()
     checkLanguageBadges(userId).catch(console.error)
-
-    return {
-      success: true,
-      data: language,
-    }
+    return { success: true as const, data: language }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create language",
-    }
+    return handleError(error, "Failed to create language")
   }
 }
 
 export async function updateLanguage(input: UpdateLanguageInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const validated = updateLanguageSchema.parse(input)
-
-    // Verify edit permission (owner or editor)
-    const { canEditLanguage } = await import("@/lib/auth-helpers")
-    const canEdit = await canEditLanguage(validated.id, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized",
-      }
-    }
-
-    const updateData: any = {}
-    if (validated.name !== undefined) updateData.name = validated.name
-    if (validated.description !== undefined)
-      updateData.description = validated.description || null
-    if (validated.visibility !== undefined)
-      updateData.visibility = validated.visibility
-    if (validated.flagUrl !== undefined)
-      updateData.flagUrl = validated.flagUrl || null
-    if (validated.discordUrl !== undefined)
-      updateData.discordUrl = validated.discordUrl || null
-    if (validated.telegramUrl !== undefined)
-      updateData.telegramUrl = validated.telegramUrl || null
-    if (validated.websiteUrl !== undefined)
-      updateData.websiteUrl = validated.websiteUrl || null
-    if (validated.fontUrl !== undefined)
-      updateData.fontUrl = validated.fontUrl || null
-    if (validated.fontFamily !== undefined)
-      updateData.fontFamily = validated.fontFamily || null
-    if (validated.fontScale !== undefined)
-      updateData.fontScale = validated.fontScale
-    if (validated.allowsDiacritics !== undefined)
-      updateData.allowsDiacritics = validated.allowsDiacritics
-    if (validated.metadata !== undefined)
-      updateData.metadata = validated.metadata
-
-    const updated = await prisma.language.update({
-      where: { id: validated.id },
-      data: updateData,
-    })
-
+    const updated = await languageService.updateLanguage(input, userId)
     revalidatePath("/dashboard")
-    revalidatePath("/browse")
-    revalidatePath(`/studio/lang/${updated.slug}`)
-    revalidatePath(`/studio/lang/${updated.slug}/settings`)
-    revalidatePath(`/lang/${updated.slug}`)
-
-    // Check for "first_publish" badge if visibility changed to PUBLIC
-    if (validated.visibility === "PUBLIC") {
+    revalidateBrowse()
+    revalidateLanguage(updated.slug)
+    if (input.visibility === "PUBLIC") {
       checkLanguageBadges(userId).catch(console.error)
     }
-
-    return {
-      success: true,
-      data: updated,
-    }
+    return { success: true as const, data: updated }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update language",
-    }
+    return handleError(error, "Failed to update language")
   }
 }
 
 export async function deleteLanguage(languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Verify ownership (skip in dev mode)
-    if (process.env.DEV_MODE !== "true") {
-      const language = await prisma.language.findUnique({
-        where: { id: languageId },
-        select: { ownerId: true },
-      })
-
-      if (!language || language.ownerId !== userId) {
-        return {
-          error: "Unauthorized",
-        }
-      }
-    }
-
-    // Delete language (cascade deletion will handle related records)
-    await prisma.language.delete({
-      where: { id: languageId },
-    })
-
-    return {
-      success: true,
-    }
+    await languageService.deleteLanguage(languageId, userId)
+    return { success: true as const }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete language",
-    }
+    return handleError(error, "Failed to delete language")
   }
 }
 
-/**
- * Update specific keys in language metadata (shallow merge).
- */
 export async function updateLanguageMetadata(
   languageId: string,
   updates: Record<string, any>
 ) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return { error: "Unauthorized" }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true, metadata: true },
-    })
-
-    if (!language || language.ownerId !== userId) {
-      return { error: "Unauthorized" }
-    }
-
-    const existing = (language.metadata as Record<string, any>) || {}
-    const merged = { ...existing, ...updates }
-
-    await prisma.language.update({
-      where: { id: languageId },
-      data: { metadata: merged },
-    })
-
-    revalidatePath(`/studio`)
-
-    return { success: true }
-  } catch {
-    return { error: "Failed to update metadata" }
+    await languageService.updateLanguageMetadata(languageId, updates, userId)
+    revalidatePath("/studio")
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update metadata")
   }
 }

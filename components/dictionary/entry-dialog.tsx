@@ -111,7 +111,7 @@ export function EntryDialog({
         })
       }
 
-      if (result.error) {
+      if ('error' in result) {
         setError(result.error)
         toast.error(result.error)
       } else {

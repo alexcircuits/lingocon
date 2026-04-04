@@ -1,215 +1,68 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { unstable_cache } from "next/cache"
-import {
-  findRootId,
-  getDescendantIds,
-  hasCircularReference,
-} from "@/lib/utils/family-graph"
+import { prisma } from "@/lib/prisma"
+import { AppError } from "@/lib/errors"
+import { revalidateFamilies } from "@/lib/utils/revalidation"
+import * as familyService from "@/lib/services/language-family"
 
-/**
- * Set or remove the parent language for a given language.
- * Allows cross-user parents if the parent language is PUBLIC.
- */
-export async function setParentLanguage(
-  languageId: string,
-  parentLanguageId: string | null
-) {
+function handleError(error: unknown, fallbackMessage: string) {
+  if (error instanceof AppError) return { error: error.message }
+  if (error instanceof Error) return { error: error.message }
+  return { error: fallbackMessage }
+}
+
+export async function setParentLanguage(languageId: string, parentLanguageId: string | null) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Only the owner of the CHILD can modify its parent
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true },
-    })
-
-    if (!language || language.ownerId !== userId) {
-      return { error: "Unauthorized" }
-    }
-
-    // If setting a parent, validate it
-    if (parentLanguageId) {
-      const parentLanguage = await prisma.language.findUnique({
-        where: { id: parentLanguageId },
-        select: { ownerId: true, visibility: true },
-      })
-
-      if (!parentLanguage) {
-        return { error: "Parent language not found" }
-      }
-
-      // Parent must be owned by user OR be PUBLIC
-      if (parentLanguage.ownerId !== userId && parentLanguage.visibility !== "PUBLIC") {
-        return { error: "Can only set a public language or your own language as parent" }
-      }
-
-      // Prevent circular references — single CTE query instead of N serial queries
-      const isCircular = await hasCircularReference(languageId, parentLanguageId)
-      if (isCircular) {
-        return { error: "Cannot create circular family tree" }
-      }
-    }
-
-    await prisma.language.update({
-      where: { id: languageId },
-      data: { parentLanguageId },
-    })
-
-    revalidatePath(`/studio`)
-    revalidatePath(`/lang`)
-    return { success: true }
-  } catch {
-    return { error: "Failed to update parent language" }
+    await familyService.setParentLanguage(languageId, parentLanguageId, userId)
+    revalidatePath("/studio")
+    revalidatePath("/lang")
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update parent language")
   }
 }
 
-/**
- * Set or remove external ancestry label (e.g. "Proto-Indo-European").
- */
-export async function setExternalAncestry(
-  languageId: string,
-  externalAncestry: string | null
-) {
+export async function setExternalAncestry(languageId: string, externalAncestry: string | null) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true },
-    })
-
-    if (!language || language.ownerId !== userId) {
-      return { error: "Unauthorized" }
-    }
-
-    await prisma.language.update({
-      where: { id: languageId },
-      data: { externalAncestry: externalAncestry?.trim() || null },
-    })
-
-    revalidatePath(`/studio`)
-    revalidatePath(`/lang`)
-    return { success: true }
-  } catch {
-    return { error: "Failed to update external ancestry" }
+    await familyService.setExternalAncestry(languageId, externalAncestry, userId)
+    revalidatePath("/studio")
+    revalidatePath("/lang")
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update external ancestry")
   }
 }
 
-/**
- * Get the full family tree for a language (from root down).
- * Includes owner info for cross-user trees and external ancestry.
- * Cached with unstable_cache for SSR performance.
- */
 export async function getLanguageFamilyTree(languageId: string) {
-  // Verify the initial language exists and is accessible
   const initialLang = await prisma.language.findUnique({
     where: { id: languageId },
     select: { id: true, visibility: true, ownerId: true },
   })
   if (!initialLang) return null
 
-  // If the language is private, only the owner can see its tree
   if (initialLang.visibility === "PRIVATE") {
     const userId = await getUserId()
     if (!userId || userId !== initialLang.ownerId) return null
   }
 
-  // Use cached inner function for the expensive tree-building part
   return getCachedFamilyTree(languageId)
 }
 
 const getCachedFamilyTree = unstable_cache(
-  async (languageId: string) => {
-    // Find the root using a single CTE query
-    const rootId = await findRootId(languageId)
-
-    // Build tree from root downward with owner info
-    const childSelect = {
-      id: true,
-      name: true,
-      slug: true,
-      visibility: true,
-      externalAncestry: true,
-      owner: { select: { id: true, name: true, image: true } },
-      _count: { select: { dictionaryEntries: true } },
-    } as const
-
-    const childInclude = (depth: number): any => {
-      if (depth <= 0) return { select: childSelect }
-      return {
-        select: {
-          ...childSelect,
-          childLanguages: childInclude(depth - 1),
-        },
-      }
-    }
-
-    const rootTree = await prisma.language.findUnique({
-      where: { id: rootId },
-      select: {
-        ...childSelect,
-        childLanguages: childInclude(10),
-      },
-    })
-
-    if (!rootTree) return null;
-
-    // If this root has external ancestry, fetch ALL roots with the same external ancestry
-    if (rootTree.externalAncestry) {
-      const siblingRoots = await prisma.language.findMany({
-        where: {
-          externalAncestry: rootTree.externalAncestry,
-          parentLanguageId: null, // Only top-level languages
-          id: { not: rootId } // Don't fetch the one we already have
-        },
-        select: {
-          ...childSelect,
-          childLanguages: childInclude(5),
-        },
-        take: 50, // Prevent unbounded results
-      });
-
-      if (siblingRoots.length > 0) {
-        const safeId = encodeURIComponent(rootTree.externalAncestry)
-        // Create a virtual root node wrapping all these families
-        return {
-          id: `virtual-${safeId}`,
-          name: rootTree.externalAncestry,
-          slug: "",
-          externalAncestry: rootTree.externalAncestry,
-          isVirtual: true,
-          childLanguages: [rootTree, ...siblingRoots]
-        } as any;
-      }
-    }
-
-    return rootTree
-  },
+  async (languageId: string) => familyService.buildFamilyTree(languageId),
   ["family-tree"],
   { revalidate: 60, tags: ["family-tree"] }
 )
 
-// Helper to generate unique slug from name
-async function generateFamilySlug(name: string): Promise<string> {
-  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-  let slug = base
-  let counter = 1
-  while (await prisma.languageFamily.findUnique({ where: { slug } })) {
-    slug = `${base}-${counter}`
-    counter++
-  }
-  return slug
-}
-
-/**
- * Create a new language family.
- */
 export async function createFamily(data: {
   name: string
   description?: string
@@ -220,41 +73,14 @@ export async function createFamily(data: {
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    // If parentFamilyId is given, verify it exists and is accessible
-    if (data.parentFamilyId) {
-      const parentFamily = await prisma.languageFamily.findUnique({
-        where: { id: data.parentFamilyId },
-        select: { id: true, ownerId: true, visibility: true, type: true },
-      })
-      if (!parentFamily) return { error: "Parent family not found" }
-      // Must own the parent or parent must be PUBLIC/SYSTEM
-      if (parentFamily.ownerId !== userId && parentFamily.visibility !== "PUBLIC" && parentFamily.type !== "SYSTEM") {
-        return { error: "Cannot create sub-family under a private family you don't own" }
-      }
-    }
-
-    const slug = await generateFamilySlug(data.name)
-    const family = await prisma.languageFamily.create({
-      data: {
-        name: data.name.trim(),
-        slug,
-        description: data.description?.trim() || null,
-        visibility: data.visibility || "PRIVATE",
-        ownerId: userId,
-        parentFamilyId: data.parentFamilyId || null,
-      },
-    })
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true, family }
-  } catch {
-    return { error: "Failed to create family" }
+    const family = await familyService.createFamily(data, userId)
+    revalidateFamilies()
+    return { success: true as const, family }
+  } catch (error) {
+    return handleError(error, "Failed to create family")
   }
 }
 
-/**
- * Update a language family.
- */
 export async function updateFamily(
   familyId: string,
   data: { name?: string; description?: string; visibility?: "PRIVATE" | "UNLISTED" | "PUBLIC" }
@@ -263,239 +89,65 @@ export async function updateFamily(
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const family = await prisma.languageFamily.findUnique({
-      where: { id: familyId },
-      select: { ownerId: true },
-    })
-    if (!family || family.ownerId !== userId) return { error: "Unauthorized" }
-
-    await prisma.languageFamily.update({
-      where: { id: familyId },
-      data: {
-        ...(data.name !== undefined && { name: data.name.trim() }),
-        ...(data.description !== undefined && { description: data.description.trim() || null }),
-        ...(data.visibility !== undefined && { visibility: data.visibility }),
-      },
-    })
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true }
-  } catch {
-    return { error: "Failed to update family" }
+    await familyService.updateFamily(familyId, data, userId)
+    revalidateFamilies()
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update family")
   }
 }
 
-/**
- * Delete a language family. Languages in it become unassigned.
- */
 export async function deleteFamily(familyId: string) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const family = await prisma.languageFamily.findUnique({
-      where: { id: familyId },
-      select: { ownerId: true, type: true },
-    })
-    if (!family || family.ownerId !== userId) return { error: "Unauthorized" }
-    if (family.type === "SYSTEM") return { error: "Cannot delete system families" }
-
-    await prisma.languageFamily.delete({ where: { id: familyId } })
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true }
-  } catch {
-    return { error: "Failed to delete family" }
+    await familyService.deleteFamily(familyId, userId)
+    revalidateFamilies()
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to delete family")
   }
 }
 
-/**
- * Assign or remove a language from a family. Owner of the language can do this.
- */
-export async function setLanguageFamily(
-  languageId: string,
-  familyId: string | null
-) {
+export async function setLanguageFamily(languageId: string, familyId: string | null) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { ownerId: true },
-    })
-    if (!language || language.ownerId !== userId) return { error: "Unauthorized" }
-
-    if (familyId) {
-      const family = await prisma.languageFamily.findUnique({
-        where: { id: familyId },
-        select: { ownerId: true, visibility: true },
-      })
-      if (!family) return { error: "Family not found" }
-      // Must own the family OR the family is PUBLIC
-      if (family.ownerId !== userId && family.visibility !== "PUBLIC") {
-        return { error: "Can only join your own families or public families" }
-      }
-    }
-
-    await prisma.language.update({
-      where: { id: languageId },
-      data: { familyId },
-    })
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true }
-  } catch {
-    return { error: "Failed to update language family" }
+    await familyService.setLanguageFamily(languageId, familyId, userId)
+    revalidateFamilies()
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update language family")
   }
 }
 
-/**
- * Get all families owned by the current user.
- */
 export async function getUserFamilies() {
   const userId = await getUserId()
   if (!userId) return []
 
-  return prisma.languageFamily.findMany({
-    where: { ownerId: userId },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      visibility: true,
-      type: true,
-      _count: { select: { languages: true } },
-    },
-    orderBy: { name: "asc" },
-  })
+  return familyService.getUserFamilies(userId)
 }
 
-/**
- * Search families the user can join (system + own + public).
- */
 export async function searchFamilies(query: string) {
   const userId = await getUserId()
   if (!userId) return { system: [], own: [], public: [] }
 
-  const baseWhere = query ? {
-    OR: [
-      { name: { contains: query, mode: "insensitive" as const } },
-      { slug: { contains: query, mode: "insensitive" as const } },
-    ],
-  } : {}
-
-  const selectFields = {
-    id: true,
-    name: true,
-    slug: true,
-    description: true,
-    type: true,
-    parentFamilyId: true,
-    owner: { select: { name: true } },
-    _count: { select: { languages: true } },
-  }
-
-  const [system, own, publicFamilies] = await Promise.all([
-    prisma.languageFamily.findMany({
-      where: { ...baseWhere, type: "SYSTEM" },
-      select: selectFields,
-      take: 30,
-      orderBy: { name: "asc" },
-    }),
-    prisma.languageFamily.findMany({
-      where: { ...baseWhere, ownerId: userId, type: "USER" },
-      select: selectFields,
-      take: 20,
-      orderBy: { name: "asc" },
-    }),
-    prisma.languageFamily.findMany({
-      where: { ...baseWhere, ownerId: { not: userId }, visibility: "PUBLIC", type: "USER" },
-      select: selectFields,
-      take: 20,
-      orderBy: { name: "asc" },
-    }),
-  ])
-
-  return { system, own, public: publicFamilies }
+  return familyService.searchFamilies(query, userId)
 }
 
-/**
- * Search languages that could be set as parent.
- * Shows user's own languages + public languages matching query.
- */
-export async function searchParentLanguages(
-  languageId: string,
-  query: string
-) {
+export async function searchParentLanguages(languageId: string, query: string) {
   const userId = await getUserId()
   if (!userId) return { own: [], public: [] }
 
-  // Single CTE query to collect all descendant IDs (instead of BFS loop)
-  const descendantIdList = await getDescendantIds(languageId)
-  const excludeIds = [languageId, ...descendantIdList]
-
-  const baseWhere = {
-    id: { notIn: excludeIds },
-    ...(query ? {
-      OR: [
-        { name: { contains: query, mode: "insensitive" as const } },
-        { slug: { contains: query, mode: "insensitive" as const } },
-      ],
-    } : {}),
-  }
-
-  const selectFields = {
-    id: true,
-    name: true,
-    slug: true,
-    owner: { select: { name: true } },
-  }
-
-  const [own, publicLangs] = await Promise.all([
-    // User's own languages
-    prisma.language.findMany({
-      where: { ...baseWhere, ownerId: userId },
-      select: selectFields,
-      take: 20,
-      orderBy: { name: "asc" },
-    }),
-    // Public languages from other users
-    prisma.language.findMany({
-      where: { ...baseWhere, ownerId: { not: userId }, visibility: "PUBLIC" },
-      select: selectFields,
-      take: 20,
-      orderBy: { name: "asc" },
-    }),
-  ])
-
-  return { own, public: publicLangs }
+  return familyService.searchParentLanguages(languageId, query, userId)
 }
 
-/**
- * Get all distinct externalAncestry values from the database.
- * Used for autocomplete in the parent language card.
- */
 export async function getExternalAncestries(): Promise<string[]> {
-  const result = await prisma.language.findMany({
-    where: {
-      externalAncestry: { not: null },
-    },
-    select: { externalAncestry: true },
-    distinct: ["externalAncestry"],
-    orderBy: { externalAncestry: "asc" },
-  })
-  return result
-    .map((r) => r.externalAncestry)
-    .filter((v): v is string => v !== null)
+  return familyService.getExternalAncestries()
 }
 
-/**
- * Derive words from a parent language into a child language.
- * Copies selected dictionary entries, linking them via sourceEntryId
- * and auto-filling etymology with the source language reference.
- */
 export async function deriveWords(
   sourceLanguageId: string,
   targetLanguageId: string,
@@ -504,64 +156,15 @@ export async function deriveWords(
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
-  if (entryIds.length === 0) return { error: "No entries selected" }
-  if (entryIds.length > 100) return { error: "Maximum 100 entries at a time" }
-
   try {
-    // Verify user owns the target language
-    const targetLang = await prisma.language.findUnique({
-      where: { id: targetLanguageId },
-      select: { ownerId: true },
-    })
-    if (!targetLang || targetLang.ownerId !== userId) {
-      return { error: "Unauthorized to modify target language" }
-    }
-
-    // Fetch source entries and source language name
-    const [sourceEntries, sourceLang] = await Promise.all([
-      prisma.dictionaryEntry.findMany({
-        where: { id: { in: entryIds }, languageId: sourceLanguageId },
-        select: {
-          id: true,
-          lemma: true,
-          gloss: true,
-          ipa: true,
-          partOfSpeech: true,
-          tags: true,
-        },
-      }),
-      prisma.language.findUnique({
-        where: { id: sourceLanguageId },
-        select: { name: true },
-      }),
-    ])
-
-    if (sourceEntries.length === 0) return { error: "No valid source entries found" }
-
-    const created = await prisma.dictionaryEntry.createMany({
-      data: sourceEntries.map(entry => ({
-        lemma: entry.lemma,
-        gloss: entry.gloss,
-        ipa: entry.ipa,
-        partOfSpeech: entry.partOfSpeech,
-        tags: entry.tags === null ? undefined : (entry.tags as any),
-        etymology: `From ${sourceLang?.name || "parent language"}: ${entry.lemma}`,
-        sourceEntryId: entry.id,
-        languageId: targetLanguageId,
-      })),
-    })
-
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true, count: created.count }
-  } catch {
-    return { error: "Failed to derive words" }
+    const result = await familyService.deriveWords(sourceLanguageId, targetLanguageId, entryIds, userId)
+    revalidateFamilies()
+    return { success: true as const, count: result.count }
+  } catch (error) {
+    return handleError(error, "Failed to derive words")
   }
 }
 
-/**
- * Fetch dictionary entries from a language for the derivation picker.
- */
 export async function getLanguageDictionary(
   languageId: string,
   query: string,
@@ -571,154 +174,30 @@ export async function getLanguageDictionary(
   const userId = await getUserId()
   if (!userId) return { entries: [], total: 0 }
 
-  // Language must be owned by user or be PUBLIC
-  const lang = await prisma.language.findUnique({
-    where: { id: languageId },
-    select: { ownerId: true, visibility: true },
-  })
-  if (!lang) return { entries: [], total: 0 }
-  if (lang.ownerId !== userId && lang.visibility !== "PUBLIC") {
-    return { entries: [], total: 0 }
-  }
-
-  const where = {
-    languageId,
-    ...(query ? {
-      OR: [
-        { lemma: { contains: query, mode: "insensitive" as const } },
-        { gloss: { contains: query, mode: "insensitive" as const } },
-      ],
-    } : {}),
-  }
-
-  const [entries, total] = await Promise.all([
-    prisma.dictionaryEntry.findMany({
-      where,
-      select: {
-        id: true,
-        lemma: true,
-        gloss: true,
-        ipa: true,
-        partOfSpeech: true,
-        tags: true,
-      },
-      orderBy: { lemma: "asc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.dictionaryEntry.count({ where }),
-  ])
-
-  return { entries, total }
+  return familyService.getLanguageDictionary(languageId, query, userId, page, pageSize)
 }
 
-// ─── Hierarchical Family Actions ─────────────────────────────────────────────
-
-/**
- * Get the ancestry path for a family — from root down to this family.
- * Returns an array of { id, name, slug } from the top-level ancestor to the given family.
- */
 export async function getFamilyAncestryPath(familyId: string) {
-  const path: { id: string; name: string; slug: string }[] = []
-
-  let currentId: string | null = familyId
-  const visited = new Set<string>()
-
-  while (currentId && !visited.has(currentId)) {
-    visited.add(currentId)
-    const family: { id: string; name: string; slug: string; parentFamilyId: string | null } | null = await prisma.languageFamily.findUnique({
-      where: { id: currentId },
-      select: { id: true, name: true, slug: true, parentFamilyId: true },
-    })
-    if (!family) break
-    path.unshift({ id: family.id, name: family.name, slug: family.slug })
-    currentId = family.parentFamilyId
-  }
-
-  return path
+  return familyService.getFamilyAncestryPath(familyId)
 }
 
-/**
- * Get direct child sub-families of a given family.
- */
 export async function getFamilyChildren(familyId: string) {
-  return prisma.languageFamily.findMany({
-    where: { parentFamilyId: familyId },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      type: true,
-      visibility: true,
-      _count: { select: { languages: true, childFamilies: true } },
-    },
-    orderBy: { name: "asc" },
-  })
+  return familyService.getFamilyChildren(familyId)
 }
 
-/**
- * Set or remove the parent family for a given family.
- * Only the owner of the family can change its parent.
- */
 export async function setFamilyParent(familyId: string, parentFamilyId: string | null) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const family = await prisma.languageFamily.findUnique({
-      where: { id: familyId },
-      select: { ownerId: true, type: true },
-    })
-    if (!family || family.ownerId !== userId) return { error: "Unauthorized" }
-    if (family.type === "SYSTEM") return { error: "Cannot modify system families" }
-
-    if (parentFamilyId) {
-      // Prevent self-referencing
-      if (familyId === parentFamilyId) return { error: "Cannot set family as its own parent" }
-
-      // Verify parent exists
-      const parent = await prisma.languageFamily.findUnique({
-        where: { id: parentFamilyId },
-        select: { id: true, ownerId: true, visibility: true, type: true },
-      })
-      if (!parent) return { error: "Parent family not found" }
-      if (parent.ownerId !== userId && parent.visibility !== "PUBLIC" && parent.type !== "SYSTEM") {
-        return { error: "Cannot link to a private family you don't own" }
-      }
-
-      // Prevent circular reference: walk up from parentFamilyId to see if we hit familyId
-      let currentId: string | null = parentFamilyId
-      const visited = new Set<string>()
-      while (currentId && !visited.has(currentId)) {
-        if (currentId === familyId) return { error: "Cannot create circular family hierarchy" }
-        visited.add(currentId)
-        const f: { parentFamilyId: string | null } | null = await prisma.languageFamily.findUnique({
-          where: { id: currentId },
-          select: { parentFamilyId: true },
-        })
-        currentId = f?.parentFamilyId || null
-      }
-    }
-
-    await prisma.languageFamily.update({
-      where: { id: familyId },
-      data: { parentFamilyId },
-    })
-
+    await familyService.setFamilyParent(familyId, parentFamilyId, userId)
     revalidatePath("/dashboard/families")
-    return { success: true }
-  } catch {
-    return { error: "Failed to update family parent" }
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to update family parent")
   }
 }
 
-// ─── Proto-Vocabulary Actions ────────────────────────────────────────────────
-
-/**
- * Create a proto-word in a family's vocabulary.
- * Only the family owner can add proto-words (USER families only).
- */
 export async function createProtoWord(
   familyId: string,
   data: { lemma: string; gloss: string; ipa?: string; notes?: string }
@@ -727,150 +206,45 @@ export async function createProtoWord(
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const family = await prisma.languageFamily.findUnique({
-      where: { id: familyId },
-      select: { ownerId: true, type: true },
-    })
-    if (!family) return { error: "Family not found" }
-    if (family.type === "SYSTEM") return { error: "Cannot add proto-words to system families" }
-    if (family.ownerId !== userId) return { error: "Unauthorized" }
-
-    const word = await prisma.protoWord.create({
-      data: {
-        lemma: data.lemma.trim(),
-        gloss: data.gloss.trim(),
-        ipa: data.ipa?.trim() || null,
-        notes: data.notes?.trim() || null,
-        familyId,
-      },
-    })
-
+    const word = await familyService.createProtoWord(familyId, data, userId)
     revalidatePath("/dashboard/families")
-    return { success: true, word }
-  } catch {
-    return { error: "Failed to create proto-word" }
+    return { success: true as const, word }
+  } catch (error) {
+    return handleError(error, "Failed to create proto-word")
   }
 }
 
-/**
- * Delete a proto-word.
- * Only the family owner can delete proto-words.
- */
 export async function deleteProtoWord(protoWordId: string) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const word = await prisma.protoWord.findUnique({
-      where: { id: protoWordId },
-      select: { family: { select: { ownerId: true, type: true } } },
-    })
-    if (!word) return { error: "Proto-word not found" }
-    if (word.family.type === "SYSTEM") return { error: "Cannot delete system proto-words" }
-    if (word.family.ownerId !== userId) return { error: "Unauthorized" }
-
-    await prisma.protoWord.delete({ where: { id: protoWordId } })
-
+    await familyService.deleteProtoWord(protoWordId, userId)
     revalidatePath("/dashboard/families")
-    return { success: true }
-  } catch {
-    return { error: "Failed to delete proto-word" }
+    return { success: true as const }
+  } catch (error) {
+    return handleError(error, "Failed to delete proto-word")
   }
 }
 
-/**
- * Search / list proto-words for a family.
- */
 export async function getProtoVocabulary(
   familyId: string,
   query: string,
   page: number = 1,
   pageSize: number = 50
 ) {
-  const where = {
-    familyId,
-    ...(query ? {
-      OR: [
-        { lemma: { contains: query, mode: "insensitive" as const } },
-        { gloss: { contains: query, mode: "insensitive" as const } },
-      ],
-    } : {}),
-  }
-
-  const [words, total] = await Promise.all([
-    prisma.protoWord.findMany({
-      where,
-      select: {
-        id: true,
-        lemma: true,
-        gloss: true,
-        ipa: true,
-        notes: true,
-      },
-      orderBy: { lemma: "asc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.protoWord.count({ where }),
-  ])
-
-  return { words, total }
+  return familyService.getProtoVocabulary(familyId, query, page, pageSize)
 }
 
-/**
- * Derive proto-words into a target language's dictionary.
- * Creates DictionaryEntry records linked via protoSourceId.
- */
-export async function deriveFromProto(
-  protoWordIds: string[],
-  targetLanguageId: string
-) {
+export async function deriveFromProto(protoWordIds: string[], targetLanguageId: string) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
-  if (protoWordIds.length === 0) return { error: "No proto-words selected" }
-  if (protoWordIds.length > 100) return { error: "Maximum 100 proto-words at a time" }
-
   try {
-    // Verify user owns the target language
-    const targetLang = await prisma.language.findUnique({
-      where: { id: targetLanguageId },
-      select: { ownerId: true },
-    })
-    if (!targetLang || targetLang.ownerId !== userId) {
-      return { error: "Unauthorized to modify target language" }
-    }
-
-    // Fetch proto-words and their family name
-    const protoWords = await prisma.protoWord.findMany({
-      where: { id: { in: protoWordIds } },
-      select: {
-        id: true,
-        lemma: true,
-        gloss: true,
-        ipa: true,
-        family: { select: { name: true } },
-      },
-    })
-
-    if (protoWords.length === 0) return { error: "No valid proto-words found" }
-
-    const created = await prisma.dictionaryEntry.createMany({
-      data: protoWords.map(pw => ({
-        lemma: pw.lemma.replace(/^\*/, ""), // Remove leading asterisk for the derived form
-        gloss: pw.gloss,
-        ipa: pw.ipa,
-        etymology: `From ${pw.family.name}: ${pw.lemma}`,
-        protoSourceId: pw.id,
-        languageId: targetLanguageId,
-      })),
-    })
-
-    revalidatePath("/studio")
-    revalidatePath("/dashboard/families")
-    return { success: true, count: created.count }
-  } catch {
-    return { error: "Failed to derive from proto-vocabulary" }
+    const result = await familyService.deriveFromProto(protoWordIds, targetLanguageId, userId)
+    revalidateFamilies()
+    return { success: true as const, count: result.count }
+  } catch (error) {
+    return handleError(error, "Failed to derive from proto-vocabulary")
   }
 }
-

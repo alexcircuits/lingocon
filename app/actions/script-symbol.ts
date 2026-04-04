@@ -1,184 +1,57 @@
 "use server"
 
 import { ZodError } from "zod"
-import { revalidatePath } from "next/cache"
-import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
-import {
-  createScriptSymbolSchema,
-  updateScriptSymbolSchema,
-  type CreateScriptSymbolInput,
-  type UpdateScriptSymbolInput,
-} from "@/lib/validations/script-symbol"
+import { getUserId } from "@/lib/auth-helpers"
+import { AppError } from "@/lib/errors"
+import { revalidateAlphabet } from "@/lib/utils/revalidation"
 import { checkScriptBadges } from "@/app/actions/badge"
+import type { CreateScriptSymbolInput, UpdateScriptSymbolInput } from "@/lib/validations/script-symbol"
+import * as symbolService from "@/lib/services/script-symbol"
+
+function handleError(error: unknown, fallbackMessage: string) {
+  if (error instanceof ZodError) return { error: error.issues[0]?.message || "Validation failed" }
+  if (error instanceof AppError) return { error: error.message }
+  if (error instanceof Error) return { error: error.message }
+  return { error: fallbackMessage }
+}
 
 export async function createScriptSymbol(input: CreateScriptSymbolInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const validated = createScriptSymbolSchema.parse(input)
-
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(validated.languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const symbol = await prisma.scriptSymbol.create({
-      data: {
-        symbol: validated.symbol,
-        capitalSymbol: validated.capitalSymbol || null,
-        ipa: validated.ipa || null,
-        latin: validated.latin || null,
-        name: validated.name || null,
-        order: validated.order,
-        languageId: validated.languageId,
-      },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
-    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
-
-    // Check for script-related badge achievements
-    checkScriptBadges(userId, validated.languageId).catch(console.error)
-
-    return {
-      success: true,
-      data: symbol,
-    }
+    const symbol = await symbolService.createSymbol(input, userId)
+    revalidateAlphabet(symbol.language.slug)
+    checkScriptBadges(userId, input.languageId).catch(console.error)
+    return { success: true as const, data: symbol }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create script symbol",
-    }
+    return handleError(error, "Failed to create script symbol")
   }
 }
 
 export async function updateScriptSymbol(input: UpdateScriptSymbolInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const validated = updateScriptSymbolSchema.parse(input)
-
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(validated.languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const symbol = await prisma.scriptSymbol.update({
-      where: { id: validated.id },
-      data: {
-        symbol: validated.symbol,
-        capitalSymbol: validated.capitalSymbol || null,
-        ipa: validated.ipa || null,
-        latin: validated.latin || null,
-        name: validated.name || null,
-        order: validated.order,
-      },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
-    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
-
-    return {
-      success: true,
-      data: symbol,
-    }
+    const symbol = await symbolService.updateSymbol(input, userId)
+    revalidateAlphabet(symbol.language.slug)
+    return { success: true as const, data: symbol }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update script symbol",
-    }
+    return handleError(error, "Failed to update script symbol")
   }
 }
 
 export async function deleteScriptSymbol(symbolId: string, languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const symbol = await prisma.scriptSymbol.delete({
-      where: { id: symbolId },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
-    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
-
-    return {
-      success: true,
-    }
+    const symbol = await symbolService.deleteSymbol(symbolId, languageId, userId)
+    revalidateAlphabet(symbol.language.slug)
+    return { success: true as const }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete script symbol",
-    }
+    return handleError(error, "Failed to delete script symbol")
   }
 }
 
@@ -188,147 +61,26 @@ export async function reorderScriptSymbols(
   direction: "up" | "down"
 ) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const symbol = await prisma.scriptSymbol.findUnique({
-      where: { id: symbolId },
-      select: { order: true, language: { select: { slug: true } } },
-    })
-
-    if (!symbol) {
-      return {
-        error: "Symbol not found",
-      }
-    }
-
-    const allSymbols = await prisma.scriptSymbol.findMany({
-      where: { languageId },
-      orderBy: { order: "asc" },
-      select: { id: true, order: true },
-    })
-
-    const currentIndex = allSymbols.findIndex((s) => s.id === symbolId)
-    if (currentIndex === -1) {
-      return {
-        error: "Symbol not found",
-      }
-    }
-
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
-
-    if (newIndex < 0 || newIndex >= allSymbols.length) {
-      return {
-        error: "Cannot move symbol in that direction",
-      }
-    }
-
-    const targetSymbol = allSymbols[newIndex]
-
-    // Swap orders
-    await prisma.$transaction([
-      prisma.scriptSymbol.update({
-        where: { id: symbolId },
-        data: { order: targetSymbol.order },
-      }),
-      prisma.scriptSymbol.update({
-        where: { id: targetSymbol.id },
-        data: { order: symbol.order },
-      }),
-    ])
-
-    revalidatePath(`/studio/lang/${symbol.language.slug}/alphabet`)
-    revalidatePath(`/lang/${symbol.language.slug}/alphabet`)
-
-    return {
-      success: true,
-    }
+    const result = await symbolService.reorderSymbols(symbolId, languageId, direction, userId)
+    revalidateAlphabet(result.slug)
+    return { success: true as const }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to reorder script symbols",
-    }
+    return handleError(error, "Failed to reorder script symbols")
   }
 }
 
-export async function saveAlphabetOrder(
-  symbolIds: string[],
-  languageId: string
-) {
+export async function saveAlphabetOrder(symbolIds: string[], languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Prevent unbounded transactions
-    if (symbolIds.length > 1000) {
-      return {
-        error: "Too many symbols to reorder at once (max 1000)",
-      }
-    }
-
-    // Verify edit permission
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { slug: true }
-    })
-
-    // Update all symbols in a transaction
-    await prisma.$transaction(
-      symbolIds.map((id, index) =>
-        prisma.scriptSymbol.update({
-          where: { id },
-          data: { order: index },
-        })
-      )
-    )
-
-    if (language) {
-      revalidatePath(`/studio/lang/${language.slug}/alphabet`)
-      revalidatePath(`/lang/${language.slug}/alphabet`)
-    }
-
-    return {
-      success: true,
-    }
+    const result = await symbolService.saveAlphabetOrder(symbolIds, languageId, userId)
+    if (result.slug) revalidateAlphabet(result.slug)
+    return { success: true as const }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to save alphabet order",
-    }
+    return handleError(error, "Failed to save alphabet order")
   }
 }
-
-

@@ -30,7 +30,7 @@ export function InlineLanguageEdit({
         [field]: newValue,
       })
 
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
         throw new Error(result.error)
       } else {

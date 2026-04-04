@@ -46,7 +46,7 @@ export function GrammarPagesManager({
     startTransition(async () => {
       const result = await deleteGrammarPage(pageId, languageId)
 
-      if (result.error) {
+      if ('error' in result) {
         setError(result.error)
         toast.error(result.error)
       } else {
@@ -60,7 +60,7 @@ export function GrammarPagesManager({
     startTransition(async () => {
       const result = await reorderGrammarPages(pageId, languageId, direction)
 
-      if (result.error) {
+      if ('error' in result) {
         setError(result.error)
         toast.error(result.error)
       } else {

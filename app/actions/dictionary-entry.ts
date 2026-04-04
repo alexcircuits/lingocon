@@ -1,142 +1,59 @@
 "use server"
 
 import { ZodError } from "zod"
-import { revalidatePath } from "next/cache"
-import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
-import {
-  createDictionaryEntrySchema,
-  updateDictionaryEntrySchema,
-  bulkUpdateDictionaryEntrySchema,
-  type CreateDictionaryEntryInput,
-  type UpdateDictionaryEntryInput,
-} from "@/lib/validations/dictionary-entry"
+import { getUserId } from "@/lib/auth-helpers"
+import { AppError } from "@/lib/errors"
 import { createActivity } from "@/lib/utils/activity"
+import { revalidateDictionary } from "@/lib/utils/revalidation"
 import { checkDictionaryBadges } from "@/app/actions/badge"
+import type { CreateDictionaryEntryInput, UpdateDictionaryEntryInput } from "@/lib/validations/dictionary-entry"
+import * as dictionaryService from "@/lib/services/dictionary-entry"
+
+function handleError(error: unknown, fallbackMessage: string) {
+  if (error instanceof ZodError) {
+    return { error: error.issues[0]?.message || "Validation failed" }
+  }
+  if (error instanceof AppError) {
+    return { error: error.message }
+  }
+  if (error instanceof Error) {
+    return { error: error.message }
+  }
+  return { error: fallbackMessage }
+}
 
 export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const sterilizedInput = JSON.parse(JSON.stringify(input))
-    const validated = createDictionaryEntrySchema.parse(sterilizedInput)
+    const entry = await dictionaryService.createEntry(input, userId)
 
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(validated.languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const entry = await prisma.dictionaryEntry.create({
-      data: {
-        lemma: validated.lemma,
-        gloss: validated.gloss,
-        ipa: validated.ipa || null,
-        partOfSpeech: validated.partOfSpeech || null,
-        etymology: validated.etymology || null,
-        relatedWords: validated.relatedWords ? (validated.relatedWords as any) : null,
-        notes: validated.notes || null,
-        tags: validated.tags ? (validated.tags as any) : null,
-        languageId: validated.languageId,
-      },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    // Log activity
     await createActivity({
       type: "CREATED",
       entityType: "DICTIONARY_ENTRY",
       entityId: entry.id,
-      languageId: validated.languageId,
+      languageId: entry.languageId,
       userId,
-      description: `Added dictionary entry "${validated.lemma}"`,
+      description: `Added dictionary entry "${entry.lemma}"`,
     })
 
-    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
-    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
-
-    // Check for dictionary-related badge achievements
+    revalidateDictionary(entry.language.slug)
     checkDictionaryBadges(userId).catch(console.error)
 
-    return {
-      success: true,
-      data: entry,
-    }
+    return { success: true as const, data: entry }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create dictionary entry",
-    }
+    return handleError(error, "Failed to create dictionary entry")
   }
 }
 
 export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const sterilizedInput = JSON.parse(JSON.stringify(input))
-    const validated = updateDictionaryEntrySchema.parse(sterilizedInput)
+    const entry = await dictionaryService.updateEntry(input, userId)
 
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(validated.languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    const updateData: any = {}
-    if (validated.lemma !== undefined) updateData.lemma = validated.lemma
-    if (validated.gloss !== undefined) updateData.gloss = validated.gloss
-    if (validated.ipa !== undefined) updateData.ipa = validated.ipa || null
-    if (validated.partOfSpeech !== undefined)
-      updateData.partOfSpeech = validated.partOfSpeech || null
-    if (validated.etymology !== undefined)
-      updateData.etymology = validated.etymology || null
-    if (validated.relatedWords !== undefined)
-      updateData.relatedWords = validated.relatedWords ? (validated.relatedWords as any) : null
-    if (validated.notes !== undefined) updateData.notes = validated.notes || null
-    if (validated.tags !== undefined)
-      updateData.tags = validated.tags ? (validated.tags as any) : null
-
-    const entry = await prisma.dictionaryEntry.update({
-      where: { id: validated.id },
-      data: updateData,
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    // Log activity
     await createActivity({
       type: "UPDATED",
       entityType: "DICTIONARY_ENTRY",
@@ -146,27 +63,11 @@ export async function updateDictionaryEntry(input: UpdateDictionaryEntryInput) {
       description: `Updated dictionary entry "${entry.lemma}"`,
     })
 
-    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
-    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
+    revalidateDictionary(entry.language.slug)
 
-    return {
-      success: true,
-      data: entry,
-    }
+    return { success: true as const, data: entry }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update dictionary entry",
-    }
+    return handleError(error, "Failed to update dictionary entry")
   }
 }
 
@@ -176,211 +77,59 @@ export async function bulkUpdateDictionaryEntries(
   languageId: string
 ) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    const validated = bulkUpdateDictionaryEntrySchema.parse({
-      entryIds,
-      updates,
-      languageId,
-    })
+    const result = await dictionaryService.bulkUpdateEntries(entryIds, updates, languageId, userId)
 
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(validated.languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    // Verify all entries belong to this language
-    const entries = await prisma.dictionaryEntry.findMany({
-      where: {
-        id: { in: validated.entryIds },
-        languageId: validated.languageId,
-      },
-      select: { id: true },
-    })
-
-    if (entries.length !== validated.entryIds.length) {
-      return {
-        error: "Some entries not found or don't belong to this language",
-      }
-    }
-
-    const updateData: any = {}
-    if (validated.updates.partOfSpeech !== undefined)
-      updateData.partOfSpeech = validated.updates.partOfSpeech || null
-    if (validated.updates.notes !== undefined)
-      updateData.notes = validated.updates.notes || null
-
-    await prisma.dictionaryEntry.updateMany({
-      where: {
-        id: { in: validated.entryIds },
-        languageId: validated.languageId,
-      },
-      data: updateData,
-    })
-
-    const language = await prisma.language.findUnique({
-      where: { id: validated.languageId },
-      select: { slug: true }
-    })
-
-    // Log activity
     await createActivity({
       type: "UPDATED",
       entityType: "DICTIONARY_ENTRY",
-      entityId: validated.entryIds[0], // Use first ID as representative
-      languageId: validated.languageId,
+      entityId: entryIds[0],
+      languageId,
       userId,
-      description: `Bulk updated ${validated.entryIds.length} dictionary entries`,
+      description: `Bulk updated ${result.count} dictionary entries`,
     })
 
-    if (language) {
-      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
-      revalidatePath(`/lang/${language.slug}/dictionary`)
-    }
+    if (result.slug) revalidateDictionary(result.slug)
 
-    return {
-      success: true,
-      updatedCount: validated.entryIds.length,
-    }
+    return { success: true as const, updatedCount: result.count }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to bulk update dictionary entries",
-    }
+    return handleError(error, "Failed to bulk update dictionary entries")
   }
 }
 
 export async function deleteDictionaryEntry(entryId: string, languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
+    const entry = await dictionaryService.deleteEntry(entryId, languageId, userId)
 
-    const entry = await prisma.dictionaryEntry.delete({
-      where: { id: entryId },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
+    await createActivity({
+      type: "DELETED",
+      entityType: "DICTIONARY_ENTRY",
+      entityId: entryId,
+      languageId: entry.languageId,
+      userId,
+      description: `Deleted dictionary entry "${entry.lemma}"`,
     })
 
-    // Log activity
-    if (entry) {
-      await createActivity({
-        type: "DELETED",
-        entityType: "DICTIONARY_ENTRY",
-        entityId: entryId,
-        languageId: entry.languageId,
-        userId,
-        description: `Deleted dictionary entry "${entry.lemma}"`,
-      })
-    }
+    revalidateDictionary(entry.language.slug)
 
-    revalidatePath(`/studio/lang/${entry.language.slug}/dictionary`)
-    revalidatePath(`/lang/${entry.language.slug}/dictionary`)
-
-    return {
-      success: true,
-    }
+    return { success: true as const }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete dictionary entry",
-    }
+    return handleError(error, "Failed to delete dictionary entry")
   }
 }
 
-export async function bulkDeleteDictionaryEntries(
-  entryIds: string[],
-  languageId: string
-) {
+export async function bulkDeleteDictionaryEntries(entryIds: string[], languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    if (!entryIds || entryIds.length === 0) {
-      return {
-        error: "No entries selected",
-      }
-    }
+    const result = await dictionaryService.bulkDeleteEntries(entryIds, languageId, userId)
 
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    // Verify all entries belong to this language
-    const entries = await prisma.dictionaryEntry.findMany({
-      where: {
-        id: { in: entryIds },
-        languageId,
-      },
-      select: { id: true },
-    })
-
-    if (entries.length !== entryIds.length) {
-      return {
-        error: "Some entries not found or don't belong to this language",
-      }
-    }
-
-    // Delete all selected entries at once
-    const result = await prisma.dictionaryEntry.deleteMany({
-      where: {
-        id: { in: entryIds },
-        languageId,
-      },
-    })
-
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { slug: true },
-    })
-
-    // Log activity
     await createActivity({
       type: "DELETED",
       entityType: "DICTIONARY_ENTRY",
@@ -390,73 +139,21 @@ export async function bulkDeleteDictionaryEntries(
       description: `Bulk deleted ${result.count} dictionary entries`,
     })
 
-    if (language) {
-      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
-      revalidatePath(`/lang/${language.slug}/dictionary`)
-    }
+    if (result.slug) revalidateDictionary(result.slug)
 
-    return {
-      success: true,
-      deletedCount: result.count,
-    }
+    return { success: true as const, deletedCount: result.count }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to bulk delete dictionary entries",
-    }
+    return handleError(error, "Failed to bulk delete dictionary entries")
   }
 }
 
 export async function deleteAllDictionaryEntries(languageId: string) {
   const userId = await getUserId()
-
-  if (!userId) {
-    return {
-      error: "Unauthorized",
-    }
-  }
+  if (!userId) return { error: "Unauthorized" }
 
   try {
-    if (!languageId) {
-      return {
-        error: "Language ID is required",
-      }
-    }
+    const result = await dictionaryService.deleteAllEntries(languageId, userId)
 
-    // Verify edit permission (owner or editor)
-    const canEdit = await canEditLanguage(languageId, userId)
-    if (!canEdit) {
-      return {
-        error: "Unauthorized - You don't have permission to edit this language",
-      }
-    }
-
-    // Get total count before deletion
-    const totalCount = await prisma.dictionaryEntry.count({
-      where: { languageId },
-    })
-
-    if (totalCount === 0) {
-      return {
-        error: "No entries to delete",
-      }
-    }
-
-    // Delete all entries for this language
-    const result = await prisma.dictionaryEntry.deleteMany({
-      where: { languageId },
-    })
-
-    const language = await prisma.language.findUnique({
-      where: { id: languageId },
-      select: { slug: true },
-    })
-
-    // Log activity
     await createActivity({
       type: "DELETED",
       entityType: "DICTIONARY_ENTRY",
@@ -466,25 +163,10 @@ export async function deleteAllDictionaryEntries(languageId: string) {
       description: `Deleted all ${result.count} dictionary entries`,
     })
 
-    if (language) {
-      revalidatePath(`/studio/lang/${language.slug}/dictionary`)
-      revalidatePath(`/lang/${language.slug}/dictionary`)
-    }
+    if (result.slug) revalidateDictionary(result.slug)
 
-    return {
-      success: true,
-      deletedCount: result.count,
-    }
+    return { success: true as const, deletedCount: result.count }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete all dictionary entries",
-    }
+    return handleError(error, "Failed to delete all dictionary entries")
   }
 }
-
-

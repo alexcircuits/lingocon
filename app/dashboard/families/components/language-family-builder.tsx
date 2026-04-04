@@ -397,7 +397,7 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
     // Process changes sequentially to handle circular references safely
     for (const change of pendingChanges) {
       const res = await setParentLanguage(change.id, change.parentId)
-      if (res?.error) {
+      if (res && 'error' in res) {
         toast.error(`Could not connect: ${res.error}`)
         // Stop on first error — already-applied changes are committed
         break
