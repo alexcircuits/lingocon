@@ -395,7 +395,7 @@ export function DictionaryManager({
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <TransliterationToggle
             onToggle={setShowLatin}
             defaultShowLatin={showLatin}
@@ -474,7 +474,7 @@ export function DictionaryManager({
             </>
           )}
 
-          <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2">
+          <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto sm:ml-0">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Entry</span>
           </Button>
