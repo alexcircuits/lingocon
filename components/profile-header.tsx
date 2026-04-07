@@ -13,7 +13,6 @@ interface ProfileHeaderProps {
     user: {
         id: string
         name: string | null
-        email: string | null
         image: string | null
         createdAt: Date
     }
@@ -40,13 +39,12 @@ export function ProfileHeader({ user, isOwnProfile, badges = [] }: ProfileHeader
                     <Avatar className="h-32 w-32 rounded-2xl border-4 border-background shadow-xl ring-1 ring-border/50">
                         <AvatarImage src={user.image || undefined} alt={user.name || "User"} className="object-cover" />
                         <AvatarFallback className="text-4xl bg-primary/10 text-primary">
-                            {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+                            {user.name?.[0]?.toUpperCase() || "U"}
                         </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 pb-2">
                         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{user.name || "Anonymous User"}</h1>
-                        <p className="mt-2 text-muted-foreground">{user.email}</p>
                         <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground md:justify-start">
                             <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1">
                                 <Calendar className="h-3.5 w-3.5" />

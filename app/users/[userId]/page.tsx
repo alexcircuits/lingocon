@@ -24,7 +24,6 @@ async function getUser(userId: string) {
     select: {
       id: true,
       name: true,
-      email: true,
       image: true,
       createdAt: true,
     },
@@ -180,7 +179,6 @@ export default async function UserProfilePage({
                               </Avatar>
                               <div className="overflow-hidden">
                                 <p className="font-medium truncate">{follower.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{follower.email}</p>
                               </div>
                             </div>
                           </Link>
@@ -210,7 +208,6 @@ export default async function UserProfilePage({
                               </Avatar>
                               <div className="overflow-hidden">
                                 <p className="font-medium truncate">{followed.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{followed.email}</p>
                               </div>
                             </div>
                           </Link>

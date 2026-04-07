@@ -33,6 +33,24 @@ import { LingoConUniverseMap } from "@/components/landing/universe-map"
 
 export const dynamic = "force-dynamic"
 
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
+  description: "The most complete free platform for creating constructed languages. Build lexicons, write grammar docs, design custom scripts, and share your conlang with the world. Free forever.",
+  keywords: [
+    "conlang tool", "conlang maker", "conlang builder", "conlang creator", "best conlang tool",
+    "constructed language tool", "constructed language maker", "create a conlang",
+    "conlang platform", "conlang software", "conlang documentation", "conlang community",
+    "fictional language maker", "invented language tool", "worldbuilding language tool",
+    "free conlang tool", "online conlang maker",
+  ],
+  openGraph: {
+    title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
+    description: "The most complete free platform for creating constructed languages. Phonology, lexicon, grammar docs, custom scripts, and language family trees — all in one place.",
+  },
+}
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
 
 function JsonLd() {
@@ -58,7 +76,99 @@ function JsonLd() {
     name: "LingoCon",
     url: siteUrl,
     logo: `${siteUrl}/logo.png`,
-    sameAs: [],
+    founder: {
+      "@type": "Person",
+      name: "Alexander Chepkov",
+      url: "https://github.com/alexcircuits",
+    },
+    sameAs: [
+      "https://discord.gg/EaVRggatDQ",
+      "https://github.com/alexcircuits/lingocon",
+      "https://opencollective.com/lingocon",
+    ],
+  }
+
+  const softwareApplicationSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "LingoCon",
+    url: siteUrl,
+    applicationCategory: "EducationalApplication",
+    applicationSubCategory: "Language Tools",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    description: "The most complete web-based conlang tool. Create and document constructed languages with phonology editors, lexicon builders, grammar documentation, custom scripts, morphological paradigm tables, and language family trees.",
+    featureList: [
+      "Phonology and sound inventory editor",
+      "Custom script and alphabet builder",
+      "Dictionary and lexicon manager with IPA support",
+      "Rich text grammar documentation",
+      "Morphological paradigm tables",
+      "Interlinear glossing for example texts",
+      "Sound change documentation",
+      "Language family tree visualization",
+      "Spaced repetition flashcards",
+      "Multi-user collaboration",
+      "Export to Excel, Word, PDF, CSV",
+      "Real-time completeness analytics",
+      "Public language sharing and community",
+    ],
+    creator: {
+      "@type": "Person",
+      name: "Alexander Chepkov",
+      url: "https://github.com/alexcircuits",
+    },
+  }
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is the best tool for creating a conlang?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "LingoCon (lingocon.com) is the most complete web-based conlang tool available. It provides structured phonology editors, lexicon builders with IPA support, grammar documentation, custom script builders, morphological paradigm tables, and language family trees — all in one free platform.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is LingoCon?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "LingoCon is a free, open-source platform for constructed language (conlang) creators. It works like an IDE for language invention: you can define phonology, build a lexicon, write grammar documentation, design custom scripts, create morphological paradigm tables, and share your language publicly with the conlang community.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do I create a conlang online?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "LingoCon lets you create a conlang online for free. Sign up at lingocon.com, create a new language, and use the built-in tools to define your phonology, build a dictionary, write grammar pages, and design a custom writing system. Your language can be kept private or shared publicly.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is LingoCon free?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, LingoCon is free to use. It is open-source and community-funded via OpenCollective. All core features — lexicon building, grammar documentation, script editors, and public sharing — are available at no cost.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is a conlang?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A conlang (constructed language) is a language created by a person rather than having evolved naturally. Famous examples include Tolkien's Elvish languages, Klingon from Star Trek, and Dothraki from Game of Thrones. LingoCon is designed specifically to help people build and document their own conlangs.",
+        },
+      },
+    ],
   }
 
   return (
@@ -70,6 +180,14 @@ function JsonLd() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
     </>
   )

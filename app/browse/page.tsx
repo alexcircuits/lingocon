@@ -12,8 +12,17 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
 export const metadata: Metadata = {
-  title: "Browse Languages",
-  description: "Explore public constructed languages created by the LingoCon community. Discover new conlangs, lexicons, and grammar documentation.",
+  title: "Browse Conlangs — Explore Constructed Languages",
+  description: "Explore hundreds of public constructed languages created by the LingoCon community. Discover conlang dictionaries, grammar docs, custom scripts, and more.",
+  keywords: ["browse conlangs", "conlang list", "constructed languages", "conlang examples", "conlang community", "invented languages", "fictional languages"],
+  openGraph: {
+    title: "Browse Conlangs — Explore Constructed Languages",
+    description: "Explore hundreds of public constructed languages. Discover conlang dictionaries, grammar documentation, custom scripts, and language family trees.",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://lingocon.com/browse",
+  },
 }
 
 export const dynamic = "force-dynamic"

@@ -6,8 +6,12 @@ import { LingoConUniverseMap } from "@/components/landing/universe-map"
 export const dynamic = "force-dynamic"
 
 export const metadata = {
-  title: "Language Family Map — LingoCon",
-  description: "Explore all public constructed language families and how they interconnect. An interactive map of the LingoCon universe.",
+  title: "Conlang Family Map — Constructed Language Families",
+  description: "Explore all public constructed language families on LingoCon. Visualize how conlangs relate to each other through lineage, proto-languages, and dialect trees.",
+  keywords: ["conlang family tree", "constructed language families", "language family map", "conlang genealogy", "proto-language", "conlang lineage"],
+  alternates: {
+    canonical: "https://lingocon.com/families",
+  },
 }
 
 export default async function PublicFamiliesPage() {

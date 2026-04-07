@@ -15,7 +15,6 @@ interface ProfileSidebarProps {
     user: {
         id: string
         name: string | null
-        email: string | null
         image: string | null
         createdAt: Date
     }
@@ -36,13 +35,12 @@ export function ProfileSidebar({ user, stats, isOwnProfile, badges }: ProfileSid
                 <Avatar className="h-32 w-32 md:h-40 md:w-40 rounded-2xl shadow-xl">
                     <AvatarImage src={user.image || undefined} alt={user.name || "User"} className="object-cover" />
                     <AvatarFallback className="text-4xl md:text-5xl bg-primary/10 text-primary">
-                        {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+                        {user.name?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                 </Avatar>
 
                 <div className="space-y-1">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{user.name || "Anonymous User"}</h1>
-                    <p className="text-muted-foreground">{user.email}</p>
                 </div>
 
                 {/* Action Buttons */}

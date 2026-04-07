@@ -21,6 +21,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.9,
         },
         {
+            url: `${siteUrl}/families`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.8,
+        },
+        {
+            url: `${siteUrl}/search`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.7,
+        },
+        {
+            url: `${siteUrl}/contributions`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.6,
+        },
+        {
+            url: `${siteUrl}/donate`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.5,
+        },
+        {
+            url: `${siteUrl}/contact`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.4,
+        },
+        {
             url: `${siteUrl}/login`,
             lastModified: new Date(),
             changeFrequency: "monthly",
@@ -31,12 +61,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: new Date(),
             changeFrequency: "monthly",
             priority: 0.3,
-        },
-        {
-            url: `${siteUrl}/search`,
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.7,
         },
     ];
 

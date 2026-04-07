@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
 import { revalidatePath } from "next/cache"
+import { signOut } from "@/auth"
 
 export async function updateUser(input: UpdateUserInput) {
     const userId = await getUserId()
@@ -47,6 +48,25 @@ export async function updateUser(input: UpdateUserInput) {
         return {
             error: "Failed to update profile",
         }
+    }
+}
+
+export async function deleteAccount() {
+    const userId = await getUserId()
+
+    if (!userId) {
+        return { error: "Unauthorized" }
+    }
+
+    try {
+        await prisma.user.delete({ where: { id: userId } })
+        await signOut({ redirect: false })
+        return { success: true }
+    } catch (error) {
+        if (error instanceof Error) {
+            return { error: error.message }
+        }
+        return { error: "Failed to delete account" }
     }
 }
 

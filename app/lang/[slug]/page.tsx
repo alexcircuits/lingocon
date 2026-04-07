@@ -216,8 +216,34 @@ export default async function PublicLanguagePage({
     },
   ]
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Browse Languages", item: `${siteUrl}/browse` },
+      { "@type": "ListItem", position: 3, name: language.name, item: `${siteUrl}/lang/${language.slug}` },
+    ],
+  }
+
+  const datasetSchema = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: `${language.name} — Constructed Language Documentation`,
+    description: language.description || `Documentation for the constructed language ${language.name}, including dictionary entries, grammar pages, and scripts.`,
+    url: `${siteUrl}/lang/${language.slug}`,
+    creator: { "@type": "Organization", name: "LingoCon", url: siteUrl },
+    license: "https://creativecommons.org/licenses/by/4.0/",
+    isAccessibleForFree: true,
+    keywords: ["conlang", "constructed language", language.name, "linguistics", "grammar", "lexicon"],
+  }
+
   return (
     <div className="space-y-12 pb-20">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }} />
       <LanguageHero language={language} isFavorite={isFavorite} userId={userId} />
 
       {/* Language Family */}

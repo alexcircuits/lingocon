@@ -5,22 +5,51 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
-import { updateUser } from "@/app/actions/user"
+import { updateUser, deleteAccount } from "@/app/actions/user"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
-import { Loader2, ArrowLeft, User, Mail, Shield, Bell } from "lucide-react"
+import { Loader2, ArrowLeft, User, Mail, Shield, Bell, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function SettingsPage() {
     const { data: session, update } = useSession()
     const router = useRouter()
     const [loading, setLoading] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+
+    const handleDeleteAccount = async () => {
+        setDeleting(true)
+        try {
+            const result = await deleteAccount()
+            if (result.error) {
+                toast.error(result.error)
+            } else {
+                toast.success("Account deleted")
+                router.push("/")
+            }
+        } catch {
+            toast.error("Failed to delete account")
+        } finally {
+            setDeleting(false)
+        }
+    }
 
     const form = useForm<UpdateUserInput>({
         resolver: zodResolver(updateUserSchema),
@@ -179,6 +208,42 @@ export default function SettingsPage() {
                                         {session?.user?.id}
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-destructive/50">
+                            <CardHeader>
+                                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                                <CardDescription>
+                                    Permanently delete your account and all associated data. This action cannot be undone.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" disabled={deleting}>
+                                            {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                            Delete Account
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will permanently delete your account, all your languages, and all associated data. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={handleDeleteAccount}
+                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                                Delete Account
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </CardContent>
                         </Card>
                     </TabsContent>

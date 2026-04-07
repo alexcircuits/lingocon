@@ -15,21 +15,47 @@ export const metadata: Metadata = {
     template: "%s | LingoCon",
   },
   description: "The platform for conlang creators. Build lexicons, write grammar documentation, and share your constructed languages with the world.",
-  keywords: ["conlang", "constructed language", "linguistics", "language documentation", "conlang platform", "worldbuilding", "lexicon builder", "grammar wiki"],
-  authors: [{ name: "LingoCon" }],
-  creator: "LingoCon",
+  keywords: [
+    // Primary target keywords
+    "conlang", "conlang tools", "conlang maker", "conlang builder", "conlang creator", "conlang platform", "conlang software",
+    // Constructed language variants
+    "constructed language", "constructed language maker", "constructed language builder", "constructed language tools", "invented language", "artificial language", "fictional language",
+    // Action-oriented
+    "create a conlang", "how to create a conlang", "language creation", "language design", "language invention", "make a language",
+    // Feature keywords
+    "lexicon builder", "grammar documentation", "phonology builder", "morphology tables", "IPA dictionary", "conlang dictionary", "grammar wiki",
+    // Community & sharing
+    "conlang community", "share conlang", "conlang documentation",
+    // Adjacent use cases
+    "worldbuilding language", "worldbuilding tools", "fictional language creator", "language inventor", "linguistics documentation",
+  ],
+  authors: [{ name: "LingoCon" }, { name: "Alexander Chepkov" }],
+  creator: "Alexander Chepkov",
+  category: "Language Tools",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
     siteName: "LingoCon",
-    title: "LingoCon — Document Your Constructed Languages",
-    description: "The professional toolkit for language construction. Define grammar, build structured dictionaries, and visualize your syntax.",
+    title: "LingoCon — The #1 Platform for Conlang Creators",
+    description: "The most complete conlang tool available. Build structured lexicons, write grammar documentation, design custom scripts, and share your constructed languages with the world.",
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "LingoCon — The platform for conlang creators",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LingoCon — Document Your Constructed Languages",
-    description: "The professional toolkit for language construction. Define grammar, build structured dictionaries, and visualize your syntax.",
+    title: "LingoCon — The #1 Platform for Conlang Creators",
+    description: "The most complete conlang tool available. Build lexicons, grammar docs, custom scripts, and share your constructed languages.",
+    images: [`${siteUrl}/og-image.png`],
+  },
+  alternates: {
+    canonical: siteUrl,
   },
   robots: {
     index: true,
