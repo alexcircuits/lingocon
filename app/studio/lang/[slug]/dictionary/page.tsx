@@ -47,18 +47,22 @@ async function getDictionaryEntries(
   const where: Prisma.DictionaryEntryWhereInput = {
     languageId,
     ...(query
-      ? field
+      ? field === "tags"
         ? {
-          [field]: { contains: query, mode: "insensitive" },
+          tags: { array_contains: [query.toLowerCase()] },
         }
-        : {
-          OR: [
-            { lemma: { contains: query, mode: "insensitive" } },
-            { gloss: { contains: query, mode: "insensitive" } },
-            { ipa: { contains: query, mode: "insensitive" } },
-            { partOfSpeech: { contains: query, mode: "insensitive" } },
-          ],
-        }
+        : field
+          ? {
+            [field]: { contains: query, mode: "insensitive" },
+          }
+          : {
+            OR: [
+              { lemma: { contains: query, mode: "insensitive" } },
+              { gloss: { contains: query, mode: "insensitive" } },
+              { ipa: { contains: query, mode: "insensitive" } },
+              { partOfSpeech: { contains: query, mode: "insensitive" } },
+            ],
+          }
       : {}),
   }
 

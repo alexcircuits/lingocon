@@ -11,7 +11,7 @@ import {
   deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages } from "lucide-react"
+import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2 } from "lucide-react"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { DictionarySearch } from "./components/dictionary-search"
@@ -24,6 +24,7 @@ import { DictionaryPagination } from "./components/dictionary-pagination"
 import { DerivationWizard } from "./components/derivation-wizard"
 import { WordGeneratorDialog } from "./components/word-generator-dialog"
 import { BorrowWordDialog } from "./components/borrow-word-dialog"
+import { BulkAddDialog } from "./components/bulk-add-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
@@ -86,7 +87,8 @@ export function DictionaryManager({
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false)
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
   const [isBorrowOpen, setIsBorrowOpen] = useState(false)
-  const [prefillLemma, setPrefillLemma] = useState<string | null>(null)
+  const [isBulkAddOpen, setIsBulkAddOpen] = useState(false)
+  const [prefillData, setPrefillData] = useState<{ lemma?: string; gloss?: string } | null>(null)
 
   // Selection State
   const [editingEntry, setEditingEntry] = useState<DictionaryEntry | null>(null)
@@ -123,6 +125,7 @@ export function DictionaryManager({
         if (isDeriveOpen) setIsDeriveOpen(false)
         if (isBulkDeleteOpen) setIsBulkDeleteOpen(false)
         if (isDeleteAllOpen) setIsDeleteAllOpen(false)
+        if (isBulkAddOpen) setIsBulkAddOpen(false)
       },
     },
   ])
@@ -474,6 +477,17 @@ export function DictionaryManager({
             </>
           )}
 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBulkAddOpen(true)}
+            className="gap-2 shrink-0"
+            title="Bulk Add Entries"
+          >
+            <Table2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Bulk Add</span>
+          </Button>
+
           <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto sm:ml-0">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Entry</span>
@@ -483,13 +497,28 @@ export function DictionaryManager({
 
       {initialEntries.length === 0 ? (
         initialQuery ? (
-          <div className="rounded-lg border border-dashed p-12 text-center">
+          <div className="rounded-lg border border-dashed p-12 text-center space-y-2">
             <p className="text-muted-foreground">
               No entries match your search.
             </p>
-            <Button type="button" variant="link" onClick={() => handleSearch("")}>
-              Clear search
-            </Button>
+            <div className="flex items-center justify-center gap-2">
+              <Button type="button" variant="link" onClick={() => handleSearch("")}>
+                Clear search
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  setPrefillData({ gloss: initialQuery })
+                  setIsAddOpen(true)
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add &ldquo;{initialQuery}&rdquo;
+              </Button>
+            </div>
           </div>
         ) : (
           <EmptyState
@@ -541,6 +570,7 @@ export function DictionaryManager({
                 setDerivationSourceEntry(entry)
                 setIsDeriveOpen(true)
               }}
+              onTagClick={(tag) => handleSearch(tag, "tags")}
             />
           </div>
 
@@ -594,14 +624,14 @@ export function DictionaryManager({
         open={isAddOpen}
         onOpenChange={(open) => {
           setIsAddOpen(open)
-          if (!open) setPrefillLemma(null)
+          if (!open) setPrefillData(null)
         }}
         onSubmit={handleCreate}
         isPending={isPending}
         mode="create"
         symbols={symbols}
         allowsDiacritics={allowsDiacritics}
-        initialData={prefillLemma ? { lemma: prefillLemma } as any : undefined}
+        initialData={prefillData ? prefillData as any : undefined}
       />
 
       <DictionaryEntryDialog
@@ -665,7 +695,7 @@ export function DictionaryManager({
         metadata={metadata}
         existingLemmas={initialEntries.map(e => e.lemma)}
         onAddWord={(word) => {
-          setPrefillLemma(word)
+          setPrefillData({ lemma: word })
           setIsAddOpen(true)
         }}
       />
@@ -676,6 +706,13 @@ export function DictionaryManager({
         languageId={languageId}
         languageName={languageName}
         onBorrow={(data) => handleCreate(data)}
+      />
+
+      <BulkAddDialog
+        open={isBulkAddOpen}
+        onOpenChange={setIsBulkAddOpen}
+        onSubmit={handleCreate}
+        isPending={isPending}
       />
 
       {isBulkEditOpen && (

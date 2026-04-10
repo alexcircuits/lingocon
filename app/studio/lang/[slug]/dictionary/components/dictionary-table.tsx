@@ -29,6 +29,7 @@ interface DictionaryTableProps {
   onEdit: (entry: DictionaryEntry) => void
   onDelete: (id: string) => void
   onDerive: (entry: DictionaryEntry) => void
+  onTagClick?: (tag: string) => void
   showLatin: boolean
   symbols: ScriptSymbol[]
   isPending?: boolean
@@ -46,6 +47,7 @@ export function DictionaryTable({
   onEdit,
   onDelete,
   onDerive,
+  onTagClick,
   showLatin,
   symbols,
   isPending,
@@ -196,12 +198,17 @@ export function DictionaryTable({
                   {Array.isArray(entry.tags) && (entry.tags as string[]).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(entry.tags as string[]).map((tag) => (
-                        <span
+                        <button
                           key={tag}
-                          className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onTagClick?.(tag)
+                          }}
+                          className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20 hover:bg-primary/20 hover:border-primary/40 transition-colors cursor-pointer"
                         >
                           {tag}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -292,7 +299,12 @@ export function DictionaryTable({
                             </h4>
                             <div className="flex flex-wrap gap-1">
                               {(entry.tags as string[]).map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-[10px]">
+                                <Badge
+                                  key={tag}
+                                  variant="outline"
+                                  className="text-[10px] cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors"
+                                  onClick={() => onTagClick?.(tag)}
+                                >
                                   {tag}
                                 </Badge>
                               ))}

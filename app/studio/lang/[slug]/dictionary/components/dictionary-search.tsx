@@ -46,7 +46,7 @@ export function DictionarySearch({
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder={field === "gloss" ? "Search meanings..." : "Search dictionary..."}
+          placeholder={field === "gloss" ? "Search meanings..." : field === "tags" ? "Search by tag..." : "Search dictionary..."}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           className="pl-9"
@@ -61,6 +61,7 @@ export function DictionarySearch({
           <SelectItem value="lemma">Word</SelectItem>
           <SelectItem value="gloss">Meaning</SelectItem>
           <SelectItem value="partOfSpeech">POS</SelectItem>
+          <SelectItem value="tags">Tags</SelectItem>
         </SelectContent>
       </Select>
     </div>

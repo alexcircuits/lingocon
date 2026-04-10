@@ -42,19 +42,39 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
   const [showLatin, setShowLatin] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<DictionaryEntryWithExamples | null>(null)
   const [reversed, setReversed] = useState(false)
+  const [activeTag, setActiveTag] = useState<string | null>(null)
 
-  // Filter entries based on search query and direction
+  const handleTagClick = (tag: string) => {
+    setActiveTag(tag)
+    setSearchQuery("")
+    setSelectedEntry(null)
+  }
+
+  const clearTagFilter = () => {
+    setActiveTag(null)
+  }
+
+  // Filter entries based on search query, tag filter, and direction
   const filteredEntries = useMemo(() => {
+    let results = entries
+
+    // Apply tag filter first
+    if (activeTag) {
+      results = results.filter((entry) =>
+        Array.isArray(entry.tags) && (entry.tags as string[]).includes(activeTag)
+      )
+    }
+
     if (!searchQuery.trim()) {
       // When reversed with no search, sort by gloss
       if (reversed) {
-        return [...entries].sort((a, b) => a.gloss.localeCompare(b.gloss))
+        return [...results].sort((a, b) => a.gloss.localeCompare(b.gloss))
       }
-      return entries
+      return results
     }
 
     const query = searchQuery.toLowerCase()
-    const results = entries.filter((entry) => {
+    results = results.filter((entry) => {
       if (reversed) {
         // Reverse mode: search gloss first, then lemma
         return (
@@ -80,7 +100,7 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
     }
 
     return results
-  }, [entries, searchQuery, reversed])
+  }, [entries, searchQuery, reversed, activeTag])
 
   // Check if entry has additional details
   const hasDetails = (entry: DictionaryEntryWithExamples) => {
@@ -128,6 +148,23 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
           defaultShowLatin={showLatin}
         />
       </div>
+
+      {activeTag && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Filtering by tag:</span>
+          <Badge variant="secondary" className="gap-1">
+            {activeTag}
+            <button
+              type="button"
+              onClick={clearTagFilter}
+              className="ml-1 hover:text-destructive transition-colors"
+              aria-label="Clear tag filter"
+            >
+              &times;
+            </button>
+          </Badge>
+        </div>
+      )}
 
       {filteredEntries.length === 0 ? (
         <div className="rounded-lg border border-dashed p-12 text-center">
@@ -304,7 +341,15 @@ export function PublicDictionary({ entries, symbols, voiceId, speed }: PublicDic
                     </h4>
                     <div className="flex flex-wrap gap-1.5">
                       {(selectedEntry.tags as string[]).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors"
+                          onClick={() => {
+                            handleTagClick(tag)
+                            setSelectedEntry(null)
+                          }}
+                        >
                           {tag}
                         </Badge>
                       ))}
