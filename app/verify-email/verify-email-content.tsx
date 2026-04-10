@@ -117,7 +117,7 @@ export function VerifyEmailContent() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground text-center">
-        Check your email for a verification link. If you didn't receive one, enter your email below.
+        Check your email for a verification link. If you didn&apos;t receive one, enter your email below.
       </p>
       {resendSent ? (
         <p className="text-sm text-green-600 text-center py-4">
