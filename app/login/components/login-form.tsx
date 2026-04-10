@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Github, Mail, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 // SVG for Google Icon
 const GoogleIcon = () => (
@@ -34,7 +35,12 @@ export function LoginForm() {
             })
 
             if (result?.error) {
-                toast.error("Invalid email or password")
+                if (result.error.includes("EMAIL_NOT_VERIFIED")) {
+                    toast.error("Please verify your email before signing in. Check your inbox for a verification link.")
+                    router.push("/verify-email")
+                } else {
+                    toast.error("Invalid email or password")
+                }
             } else {
                 toast.success("Logged in successfully")
                 router.push("/dashboard")
@@ -70,6 +76,9 @@ export function LoginForm() {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
+                        <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                            Forgot password?
+                        </Link>
                     </div>
                     <Input
                         id="password"
