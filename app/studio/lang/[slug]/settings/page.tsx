@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { getUserId, isLanguageOwner } from "@/lib/auth-helpers"
+import { getUserId, isLanguageOwner, canEditLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { LanguageSettings } from "./language-settings"
 import { Collaborators } from "./collaborators"
@@ -112,7 +112,12 @@ export default async function SettingsPage({
   }
 
   const { language, dictionaryEntries, userLanguages, descendantIds, families } = data
-  const owner = userId ? await isLanguageOwner(language.id, userId) : false
+  const [owner, canEdit] = userId
+    ? await Promise.all([
+        isLanguageOwner(language.id, userId),
+        canEditLanguage(language.id, userId),
+      ])
+    : [false, false]
   
   // Get family tree if language has a parent or children
   let familyTree = null
@@ -142,7 +147,7 @@ export default async function SettingsPage({
         descendantIds={descendantIds}
         familyTree={familyTree}
         currentSlug={slug}
-        isOwner={owner}
+        isOwner={canEdit}
       />
       <Collaborators languageId={language.id} isOwner={owner} />
     </div>

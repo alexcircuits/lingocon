@@ -51,6 +51,7 @@ export async function updateLanguage(input: UpdateLanguageInput, userId: string)
   if (validated.fontFamily !== undefined) updateData.fontFamily = validated.fontFamily || null
   if (validated.fontScale !== undefined) updateData.fontScale = validated.fontScale
   if (validated.allowsDiacritics !== undefined) updateData.allowsDiacritics = validated.allowsDiacritics
+  if (validated.allowForking !== undefined) updateData.allowForking = validated.allowForking
   if (validated.metadata !== undefined) updateData.metadata = validated.metadata
 
   return prisma.language.update({
