@@ -58,11 +58,17 @@ export default function ContributionsPage() {
                             We don&apos;t care about &quot;clean code&quot; or &quot;perfect commits&quot; if they never happen.
                             We care about momentum. If it improves the platform, ship it.
                         </p>
-                        <div className="mt-8 flex gap-4">
+                        <div className="mt-8 flex flex-wrap gap-4">
                             <Link href="https://discord.gg/EaVRggatDQ" target="_blank">
                                 <Button size="lg" className="gap-2 h-12 px-6 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 shadow-lg shadow-[#5865F2]/20">
                                     <DiscordIcon className="w-5 h-5" />
                                     Join our Discord
+                                </Button>
+                            </Link>
+                            <Link href="/docs">
+                                <Button size="lg" variant="outline" className="gap-2 h-12 px-6 rounded-full border-border/60">
+                                    <FileText className="w-5 h-5" />
+                                    Developer documentation
                                 </Button>
                             </Link>
                         </div>

@@ -1,8 +1,17 @@
+/**
+ * Central authorization helpers for Server Actions, Route Handlers, and RSC data loaders.
+ *
+ * These functions sit *above* Prisma domain logic: they answer "who is the caller?" and
+ * "may this user touch this language?" using session data plus explicit collaborator checks.
+ *
+ * @see `auth.ts` for how sessions are established (OAuth vs dev mode).
+ */
 import { auth } from "@/auth"
 import { getDevUserId } from "./dev-auth"
 import { prisma } from "./prisma"
 import { isAdmin } from "@/lib/admin"
 
+/** Returns the authenticated user's id, or `null` for guests / suspended accounts / missing session. */
 export async function getUserId(): Promise<string | null> {
   const session = await auth()
   if (session?.user?.id) {
@@ -22,6 +31,7 @@ export async function getUserId(): Promise<string | null> {
   return null
 }
 
+/** Same as `getUserId` but throws if unauthenticated — handy for actions that must never be public. */
 export async function requireAuth(): Promise<string> {
   const userId = await getUserId()
   if (!userId) {

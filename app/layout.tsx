@@ -1,3 +1,8 @@
+/**
+ * Root layout for the entire App Router tree: global styles, theme + session providers, toast host,
+ * achievement listener, and service worker registration (production only — dev unregisters SWs
+ * to protect Fast Refresh).
+ */
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";

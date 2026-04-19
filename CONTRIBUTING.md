@@ -28,7 +28,7 @@ Grab an issue labeled `good first issue`. Change a CSS class. Update a dependenc
 
 ### 4. The Academic (45 mins)
 Are we teaching people the wrong IPA chart? Is our glossaries logic linguistically sound? Fix our data.
-[**Edit Data Files**](https://github.com/alexcircuits/lingocon/tree/main/actions).
+[**Edit Data Files**](https://github.com/alexcircuits/lingocon/tree/main/lib/data) (and related `lib/` / `prisma/` seeds).
 
 ### 5. The Old School
 Don't like GitHub? Email your files or napkin sketches to **contribute@noirsystems.com**.
@@ -40,4 +40,33 @@ Don't like GitHub? Email your files or napkin sketches to **contribute@noirsyste
 3.  **Real Impact**: Your change might be live on lingocon.com within 24 hours.
 
 **Stop overthinking it. Just ship it.**
+
+---
+
+## For developers (repository layout)
+
+If you are writing or reviewing code, use the docs in **`docs/`** as the canonical tour (also published on the live site at **[lingocon.com/docs](https://lingocon.com/docs)** after each deploy):
+
+- [docs/README.md](docs/README.md) — index of all guides
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — auth, routing, caching mental model
+- [docs/CODEBASE.md](docs/CODEBASE.md) — where features live on disk
+- [docs/DATABASE.md](docs/DATABASE.md) — Prisma domains and migration workflow
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — environment variables and scripts
+- [docs/SERVER_ACTIONS_AND_API.md](docs/SERVER_ACTIONS_AND_API.md) — Server Actions vs Route Handlers
+
+### Local checks before you open a PR
+
+```bash
+npm run lint
+npm run build
+```
+
+If your change touches Prisma, include the generated migration under `prisma/migrations/`. If it is UI-only, a successful `lint` run is often enough.
+
+### Code style expectations
+
+- Prefer **`@/` imports** and existing patterns in neighboring files.
+- **Server Actions** belong in `app/actions/` and should call `getUserId` / `canEditLanguage` (or related helpers) before mutating language data.
+- Add a **short comment at the top of non-trivial files** explaining the module’s responsibility; explain *why* for non-obvious branches inside functions.
+- Avoid drive-by reformatting unrelated files in the same PR—small, reviewable diffs get merged faster.
 

@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { DOC_PAGES } from "@/lib/docs/site-docs";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: "monthly",
             priority: 0.6,
         },
+        {
+            url: `${siteUrl}/docs`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.65,
+        },
+        ...DOC_PAGES.map((p) => ({
+            url: `${siteUrl}/docs/${p.slug}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly" as const,
+            priority: 0.55,
+        })),
         {
             url: `${siteUrl}/donate`,
             lastModified: new Date(),

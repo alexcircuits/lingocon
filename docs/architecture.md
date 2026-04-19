@@ -1,155 +1,74 @@
-# LingoCon Architecture
+# Architecture
 
-## Overview
+LingoCon is a **Next.js 14 App Router** application backed by **PostgreSQL** via **Prisma**. Most user-facing mutations go through **Server Actions** (`"use server"`) rather than a separate REST API, though there are still **Route Handlers** under `app/api/` for auth, exports, uploads, and integrations.
 
-LingoCon is a Next.js 14 application using the App Router. It follows a layered architecture that separates concerns into validation, business logic, data access, and presentation.
+## High-level diagram
 
-## Tech Stack
+```mermaid
+flowchart TB
+  subgraph client [Browser]
+    RSC[React Server Components]
+    CC[Client Components]
+  end
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript (strict mode) |
-| Database | PostgreSQL + Prisma ORM |
-| Auth | NextAuth.js v5 (Auth.js) |
-| Validation | Zod |
-| UI | React 18 + shadcn/ui + Tailwind CSS |
-| Rich Text | TipTap |
-| State | React Hook Form + server actions |
+  subgraph next [Next.js App Router]
+    Pages[app/**/page.tsx layouts]
+    Actions[app/actions/* Server Actions]
+    API[app/api/* Route Handlers]
+  end
 
-## Layered Architecture
+  subgraph data [Data layer]
+    Prisma[(Prisma / PostgreSQL)]
+  end
 
-```
-┌─────────────────────────────────────────────┐
-│  Components (app/, components/)             │
-│  UI rendering, user interaction             │
-├─────────────────────────────────────────────┤
-│  Server Actions (app/actions/)              │
-│  Auth, validation, orchestration            │
-├─────────────────────────────────────────────┤
-│  Services (lib/services/)                   │
-│  Business logic, domain rules               │
-├─────────────────────────────────────────────┤
-│  Data Access (Prisma)                       │
-│  Database queries, transactions             │
-└─────────────────────────────────────────────┘
+  Auth[auth.ts + NextAuth]
+
+  RSC --> Pages
+  CC --> Actions
+  CC --> API
+  Pages --> Auth
+  Actions --> Auth
+  Actions --> Prisma
+  API --> Prisma
+  API --> Auth
 ```
 
-### Components (Presentation Layer)
+## Authentication and authorization
 
-- Located in `app/` (pages) and `components/` (shared)
-- Call server actions for mutations
-- Fetch data via server components or action queries
-- Handle `ActionResult` responses (show toasts, update UI)
+- **`auth.ts`** configures Auth.js (NextAuth v5): OAuth (GitHub, Google), credentials, Prisma adapter, JWT session strategy, and callbacks that copy `user.id` onto the JWT and session.
+- **`DEV_MODE=true`** short-circuits real sign-in: `auth()` returns a synthetic session backed by a `dev@localhost` user (see `lib/dev-auth.ts`). This is for local development only.
+- **`lib/auth-helpers.ts`** is the **application-level** gate used by Server Actions and pages:
+  - `getUserId()` — current user or `null` (respects suspension).
+  - `requireAuth()` — throws if unauthenticated.
+  - `canEditLanguage` / `canViewLanguage` / `isLanguageOwner` — collaboration and visibility checks.
 
-### Server Actions (Orchestration Layer)
+Always prefer these helpers over duplicating permission queries in random modules.
 
-Located in `app/actions/`. Each action function:
+## Routing and product surfaces
 
-1. Checks authentication (`getUserId()`)
-2. Validates input (Zod schema from `lib/validations/`)
-3. Checks authorization (`canEditLanguage()`)
-4. Calls service function (`lib/services/`)
-5. Logs activity (`createActivity()`)
-6. Revalidates cached paths (`revalidatePath()`)
-7. Returns `ActionResult<T>`
+- **`/lang/[slug]/...`** — public or visibility-gated **reader** experience for a language (dictionary, grammar, texts, etc.).
+- **`/studio/lang/[slug]/...`** — **authoring** UI for owners and editors.
+- **`/dashboard`**, **`/admin`**, **`/settings`** — user dashboard, platform admin, and account settings.
 
-Actions are **thin** — they should not contain business logic. They are the "glue" between Next.js concerns (caching, auth sessions) and pure business logic.
+Layouts under `app/lang/` and `app/studio/lang/` wrap children with navigation and context appropriate to each mode.
 
-### Services (Business Logic Layer)
+## Rich text and structured content
 
-Located in `lib/services/`. Key rules:
+- **Grammar pages, articles, and similar** store TipTap (or compatible) JSON in Prisma `Json` fields.
+- Custom TipTap extensions live under **`lib/tiptap/`** (for example paradigm and IGT blocks).
 
-- **No Next.js imports** — services must not import from `next/cache`, `next/navigation`, etc.
-- **Receive userId as parameter** — services do not call `getUserId()` themselves
-- **Throw AppError subclasses** — the action layer catches and translates to `ActionResult`
-- **Testable with mocked Prisma** — no framework dependencies to mock
+## Caching and revalidation
 
-```typescript
-// lib/services/dictionary-entry.ts
-export async function createEntry(
-  data: CreateDictionaryEntryInput,
-  userId: string
-): Promise<DictionaryEntry> {
-  // Business logic here
-  // Throws UnauthorizedError, NotFoundError, etc. on failure
-  return prisma.dictionaryEntry.create({ data: { ... } })
-}
-```
+Server Actions call **`revalidatePath`** (and occasionally tag-based revalidation where implemented) after writes so public pages stay fresh. When you add a new mutation, follow existing actions: update the DB, then revalidate the studio **and** public paths that surface the same data.
 
-### Data Access (Prisma)
+## Background and edge behavior
 
-- Schema defined in `prisma/schema.prisma` (38 models)
-- Single client instance in `lib/prisma.ts`
-- Services access Prisma directly — no extra repository layer needed at current scale
+- The root layout registers a **service worker** in production only; in development it unregisters workers to avoid stale HMR caches.
+- Optional **AWS Polly** powers IPA pronunciation from `app/api/pronounce` when credentials are present.
 
-## Error Handling
+## Design principles for changes
 
-```
-Service throws AppError  →  Action catches  →  Returns ActionResult  →  Component shows toast
-```
-
-Error types (`lib/errors.ts`):
-- `UnauthorizedError` — user lacks permission
-- `NotFoundError` — entity doesn't exist
-- `ValidationError` — business rule violation
-- `ConflictError` — duplicate or conflicting state
-
-## Validation
-
-All input validation uses Zod schemas in `lib/validations/`:
-
-- One file per domain entity (e.g., `dictionary-entry.ts`, `language.ts`)
-- Schemas define max lengths, required fields, and shapes
-- Both `create` and `update` schemas exist (update fields are optional)
-- Type inference: `type CreateInput = z.infer<typeof createSchema>`
-
-## Authentication & Authorization
-
-- **Authentication**: NextAuth.js sessions via `getUserId()` / `requireAuth()`
-- **Authorization**: Permission helpers in `lib/auth-helpers.ts`:
-  - `canEditLanguage(languageId, userId)` — owner or EDITOR collaborator
-  - `canViewLanguage(languageId, userId)` — owner, collaborator, or public
-  - `isLanguageOwner(languageId, userId)` — owner only
-- **Admin**: `isAdmin()` / `requireAdmin()` in `lib/admin.ts`
-- **DEV_MODE**: Bypasses auth for local development
-
-## Key Domain Models
-
-```
-User
- ├── Language (owns many)
- │    ├── DictionaryEntry (lemma, gloss, IPA, POS, etymology, tags)
- │    ├── GrammarPage (rich text documentation)
- │    ├── ScriptSymbol (alphabet characters)
- │    ├── Paradigm (inflection tables)
- │    ├── ExampleSentence
- │    ├── Text (books, poems)
- │    └── LanguageCollaborator (shared editing)
- ├── LanguageFamily (hierarchical family trees)
- │    └── ProtoWord (proto-language vocabulary)
- └── Activity (audit trail)
-```
-
-## Directory Conventions
-
-| Path | Purpose |
-|------|---------|
-| `app/studio/lang/[slug]/` | Language editing workspace (feature-based routing) |
-| `app/lang/[slug]/` | Public-facing language pages |
-| `app/actions/<entity>.ts` | Server actions grouped by domain entity |
-| `lib/services/<entity>.ts` | Service functions grouped by domain entity |
-| `lib/validations/<entity>.ts` | Zod schemas grouped by domain entity |
-| `lib/utils/` | Pure utility functions (slug generation, IPA detection, etc.) |
-| `components/<feature>/` | Feature-scoped component directories |
-| `tests/helpers/` | Shared test mock factories |
-| `<dir>/__tests__/` | Co-located test files |
-
-## Testing Strategy
-
-- **Unit tests**: Validation schemas and utility functions (pure, no mocking)
-- **Service tests**: Business logic with mocked Prisma (`tests/helpers/prisma-mock.ts`)
-- **Action tests**: Thin integration tests with mocked auth + services
-- **Component tests**: React Testing Library for interactive components
-
-Test files are co-located: `lib/validations/__tests__/dictionary-entry.test.ts`
+1. **Colocate** UI with the route that owns it when the component is not reused elsewhere.
+2. **Put cross-cutting logic** in `lib/` (pure helpers) or `app/actions/` (mutations with auth and Prisma).
+3. **Validate inputs** with Zod schemas in `lib/validations/` before trusting client-submitted data.
+4. **Return structured errors** from Server Actions (`{ error: string }` or `ActionResult` from `lib/types/action-result.ts`) so the UI can toast or inline-validate consistently.

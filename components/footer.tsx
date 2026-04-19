@@ -17,6 +17,9 @@ export function Footer() {
                         <Link href="/browse" className="hover:text-primary transition-colors">
                             Browse
                         </Link>
+                        <Link href="/docs" className="hover:text-primary transition-colors">
+                            Developer docs
+                        </Link>
                         <Link href="/survey" className="hover:text-primary transition-colors">
                             Community Survey
                         </Link>

@@ -1,5 +1,13 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// LingoCon Prisma schema — PostgreSQL
+//
+// Domain overview (see docs/DATABASE.md for prose explanations):
+// - Auth.js tables: User, Account, Session, VerificationToken
+// - Core content: Language (+ collaborators, visibility), ScriptSymbol, GrammarPage, DictionaryEntry,
+//   Paradigm, ExampleSentence, Article, Text, Comment, Activity, …
+// - Families / reconstruction: LanguageFamily, ProtoWord
+// - Admin: AuditLog, moderation fields on User
+//
+// After editing: `npm run db:migrate` (and commit the new migration directory).
 
 generator client {
   provider = "prisma-client-js"

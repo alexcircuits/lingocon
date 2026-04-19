@@ -60,7 +60,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/langua?schema=public"
 ```
 
 > [!TIP]
-> **DEV_MODE="true"** allows you to use the app without configuring GitHub OAuth or NextAuth secrets. It simulates a verified user environment.
+> **DEV_MODE="true"** allows you to use the app without configuring GitHub OAuth or NextAuth secrets. It simulates a verified user environment via a fixed local user (see `lib/constants/dev-user.ts`). Never enable this in production.
 
 ### 4. Database Setup
 
@@ -84,22 +84,28 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) to see the app.
 
-## Project Structure
+## Project structure
 
 ```
 lingocon/
-├── app/                  # App Router pages and layouts
-│   ├── actions/          # Server Actions
-│   ├── api/              # API Routes
+├── app/                  # App Router: pages, layouts, Server Actions, Route Handlers
+│   ├── actions/          # Server Actions (mutations + guarded reads)
+│   ├── api/              # HTTP endpoints (auth, exports, uploads, integrations)
+│   ├── lang/             # Public reader experience per language slug
+│   ├── studio/           # Authoring tools for language owners/editors
 │   └── ...
-├── components/           # React components
-│   └── ui/               # Reusable UI components (shadcn/ui)
-├── lib/                  # Utilities and libraries
-├── prisma/               # Database schema and migrations
-└── types/                # Global type definitions
+├── components/           # Shared React UI (feature widgets + shadcn primitives)
+├── docs/                 # Contributor docs (architecture, database, dev setup)
+├── lib/                  # Prisma singleton, auth helpers, validations, TipTap, utilities
+├── prisma/               # Database schema, migrations, seeds
+├── public/               # Static assets, icons, service worker
+├── tests/                # Shared test helpers (mocks)
+└── types/                # Global TypeScript augmentations (e.g. next-auth)
 ```
 
-## Common Tasks
+**New to the repo?** Browse **[Developer docs on the site](https://lingocon.com/docs)** (or locally at `/docs` when running the app), or read [docs/README.md](docs/README.md) in GitHub, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/CODEBASE.md](docs/CODEBASE.md).
+
+## Common tasks
 
 ### Database Management
 
@@ -126,14 +132,11 @@ See `/app/api/pronounce/route.ts` for implementation details.
 
 ## Contributing
 
-**We are under-resourced and strictly prioritize momentum over polish.**
+Maintainers merge pragmatic fixes quickly, but **readable, documented changes** help the next person—even if that next person is you in six months.
 
-If you want to help, but don't know where to start, visit our [**Contributions Hub**](https://lingocon.com/contributions). We explicitly welcome:
-- AI-generated content/fixes
-- Messy, partial, or "unprofessional" code that solves a problem
-- Direct file drops via email for non-technical users
+If you want to help and do not know where to start, visit the [**Contributions Hub**](https://lingocon.com/contributions). We still welcome AI-assisted work, small partial fixes, and non-GitHub contributions described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full "No Shame" policy.
+For code changes: skim [docs/CODEBASE.md](docs/CODEBASE.md), run `npm run lint`, and describe **what user-visible behavior** changed in your PR.
 
 ## Authors
 

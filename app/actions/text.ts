@@ -1,3 +1,13 @@
+/**
+ * Server Actions for `Text` records (long-form writing attached to a language).
+ *
+ * Flow for every mutation:
+ * 1. Resolve the caller with `getUserId`.
+ * 2. Authorize via `canEditLanguage` (owners, editors, and admins pass).
+ * 3. Touch Prisma, then `revalidatePath` for both studio and public `/lang/...` URLs.
+ *
+ * Slugs are unique per `languageId`; when titles change we scan for collisions the same way as on create.
+ */
 "use server"
 
 import { prisma } from "@/lib/prisma"
@@ -6,6 +16,7 @@ import { revalidatePath } from "next/cache"
 import { TextType } from "@prisma/client"
 import { checkContentBadges } from "@/app/actions/badge"
 
+/** URL-safe slug derived from a title; not globally unique — uniqueness is enforced per language. */
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
