@@ -3,17 +3,34 @@
 import { prisma } from "@/lib/prisma"
 
 /**
- * Search public languages on LingoCon (excluding the current one).
+ * Search languages available for borrowing: public languages OR the user's
+ * own private/unlisted languages (excluding the current one).
  */
 export async function searchLanguages(query: string, excludeLanguageId: string) {
+  // Attempt to resolve the current user so we can include their own languages.
+  // borrow.ts intentionally keeps this import-free from auth-helpers to avoid
+  // a circular dep — use the session directly.
+  const { auth } = await import("@/auth")
+  const session = await auth()
+  const userId = session?.user?.id ?? null
+
+  const ownClause = userId ? [{ ownerId: userId }] : []
+
   const languages = await prisma.language.findMany({
     where: {
-      visibility: "PUBLIC",
       id: { not: excludeLanguageId },
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { slug: { contains: query, mode: "insensitive" } },
+        { visibility: "PUBLIC" },
+        ...ownClause,
       ],
+      AND: query
+        ? [{
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { slug: { contains: query, mode: "insensitive" } },
+            ],
+          }]
+        : [],
     },
     select: {
       id: true,

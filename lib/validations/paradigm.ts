@@ -1,5 +1,18 @@
 import { z } from "zod"
 
+export const paradigmSlotsSchema = z.object({
+  rows: z.array(z.string()).default([]),
+  columns: z.array(z.string()).default([]),
+  cells: z.record(z.string(), z.string()).default({}),
+})
+
+export type ParadigmSlots = z.infer<typeof paradigmSlotsSchema>
+
+export function parseParadigmSlots(slots: unknown): ParadigmSlots {
+  const result = paradigmSlotsSchema.safeParse(slots)
+  return result.success ? result.data : { rows: [], columns: [], cells: {} }
+}
+
 export const createParadigmSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
   slots: z.record(z.string(), z.any()), // JSON structure for table

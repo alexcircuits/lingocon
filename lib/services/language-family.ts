@@ -79,28 +79,36 @@ export async function buildFamilyTree(languageId: string) {
     slug: true,
     visibility: true,
     externalAncestry: true,
+    parentLanguageId: true,
     owner: { select: { id: true, name: true, image: true } },
     _count: { select: { dictionaryEntries: true } },
   } as const
 
-  const childInclude = (depth: number): any => {
-    if (depth <= 0) return { select: childSelect }
-    return {
-      select: {
-        ...childSelect,
-        childLanguages: childInclude(depth - 1),
-      },
-    }
+  const fetchSubtree = async (rId: string): Promise<any> => {
+    const descendantIds = await getDescendantIds(rId)
+    const allIds = [rId, ...descendantIds]
+    const allNodes = await prisma.language.findMany({
+      where: { id: { in: allIds } },
+      select: childSelect,
+    })
+    
+    const nodeMap = new Map<string, any>()
+    allNodes.forEach(node => {
+      nodeMap.set(node.id, { ...node, childLanguages: [] })
+    })
+
+    let rTree: any = null
+    nodeMap.forEach(node => {
+      if (node.id === rId) {
+        rTree = node
+      } else if (node.parentLanguageId && nodeMap.has(node.parentLanguageId)) {
+        nodeMap.get(node.parentLanguageId).childLanguages.push(node)
+      }
+    })
+    return rTree
   }
 
-  const rootTree = await prisma.language.findUnique({
-    where: { id: rootId },
-    select: {
-      ...childSelect,
-      childLanguages: childInclude(10),
-    },
-  })
-
+  const rootTree = await fetchSubtree(rootId)
   if (!rootTree) return null
 
   if (rootTree.externalAncestry) {
@@ -110,14 +118,15 @@ export async function buildFamilyTree(languageId: string) {
         parentLanguageId: null,
         id: { not: rootId },
       },
-      select: {
-        ...childSelect,
-        childLanguages: childInclude(5),
-      },
+      select: { id: true },
       take: 50,
     })
 
     if (siblingRoots.length > 0) {
+      const siblingTrees = await Promise.all(
+        siblingRoots.map(sib => fetchSubtree(sib.id))
+      )
+      
       const safeId = encodeURIComponent(rootTree.externalAncestry)
       return {
         id: `virtual-${safeId}`,
@@ -125,7 +134,7 @@ export async function buildFamilyTree(languageId: string) {
         slug: "",
         externalAncestry: rootTree.externalAncestry,
         isVirtual: true,
-        childLanguages: [rootTree, ...siblingRoots],
+        childLanguages: [rootTree, ...siblingTrees.filter(Boolean)],
       } as any
     }
   }

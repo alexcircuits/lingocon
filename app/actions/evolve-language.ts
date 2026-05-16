@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { checkLanguageBadges } from "@/app/actions/badge"
@@ -72,7 +73,7 @@ export async function evolveLanguage(input: EvolveLanguageInput) {
           fontFamily: parent.fontFamily,
           fontScale: parent.fontScale,
           allowsDiacritics: parent.allowsDiacritics,
-          metadata: parent.metadata ? (parent.metadata as any) : null,
+          metadata: parent.metadata as Prisma.InputJsonValue ?? Prisma.JsonNull,
         },
       })
 
@@ -91,8 +92,7 @@ export async function evolveLanguage(input: EvolveLanguageInput) {
         })
       }
 
-      // 3. Clone dictionary entries. Note: we are not deep cloning tags 
-      // or related words for simplicity, just the core etymons.
+      // 3. Clone dictionary entries and auto-link cognate chains.
       if (parent.dictionaryEntries.length > 0) {
         await tx.dictionaryEntry.createMany({
           data: parent.dictionaryEntries.map(entry => ({
@@ -101,12 +101,38 @@ export async function evolveLanguage(input: EvolveLanguageInput) {
             partOfSpeech: entry.partOfSpeech,
             gloss: entry.gloss,
             ipa: entry.ipa,
-            relatedWords: entry.relatedWords ? (entry.relatedWords as any) : [],
+            relatedWords: (entry.relatedWords ?? []) as Prisma.InputJsonValue,
             notes: entry.notes,
-            // Track etymology back to parent!
-            etymology: `Derived from ${parent.name}: ${entry.lemma}`
+            tags: entry.tags as Prisma.InputJsonValue ?? Prisma.JsonNull,
+            etymology: entry.etymology || `Derived from ${parent.name}: ${entry.lemma}`,
           }))
         })
+
+        // 4. Link each cloned entry back to its parent entry via sourceEntryId
+        //    so the cognate chain is immediately populated.
+        const [childEntries, parentEntries] = await Promise.all([
+          tx.dictionaryEntry.findMany({
+            where: { languageId: lang.id },
+            select: { id: true, lemma: true },
+          }),
+          tx.dictionaryEntry.findMany({
+            where: { languageId: parent.id },
+            select: { id: true, lemma: true },
+          }),
+        ])
+
+        const parentIdByLemma = new Map(parentEntries.map(e => [e.lemma, e.id]))
+
+        await Promise.all(
+          childEntries
+            .filter(e => parentIdByLemma.has(e.lemma))
+            .map(e =>
+              tx.dictionaryEntry.update({
+                where: { id: e.id },
+                data: { sourceEntryId: parentIdByLemma.get(e.lemma) },
+              })
+            )
+        )
       }
 
       return lang

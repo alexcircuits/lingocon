@@ -125,6 +125,29 @@ export async function deleteEntry(entryId: string, languageId: string, userId: s
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
 
+  // Scrub dangling relatedWords references
+  const entriesWithRelated = await prisma.dictionaryEntry.findMany({
+    where: { languageId },
+    select: { id: true, relatedWords: true },
+  })
+
+  const updates = []
+  for (const e of entriesWithRelated) {
+    if (e.id === entryId) continue
+    const related = e.relatedWords as string[]
+    if (Array.isArray(related) && related.includes(entryId)) {
+      updates.push(
+        prisma.dictionaryEntry.update({
+          where: { id: e.id },
+          data: { relatedWords: related.filter(id => id !== entryId) },
+        })
+      )
+    }
+  }
+  if (updates.length > 0) {
+    await Promise.all(updates)
+  }
+
   return prisma.dictionaryEntry.delete({
     where: { id: entryId },
     include: {
@@ -155,6 +178,31 @@ export async function bulkDeleteEntries(entryIds: string[], languageId: string, 
 
   if (entries.length !== entryIds.length) {
     throw new NotFoundError("Some entries not found or don't belong to this language")
+  }
+
+  // Scrub dangling relatedWords references
+  const entriesWithRelated = await prisma.dictionaryEntry.findMany({
+    where: { languageId },
+    select: { id: true, relatedWords: true },
+  })
+
+  const entryIdsSet = new Set(entryIds)
+  const updates = []
+  for (const e of entriesWithRelated) {
+    if (entryIdsSet.has(e.id)) continue
+    
+    const related = e.relatedWords as string[]
+    if (Array.isArray(related) && related.some(id => entryIdsSet.has(id))) {
+      updates.push(
+        prisma.dictionaryEntry.update({
+          where: { id: e.id },
+          data: { relatedWords: related.filter(id => !entryIdsSet.has(id)) },
+        })
+      )
+    }
+  }
+  if (updates.length > 0) {
+    await Promise.all(updates)
   }
 
   const result = await prisma.dictionaryEntry.deleteMany({

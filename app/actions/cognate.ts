@@ -1,16 +1,14 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
-import { getDevUserId } from "@/lib/dev-auth"
+import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 
 /**
  * Link a dictionary entry to its source/ancestor entry (cognate tracking).
  */
 export async function linkCognate(entryId: string, sourceEntryId: string) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   // Verify both entries exist and user owns the entry being linked
@@ -31,16 +29,19 @@ export async function linkCognate(entryId: string, sourceEntryId: string) {
   if (entryId === sourceEntryId) return { error: "Cannot link an entry to itself" }
 
   // Prevent circular chains (walk up to 20 levels)
-  let current: string | null = sourceEntryId
-  let depth = 0
-  while (current && depth < 20) {
-    if (current === entryId) return { error: "Circular cognate chain detected" }
-    const parent: { sourceEntryId: string | null } | null = await prisma.dictionaryEntry.findUnique({
-      where: { id: current },
-      select: { sourceEntryId: true },
-    })
-    current = parent?.sourceEntryId ?? null
-    depth++
+  const chain = await prisma.$queryRaw<{ id: string }[]>`
+    WITH RECURSIVE chain AS (
+      SELECT id, "sourceEntryId"
+      FROM dictionary_entries WHERE id = ${sourceEntryId}
+      UNION ALL
+      SELECT e.id, e."sourceEntryId"
+      FROM dictionary_entries e
+      JOIN chain c ON e.id = c."sourceEntryId"
+    )
+    SELECT id FROM chain LIMIT 20
+  `
+  if (chain.some(c => c.id === entryId)) {
+    return { error: "Circular cognate chain detected" }
   }
 
   await prisma.dictionaryEntry.update({
@@ -56,8 +57,7 @@ export async function linkCognate(entryId: string, sourceEntryId: string) {
  * Remove a cognate link from an entry.
  */
 export async function unlinkCognate(entryId: string) {
-  const session = await auth()
-  const userId = session?.user?.id || (process.env.DEV_MODE === "true" ? await getDevUserId() : null)
+  const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   const entry = await prisma.dictionaryEntry.findUnique({
@@ -81,44 +81,38 @@ export async function unlinkCognate(entryId: string) {
  * Get the cognate chain for an entry (walk up through source entries).
  */
 export async function getCognateChain(entryId: string) {
-  const chain: { id: string; lemma: string; gloss: string; ipa: string | null; languageName: string; languageSlug: string }[] = []
+  const chainRows = await prisma.$queryRaw<
+    {
+      id: string
+      lemma: string
+      gloss: string
+      ipa: string | null
+      sourceEntryId: string | null
+      languageName: string
+      languageSlug: string
+    }[]
+  >`
+    WITH RECURSIVE chain AS (
+      SELECT id, lemma, gloss, ipa, "sourceEntryId", "languageId"
+      FROM dictionary_entries WHERE id = ${entryId}
+      UNION ALL
+      SELECT e.id, e.lemma, e.gloss, e.ipa, e."sourceEntryId", e."languageId"
+      FROM dictionary_entries e
+      JOIN chain c ON e.id = c."sourceEntryId"
+    )
+    SELECT c.id, c.lemma, c.gloss, c.ipa, c."sourceEntryId", l.name AS "languageName", l.slug AS "languageSlug"
+    FROM chain c JOIN languages l ON c."languageId" = l.id
+    LIMIT 20
+  `
 
-  let currentId: string | null = entryId
-  let depth = 0
-
-  while (currentId && depth < 20) {
-    const entry: {
-      id: string; lemma: string; gloss: string; ipa: string | null;
-      sourceEntryId: string | null;
-      language: { name: string; slug: string };
-    } | null = await prisma.dictionaryEntry.findUnique({
-      where: { id: currentId },
-      select: {
-        id: true,
-        lemma: true,
-        gloss: true,
-        ipa: true,
-        sourceEntryId: true,
-        language: { select: { name: true, slug: true } },
-      },
-    })
-
-    if (!entry) break
-
-    chain.push({
-      id: entry.id,
-      lemma: entry.lemma,
-      gloss: entry.gloss,
-      ipa: entry.ipa,
-      languageName: entry.language.name,
-      languageSlug: entry.language.slug,
-    })
-
-    currentId = entry.sourceEntryId
-    depth++
-  }
-
-  return chain
+  return chainRows.map(row => ({
+    id: row.id,
+    lemma: row.lemma,
+    gloss: row.gloss,
+    ipa: row.ipa,
+    languageName: row.languageName,
+    languageSlug: row.languageSlug,
+  }))
 }
 
 /**

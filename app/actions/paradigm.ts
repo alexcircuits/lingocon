@@ -175,6 +175,43 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
   }
 }
 
+/**
+ * Duplicate a paradigm within the same language.
+ * Copies the name (appended with " (copy)"), slots, and notes.
+ */
+export async function cloneParadigm(paradigmId: string, languageId: string) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+
+  const canEdit = await canEditLanguage(languageId, userId)
+  if (!canEdit) return { error: "Unauthorized" }
+
+  try {
+    const source = await prisma.paradigm.findUnique({
+      where: { id: paradigmId },
+      select: { name: true, slots: true, notes: true, language: { select: { slug: true } } },
+    })
+
+    if (!source) return { error: "Paradigm not found" }
+
+    const clone = await prisma.paradigm.create({
+      data: {
+        name: `${source.name} (copy)`,
+        slots: source.slots as any,
+        notes: source.notes,
+        languageId,
+      },
+    })
+
+    revalidatePath(`/studio/lang/${source.language.slug}/paradigms`)
+
+    return { success: true, data: clone }
+  } catch (error) {
+    if (error instanceof Error) return { error: error.message }
+    return { error: "Failed to clone paradigm" }
+  }
+}
+
 export async function getParadigmsForLanguage(languageId: string) {
   try {
     const paradigms = await prisma.paradigm.findMany({

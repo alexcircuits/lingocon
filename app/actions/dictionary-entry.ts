@@ -1,6 +1,7 @@
 "use server"
 
 import { ZodError } from "zod"
+import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { AppError } from "@/lib/errors"
 import { createActivity } from "@/lib/utils/activity"
@@ -168,5 +169,30 @@ export async function deleteAllDictionaryEntries(languageId: string) {
     return { success: true as const, deletedCount: result.count }
   } catch (error) {
     return handleError(error, "Failed to delete all dictionary entries")
+  }
+}
+
+/**
+ * Public action — no auth required.
+ * Fetches a single dictionary entry with its example sentences for the
+ * lazy-load detail sheet in the public dictionary view.
+ */
+export async function getPublicDictionaryEntry(entryId: string) {
+  try {
+    const entry = await prisma.dictionaryEntry.findUnique({
+      where: { id: entryId },
+      include: {
+        exampleSentences: { orderBy: { order: "asc" } },
+        language: { select: { visibility: true } },
+      },
+    })
+
+    if (!entry || entry.language.visibility === "PRIVATE") {
+      return { error: "Not found" }
+    }
+
+    return { success: true as const, data: entry }
+  } catch (error) {
+    return handleError(error, "Failed to fetch entry details")
   }
 }

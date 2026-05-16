@@ -8,8 +8,9 @@ export function revalidateDictionary(slug: string) {
 
 /** Revalidate grammar pages for a language (studio + public) */
 export function revalidateGrammar(slug: string) {
-  revalidatePath(`/studio/lang/${slug}/grammar`)
-  revalidatePath(`/lang/${slug}/grammar`)
+  // "layout" scope busts the ISR cache for all sub-pages under this route segment
+  revalidatePath(`/studio/lang/${slug}/grammar`, "layout")
+  revalidatePath(`/lang/${slug}/grammar`, "layout")
 }
 
 /** Revalidate alphabet/script pages for a language (studio + public) */
@@ -47,6 +48,7 @@ export function revalidateStudio() {
 export function revalidateFamilies() {
   revalidatePath("/studio")
   revalidatePath("/dashboard/families")
+  revalidatePath("/families")
 }
 
 /** Revalidate articles for a language */

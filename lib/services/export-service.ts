@@ -42,7 +42,18 @@ const exportSelect = {
             ipa: true,
             partOfSpeech: true,
             notes: true,
+            etymology: true,
+            tags: true,
+            relatedWords: true,
+            sourceEntryId: true,
         },
+    },
+    // Family & lineage
+    parentLanguage: {
+        select: { id: true, name: true, slug: true },
+    },
+    family: {
+        select: { id: true, name: true, slug: true },
     },
     paradigms: {
         select: {

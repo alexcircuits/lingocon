@@ -1,5 +1,22 @@
 import { z } from "zod"
 
+export const languageMetadataSchema = z.object({
+  wordOrder: z.string().optional(),
+  morphologicalTendency: z.string().optional(),
+  vowels: z.array(z.string()).optional(),
+  consonants: z.array(z.string()).optional(),
+  syllableStructure: z.string().optional(),
+  allophonyRules: z.string().optional(),
+  soundChangeRules: z.string().optional(),
+  phonologyOverride: z.object({
+    enabled: z.boolean(),
+    consonants: z.array(z.string()).optional(),
+    vowels: z.array(z.string()).optional(),
+  }).optional(),
+}).catchall(z.any())
+
+export type LanguageMetadata = z.infer<typeof languageMetadataSchema>
+
 export const createLanguageSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   slug: z
@@ -9,7 +26,7 @@ export const createLanguageSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   description: z.string().max(1000).optional(),
   visibility: z.enum(["PRIVATE", "UNLISTED", "PUBLIC"]),
-  metadata: z.record(z.string(), z.any()).optional(), // Typology data from wizard
+  metadata: languageMetadataSchema.optional(), // Typology data from wizard
 })
 
 export const updateLanguageSchema = z.object({
@@ -26,7 +43,7 @@ export const updateLanguageSchema = z.object({
   fontScale: z.number().min(0.5).max(3.0).optional(),
   allowsDiacritics: z.boolean().optional(),
   allowForking: z.boolean().optional(),
-  metadata: z.record(z.string(), z.any()).optional(),
+  metadata: languageMetadataSchema.optional(),
 })
 
 export type CreateLanguageInput = z.infer<typeof createLanguageSchema>
