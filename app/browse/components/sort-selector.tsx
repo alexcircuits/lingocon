@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type SortOption = "recent" | "updated" | "entries" | "name"
+type SortOption = "recent" | "updated" | "entries" | "name" | "likes"
 
 interface SortSelectorProps {
   currentSort: SortOption
@@ -37,6 +37,7 @@ export function SortSelector({ currentSort }: SortSelectorProps) {
           <SelectItem value="recent">Recently Created</SelectItem>
           <SelectItem value="updated">Recently Updated</SelectItem>
           <SelectItem value="entries">Most Entries</SelectItem>
+          <SelectItem value="likes">Most Likes</SelectItem>
           <SelectItem value="name">Name (A-Z)</SelectItem>
         </SelectContent>
       </Select>

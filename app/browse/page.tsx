@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-type SortOption = "recent" | "updated" | "entries" | "name"
+type SortOption = "recent" | "updated" | "entries" | "name" | "likes"
 
 async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 1, query: string = "") {
   const pageSize = 20
@@ -64,6 +64,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
     parentLanguageId: true,
     externalAncestry: true,
     familyId: true,
+    lastSlugChangedAt: true,
     owner: {
       select: { id: true, name: true, image: true },
     },
@@ -86,6 +87,14 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
       where,
       select: sharedSelect,
       orderBy: { dictionaryEntries: { _count: "desc" } },
+      take: pageSize,
+      skip,
+    })
+  } else if (sortBy === "likes") {
+    languages = await prisma.language.findMany({
+      where,
+      select: sharedSelect,
+      orderBy: { favorites: { _count: "desc" } },
       take: pageSize,
       skip,
     })

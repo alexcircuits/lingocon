@@ -217,6 +217,7 @@ async function getFeaturedLanguages() {
       },
     },
     orderBy: [
+      { favorites: { _count: "desc" } },
       { dictionaryEntries: { _count: "desc" } },
       { updatedAt: "desc" },
     ],
