@@ -412,7 +412,7 @@ export function DictionaryManager({
         />
       )}
 
-      <div className="flex flex-col sm:flex-row items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
         <div className="flex-1 w-full">
           <DictionarySearch
             onSearch={handleSearch}
@@ -423,7 +423,7 @@ export function DictionaryManager({
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Select defaultValue={initialSort} onValueChange={handleSort}>
-            <SelectTrigger className="h-9 w-[160px] gap-1 text-sm">
+            <SelectTrigger className="h-9 w-[140px] sm:w-[160px] gap-1 text-sm">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <SelectValue placeholder="Sort by…" />
             </SelectTrigger>

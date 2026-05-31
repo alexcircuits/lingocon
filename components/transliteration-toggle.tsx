@@ -24,13 +24,12 @@ export function TransliterationToggle({
   return (
     <Button
       type="button"
-      variant="outline"
-      size="sm"
+      variant={showLatin ? "secondary" : "outline"}
+      size="icon"
       onClick={handleToggle}
-      className="gap-2"
+      title={showLatin ? "Show Native Script" : "Show Latin Transliteration"}
     >
       <Languages className="h-4 w-4" />
-      {showLatin ? "Show Native Script" : "Show Latin Transliteration"}
     </Button>
   )
 }

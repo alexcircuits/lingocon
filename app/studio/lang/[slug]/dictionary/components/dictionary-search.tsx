@@ -53,7 +53,7 @@ export function DictionarySearch({
         />
       </div>
       <Select value={field} onValueChange={handleFieldChange}>
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-[100px] sm:w-[130px]">
           <SelectValue placeholder="Field" />
         </SelectTrigger>
         <SelectContent>
