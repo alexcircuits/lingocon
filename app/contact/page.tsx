@@ -66,7 +66,7 @@ export default async function ContactPage() {
 
                         {/* General Inquiries */}
                         <div className="bg-secondary/10 border border-border/40 backdrop-blur-sm rounded-2xl p-8 hover:bg-secondary/20 transition-all duration-300 group">
-                            <div className="w-12 h-12 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-6 text-violet-500 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 text-primary group-hover:scale-110 transition-transform">
                                 <MessageSquare className="w-6 h-6" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">General Inquiries</h3>

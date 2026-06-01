@@ -103,19 +103,19 @@ export function FlashcardCard({
       {/* Action buttons (only visible when flipped) */}
       <div
         className={cn(
-          "flex gap-4 transition-all duration-300",
+          "flex flex-col gap-3 sm:flex-row w-full transition-all duration-300",
           flipped ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         )}
       >
         <button
           onClick={(e) => { e.stopPropagation(); handleResult(false) }}
-          className="px-8 py-3 rounded-xl bg-destructive/10 text-destructive font-medium hover:bg-destructive/20 transition-colors border border-destructive/20 text-lg"
+          className="flex-1 w-full sm:w-auto px-8 py-3 rounded-xl bg-destructive/10 text-destructive font-medium hover:bg-destructive/20 transition-colors border border-destructive/20 text-lg"
         >
           Didn&apos;t Know
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleResult(true) }}
-          className="px-8 py-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 text-lg"
+          className="flex-1 w-full sm:w-auto px-8 py-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 text-lg"
         >
           Knew It! ✓
         </button>

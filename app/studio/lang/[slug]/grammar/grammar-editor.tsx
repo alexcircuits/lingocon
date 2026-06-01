@@ -223,22 +223,23 @@ export function GrammarEditor({
           />
         </Card>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           {page ? (
             <Button
               type="button"
               variant="destructive"
               onClick={() => setIsDeleteOpen(true)}
               disabled={isPending}
+              className="w-full sm:w-auto"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Page
             </Button>
           ) : (
-            <div />
+            <div className="hidden sm:block" />
           )}
 
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
             {isPending ? "Saving..." : page ? "Update Page" : "Create Page"}
           </Button>

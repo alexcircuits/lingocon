@@ -73,9 +73,9 @@ export default async function ArticlesPage({
 
   return (
     <div className="space-y-8">
-      <div className="pb-6 border-b border-border/40 flex items-end justify-between gap-4">
+      <div className="pb-6 border-b border-border/40 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-serif tracking-tight mb-1">Articles</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Articles</h1>
           <p className="text-muted-foreground">
             Write news updates, announcements, and articles about your language
           </p>
@@ -122,7 +122,7 @@ export default async function ArticlesPage({
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5" />
                         {article.author.name || "Unknown"}

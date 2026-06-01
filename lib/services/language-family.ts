@@ -48,6 +48,12 @@ export async function setParentLanguage(
   })
 }
 
+/**
+ * @deprecated `externalAncestry` is a legacy free-text ancestry label, superseded
+ * by proper `LanguageFamily` grouping (`familyId`) plus `parentLanguageId` lineage.
+ * It is still read to build virtual tree roots and OG images, but new code should
+ * assign a `LanguageFamily` instead. No editor UI is exposed for it.
+ */
 export async function setExternalAncestry(
   languageId: string,
   externalAncestry: string | null,
@@ -356,6 +362,10 @@ export async function searchParentLanguages(
   return { own, public: publicLangs }
 }
 
+/**
+ * @deprecated See {@link setExternalAncestry}. Legacy free-text ancestry labels;
+ * prefer `LanguageFamily` grouping for new work.
+ */
 export async function getExternalAncestries(): Promise<string[]> {
   const result = await prisma.language.findMany({
     where: { externalAncestry: { not: null } },

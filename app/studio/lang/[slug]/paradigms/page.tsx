@@ -37,7 +37,7 @@ export default async function ParadigmsPage({
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-3xl font-serif tracking-tight mb-1">Paradigm Tables</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Paradigm Tables</h1>
         <p className="text-muted-foreground">
           Define declension and conjugation tables for morphological patterns
         </p>

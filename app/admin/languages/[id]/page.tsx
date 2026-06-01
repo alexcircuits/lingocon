@@ -107,7 +107,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <FileText className="h-5 w-5 text-violet-500 mb-2" />
+                            <FileText className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.grammarPages}</p>
                             <p className="text-xs text-muted-foreground">Grammar</p>
                         </div>
@@ -116,7 +116,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <Type className="h-5 w-5 text-emerald-500 mb-2" />
+                            <Type className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.scriptSymbols}</p>
                             <p className="text-xs text-muted-foreground">Alphabet</p>
                         </div>
@@ -125,7 +125,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <Table2 className="h-5 w-5 text-amber-500 mb-2" />
+                            <Table2 className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.paradigms}</p>
                             <p className="text-xs text-muted-foreground">Paradigms</p>
                         </div>
@@ -134,7 +134,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <AlignLeft className="h-5 w-5 text-blue-500 mb-2" />
+                            <AlignLeft className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.articles}</p>
                             <p className="text-xs text-muted-foreground">Articles</p>
                         </div>
@@ -143,7 +143,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <BookOpen className="h-5 w-5 text-rose-500 mb-2" />
+                            <BookOpen className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.texts}</p>
                             <p className="text-xs text-muted-foreground">Texts</p>
                         </div>
@@ -152,7 +152,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <Heart className="h-5 w-5 text-red-500 mb-2" />
+                            <Heart className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.favorites}</p>
                             <p className="text-xs text-muted-foreground">Favorites</p>
                         </div>
@@ -161,7 +161,7 @@ export default async function AdminLanguageDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                            <Activity className="h-5 w-5 text-orange-500 mb-2" />
+                            <Activity className="h-5 w-5 text-primary mb-2" />
                             <p className="text-2xl font-serif">{language.stats.activities}</p>
                             <p className="text-xs text-muted-foreground">Activities</p>
                         </div>

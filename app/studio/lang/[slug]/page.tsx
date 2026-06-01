@@ -111,7 +111,7 @@ export default async function OverviewPage({
     <div className="space-y-8">
       {/* Header */}
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-3xl font-serif tracking-tight mb-1">{language.name}</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-1">{language.name}</h1>
         <p className="text-muted-foreground">
           Overview and analytics for your language
         </p>
@@ -122,9 +122,9 @@ export default async function OverviewPage({
         {quickActions.map((action) => {
           const Icon = action.icon
           const colorMap = {
-            emerald: "hover:border-emerald-500 hover:text-emerald-500",
-            violet: "hover:border-violet-500 hover:text-violet-500",
-            amber: "hover:border-amber-500 hover:text-amber-500",
+            emerald: "hover:border-primary hover:text-primary",
+            violet: "hover:border-primary hover:text-primary",
+            amber: "hover:border-primary hover:text-primary",
           }
           return (
             <Link key={action.label} href={action.href}>
@@ -166,7 +166,7 @@ export default async function OverviewPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-muted-foreground">Name</span>
@@ -186,8 +186,8 @@ export default async function OverviewPage({
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-muted-foreground">Slug</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <code className="text-sm bg-muted px-2 py-1 rounded">{language.slug}</code>
+                <div className="flex items-center gap-2 min-w-0">
+                  <code className="text-sm bg-muted px-2 py-1 rounded truncate min-w-0">{language.slug}</code>
                   <CopyButton text={language.slug} message="Copied!" size="sm" />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default async function OverviewPage({
               />
             </div>
 
-            <div className="pt-2 flex gap-6 text-sm">
+            <div className="pt-2 flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-muted-foreground" />
                 <span className="capitalize">{language.visibility.toLowerCase()}</span>
@@ -220,7 +220,7 @@ export default async function OverviewPage({
         <Card className="border-border/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Activity className="h-4 w-4 text-rose-500" />
+              <Activity className="h-4 w-4 text-primary" />
               Recent Activity
             </CardTitle>
           </CardHeader>

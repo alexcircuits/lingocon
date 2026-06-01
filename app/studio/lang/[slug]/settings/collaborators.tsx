@@ -264,60 +264,114 @@ export function Collaborators({ languageId, isOwner }: CollaboratorsProps) {
             description="Invite others to collaborate on this language. Editors can make changes, viewers can only view."
           />
         ) : (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead className="w-32">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {collaborators.map((collab) => (
-                  <TableRow key={collab.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {collab.user.name || collab.user.email || "Anonymous"}
-                        </p>
-                        {collab.user.email && (
-                          <p className="text-xs text-muted-foreground">{collab.user.email}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={collab.role}
-                        onValueChange={(value) =>
-                          handleUpdateRole(collab.userId, value as CollaboratorRole)
-                        }
-                        disabled={isPending || !isOwner}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EDITOR">Editor</SelectItem>
-                          <SelectItem value="VIEWER">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemove(collab.userId)}
-                        disabled={isPending || !isOwner}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+          <>
+            <div className="hidden rounded-lg border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="w-32">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {collaborators.map((collab) => (
+                    <TableRow key={collab.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {collab.user.name || collab.user.email || "Anonymous"}
+                          </p>
+                          {collab.user.email && (
+                            <p className="text-xs text-muted-foreground">{collab.user.email}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={collab.role}
+                          onValueChange={(value) =>
+                            handleUpdateRole(collab.userId, value as CollaboratorRole)
+                          }
+                          disabled={isPending || !isOwner}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="EDITOR">Editor</SelectItem>
+                            <SelectItem value="VIEWER">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Remove collaborator"
+                          onClick={() => handleRemove(collab.userId)}
+                          disabled={isPending || !isOwner}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile: stacked cards */}
+            <div className="space-y-3 md:hidden">
+              {collaborators.map((collab) => (
+                <div key={collab.id} className="space-y-3 rounded-lg border p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 shrink-0">
+                      <AvatarImage src={collab.user.image || undefined} />
+                      <AvatarFallback>
+                        {(collab.user.name || collab.user.email || "U")[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">
+                        {collab.user.name || collab.user.email || "Anonymous"}
+                      </p>
+                      {collab.user.email && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {collab.user.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Select
+                    value={collab.role}
+                    onValueChange={(value) =>
+                      handleUpdateRole(collab.userId, value as CollaboratorRole)
+                    }
+                    disabled={isPending || !isOwner}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EDITOR">Editor</SelectItem>
+                      <SelectItem value="VIEWER">Viewer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    aria-label="Remove collaborator"
+                    onClick={() => handleRemove(collab.userId)}
+                    disabled={isPending || !isOwner}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

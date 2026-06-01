@@ -115,7 +115,7 @@ export function InlineEdit({
             maxLength={maxLength}
             disabled={isSaving}
             className={cn(
-              "h-8",
+              "h-9 sm:h-8",
               error && "border-destructive focus-visible:ring-destructive"
             )}
           />
@@ -134,7 +134,7 @@ export function InlineEdit({
             variant="ghost"
             onClick={handleSave}
             disabled={isSaving}
-            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            className="h-9 w-9 sm:h-8 sm:w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
           >
             <Check className="h-4 w-4" />
           </Button>
@@ -143,7 +143,7 @@ export function InlineEdit({
             variant="ghost"
             onClick={handleCancel}
             disabled={isSaving}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -165,7 +165,7 @@ export function InlineEdit({
         <span className="flex-1 text-foreground">{value || placeholder}</span>
       )}
       {!disabled && (
-        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Pencil className="hover-reveal h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
     </div>
   )

@@ -79,3 +79,28 @@ export async function getAuditLogs(params: {
         }
     }
 }
+
+/**
+ * Distinct action and resource values, used to populate audit log filters.
+ */
+export async function getAuditFilterOptions() {
+    await requireAdmin()
+
+    const [actions, resources] = await Promise.all([
+        prisma.auditLog.findMany({
+            select: { action: true },
+            distinct: ["action"],
+            orderBy: { action: "asc" }
+        }),
+        prisma.auditLog.findMany({
+            select: { resource: true },
+            distinct: ["resource"],
+            orderBy: { resource: "asc" }
+        })
+    ])
+
+    return {
+        actions: actions.map((a) => a.action),
+        resources: resources.map((r) => r.resource)
+    }
+}

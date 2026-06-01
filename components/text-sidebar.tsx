@@ -34,7 +34,7 @@ export function TextSidebar({ languageSlug, texts, currentSlug }: TextSidebarPro
                         className={cn(
                             "block px-4 py-2 text-sm font-medium transition-colors hover:bg-muted rounded-md mx-2",
                             currentSlug === text.slug
-                                ? "bg-rose-500/10 text-rose-600 hover:bg-rose-500/15"
+                                ? "bg-primary/10 text-primary hover:bg-primary/15"
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >

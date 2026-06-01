@@ -174,8 +174,8 @@ export function DictionaryTable({
                   )}
                   {entry.sourceEntryId && entry.sourceEntry && (
                     <div className="flex items-center gap-1 mt-1">
-                      <Link2 className="h-2.5 w-2.5 text-purple-500" />
-                      <span className="text-[10px] text-purple-500/80">
+                      <Link2 className="h-2.5 w-2.5 text-primary" />
+                      <span className="text-[10px] text-primary/80">
                         from <span className="font-serif font-medium">{entry.sourceEntry.lemma}</span>
                         {entry.sourceEntry.language && (
                           <span className="text-muted-foreground"> ({entry.sourceEntry.language.name})</span>

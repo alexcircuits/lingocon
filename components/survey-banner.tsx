@@ -37,7 +37,7 @@ export function SurveyBanner() {
                 >
                     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl shadow-primary/10">
                         {/* Gradient accent */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-violet-500 to-primary" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary" />
 
                         <div className="p-5">
                             <button
@@ -49,7 +49,7 @@ export function SurveyBanner() {
                             </button>
 
                             <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center">
+                                <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                                     <ClipboardList className="h-5 w-5 text-primary" />
                                 </div>
                                 <div className="flex-1 min-w-0">

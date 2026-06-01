@@ -166,6 +166,12 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/families" className="cursor-pointer">
+                    <GitBranch className="mr-2 h-4 w-4" />
+                    Family Tree
+                  </Link>
+                </DropdownMenuItem>
                 {user?.isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin" className="cursor-pointer">

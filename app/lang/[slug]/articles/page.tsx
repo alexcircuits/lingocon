@@ -79,10 +79,10 @@ export default async function PublicArticlesPage({
               key={article.id}
               href={`/lang/${slug}/articles/${article.slug}`}
             >
-              <Card className="p-5 hover:bg-secondary/30 hover:border-amber-500/30 transition-all duration-300 group cursor-pointer border-border/50">
+              <Card className="p-5 hover:bg-secondary/30 hover:border-primary/30 transition-all duration-300 group cursor-pointer border-border/50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-serif font-medium text-xl line-clamp-1 group-hover:text-amber-600 transition-colors">
+                    <h3 className="font-serif font-medium text-xl line-clamp-1 group-hover:text-primary transition-colors">
                       {article.title}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
@@ -96,7 +96,7 @@ export default async function PublicArticlesPage({
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-amber-600 transition-all transform translate-x-[-4px] group-hover:translate-x-0" />
+                  <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all transform translate-x-[-4px] group-hover:translate-x-0" />
                 </div>
               </Card>
             </Link>

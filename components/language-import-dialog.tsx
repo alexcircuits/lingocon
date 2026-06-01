@@ -17,8 +17,9 @@ import { Label } from "@/components/ui/label"
 import { Upload, Loader2, FileJson } from "lucide-react"
 import { importLanguage } from "@/app/actions/import-language"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
-export function LanguageImportDialog() {
+export function LanguageImportDialog({ className }: { className?: string }) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [file, setFile] = useState<File | null>(null)
@@ -58,7 +59,7 @@ export function LanguageImportDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className={cn("gap-2", className)}>
                     <Upload className="h-4 w-4" />
                     Import JSON
                 </Button>

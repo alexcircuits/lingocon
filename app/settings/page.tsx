@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
 import { Loader2, ArrowLeft, User, Mail, Shield, Bell, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PaletteSwitcher } from "@/components/palette-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -91,7 +93,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-muted/20">
+        <div className="bg-muted/20">
             <div className="container max-w-4xl py-10 space-y-8">
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -105,9 +107,10 @@ export default function SettingsPage() {
                 </div>
 
                 <Tabs defaultValue="profile" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+                    <TabsList className="grid w-full grid-cols-4 lg:w-[560px]">
                         <TabsTrigger value="profile">Profile</TabsTrigger>
                         <TabsTrigger value="account">Account</TabsTrigger>
+                        <TabsTrigger value="appearance">Appearance</TabsTrigger>
                         <TabsTrigger value="notifications" disabled className="opacity-50">Notifications</TabsTrigger>
                     </TabsList>
 
@@ -181,6 +184,38 @@ export default function SettingsPage() {
                                         </div>
                                     </form>
                                 </Form>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="appearance" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Theme</CardTitle>
+                                <CardDescription>
+                                    Choose how LingoCon looks. Light, dark, or follow your system.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
+                                    <div>
+                                        <div className="font-medium">Appearance mode</div>
+                                        <p className="text-xs text-muted-foreground">Light / Dark / System</p>
+                                    </div>
+                                    <ThemeToggle />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Color palette</CardTitle>
+                                <CardDescription>
+                                    Switch between the new Aurora look and the original Classic theme. Applies instantly across the app.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <PaletteSwitcher />
                             </CardContent>
                         </Card>
                     </TabsContent>

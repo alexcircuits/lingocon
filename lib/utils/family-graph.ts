@@ -1,12 +1,19 @@
 /**
- * Shared family-graph utilities for the Language Family feature.
+ * Server-only family-graph helpers.
  *
- * Provides:
- * - CTE-based SQL helpers for ancestor/descendant queries (single-query, no N+1)
- * - Shared graph-building logic used by the builder, stats, and map components
+ * Provides CTE-based SQL helpers for ancestor/descendant queries (single-query,
+ * no N+1). The pure, client-safe graph-building and family-resolution logic
+ * lives in `./family-graph-core` and is re-exported here so existing
+ * server-side imports keep working unchanged.
+ *
+ * IMPORTANT: client components must import graph logic from
+ * `@/lib/utils/family-graph-core` directly — importing from this module pulls
+ * Prisma into the bundle.
  */
 
 import { prisma } from "@/lib/prisma"
+
+export * from "./family-graph-core"
 
 // ─── CTE-based DB Helpers ──────────────────────────────────────────────────
 
@@ -106,137 +113,4 @@ export async function getAncestorIds(languageIds: string[]): Promise<string[]> {
     WHERE id != ALL(${languageIds})
   `
   return result.map((r) => r.id)
-}
-
-// ─── Shared Graph-Building Logic ───────────────────────────────────────────
-
-export interface FamilyLanguageData {
-  id: string
-  name: string
-  slug: string
-  parentLanguageId: string | null
-  externalAncestry: string | null
-  ownerId: string
-  owner?: { id: string; name: string | null; image: string | null }
-  isVirtual?: boolean
-  _count: { dictionaryEntries: number }
-}
-
-export interface FamilyGraph {
-  /** Map of id → language data (including virtual nodes) */
-  byId: Map<string, FamilyLanguageData>
-  /** Map of id → array of child IDs */
-  childrenMap: Map<string, string[]>
-  /** Root language IDs (including virtual nodes) */
-  rootIds: string[]
-  /** Map of external ancestry name → virtual node ID */
-  virtualMap: Map<string, string>
-}
-
-/**
- * Build the family graph from a flat list of languages.
- *
- * Creates virtual nodes for external ancestry labels, builds a children map,
- * finds roots, and handles cycles by promoting unreachable nodes to roots.
- *
- * This is the single source of truth for graph structure, used by:
- * - Family Builder (ReactFlow layout)
- * - Tree Stats
- * - Universe Map
- */
-export function buildFamilyGraph(languages: FamilyLanguageData[]): FamilyGraph {
-  // Create virtual nodes for unique external ancestries
-  const virtualMap = new Map<string, string>()
-  languages.forEach((l) => {
-    if (
-      !l.parentLanguageId &&
-      l.externalAncestry &&
-      !virtualMap.has(l.externalAncestry)
-    ) {
-      virtualMap.set(
-        l.externalAncestry,
-        `virtual-${encodeURIComponent(l.externalAncestry)}`
-      )
-    }
-  })
-
-  // Combine real languages and virtual nodes
-  const byId = new Map<string, FamilyLanguageData>(
-    languages.map((l) => [l.id, l])
-  )
-
-  virtualMap.forEach((virtualId, ancestryName) => {
-    byId.set(virtualId, {
-      id: virtualId,
-      name: ancestryName,
-      slug: "",
-      parentLanguageId: null,
-      externalAncestry: null,
-      ownerId: "system",
-      _count: { dictionaryEntries: 0 },
-      isVirtual: true,
-    })
-  })
-
-  // Build children map
-  const childrenMap = new Map<string, string[]>()
-  byId.forEach((_, id) => childrenMap.set(id, []))
-
-  languages.forEach((l) => {
-    if (l.parentLanguageId && childrenMap.has(l.parentLanguageId)) {
-      childrenMap.get(l.parentLanguageId)!.push(l.id)
-    } else if (
-      !l.parentLanguageId &&
-      l.externalAncestry &&
-      virtualMap.has(l.externalAncestry)
-    ) {
-      childrenMap.get(virtualMap.get(l.externalAncestry)!)!.push(l.id)
-    }
-  })
-
-  // Sort children alphabetically for consistent ordering
-  childrenMap.forEach((kids) => {
-    kids.sort((a, b) => {
-      const nameA = byId.get(a)?.name || ""
-      const nameB = byId.get(b)?.name || ""
-      return nameA.localeCompare(nameB)
-    })
-  })
-
-  // Find roots
-  const roots = Array.from(byId.values())
-    .filter((l) => {
-      if (l.isVirtual) return true
-      if (l.parentLanguageId && byId.has(l.parentLanguageId)) return false
-      if (l.externalAncestry && virtualMap.has(l.externalAncestry)) return false
-      return true
-    })
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  // Handle disconnected cycles — promote unreachable nodes to roots
-  const reachable = new Set<string>()
-  function markReachable(id: string) {
-    if (reachable.has(id)) return
-    reachable.add(id)
-    ;(childrenMap.get(id) || []).forEach(markReachable)
-  }
-  roots.forEach((r) => markReachable(r.id))
-
-  const unreached = Array.from(byId.values())
-    .filter((l) => !reachable.has(l.id))
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  unreached.forEach((l) => {
-    if (!reachable.has(l.id)) {
-      roots.push(l)
-      markReachable(l.id)
-    }
-  })
-
-  return {
-    byId,
-    childrenMap,
-    rootIds: roots.map((r) => r.id),
-    virtualMap,
-  }
 }

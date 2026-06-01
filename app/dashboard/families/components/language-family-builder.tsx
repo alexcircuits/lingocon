@@ -24,8 +24,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Save, Plus, ArrowRight, X, Undo2, Redo2, Search, Focus, GitCompareArrows, Network, BookCopy } from "lucide-react"
 import { toast } from "sonner"
-import { setParentLanguage } from "@/app/actions/language-family"
-import { buildFamilyGraph } from "@/lib/utils/family-graph"
+import { setParentLanguage, setLanguageFamily } from "@/app/actions/language-family"
+import { buildFamilyGraph } from "@/lib/utils/family-graph-core"
 import { useRouter } from "next/navigation"
 import { DerivationPanel } from "./derivation-panel"
 
@@ -35,6 +35,8 @@ interface LanguageData {
   slug: string
   parentLanguageId: string | null
   externalAncestry: string | null
+  familyId?: string | null
+  family?: { id: string; name: string } | null
   ownerId: string
   owner?: { id: string; name: string | null; image: string | null }
   _count: {
@@ -175,6 +177,23 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
 function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPendingChangesChange }: LanguageFamilyBuilderProps) {
   const router = useRouter()
   const reactFlowInstance = useReactFlow()
+
+  // Quick lookup for the auto-suggest-family-on-connect flow.
+  const langInfoById = useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; ownerId: string; familyId: string | null; familyName: string | null }
+    >()
+    initialLanguages.forEach((l) =>
+      map.set(l.id, {
+        name: l.name,
+        ownerId: l.ownerId,
+        familyId: l.familyId ?? null,
+        familyName: l.family?.name ?? null,
+      })
+    )
+    return map
+  }, [initialLanguages])
 
   // Defer the O(n²) layout computation to after the first paint so the
   // skeleton clears quickly and the browser doesn't hang on mount.
@@ -387,8 +406,37 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
         }
         return n
       }))
+
+      // Auto-suggest: if the new parent belongs to a named family that the
+      // (owned) daughter language isn't in yet, offer to add it. This keeps the
+      // lineage layer and the taxonomy layer in sync without forcing it.
+      const parent = params.source ? langInfoById.get(params.source) : undefined
+      const child = params.target ? langInfoById.get(params.target) : undefined
+      if (
+        parent?.familyId &&
+        child &&
+        child.ownerId === currentUserId &&
+        child.familyId !== parent.familyId
+      ) {
+        const childId = params.target as string
+        const familyId = parent.familyId
+        toast(`Add ${child.name} to the ${parent.familyName} family?`, {
+          description: "Keeps the family map grouped with its lineage.",
+          action: {
+            label: "Add",
+            onClick: async () => {
+              const res = await setLanguageFamily(childId, familyId)
+              if (res && "error" in res) toast.error(res.error)
+              else {
+                toast.success(`${child.name} added to ${parent.familyName}`)
+                router.refresh()
+              }
+            },
+          },
+        })
+      }
     },
-    [setEdges, setNodes, pushUndo]
+    [setEdges, setNodes, pushUndo, langInfoById, currentUserId, router]
   )
   
   const onEdgesDelete = useCallback((deleted: Edge[]) => {

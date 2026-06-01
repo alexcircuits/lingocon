@@ -163,15 +163,8 @@ export function SearchResults() {
 
                             {/* Footer */}
                             <div className="mt-8 pt-6 border-t border-border/30 flex flex-col items-center gap-4">
-                                <div className="text-3xl font-bold tracking-wide select-none">
-                                    <span className="text-blue-500">L</span>
-                                    <span className="text-red-500">i</span>
-                                    <span className="text-amber-500">n</span>
-                                    <span className="text-blue-500">g</span>
-                                    <span className="text-green-500">o</span>
-                                    <span className="text-red-500">C</span>
-                                    <span className="text-amber-500">o</span>
-                                    <span className="text-blue-500">n</span>
+                                <div className="text-3xl font-extrabold tracking-tight select-none aurora-gradient-text">
+                                    LingoCon
                                 </div>
                                 <p className="text-xs text-foreground/40">
                                     Showing {counts[activeTab]} results for &ldquo;{debouncedQuery}&rdquo;

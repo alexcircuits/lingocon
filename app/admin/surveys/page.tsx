@@ -52,7 +52,7 @@ export default async function AdminSurveysPage() {
     )
 
     return (
-        <div className="space-y-8">
+        <div className="p-4 md:p-8 space-y-8">
             <div>
                 <h1 className="text-3xl font-serif font-medium tracking-tight mb-2">Survey Results</h1>
                 <p className="text-muted-foreground">View anonymous survey responses from the community.</p>

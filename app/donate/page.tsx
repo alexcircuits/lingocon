@@ -51,7 +51,7 @@ export default async function DonatePage() {
                     <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16 text-left">
                         {/* Server Costs */}
                         <div className="bg-secondary/20 border border-border/50 backdrop-blur-md rounded-2xl p-6 hover:bg-secondary/30 transition-all duration-300">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 text-blue-500">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
                                 <Globe2 className="w-5 h-5" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2">Infrastructure</h3>
@@ -62,7 +62,7 @@ export default async function DonatePage() {
 
                         {/* Open Source */}
                         <div className="bg-secondary/20 border border-border/50 backdrop-blur-md rounded-2xl p-6 hover:bg-secondary/30 transition-all duration-300">
-                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-4 text-green-500">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
                                 <Users className="w-5 h-5" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2">Open Source</h3>
@@ -73,7 +73,7 @@ export default async function DonatePage() {
 
                         {/* Development */}
                         <div className="bg-secondary/20 border border-border/50 backdrop-blur-md rounded-2xl p-6 hover:bg-secondary/30 transition-all duration-300">
-                            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 text-amber-500">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
                                 <Coffee className="w-5 h-5" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2">Development</h3>

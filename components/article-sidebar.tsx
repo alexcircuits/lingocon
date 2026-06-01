@@ -34,7 +34,7 @@ export function ArticleSidebar({ languageSlug, articles, currentSlug }: ArticleS
             className={cn(
               "block px-4 py-2 text-sm font-medium transition-colors hover:bg-muted rounded-md mx-2",
               currentSlug === article.slug
-                ? "bg-amber-500/10 text-amber-600 hover:bg-amber-500/15"
+                ? "bg-primary/10 text-primary hover:bg-primary/15"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >

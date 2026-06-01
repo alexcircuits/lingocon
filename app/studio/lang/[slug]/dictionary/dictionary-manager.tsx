@@ -11,7 +11,7 @@ import {
   deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2, ArrowUpDown } from "lucide-react"
+import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2, ArrowUpDown, MoreHorizontal } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -19,6 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { DictionarySearch } from "./components/dictionary-search"
@@ -421,7 +428,7 @@ export function DictionaryManager({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div className="hidden sm:flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Select defaultValue={initialSort} onValueChange={handleSort}>
             <SelectTrigger className="h-9 w-[140px] sm:w-[160px] gap-1 text-sm">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -529,6 +536,86 @@ export function DictionaryManager({
             <span className="hidden sm:inline">Add Entry</span>
           </Button>
         </div>
+
+        {/* Mobile condensed controls: Sort + primary Add + collapsed "More" menu */}
+        <div className="flex sm:hidden flex-wrap items-center gap-2 w-full">
+          <Select defaultValue={initialSort} onValueChange={handleSort}>
+            <SelectTrigger className="h-9 w-[140px] gap-1 text-sm">
+              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <SelectValue placeholder="Sort by…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="lemma">A → Z (lemma)</SelectItem>
+              <SelectItem value="gloss">A → Z (gloss)</SelectItem>
+              <SelectItem value="createdAt">Newest first</SelectItem>
+              <SelectItem value="partOfSpeech">Part of speech</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <TransliterationToggle
+            onToggle={setShowLatin}
+            defaultShowLatin={showLatin}
+          />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9" title="More actions">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  const url = `/api/export/csv?languageId=${languageId}`
+                  window.open(url, "_blank")
+                  toast.success("Dictionary exported successfully")
+                }}
+                disabled={isPending || totalEntries === 0}
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsImportOpen(true)} disabled={isPending}>
+                <Upload className="h-4 w-4" />
+                Import CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsGeneratorOpen(true)} disabled={isPending}>
+                <Sparkles className="h-4 w-4" />
+                Generate Words
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsBorrowOpen(true)} disabled={isPending}>
+                <Languages className="h-4 w-4" />
+                Borrow Word
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsBulkAddOpen(true)}>
+                <Table2 className="h-4 w-4" />
+                Bulk Add
+              </DropdownMenuItem>
+              {selectedEntries.size > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsBulkEditOpen(true)} disabled={isPending}>
+                    <Edit className="h-4 w-4" />
+                    Bulk Edit ({selectedEntries.size})
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsBulkDeleteOpen(true)}
+                    disabled={isPending}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedEntries.size})
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto">
+            <Plus className="h-4 w-4" />
+            Add Entry
+          </Button>
+        </div>
       </div>
 
       {initialEntries.length === 0 ? (
@@ -569,7 +656,7 @@ export function DictionaryManager({
         )
       ) : (
         <>
-          <div className="flex justify-between items-center text-sm text-muted-foreground">
+          <div className="flex flex-col items-start gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
               Showing {initialEntries.length} of {totalEntries} entries
             </span>
@@ -631,6 +718,7 @@ export function DictionaryManager({
                 setDerivationSourceEntry(entry)
                 setIsDeriveOpen(true)
               }}
+              onTagClick={(tag) => handleSearch(tag, "tags")}
             />
           </div>
 

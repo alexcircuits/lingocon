@@ -47,73 +47,106 @@
 
 @layer base {
   :root {
-    /* Sophisticated warm palette - Cream & Teal */
-    --background: 40 33% 98%;
-    --foreground: 220 30% 15%;
+    /* Aurora palette — playful violet/blue, glassy, geometric */
+    --background: 228 44% 99%;
+    --foreground: 232 45% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 30% 15%;
+    --card-foreground: 232 45% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 15%;
+    --popover-foreground: 232 45% 12%;
 
-    /* Deep teal primary */
-    --primary: 175 60% 30%;
+    /* Electric violet primary */
+    --primary: 252 88% 64%;
     --primary-foreground: 0 0% 100%;
 
-    /* Warm coral accent */
-    --accent: 15 85% 60%;
+    /* Magenta accent */
+    --accent: 333 100% 65%;
     --accent-foreground: 0 0% 100%;
 
-    --secondary: 40 20% 95%;
-    --secondary-foreground: 220 30% 20%;
+    --secondary: 228 44% 96%;
+    --secondary-foreground: 232 40% 20%;
 
-    --muted: 40 15% 93%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 228 32% 95%;
+    --muted-foreground: 230 16% 46%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
-    --ring: 175 60% 30%;
+    --border: 228 28% 90%;
+    --input: 228 28% 90%;
+    --ring: 252 88% 64%;
 
-    --radius: 0.75rem;
+    --radius: 1.25rem;
 
     /* Semantic colors */
     --success: 152 60% 40%;
     --warning: 38 92% 50%;
     --info: 205 75% 50%;
+
+    /* Aurora accent ramp for multi-colour pops */
+    --aurora-violet: 252 88% 64%;
+    --aurora-blue: 217 91% 60%;
+    --aurora-magenta: 333 100% 65%;
+    --aurora-mint: 165 72% 48%;
+
+    /* Data-viz palette (charts) */
+    --chart-1: 252 88% 64%;
+    --chart-2: 333 100% 65%;
+    --chart-3: 217 91% 60%;
+    --chart-4: 165 72% 48%;
+    --chart-5: 38 92% 50%;
+    --chart-6: 280 72% 62%;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 40 20% 95%;
+    --background: 233 42% 7%;
+    --foreground: 228 40% 96%;
 
-    --card: 220 25% 10%;
-    --card-foreground: 40 20% 95%;
+    --card: 232 34% 11%;
+    --card-foreground: 228 40% 96%;
 
-    --popover: 220 25% 10%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 232 34% 11%;
+    --popover-foreground: 228 40% 96%;
 
-    --primary: 175 55% 45%;
-    --primary-foreground: 220 25% 8%;
+    --primary: 252 96% 73%;
+    --primary-foreground: 233 45% 9%;
 
-    --accent: 15 80% 55%;
+    --accent: 333 100% 69%;
     --accent-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 15%;
-    --secondary-foreground: 40 15% 90%;
+    --secondary: 232 26% 16%;
+    --secondary-foreground: 228 30% 90%;
 
-    --muted: 220 20% 15%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 232 22% 16%;
+    --muted-foreground: 230 18% 64%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 175 55% 45%;
+    --border: 232 22% 20%;
+    --input: 232 22% 20%;
+    --ring: 252 96% 73%;
+
+    --radius: 1.25rem;
+
+    --success: 152 55% 50%;
+    --warning: 38 92% 58%;
+    --info: 205 80% 60%;
+
+    --aurora-violet: 252 96% 73%;
+    --aurora-blue: 217 92% 66%;
+    --aurora-magenta: 333 100% 69%;
+    --aurora-mint: 165 70% 55%;
+
+    /* Data-viz palette (charts) */
+    --chart-1: 252 96% 73%;
+    --chart-2: 333 100% 69%;
+    --chart-3: 217 92% 66%;
+    --chart-4: 165 70% 55%;
+    --chart-5: 38 92% 58%;
+    --chart-6: 280 78% 70%;
   }
 }
 
@@ -129,16 +162,17 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
-  /* Editorial serif headings */
+  /* Geometric-sans headings (Aurora) */
   h1,
   h2,
-  h3 {
-    font-family: var(--font-instrument-serif), Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+  h3,
+  h4 {
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
   }
 
   /* Monospace for technical elements */
@@ -503,6 +537,98 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   AURORA UTILITIES — now global. The Aurora palette lives in :root/.dark,
+   so these helpers (glass, gradient text, blobs, ring glow) work app-wide.
+   ═══════════════════════════════════════════════════════════════════════ */
+.font-display {
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+.aurora-gradient-text {
+  background-image: linear-gradient(
+    100deg,
+    hsl(var(--aurora-violet)),
+    hsl(var(--aurora-blue)) 45%,
+    hsl(var(--aurora-magenta))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.aurora-glass {
+  background: hsl(var(--card) / 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.7);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.5) inset,
+    0 20px 50px -20px hsl(var(--aurora-violet) / 0.25);
+}
+
+.dark .aurora-glass {
+  background: hsl(var(--card) / 0.5);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.06) inset,
+    0 24px 60px -24px hsl(0 0% 0% / 0.6);
+}
+
+/* Big soft animated colour blobs for section backgrounds */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.dark .aurora-blob {
+  opacity: 0.35;
+}
+
+@keyframes aurora-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, -6%, 0) scale(1.12); }
+}
+
+.aurora-blob-animate {
+  animation: aurora-float 18s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob-animate { animation: none; }
+}
+
+/* Conic ring glow used behind the hero demo window */
+.aurora-ring-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from 180deg,
+    hsl(var(--aurora-violet)),
+    hsl(var(--aurora-blue)),
+    hsl(var(--aurora-mint)),
+    hsl(var(--aurora-magenta)),
+    hsl(var(--aurora-violet))
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* The embedded studio demo now inherits the global Aurora theme, so it stays
+   1:1 with the (now Aurora) live studio. `.studio-demo-theme` is kept as a
+   harmless hook in case the demo ever needs to diverge again. */
+
 /* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
@@ -523,6 +649,57 @@
   background: hsl(var(--muted-foreground) / 0.3);
 }
 
+/* Thin scrollbar (used by studio layout/sidebar) */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 9999px;
+  border: none;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* Fluid container used by the studio top bar */
+.container-fluid {
+  width: 100%;
+}
+
+/* Touch-friendly reveal: actions stay visible on touch devices, and only
+   fade-until-hover on devices that actually support hover (desktop). Pair
+   with a `group` ancestor. */
+.hover-reveal {
+  transition: opacity 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-reveal {
+    opacity: 0;
+  }
+  .group:hover .hover-reveal,
+  .group:focus-within .hover-reveal {
+    opacity: 1;
+  }
+}
+
+/* Horizontal-scroll affordance: a soft right-edge fade hinting more content.
+   Apply to a scroll container that may overflow on small screens. */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 1.5rem), transparent 100%);
+  mask-image: linear-gradient(to right, black calc(100% - 1.5rem), transparent 100%);
+}
+@media (min-width: 768px) {
+  .scroll-fade-x {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
 /* Focus styles */
 :focus-visible {
   outline: 2px solid hsl(var(--ring));
@@ -533,4 +710,97 @@
 ::selection {
   background: hsl(var(--primary) / 0.15);
   color: hsl(var(--foreground));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CLASSIC PALETTE (legacy) — opt-in via data-palette="classic" on <html>.
+   Restores the original teal/cream identity: warm palette, Instrument Serif
+   headings, and the tighter legacy radius. Aurora remains the default.
+   ═══════════════════════════════════════════════════════════════════════ */
+[data-palette="classic"] {
+  --background: 40 33% 98%;
+  --foreground: 220 30% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 30% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 30% 15%;
+  --primary: 175 60% 30%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 15 85% 60%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 40 20% 95%;
+  --secondary-foreground: 220 30% 20%;
+  --muted: 40 15% 93%;
+  --muted-foreground: 220 15% 45%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 15% 88%;
+  --input: 40 15% 88%;
+  --ring: 175 60% 30%;
+  --radius: 0.75rem;
+  --success: 152 60% 40%;
+  --warning: 38 92% 50%;
+  --info: 205 75% 50%;
+  /* keep gradient-text utilities on-theme */
+  --aurora-violet: 175 60% 30%;
+  --aurora-blue: 205 75% 50%;
+  --aurora-magenta: 15 85% 60%;
+  --aurora-mint: 152 60% 40%;
+
+  /* Data-viz palette (charts) */
+  --chart-1: 175 60% 32%;
+  --chart-2: 15 85% 58%;
+  --chart-3: 205 75% 50%;
+  --chart-4: 152 60% 42%;
+  --chart-5: 38 92% 50%;
+  --chart-6: 0 70% 56%;
+}
+
+.dark[data-palette="classic"] {
+  --background: 220 25% 8%;
+  --foreground: 40 20% 95%;
+  --card: 220 25% 10%;
+  --card-foreground: 40 20% 95%;
+  --popover: 220 25% 10%;
+  --popover-foreground: 40 20% 95%;
+  --primary: 175 55% 45%;
+  --primary-foreground: 220 25% 8%;
+  --accent: 15 80% 55%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 220 20% 15%;
+  --secondary-foreground: 40 15% 90%;
+  --muted: 220 20% 15%;
+  --muted-foreground: 220 15% 55%;
+  --destructive: 0 65% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 20% 18%;
+  --input: 220 20% 18%;
+  --ring: 175 55% 45%;
+  --aurora-violet: 175 55% 45%;
+  --aurora-blue: 205 80% 60%;
+  --aurora-magenta: 15 80% 55%;
+  --aurora-mint: 152 55% 50%;
+
+  /* Data-viz palette (charts) */
+  --chart-1: 175 55% 50%;
+  --chart-2: 15 80% 58%;
+  --chart-3: 205 80% 62%;
+  --chart-4: 152 55% 52%;
+  --chart-5: 38 92% 60%;
+  --chart-6: 0 70% 62%;
+}
+
+/* Legacy typography: system body + Instrument Serif editorial headings */
+[data-palette="classic"] body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-palette="classic"] :is(h1, h2, h3) {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+[data-palette="classic"] .font-serif {
+  font-family: var(--font-instrument-serif), Georgia, serif;
 }

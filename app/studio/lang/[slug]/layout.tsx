@@ -4,6 +4,8 @@ import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { StudioLayout } from "../studio-layout"
 import { FontLoader } from "@/components/font-loader"
+import { getStudioNavInstalls } from "@/lib/services/module"
+import type { ModuleNavTab } from "@/lib/studio-nav"
 
 
 export const metadata = {
@@ -74,8 +76,19 @@ export default async function StudioLangLayout({
     notFound()
   }
 
+  // Studio-panel tabs contributed by the current user's enabled modules.
+  let moduleTabs: ModuleNavTab[] = []
+  if (userId) {
+    const installs = await getStudioNavInstalls(userId, language.id)
+    moduleTabs = installs.map((i) => ({
+      name: i.module.name,
+      href: `/studio/lang/${language.slug}/modules/${i.module.slug}`,
+      icon: i.module.icon,
+    }))
+  }
+
   return (
-    <StudioLayout language={language}>
+    <StudioLayout language={language} moduleTabs={moduleTabs}>
       <FontLoader fontUrl={language.fontUrl} fontFamily={language.fontFamily} fontScale={language.fontScale} />
       {children}
     </StudioLayout>

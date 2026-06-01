@@ -152,7 +152,7 @@ export default async function PublicTextPage({
       <div className="flex-1 min-w-0 py-6 lg:py-8">
         <article className="max-w-3xl mx-auto">
           <header className="mb-8 border-b pb-6">
-            <Badge variant="secondary" className="mb-4 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20">
+            <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary hover:bg-primary/20">
               Text
             </Badge>
             <h1 className="text-3xl md:text-4xl font-serif font-medium mb-4 tracking-tight">

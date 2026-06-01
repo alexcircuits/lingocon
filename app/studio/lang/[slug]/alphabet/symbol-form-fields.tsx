@@ -22,7 +22,7 @@ interface SymbolFormFieldsProps {
 export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: SymbolFormFieldsProps) {
   return (
     <div className="space-y-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-symbol`}>Lowercase</Label>
           <Input
@@ -54,7 +54,7 @@ export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: Sy
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-ipa`}>IPA (optional)</Label>
           <IPAInput

@@ -72,20 +72,20 @@ export function ParadigmContentEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit Paradigm Content: {paradigm.name}</DialogTitle>
+          <DialogTitle className="truncate break-words">Edit Paradigm Content: {paradigm.name}</DialogTitle>
           <DialogDescription>
             Fill in the forms for this paradigm table.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-auto py-4">
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto scroll-fade-x">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px] bg-muted/50"></TableHead>
+                  <TableHead className="w-[150px] sticky left-0 z-10 bg-card"></TableHead>
                   {columns.map((col, idx) => (
                     <TableHead key={idx} className="bg-muted/50 font-semibold min-w-[150px]">
                       {col}
@@ -96,7 +96,7 @@ export function ParadigmContentEditor({
               <TableBody>
                 {rows.map((row, rowIdx) => (
                   <TableRow key={rowIdx}>
-                    <TableCell className="font-medium bg-muted/20">
+                    <TableCell className="font-medium sticky left-0 z-10 bg-card">
                       {row}
                     </TableCell>
                     {columns.map((_: string, colIdx: number) => {

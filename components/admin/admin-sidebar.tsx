@@ -13,7 +13,8 @@ import {
     Shield,
     ArrowLeft,
     ShieldAlert,
-    ClipboardList
+    ClipboardList,
+    Blocks
 } from "lucide-react"
 
 const navItems = [
@@ -43,11 +44,17 @@ const navItems = [
         icon: FileText
     },
     {
+        title: "Modules",
+        href: "/admin/modules",
+        icon: Blocks
+    },
+    {
         title: "Surveys",
         href: "/admin/surveys",
         icon: ClipboardList
     },
     {
+        title: "System",
         href: "/admin/system",
         icon: Settings
     },
@@ -88,7 +95,7 @@ export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void })
                             )}
                         >
                             <item.icon className="h-4 w-4" />
-                            {item.title || "Settings"}
+                            {item.title}
                         </Link>
                     )
                 })}

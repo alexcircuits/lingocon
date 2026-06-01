@@ -329,14 +329,14 @@ export function BorrowWordDialog({
 
                 {/* Source preview */}
                 <div className="rounded-lg border bg-muted/50 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs text-muted-foreground">Source ({sourceLangName})</div>
                       <div className="font-serif text-lg">{selectedEntry.lemma}</div>
                       <div className="text-sm text-muted-foreground">{selectedEntry.gloss}</div>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
+                    <ArrowRight className="h-5 w-5 shrink-0 rotate-90 text-muted-foreground sm:rotate-0" />
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs text-muted-foreground">Adapted ({languageName})</div>
                       <div className="font-serif text-lg text-primary">
                         {adaptedForm || "..."}

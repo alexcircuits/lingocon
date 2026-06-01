@@ -1,39 +1,36 @@
 import { auth } from "@/auth"
+import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
 import {
-  BookOpen,
-  Languages,
-  FileText,
   ArrowRight,
-  Search,
-  PenTool,
-  Library,
   Github,
   Construction,
   Heart,
   Globe,
-  Users,
-  BookMarked,
   Map,
+  Sparkles,
 } from "lucide-react"
 import { FeaturedLanguages } from "@/components/featured-languages"
 import { Navbar } from "@/components/navbar"
 import { TopLanguagesStripe } from "@/components/top-languages-stripe"
-
-import { HeroBackground } from "@/components/hero-background"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Footer } from "@/components/footer"
 import { WordOfTheDay } from "@/components/word-of-the-day"
 import { SurveyBanner } from "@/components/survey-banner"
-import { LingoConUniverseMap } from "@/components/landing/universe-map"
-import { AnimatedCounter } from "@/components/landing/animated-counter"
-import { IPAVowelChart } from "@/components/landing/ipa-vowel-chart"
-
-export const dynamic = "force-dynamic"
+import { UniverseMapLazy } from "@/components/landing/universe-map-lazy"
+import { HeroSocialProof } from "@/components/landing/hero-social-proof"
+import { HowItWorks } from "@/components/landing/how-it-works"
+import { FaqSection } from "@/components/landing/faq-section"
+import { FAQ_ITEMS, HOW_IT_WORKS_STEPS } from "@/lib/landing-content"
+import { StudioDemo } from "@/components/landing/studio-demo/studio-demo"
+import { AuroraBackground } from "@/components/landing/aurora-background"
+import { FeatureBento } from "@/components/landing/feature-bento"
+import { UseCases } from "@/components/landing/use-cases"
+import { CommunityGlobe } from "@/components/landing/community-globe"
+// import { TestimonialsMarquee } from "@/components/landing/testimonials-marquee"
 
 import type { Metadata } from "next"
 
@@ -129,48 +126,14 @@ function JsonLd() {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What is the best tool for creating a conlang?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "LingoCon (lingocon.com) is the most complete web-based conlang tool available. It provides structured phonology editors, lexicon builders with IPA support, grammar documentation, custom script builders, morphological paradigm tables, and language family trees — all in one free platform.",
-        },
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
       },
-      {
-        "@type": "Question",
-        name: "What is LingoCon?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "LingoCon is a free, open-source platform for constructed language (conlang) creators. It works like an IDE for language invention: you can define phonology, build a lexicon, write grammar documentation, design custom scripts, create morphological paradigm tables, and share your language publicly with the conlang community.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "How do I create a conlang online?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "LingoCon lets you create a conlang online for free. Sign up at lingocon.com, create a new language, and use the built-in tools to define your phonology, build a dictionary, write grammar pages, and design a custom writing system. Your language can be kept private or shared publicly.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Is LingoCon free?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, LingoCon is free to use. It is open-source and community-funded via OpenCollective. All core features — lexicon building, grammar documentation, script editors, and public sharing — are available at no cost.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is a conlang?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "A conlang (constructed language) is a language created by a person rather than having evolved naturally. Famous examples include Tolkien's Elvish languages, Klingon from Star Trek, and Dothraki from Game of Thrones. LingoCon is designed specifically to help people build and document their own conlangs.",
-        },
-      },
-    ],
+    })),
   }
 
   return (
@@ -196,7 +159,7 @@ function JsonLd() {
 }
 
 
-async function getFeaturedLanguages() {
+const getFeaturedLanguages = unstable_cache(async () => {
   const languages = await prisma.language.findMany({
     where: {
       visibility: "PUBLIC",
@@ -227,9 +190,9 @@ async function getFeaturedLanguages() {
   })
 
   return languages
-}
+}, ["landing-featured-languages"], { revalidate: 300, tags: ["languages"] })
 
-async function getTopLanguages() {
+const getTopLanguages = unstable_cache(async () => {
   const languages = await prisma.language.findMany({
     where: {
       visibility: "PUBLIC",
@@ -249,9 +212,9 @@ async function getTopLanguages() {
   })
 
   return languages
-}
+}, ["landing-top-languages"], { revalidate: 300, tags: ["languages"] })
 
-async function getUniverseLanguages() {
+const getUniverseLanguages = unstable_cache(async () => {
   return prisma.language.findMany({
     where: { visibility: "PUBLIC" },
     select: {
@@ -260,13 +223,17 @@ async function getUniverseLanguages() {
       slug: true,
       flagUrl: true,
       parentLanguageId: true,
+      // Must match the /families query so both maps render the same graph
+      externalAncestry: true,
+      familyId: true,
+      family: { select: { id: true, name: true } },
       owner: { select: { name: true } },
       _count: { select: { dictionaryEntries: true } }
     }
   })
-}
+}, ["landing-universe-languages"], { revalidate: 300, tags: ["languages"] })
 
-async function getStats() {
+const getStats = unstable_cache(async () => {
   const [languageCount, wordCount, userCount, grammarCount] = await Promise.all([
     prisma.language.count(),
     prisma.dictionaryEntry.count(),
@@ -274,12 +241,7 @@ async function getStats() {
     prisma.grammarPage.count(),
   ])
   return { languageCount, wordCount, userCount, grammarCount }
-}
-
-import { DictionaryCard } from "@/components/landing/dictionary-card"
-import { GrammarCard } from "@/components/landing/grammar-card"
-import { ScriptCard } from "@/components/landing/script-card"
-import { ParadigmCard } from "@/components/landing/paradigm-card"
+}, ["landing-stats"], { revalidate: 300, tags: ["languages"] })
 
 const DiscordIcon = ({ className }: { className?: string }) => (
   <svg
@@ -312,123 +274,81 @@ export default async function Home() {
     image: session.user.image,
   } : null
 
-  const features = [
-    {
-      title: "Script & Alphabet",
-      description: "Define custom scripts with IPA mapping and romanization support.",
-      header: <ScriptCard />,
-      icon: <PenTool className="h-4 w-4 text-primary" />,
-      className: "md:col-span-2 effect-card",
-    },
-    {
-      title: "Grammar Wiki",
-      description: "Write rich articles with interlinear glossing.",
-      header: <GrammarCard />,
-      icon: <BookOpen className="h-4 w-4 text-violet-500" />,
-      className: "md:col-span-1 effect-card",
-    },
-    {
-      title: "Smart Dictionary",
-      description: "Full lexicon with search, filtering, and POS tagging.",
-      header: <DictionaryCard />,
-      icon: <Search className="h-4 w-4 text-emerald-500" />,
-      className: "md:col-span-1 effect-card",
-    },
-    {
-      title: "Morphology Tables",
-      description: "Create complex conjugation and declension paradigms.",
-      header: <ParadigmCard />,
-      icon: <Library className="h-4 w-4 text-rose-500" />,
-      className: "md:col-span-2 effect-card",
-    },
-  ]
-
-  const statItems = [
-    { label: "Languages Created", value: stats.languageCount, icon: Languages, suffix: "+" },
-    { label: "Words Defined", value: stats.wordCount, icon: BookMarked, suffix: "+" },
-    { label: "Active Conlangers", value: stats.userCount, icon: Users, suffix: "" },
-    { label: "Grammar Pages", value: stats.grammarCount, icon: FileText, suffix: "+" },
-  ]
-
   return (
-    <main className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
+    <main className="landing-aurora font-display min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
       <JsonLd />
       <Navbar user={user} isDevMode={isDevMode} />
 
       {/* ═══════════════════════════════════════════════════════════
-          HERO SECTION — Create Instant "Wow"
+          HERO — Aurora + real interactive studio demo
           ═══════════════════════════════════════════════════════════ */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-4 overflow-hidden min-h-[90vh] flex flex-col justify-center">
-        <HeroBackground />
+      <section className="relative overflow-hidden px-4 pt-28 pb-16 md:pt-36 md:pb-24">
+        <AuroraBackground variant="hero" />
 
-        <div className="container mx-auto max-w-5xl relative z-10 text-center">
-          {/* Badge row */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 text-sm font-medium border-primary/20 bg-primary/5 text-primary rounded-full backdrop-blur-sm font-mono tracking-wide"
-            >
-              Open Source
-            </Badge>
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 text-sm font-medium border-primary/20 bg-primary/5 text-primary rounded-full backdrop-blur-sm font-mono tracking-wide"
-            >
-              Free Forever
-            </Badge>
-            <Badge
-              variant="outline"
-              className="px-4 py-1.5 text-sm font-medium border-primary/20 bg-primary/5 text-primary rounded-full backdrop-blur-sm font-mono tracking-wide"
-            >
-              By Conlangers, For Conlangers
-            </Badge>
+        <div className="container relative z-10 mx-auto max-w-7xl">
+          {/* Eyebrow */}
+          <div className="flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-md">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Open source · No paywalls · Built by conlangers
+            </span>
           </div>
 
-          {/* Main Headline */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight mb-8 leading-[0.9] text-foreground animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <span className="text-shine">Create living languages</span>
+          {/* Headline */}
+          <h1 className="mx-auto mt-8 max-w-5xl text-center text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.5rem] animate-in fade-in slide-in-from-bottom-4 duration-700">
+            Invent a language.
             <br />
-            <span className="italic relative inline-block">
-              <span className="text-gradient relative z-10">with structure</span>
-            </span>
+            <span className="aurora-gradient-text">Document a world.</span>
           </h1>
 
-          {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed font-light animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
-            Phonology, lexicon, grammar, scripts, paradigm tables — all in one place.
-            Free, open source, built by conlangers.
+          {/* Subhead */}
+          <p className="mx-auto mt-7 max-w-2xl text-center text-lg text-muted-foreground sm:text-xl md:text-2xl animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
+            The all-in-one studio for constructed languages — phonology, lexicon, grammar,
+            custom scripts and paradigm tables. Try the real editor right here, no signup.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-            {isAuthenticated ? (
-              <Link href="/dashboard" className="w-full sm:w-auto">
-                <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-full hover:scale-105 transition-all shadow-lg hover:shadow-primary/25">
-                  Go to Dashboard <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
-                </MagneticButton>
-              </Link>
-            ) : (
-              <Link href="/login" className="w-full sm:w-auto">
-                <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-full hover:scale-105 transition-all shadow-lg hover:shadow-primary/25">
-                  Begin Your First Language <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
-                </MagneticButton>
-              </Link>
-            )}
-            <Link href="/browse" className="w-full sm:w-auto">
+          <div className="mx-auto mt-9 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center sm:gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+            <Link href={isAuthenticated ? "/dashboard" : "/login"} className="block w-full sm:w-auto">
+              <MagneticButton className="h-14 w-full rounded-full bg-gradient-to-r from-primary to-[hsl(var(--aurora-blue))] px-8 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:scale-105 sm:w-auto">
+                {isAuthenticated ? "Go to Dashboard" : "Start building free"}
+                <ArrowRight className="ml-2 h-5 w-5 pointer-events-none" />
+              </MagneticButton>
+            </Link>
+            <Link href="/browse" className="block w-full sm:w-auto">
               <MagneticButton
                 variant="outline"
-                className="h-14 px-8 text-base font-medium rounded-full border-2 border-primary/20 hover:border-primary/50 bg-background/50 backdrop-blur-sm w-full transition-all"
+                className="h-14 w-full rounded-full border-2 border-border bg-card/50 px-8 text-base font-semibold backdrop-blur-md transition-all hover:border-primary/40 sm:w-auto"
               >
-                <Globe className="mr-2 w-5 h-5 pointer-events-none" />
+                <Globe className="mr-2 h-5 w-5 pointer-events-none" />
                 Explore the Universe
               </MagneticButton>
             </Link>
           </div>
 
-          {/* Trending Stripe */}
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 border-t border-border/40 pt-12 mt-12">
-            <p className="text-xs font-semibold text-muted-foreground/60 mb-6 uppercase tracking-[0.2em]">
-              Trending in the Corpus
+          {/* Social proof */}
+          <div className="mt-7 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
+            <HeroSocialProof
+              languageCount={stats.languageCount}
+              wordCount={stats.wordCount}
+              userCount={stats.userCount}
+            />
+          </div>
+
+          {/* Interactive studio demo — the real product (desktop only) */}
+          <div className="relative mx-auto mt-16 hidden max-w-6xl md:mt-20 md:block">
+            <div className="aurora-ring-glow relative rounded-[24px]">
+              <StudioDemo />
+            </div>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              ↑ This is the actual editor. Add words, reorder your alphabet, switch tools — it&apos;s live.
+            </p>
+          </div>
+
+          {/* Trending stripe */}
+          <div className="mt-20 border-t border-border/50 pt-12">
+            <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+              Trending in the corpus
             </p>
             <TopLanguagesStripe languages={topLanguages} />
           </div>
@@ -436,38 +356,187 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          STATS / TRUST BAR
+          FEATURES — big asymmetric bento
           ═══════════════════════════════════════════════════════════ */}
-      <section className="py-16 border-y border-border/40 bg-secondary/20">
+      <section className="relative overflow-hidden px-4 py-24">
+        <AuroraBackground variant="subtle" grid={false} />
+        <div className="container relative z-10 mx-auto max-w-6xl">
+          <div className="mx-auto mb-16 max-w-3xl text-center">
+            <Badge variant="outline" className="mb-5 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs uppercase tracking-widest text-primary">
+              The toolkit
+            </Badge>
+            <h2 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
+              Everything you need to <span className="aurora-gradient-text">create</span>
+            </h2>
+            <p className="mx-auto mt-5 text-lg text-muted-foreground md:text-xl">
+              From phonology to syntax — structured, connected tools that adapt to whatever
+              your language wants to become.
+            </p>
+          </div>
+
+          <FeatureBento />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════
+          USE CASES
+          ═══════════════════════════════════════════════════════════ */}
+      <section className="px-4 pb-24">
+        <div className="container mx-auto max-w-6xl">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+              Built for whatever you&apos;re <span className="aurora-gradient-text">creating</span>
+            </h2>
+            <p className="mx-auto mt-4 text-lg text-muted-foreground">
+              From sprawling fantasy worlds to serious linguistic study.
+            </p>
+          </div>
+          <UseCases />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════
+          COMMUNITY GLOBE
+          ═══════════════════════════════════════════════════════════ */}
+      <section className="px-4 py-24">
+        <CommunityGlobe
+          languageCount={stats.languageCount}
+          wordCount={stats.wordCount}
+          userCount={stats.userCount}
+        />
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════
+          HOW IT WORKS — 3 Steps
+          ═══════════════════════════════════════════════════════════ */}
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-4xl mx-auto">
-            {statItems.map((stat) => {
-              const Icon = stat.icon
-              return (
-                <div
-                  key={stat.label}
-                  className="text-center stat-hover rounded-xl p-4 cursor-default"
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+              How it works
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif mb-4">
+              From idea to living language
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Three steps from a blank page to a documented, shareable conlang.
+            </p>
+          </div>
+          <HowItWorks steps={HOW_IT_WORKS_STEPS} />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════
+          UNIVERSE MAP — Full-Bleed "Wow" Moment
+          ═══════════════════════════════════════════════════════════ */}
+      {universeLanguages.length > 0 && (
+        <section className="py-24 relative overflow-hidden font-display">
+          <AuroraBackground variant="subtle" />
+          <div className="container mx-auto px-4 relative">
+            <div className="text-center mb-12">
+              <Badge variant="outline" className="text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary mb-4">
+                Interactive Map
+              </Badge>
+              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+                Explore the <span className="aurora-gradient-text">LingoCon Universe</span>
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Every node is a language. Every connection is a family tree. Discover the constellation of constructed languages being built right now.
+              </p>
+            </div>
+            <div className="max-w-6xl mx-auto">
+              <UniverseMapLazy languages={universeLanguages} />
+            </div>
+            <div className="text-center mt-8">
+              <Link href="/browse">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full border-2 border-border bg-card/50 backdrop-blur-md hover:border-primary/40 gap-2"
                 >
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary mb-3">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="text-3xl md:text-4xl font-serif font-medium text-foreground mb-1">
-                    <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                    {stat.label}
-                  </div>
-                </div>
-              )
-            })}
+                  <Map className="w-4 h-4" />
+                  Browse All Languages
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          WORD OF THE DAY
+          ═══════════════════════════════════════════════════════════ */}
+      <section className="py-24 bg-secondary/30 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-5xl mx-auto">
+            <div className="text-center lg:text-left">
+              <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+                Living lexicons
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-serif mb-4">
+                Word of the Day
+              </h2>
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Every word here was invented and defined by a member of the community —
+                complete with IPA, part of speech, and its own writing system. A small window
+                into the worlds being built on LingoCon.
+              </p>
+              <Link href="/browse" className="inline-flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all">
+                Discover more languages
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="w-full max-w-lg mx-auto lg:mx-0">
+              <WordOfTheDay />
+            </div>
           </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          CONTRIBUTOR CALLOUT
+          FEATURED LANGUAGES
           ═══════════════════════════════════════════════════════════ */}
-      <section className="py-12 border-b border-border/40 bg-zinc-50/50 dark:bg-zinc-900/50">
+      {
+        featuredLanguages.length > 0 && (
+          <section className="py-24 bg-background">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-serif mb-4">
+                  Made with LingoCon
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Explore languages created by our community
+                </p>
+              </div>
+              <FeaturedLanguages languages={featuredLanguages} />
+            </div>
+          </section>
+        )
+      }
+
+      {/* ═══════════════════════════════════════════════════════════
+          TESTIMONIALS
+          ═══════════════════════════════════════════════════════════ */}
+      {/*
+      <section className="overflow-hidden px-4 py-24">
+        <div className="container mx-auto max-w-6xl">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <Badge variant="outline" className="mb-5 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs uppercase tracking-widest text-primary">
+              Loved by conlangers
+            </Badge>
+            <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+              From spreadsheets to <span className="aurora-gradient-text">storyworlds</span>
+            </h2>
+          </div>
+        </div>
+        <TestimonialsMarquee />
+      </section>
+      */}
+
+      {/* ═══════════════════════════════════════════════════════════
+          CONTRIBUTOR CALLOUT — Community & Open Source
+          ═══════════════════════════════════════════════════════════ */}
+      <section className="py-16 border-y border-border/40 bg-secondary/20">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left">
             <h3 className="text-2xl font-serif font-medium mb-3 flex items-center justify-center md:justify-start gap-3">
@@ -505,174 +574,76 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          PHILOSOPHY SECTION — Visual Poetry
+          FAQ — Visible (shares data with JSON-LD)
           ═══════════════════════════════════════════════════════════ */}
-      <section className="py-32 px-4 bg-foreground text-background overflow-hidden relative">
-        <div className="container mx-auto max-w-5xl relative z-10">
-          <div className="flex flex-col lg:flex-row gap-16 items-center">
-            {/* Text Content */}
-            <div className="flex-1 flex flex-col gap-12">
-              <h2 className="text-4xl sm:text-6xl md:text-7xl font-serif font-medium leading-[1.1] tracking-tight">
-                Spreadsheets define data. <br />
-                <span className="text-muted-foreground/60 italic">LingoCon defines culture.</span>
-              </h2>
-
-              {/* Accent line */}
-              <div className="h-px w-32 bg-gradient-to-r from-[hsl(var(--accent))] to-transparent" />
-
-              <div className="grid md:grid-cols-2 gap-12">
-                <p className="text-lg md:text-xl leading-relaxed text-background/80 font-light">
-                  Language isn&apos;t just a list of words. It&apos;s a complex web of relationships,
-                  from the phonotactics that shape your sound to the syntax tree that holds your thought.
-                </p>
-                <p className="text-lg md:text-xl leading-relaxed text-background/80 font-light">
-                  We built LingoCon to be the IDE for conlangs. Structural integrity,
-                  cross-referencing, and export-ready formatting come standard. This is where your world begins to speak.
-                </p>
-              </div>
-            </div>
-
-            {/* IPA Vowel Chart - draws on scroll */}
-            <div className="flex-shrink-0 hidden lg:block">
-              <IPAVowelChart />
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* ═══════════════════════════════════════════════════════════
-          FEATURES GRID — Bento Cards with Scroll Reveals
-          ═══════════════════════════════════════════════════════════ */}
-      <section className="py-24 bg-secondary/30 relative border-y border-border/40">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif mb-4">
-              Everything you need to create
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              From phonology to syntax, we provide structured tools that adapt to your language&apos;s unique features.
-            </p>
-          </div>
-
-          <BentoGrid className="max-w-5xl mx-auto">
-            {features.map((feature, i) => (
-              <BentoGridItem
-                key={i}
-                title={feature.title}
-                description={feature.description}
-                header={feature.header}
-                icon={feature.icon}
-                className={feature.className}
-                index={i}
-              />
-            ))}
-          </BentoGrid>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          UNIVERSE MAP — Full-Bleed "Wow" Moment
-          ═══════════════════════════════════════════════════════════ */}
-      {universeLanguages.length > 0 && (
-        <section className="py-24 bg-foreground text-background relative overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <Badge variant="outline" className="text-xs uppercase tracking-widest border-background/20 bg-background/5 text-background/70 mb-4">
-                Interactive Map
-              </Badge>
-              <h2 className="text-3xl md:text-5xl font-serif mb-4">
-                Explore the LingoCon Universe
-              </h2>
-              <p className="text-background/60 text-lg max-w-2xl mx-auto">
-                Every node is a language. Every connection is a family tree. Discover the constellation of constructed languages being built right now.
-              </p>
-            </div>
-            <div className="max-w-6xl mx-auto">
-              <LingoConUniverseMap languages={universeLanguages} />
-            </div>
-            <div className="text-center mt-8">
-              <Link href="/browse">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full border-background/20 text-background hover:bg-background/10 gap-2"
-                >
-                  <Map className="w-4 h-4" />
-                  Browse All Languages
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════
-          WORD OF THE DAY
-          ═══════════════════════════════════════════════════════════ */}
-      <section className="py-24 bg-secondary/30 border-y border-border/40">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+              FAQ
+            </Badge>
             <h2 className="text-3xl md:text-4xl font-serif mb-4">
-              Word of the Day
+              Questions, answered
             </h2>
-            <p className="text-muted-foreground text-lg">
-              Discover new words from our community&apos;s languages
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Everything you need to know about building languages with LingoCon.
             </p>
           </div>
-          <div className="max-w-lg mx-auto">
-            <WordOfTheDay />
-          </div>
+          <FaqSection items={FAQ_ITEMS} />
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          FEATURED LANGUAGES
+          SUPPORT STRIP — Demoted, warm
           ═══════════════════════════════════════════════════════════ */}
-      {
-        featuredLanguages.length > 0 && (
-          <section className="py-24 bg-background">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-serif mb-4">
-                  Made with LingoCon
-                </h2>
-                <p className="text-muted-foreground text-lg">
-                  Explore languages created by our community
-                </p>
-              </div>
-              <FeaturedLanguages languages={featuredLanguages} />
-            </div>
-          </section>
-        )
-      }
+      <section className="py-10 bg-rose-500/5 border-y border-rose-500/10">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-x-6 gap-y-4 text-center sm:text-left">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500 ring-1 ring-rose-500/20">
+              <Heart className="h-5 w-5 fill-rose-500/20" />
+            </span>
+            <p className="text-muted-foreground font-light max-w-md">
+              LingoCon is free and community-funded. Help keep the servers running for every conlanger on earth.
+            </p>
+          </div>
+          <Link href="/donate" className="shrink-0">
+            <Button className="rounded-full h-11 px-6 bg-rose-500 hover:bg-rose-600 text-white gap-2 shadow-lg shadow-rose-500/20 transition-all hover:scale-105">
+              <Heart className="w-4 h-4 fill-current" />
+              Support on OpenCollective
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SUPPORT SECTION — Emotional & Warm
+          FINAL CTA — Reconvert to Signup
           ═══════════════════════════════════════════════════════════ */}
-      <section className="py-24 bg-rose-500/5 border-t border-rose-500/10 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.03)_0,transparent_100%)] pointer-events-none" />
-        
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 mb-6 shadow-sm ring-1 ring-rose-500/20 heart-pulse">
-            <Heart className="w-8 h-8 fill-rose-500/20" />
-          </div>
-          <h2 className="text-3xl md:text-5xl font-serif mb-6 tracking-tight text-foreground">
-            Support Our Mission
+      <section className="relative overflow-hidden py-28 bg-foreground text-background">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_0%,hsl(var(--primary)/0.25),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,black,transparent)] bg-[linear-gradient(to_right,hsl(var(--background)/0.06)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--background)/0.06)_1px,transparent_1px)] bg-[size:44px_44px]" />
+        <div className="container mx-auto px-4 relative z-10 text-center max-w-3xl">
+          <h2 className="text-4xl md:text-6xl font-serif mb-6 tracking-tight leading-[1.05]">
+            Your world is waiting <br />
+            <span className="italic text-background/60">for its first word.</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-            LingoCon is built by language lovers, for language lovers.
-            Every contribution keeps the servers running and the tools free for every conlanger on earth.
-            If our platform helps your worlds come alive, consider helping us sustain this dream.
+          <p className="text-lg md:text-xl text-background/70 mb-10 font-light max-w-2xl mx-auto leading-relaxed">
+            Join {stats.userCount > 1 ? `${stats.userCount} ` : ""}conlangers building structured, living languages. Free forever — no credit card, no catch.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/donate">
-              <Button size="lg" className="rounded-full h-14 px-8 bg-rose-500 hover:bg-rose-600 text-white gap-2 shadow-xl shadow-rose-500/20 transition-all hover:scale-105">
-                <Heart className="w-5 h-5 fill-current" />
-                Donate via OpenCollective
-              </Button>
+            <Link href={isAuthenticated ? "/dashboard" : "/login"} className="w-full sm:w-auto">
+              <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-background text-foreground hover:bg-background/90 w-full hover:scale-105 transition-all shadow-xl">
+                {isAuthenticated ? "Go to Dashboard" : "Begin Your First Language"}
+                <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
+              </MagneticButton>
+            </Link>
+            <Link href="/browse" className="w-full sm:w-auto">
+              <MagneticButton
+                variant="outline"
+                className="h-14 px-8 text-base font-medium rounded-full border-2 border-background/20 text-background hover:bg-background/10 bg-transparent w-full transition-all"
+              >
+                <Globe className="mr-2 w-5 h-5 pointer-events-none" />
+                Explore the Universe
+              </MagneticButton>
             </Link>
           </div>
         </div>

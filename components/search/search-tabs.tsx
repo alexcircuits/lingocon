@@ -44,7 +44,7 @@ export function SearchTabs({ currentTab, onTabChange, counts }: SearchTabsProps)
                             className={cn(
                                 "relative flex items-center gap-1.5 px-3 pb-3 pt-3 text-sm whitespace-nowrap transition-colors",
                                 isActive
-                                    ? "text-blue-600 dark:text-blue-400"
+                                    ? "text-primary"
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
@@ -52,7 +52,7 @@ export function SearchTabs({ currentTab, onTabChange, counts }: SearchTabsProps)
                             <span>{tab.label}</span>
                             
                             {isActive && (
-                                <span className="absolute bottom-0 left-0 w-full h-[3px] bg-blue-600 dark:bg-blue-400 rounded-t-full" />
+                                <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
                             )}
                         </button>
                     )

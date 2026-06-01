@@ -19,6 +19,7 @@ interface DictionaryTableMobileProps {
   onDerive: (entry: DictionaryEntry) => void
   showLatin: boolean
   enableAudio: boolean
+  onTagClick?: (tag: string) => void
 }
 
 export function DictionaryTableMobile({
@@ -69,7 +70,7 @@ export function DictionaryTableMobile({
                     className="mt-1"
                   />
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg font-serif mb-1 break-words font-custom-script">
+                    <CardTitle className="text-lg font-bold mb-1 break-words font-custom-script">
                       {entry.lemma}
                     </CardTitle>
                     {latin && (
@@ -89,7 +90,7 @@ export function DictionaryTableMobile({
                     )}
                   </div>
                 </div>
-                <div className="flex justify-end gap-1 mt-3">
+                <div className="flex justify-end gap-1 self-start">
                   <Button
                     variant="ghost"
                     size="icon"

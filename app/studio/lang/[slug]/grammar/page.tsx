@@ -69,16 +69,23 @@ export default async function GrammarPage({
 
   return (
     <div className="space-y-8">
-      <div className="pb-6 border-b border-border/40 flex items-end justify-between gap-4">
+      <div className="pb-6 border-b border-border/40 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-serif tracking-tight mb-1">Grammar</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Grammar</h1>
           <p className="text-muted-foreground">
             Create and organize grammar documentation pages
           </p>
+          {language.grammarPages.length > 0 && (
+            <span className="mt-2 block text-xs text-muted-foreground tabular-nums sm:hidden">
+              {language.grammarPages.length} page{language.grammarPages.length !== 1 ? "s" : ""}
+              {" · "}
+              {totalWords.toLocaleString()} word{totalWords !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {language.grammarPages.length > 0 && (
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
               {language.grammarPages.length} page{language.grammarPages.length !== 1 ? "s" : ""}
               {" · "}
               {totalWords.toLocaleString()} word{totalWords !== 1 ? "s" : ""}

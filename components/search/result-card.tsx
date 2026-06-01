@@ -91,7 +91,7 @@ export function ResultCard({ result, query }: ResultCardProps) {
                     <span className="text-sm text-foreground/70">{result.slug}</span>
                 </div>
                 <Link href={url} className="block">
-                    <h3 className="text-xl leading-snug text-blue-700 dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                    <h3 className="text-xl leading-snug text-primary hover:underline cursor-pointer">
                         {highlightMatch(result.name, query)}
                         {result.owner.name && (
                             <span className="text-base text-foreground/50 font-normal"> — by {result.owner.name}</span>
@@ -122,7 +122,7 @@ export function ResultCard({ result, query }: ResultCardProps) {
                     <span className="text-sm text-foreground/70">dictionary</span>
                 </div>
                 <Link href={url} className="block">
-                    <h3 className="text-xl leading-snug text-blue-700 dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                    <h3 className="text-xl leading-snug text-primary hover:underline cursor-pointer">
                         <span style={result.language.fontFamily ? { fontFamily: result.language.fontFamily } : undefined}>
                             {highlightMatch(result.lemma, query)}
                         </span>
@@ -151,7 +151,7 @@ export function ResultCard({ result, query }: ResultCardProps) {
                     <span className="text-sm text-foreground/70">grammar</span>
                 </div>
                 <Link href={url} className="block">
-                    <h3 className="text-xl leading-snug text-blue-700 dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                    <h3 className="text-xl leading-snug text-primary hover:underline cursor-pointer">
                         {highlightMatch(result.title, query)}
                     </h3>
                 </Link>
@@ -174,7 +174,7 @@ export function ResultCard({ result, query }: ResultCardProps) {
                     <span className="text-sm text-foreground/70">articles</span>
                 </div>
                 <Link href={url} className="block">
-                    <h3 className="text-xl leading-snug text-blue-700 dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                    <h3 className="text-xl leading-snug text-primary hover:underline cursor-pointer">
                         {highlightMatch(result.title, query)}
                     </h3>
                 </Link>
@@ -198,7 +198,7 @@ export function ResultCard({ result, query }: ResultCardProps) {
                     <span className="text-sm text-foreground/70">texts</span>
                 </div>
                 <Link href={url} className="block">
-                    <h3 className="text-xl leading-snug text-blue-700 dark:text-[#8ab4f8] hover:underline cursor-pointer">
+                    <h3 className="text-xl leading-snug text-primary hover:underline cursor-pointer">
                         {highlightMatch(result.title, query)}
                     </h3>
                 </Link>

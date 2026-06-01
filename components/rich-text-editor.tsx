@@ -363,7 +363,7 @@ export function RichTextEditor({
                         disabled={disabled}
                         title="Insert Paradigm Table (Structured)"
                     >
-                        <Table2 className="h-4 w-4 text-blue-500" />
+                        <Table2 className="h-4 w-4" />
                     </Button>
                 )}
 
@@ -395,7 +395,9 @@ export function RichTextEditor({
             </div>
 
             {/* Content */}
-            <EditorContent editor={editor} />
+            <div className="overflow-x-auto">
+                <EditorContent editor={editor} />
+            </div>
 
             {withIpaChart && (
                 <IpaChartGenerator

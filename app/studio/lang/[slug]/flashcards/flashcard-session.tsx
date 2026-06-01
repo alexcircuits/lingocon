@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Layers, Brain, RotateCcw, Trophy, Flame, Target, ArrowLeft } from "lucide-react"
+import { Layers, Brain, RotateCcw, Trophy, Flame, Target, ArrowLeft, X } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -137,7 +137,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
     return (
       <div className="max-w-xl mx-auto space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-serif font-medium">Study {languageName}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Study {languageName}</h1>
           <p className="text-muted-foreground">Choose your study mode and options</p>
         </div>
 
@@ -242,6 +242,16 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
 
     return (
       <div className="max-w-xl mx-auto space-y-4">
+        {/* Mid-session exit */}
+        <div className="flex">
+          <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ml-2">
+            <Link href={isPublic ? `/lang/${languageSlug}` : `/studio/lang/${languageSlug}/flashcards`}>
+              <X className="h-4 w-4" />
+              Exit
+            </Link>
+          </Button>
+        </div>
+
         {/* Streak counter */}
         {streak >= 3 && (
           <div className="flex items-center justify-center gap-2 text-amber-500 font-medium animate-in fade-in zoom-in duration-300">
@@ -299,7 +309,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
       </div>
 
       <div className="space-y-1">
-        <h2 className="text-3xl font-serif font-medium">
+        <h2 className="text-3xl font-bold tracking-tight">
           {isPerfect ? "Perfect Score!" : accuracy >= 70 ? "Great Job!" : "Keep Practicing!"}
         </h2>
         <p className="text-muted-foreground">
@@ -308,7 +318,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 space-y-1">
           <div className="text-3xl font-bold text-primary">{accuracy}%</div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">

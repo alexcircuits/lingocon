@@ -235,45 +235,44 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
           />
         </Card>
 
-        <div className="flex items-center justify-between">
-          {article ? (
-            <Button
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <label className="inline-flex min-h-11 items-center gap-3 self-start">
+            <span className="text-xs text-muted-foreground">
+              {isPublished ? "Public" : "Draft"}
+            </span>
+            <button
               type="button"
-              variant="destructive"
-              onClick={() => setIsDeleteOpen(true)}
+              role="switch"
+              aria-checked={isPublished}
+              onClick={() => setIsPublished(!isPublished)}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
+                isPublished ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
               disabled={isPending}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Article
-            </Button>
-          ) : (
-            <div />
-          )}
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">
-                {isPublished ? "Public" : "Draft"}
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isPublished}
-                onClick={() => setIsPublished(!isPublished)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
-                  isPublished ? "bg-primary" : "bg-muted-foreground/30"
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                  isPublished ? "translate-x-4" : "translate-x-0.5"
                 }`}
-                disabled={isPending}
-              >
-                <span
-                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                    isPublished ? "translate-x-4" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-            </div>
+              />
+            </button>
+          </label>
 
-            <Button type="submit" disabled={isPending}>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            {article ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setIsDeleteOpen(true)}
+                disabled={isPending}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Article
+              </Button>
+            ) : null}
+
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
               {isPending ? "Saving..." : article ? "Save Changes" : "Save Article"}
             </Button>

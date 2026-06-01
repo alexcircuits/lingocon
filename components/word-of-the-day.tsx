@@ -21,7 +21,7 @@ export async function WordOfTheDay() {
     const hasTransliteration = latinLemma !== word.lemma
 
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/5 via-background to-violet-500/5 p-6 shadow-sm hover:shadow-md transition-all">
+        <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-6 shadow-sm hover:shadow-md transition-all">
             <FontLoader
                 fontUrl={language.fontUrl}
                 fontFamily={language.fontFamily}

@@ -5,6 +5,8 @@ import { CreateLanguageForm } from "./form"
 import { LanguageWizard } from "./wizard"
 import { WizardEntry } from "./wizard-entry"
 import { prisma } from "@/lib/prisma"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 
 export const dynamic = "force-dynamic"
 
@@ -25,6 +27,12 @@ export default async function NewLanguagePage({
     select: { id: true, name: true },
     orderBy: { name: "asc" }
   }) : []
+
+  const navUser = userId ? await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, image: true, isAdmin: true },
+  }) : null
+  const isDevMode = process.env.DEV_MODE === "true"
 
   const params = await searchParams
   const useWizard = params.wizard === "true"
@@ -49,24 +57,31 @@ export default async function NewLanguagePage({
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Create New Language</h1>
-        <p className="mt-2 text-muted-foreground">
-          Start documenting your constructed language
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar user={navUser} isDevMode={isDevMode} />
+      <div className="h-14" />
 
-      {useWizard ? (
-        <LanguageWizard />
-      ) : (
-        <Card className="p-6">
-          <WizardEntry />
-          <div className="mt-6 pt-6 border-t">
-            <CreateLanguageForm userLanguages={userLanguages} initialParentId={initialParentId} />
-          </div>
-        </Card>
-      )}
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Create New Language</h1>
+          <p className="mt-2 text-muted-foreground">
+            Start documenting your constructed language
+          </p>
+        </div>
+
+        {useWizard ? (
+          <LanguageWizard />
+        ) : (
+          <Card className="p-6">
+            <WizardEntry />
+            <div className="mt-6 pt-6 border-t">
+              <CreateLanguageForm userLanguages={userLanguages} initialParentId={initialParentId} />
+            </div>
+          </Card>
+        )}
+      </main>
+
+      <Footer />
     </div>
   )
 }

@@ -3,17 +3,30 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "motion/react"
-import type { Language, User as UserType } from "@prisma/client"
-import { cn } from "@/lib/utils"
-import { Heart } from "lucide-react"
+import { Languages, BookOpen, FileText, Heart, ArrowRight } from "lucide-react"
+import { cn, formatDate } from "@/lib/utils"
 
-// Generate a consistent gradient based on the language name
+export interface BookCardLanguage {
+    id: string
+    name: string
+    slug: string
+    description?: string | null
+    flagUrl?: string | null
+    createdAt?: Date | string
+    owner: { name: string | null; image?: string | null }
+    _count: {
+        scriptSymbols?: number
+        grammarPages?: number
+        dictionaryEntries: number
+        favorites?: number
+    }
+}
+
 function getGradientFromName(name: string): [string, string] {
     let hash = 0
     for (let i = 0; i < name.length; i++) {
-        const char = name.charCodeAt(i)
-        hash = ((hash << 5) - hash) + char
-        hash = hash & hash
+        hash = (hash << 5) - hash + name.charCodeAt(i)
+        hash &= hash
     }
     const gradients: [string, string][] = [
         ["#667eea", "#764ba2"],
@@ -21,14 +34,8 @@ function getGradientFromName(name: string): [string, string] {
         ["#4facfe", "#00f2fe"],
         ["#43e97b", "#38f9d7"],
         ["#fa709a", "#fee140"],
-        ["#a8edea", "#fed6e3"],
-        ["#ff9a9e", "#fad0c4"],
-        ["#ffecd2", "#fcb69f"],
         ["#a18cd1", "#fbc2eb"],
-        ["#fad0c4", "#ffd1ff"],
-        ["#667eea", "#f093fb"],
         ["#00c6fb", "#005bea"],
-        ["#d299c2", "#fef9d7"],
         ["#89f7fe", "#66a6ff"],
         ["#cd9cf2", "#f6f3ff"],
         ["#fddb92", "#d1fdff"],
@@ -36,80 +43,141 @@ function getGradientFromName(name: string): [string, string] {
     return gradients[Math.abs(hash) % gradients.length]
 }
 
-interface BookCardProps {
-    language: {
-        id: string
-        name: string
-        slug: string
-        flagUrl?: string | null
-        owner: { name: string | null; image?: string | null }
-        _count: {
-            scriptSymbols?: number
-            grammarPages?: number
-            dictionaryEntries: number
-            favorites?: number
-        }
-    }
+function initials(name: string): string {
+    const words = name.trim().split(/\s+/)
+    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+    return name.slice(0, 2).toUpperCase()
 }
 
-export function BookCard({ language }: BookCardProps) {
+function Cover({
+    name,
+    flagUrl,
+    className,
+    textClassName,
+}: {
+    name: string
+    flagUrl?: string | null
+    className?: string
+    textClassName?: string
+}) {
+    if (flagUrl) {
+        return (
+            <div className={cn("relative overflow-hidden", className)}>
+                <Image
+                    src={flagUrl}
+                    alt={name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    unoptimized={flagUrl.startsWith("/uploads/")}
+                />
+            </div>
+        )
+    }
+    const [c1, c2] = getGradientFromName(name)
     return (
-        <Link href={`/lang/${language.slug}`} className="block group perspective-1000">
-            <motion.div
-                whileHover={{ y: -5, rotateY: -5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="relative bg-card border-none rounded-none shadow-xl flex flex-col h-[320px] w-full max-w-[260px] mx-auto overflow-hidden preserve-3d group-hover:shadow-2xl transition-all duration-500"
-            >
-                {/* Spine/Side (Simulated) */}
-                <div className="absolute left-0 top-0 bottom-0 w-3 bg-primary/20 bg-gradient-to-r from-black/20 to-transparent z-20" />
+        <div
+            className={cn("flex items-center justify-center overflow-hidden", className)}
+            style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}
+        >
+            <span className={cn("font-bold text-white/45 select-none", textClassName)}>{initials(name)}</span>
+        </div>
+    )
+}
 
-                {/* Cover Image/Color */}
-                <div className="absolute inset-0 bg-secondary flex flex-col">
-                    {language.flagUrl ? (
-                        <div className="h-1/2 relative overflow-hidden">
-                            <Image
-                                src={language.flagUrl}
-                                alt={language.name}
-                                fill
-                                className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-primary/10 mix-blend-multiply" />
-                        </div>
-                    ) : (
-                        <div
-                            className="h-1/2 relative overflow-hidden flex items-center justify-center"
-                            style={{
-                                background: `linear-gradient(135deg, ${getGradientFromName(language.name)[0]}, ${getGradientFromName(language.name)[1]})`,
-                            }}
-                        >
-                            <span className="text-5xl font-serif font-bold text-white/30 select-none">
-                                {language.name.slice(0, 2).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
+function Stat({ icon: Icon, value }: { icon: React.ElementType; value: number }) {
+    return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-secondary/40 px-2 py-0.5 text-xs text-muted-foreground">
+            <Icon className="h-3 w-3 text-primary" />
+            <span className="tabular-nums">{value}</span>
+        </span>
+    )
+}
 
-                    <div className="h-1/2 bg-card p-6 flex flex-col justify-between border-t border-border/10 relative">
-                        {/* Texture overlay */}
-                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
+function Stats({ language }: { language: BookCardLanguage }) {
+    return (
+        <>
+            <Stat icon={FileText} value={language._count.dictionaryEntries} />
+            <Stat icon={Languages} value={language._count.scriptSymbols ?? 0} />
+            <Stat icon={BookOpen} value={language._count.grammarPages ?? 0} />
+            <Stat icon={Heart} value={language._count.favorites ?? 0} />
+        </>
+    )
+}
 
-                        <div>
-                            <h3 className="font-serif text-2xl font-medium tracking-tight text-foreground line-clamp-2 leading-none mb-2 group-hover:text-primary transition-colors">
-                                {language.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground font-medium">
-                                by {language.owner.name}
+// A subtle vertical accent that keeps the "book spine" identity.
+const Spine = () => (
+    <div className="absolute left-0 top-0 bottom-0 z-10 w-1 bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
+)
+
+interface BookCardProps {
+    language: BookCardLanguage
+    view?: "grid" | "list"
+    className?: string
+}
+
+export function BookCard({ language, view = "grid", className }: BookCardProps) {
+    if (view === "list") {
+        return (
+            <Link href={`/lang/${language.slug}`} className={cn("group block", className)}>
+                <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl aurora-glass p-3 transition-colors hover:border-primary/30">
+                    <Spine />
+                    <Cover
+                        name={language.name}
+                        flagUrl={language.flagUrl}
+                        className="h-14 w-20 shrink-0 rounded-xl"
+                        textClassName="text-lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-1 font-semibold tracking-tight transition-colors group-hover:text-primary">
+                            {language.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                            by {language.owner.name || "Anonymous"}
+                            {language.createdAt ? ` · ${formatDate(language.createdAt)}` : ""}
+                        </p>
+                        {language.description && (
+                            <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
+                                {language.description}
                             </p>
-                        </div>
+                        )}
+                    </div>
+                    <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                        <Stats language={language} />
+                    </div>
+                    <ArrowRight className="hidden h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-primary md:block" />
+                </div>
+            </Link>
+        )
+    }
 
-                        <div className="space-y-2">
-                            <div className="w-full h-px bg-border/50" />
-                            <div className="flex justify-between items-center text-xs font-mono text-muted-foreground/80 uppercase tracking-widest">
-                                <span>{language._count.dictionaryEntries} w.</span>
-                                <div className="flex items-center gap-1">
-                                    <Heart className="h-3 w-3 fill-rose-500/20 text-rose-500" />
-                                    <span>{language._count.favorites || 0}</span>
-                                </div>
-                            </div>
+    return (
+        <Link href={`/lang/${language.slug}`} className={cn("group block", className)}>
+            <motion.div
+                whileHover={{ y: -4 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="relative mx-auto h-[320px] w-full max-w-[260px] overflow-hidden rounded-l-none rounded-r-2xl aurora-glass transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-primary/10"
+            >
+                {/* Notebook binding: a flat-edged spine on the left + a fold line */}
+                <div className="absolute left-0 top-0 bottom-0 z-20 w-2.5 bg-gradient-to-b from-primary/50 via-primary/30 to-primary/10" />
+                <div className="absolute left-2.5 top-0 bottom-0 z-20 w-px bg-black/10 dark:bg-white/10" />
+
+                <div className="flex h-full flex-col pl-2.5">
+                    <Cover
+                        name={language.name}
+                        flagUrl={language.flagUrl}
+                        className="h-[150px] w-full"
+                        textClassName="text-5xl"
+                    />
+                    <div className="flex flex-1 flex-col p-4">
+                        <h3 className="line-clamp-2 text-lg font-bold leading-tight tracking-tight transition-colors group-hover:text-primary">
+                            {language.name}
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">by {language.owner.name || "Anonymous"}</p>
+                        {language.description && (
+                            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{language.description}</p>
+                        )}
+                        <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
+                            <Stats language={language} />
                         </div>
                     </div>
                 </div>

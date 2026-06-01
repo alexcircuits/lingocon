@@ -18,69 +18,86 @@ interface AnimatedLanguageCardProps {
   index: number
 }
 
+function StatPill({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: React.ElementType
+  value: number
+  label: string
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground">
+      <Icon className="h-3 w-3 text-primary" />
+      <span className="font-semibold tabular-nums text-foreground">{value}</span>
+      {label}
+    </span>
+  )
+}
+
 export function AnimatedLanguageCard({ language, index }: AnimatedLanguageCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04 }}
       whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileTap={{ scale: 0.99 }}
     >
-      <Link href={`/studio/lang/${language.slug}`} className="block group">
-        <div className="relative p-5 rounded-xl border border-border/60 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <LanguagePlaceholder
-                name={language.name}
-                flagUrl={language.flagUrl}
-                size="md"
-                variant="flag"
-              />
-              <div>
-                <h3 className="font-serif text-lg font-medium group-hover:text-primary transition-colors">
+      <Link href={`/studio/lang/${language.slug}`} className="group block">
+        <div className="relative flex items-center gap-3.5 rounded-2xl border border-border/60 bg-card p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 sm:gap-4 sm:p-5">
+          <LanguagePlaceholder
+            name={language.name}
+            flagUrl={language.flagUrl}
+            size="md"
+            variant="flag"
+            className="shrink-0"
+          />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-bold tracking-tight transition-colors group-hover:text-primary sm:text-lg">
                   {language.name}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                  <Calendar className="h-3 w-3" />
-                  <span>Updated {formatDate(language.updatedAt)}</span>
-                </div>
+                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Updated {formatDate(language.updatedAt)}</span>
+                </p>
               </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "shrink-0 text-[10px] font-normal sm:text-xs",
+                  language.visibility === "PRIVATE" && "bg-muted text-muted-foreground border-transparent",
+                  language.visibility === "UNLISTED" && "bg-amber-500/10 text-amber-600 border-amber-500/20",
+                  language.visibility === "PUBLIC" && "bg-primary/10 text-primary border-primary/20",
+                )}
+              >
+                {language.visibility === "PRIVATE"
+                  ? "Private"
+                  : language.visibility === "UNLISTED"
+                    ? "Unlisted"
+                    : "Public"}
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-xs font-normal",
-                language.visibility === "PRIVATE" && "bg-muted text-muted-foreground border-transparent",
-                language.visibility === "UNLISTED" && "bg-amber-500/10 text-amber-600 border-amber-500/20",
-                language.visibility === "PUBLIC" && "bg-primary/10 text-primary border-primary/20"
-              )}
-            >
-              {language.visibility === "PRIVATE" ? "Private" : language.visibility === "UNLISTED" ? "Unlisted" : "Public"}
-            </Badge>
+
+            {language.description && (
+              <p className="mt-2 line-clamp-1 text-sm text-muted-foreground sm:line-clamp-2">
+                {language.description}
+              </p>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <StatPill icon={FileText} value={language._count.dictionaryEntries} label="entries" />
+              <StatPill icon={BookOpen} value={language._count.grammarPages} label="pages" />
+            </div>
           </div>
 
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 pl-[52px]">
-            {language.description || "No description provided."}
-          </p>
-
-          <div className="flex items-center gap-6 pl-[52px] text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <FileText className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{language._count.dictionaryEntries}</span> entries
-            </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{language._count.grammarPages}</span> pages
-            </div>
-
-            <div className="ml-auto flex items-center text-primary text-xs font-medium opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
-              Open Studio <ArrowRight className="h-3 w-3 ml-1" />
-            </div>
-          </div>
+          <ArrowRight className="hidden h-5 w-5 shrink-0 self-center text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary sm:block" />
         </div>
       </Link>
     </motion.div>
   )
 }
-

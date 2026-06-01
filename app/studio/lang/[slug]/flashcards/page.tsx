@@ -46,7 +46,7 @@ export default async function FlashcardsPage({ params }: { params: Promise<{ slu
   if (!language) notFound()
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="mx-auto max-w-3xl">
       <FlashcardSession
         entries={language.dictionaryEntries}
         languageName={language.name}

@@ -31,6 +31,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
+import {
   FolderTree,
   Plus,
   Pencil,
@@ -40,10 +44,17 @@ import {
   Eye,
   Languages,
   ArrowRight,
-  GripVertical,
   Shield,
+  BookA,
 } from "lucide-react"
-import { createFamily, updateFamily, deleteFamily, setLanguageFamily } from "@/app/actions/language-family"
+import {
+  createFamily,
+  updateFamily,
+  deleteFamily,
+  setLanguageFamily,
+  setFamilyParent,
+} from "@/app/actions/language-family"
+import { ProtoVocabularyPanel } from "../components/proto-vocabulary-panel"
 
 interface FamilyLanguage {
   id: string
@@ -61,16 +72,24 @@ interface Family {
   visibility: string
   type: string
   createdAt: Date
+  parentFamilyId: string | null
+  parentFamily: { id: string; name: string } | null
   languages: FamilyLanguage[]
-  _count: { languages: number }
+  _count: { languages: number; protoWords: number }
+}
+
+interface TargetLanguage {
+  id: string
+  name: string
 }
 
 interface FamilyManagerProps {
   families: Family[]
   unassignedLanguages: FamilyLanguage[]
+  targetLanguages: TargetLanguage[]
 }
 
-export function FamilyManager({ families, unassignedLanguages }: FamilyManagerProps) {
+export function FamilyManager({ families, unassignedLanguages, targetLanguages }: FamilyManagerProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -85,9 +104,19 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
   const [editName, setEditName] = useState("")
   const [editDesc, setEditDesc] = useState("")
   const [editVisibility, setEditVisibility] = useState<string>("PRIVATE")
+  const [editParent, setEditParent] = useState<string>("none")
 
   // Assign dialog
   const [assignFamily, setAssignFamily] = useState<Family | null>(null)
+
+  // Proto-vocabulary drawer
+  const [protoFamily, setProtoFamily] = useState<Family | null>(null)
+
+  // Candidate parent families: the user's own families, excluding the family
+  // being edited (the service rejects deeper cycles on save).
+  const parentOptions = editFamily
+    ? families.filter((f) => f.id !== editFamily.id && f.type !== "SYSTEM")
+    : []
 
   const handleCreate = () => {
     if (!newName.trim()) return
@@ -112,19 +141,29 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
 
   const handleUpdate = () => {
     if (!editFamily || !editName.trim()) return
+    const family = editFamily
+    const nextParent = editParent === "none" ? null : editParent
+    const parentChanged = nextParent !== (family.parentFamilyId ?? null)
     startTransition(async () => {
-      const result = await updateFamily(editFamily.id, {
+      const result = await updateFamily(family.id, {
         name: editName.trim(),
         description: editDesc.trim() || undefined,
         visibility: editVisibility as "PRIVATE" | "UNLISTED" | "PUBLIC",
       })
       if ('error' in result) {
         toast.error(result.error)
-      } else {
-        toast.success("Family updated!")
-        setEditFamily(null)
-        router.refresh()
+        return
       }
+      if (parentChanged) {
+        const parentRes = await setFamilyParent(family.id, nextParent)
+        if (parentRes && 'error' in parentRes) {
+          toast.error(parentRes.error)
+          return
+        }
+      }
+      toast.success("Family updated!")
+      setEditFamily(null)
+      router.refresh()
     })
   }
 
@@ -169,6 +208,7 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
     setEditName(family.name)
     setEditDesc(family.description || "")
     setEditVisibility(family.visibility)
+    setEditParent(family.parentFamilyId ?? "none")
   }
 
   const visibilityIcon = (v: string) => {
@@ -179,18 +219,8 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-serif tracking-tight mb-1 flex items-center gap-3">
-            <FolderTree className="h-8 w-8 text-primary" />
-            Manage Families
-          </h1>
-          <p className="text-muted-foreground">
-            Create, rename, and organize your language families.
-          </p>
-        </div>
-
+      {/* Create action (page header lives in the route) */}
+      <div className="flex justify-end">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -286,8 +316,8 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
             <Card key={family.id} className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-serif text-lg font-medium">{family.name}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-lg font-bold tracking-tight">{family.name}</h3>
                     {family.type === "SYSTEM" && (
                       <Badge variant="outline" className="gap-1 text-xs">
                         <Shield className="h-3 w-3" />
@@ -298,6 +328,18 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
                       {visibilityIcon(family.visibility)}
                       {family.visibility.toLowerCase()}
                     </Badge>
+                    {family.parentFamily && (
+                      <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
+                        <FolderTree className="h-3 w-3" />
+                        Sub-family of {family.parentFamily.name}
+                      </Badge>
+                    )}
+                    {family._count.protoWords > 0 && (
+                      <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
+                        <BookA className="h-3 w-3" />
+                        {family._count.protoWords} proto-word{family._count.protoWords !== 1 ? "s" : ""}
+                      </Badge>
+                    )}
                   </div>
                   {family.description && (
                     <p className="text-sm text-muted-foreground">{family.description}</p>
@@ -305,6 +347,15 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
                 </div>
 
                 <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setProtoFamily(family)}
+                    className="gap-1.5 text-xs text-muted-foreground hover:text-primary"
+                  >
+                    <BookA className="h-4 w-4" />
+                    <span className="hidden sm:inline">Proto-vocab</span>
+                  </Button>
                   {family.type !== "SYSTEM" && (
                     <>
                       <Button variant="ghost" size="icon" onClick={() => openEdit(family)} disabled={isPending}>
@@ -457,6 +508,25 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Parent family (optional)</Label>
+              <Select value={editParent} onValueChange={setEditParent}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No parent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No parent (top-level)</SelectItem>
+                  {parentOptions.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Nest this family under a broader one to build a proto-family hierarchy.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={handleUpdate} disabled={isPending || !editName.trim()}>
@@ -465,6 +535,21 @@ export function FamilyManager({ families, unassignedLanguages }: FamilyManagerPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Proto-vocabulary drawer */}
+      <Sheet open={!!protoFamily} onOpenChange={(open) => !open && setProtoFamily(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+          {protoFamily && (
+            <ProtoVocabularyPanel
+              familyId={protoFamily.id}
+              familyName={protoFamily.name}
+              isEditable={protoFamily.type !== "SYSTEM"}
+              targetLanguages={targetLanguages}
+              onClose={() => setProtoFamily(null)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

@@ -188,7 +188,7 @@ export function WordGeneratorDialog({
             <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-amber-500" />
+                        <Sparkles className="h-5 w-5 text-primary" />
                         Word Generator
                     </DialogTitle>
                     <DialogDescription>
@@ -222,7 +222,7 @@ export function WordGeneratorDialog({
                     </div>
 
                     {/* Controls */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="space-y-1.5">
                             <Label className="text-xs">Min syllables</Label>
                             <Input
@@ -277,18 +277,18 @@ export function WordGeneratorDialog({
                     {/* Results */}
                     {generatedWords.length > 0 && (
                         <ScrollArea className="h-[280px] rounded-lg border">
-                            <div className="p-2 grid grid-cols-2 gap-1.5">
+                            <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                 {generatedWords.map((word, idx) => (
                                     <div
                                         key={`${word}-${idx}`}
                                         className="group flex items-center justify-between gap-1 rounded-md border border-border/50 bg-card px-3 py-2 text-sm hover:border-primary/30 hover:bg-muted/50 transition-colors"
                                     >
                                         <span className="font-mono tracking-wide truncate">{word}</span>
-                                        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-0.5 shrink-0 hover-reveal">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-6 w-6"
+                                                className="h-9 w-9 sm:h-8 sm:w-8"
                                                 onClick={() => handleCopy(word, idx)}
                                                 title="Copy"
                                             >
@@ -301,7 +301,7 @@ export function WordGeneratorDialog({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-6 w-6 text-primary"
+                                                className="h-9 w-9 sm:h-8 sm:w-8 text-primary"
                                                 onClick={() => handleAddWord(word)}
                                                 title="Add to dictionary"
                                             >

@@ -207,7 +207,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
             <div className="space-y-0.5">
               <Label htmlFor="allowsDiacritics" className="text-base font-medium">
                 Diacritical Language
@@ -224,7 +224,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border/40 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
             <div className="space-y-0.5">
               <Label htmlFor="allowForking" className="text-base font-medium">
                 Allow Forking
@@ -304,7 +304,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                     <Label htmlFor="fontScale">Font Scale ({formData.fontScale.toFixed(1)}x)</Label>
                     <span className="text-xs text-muted-foreground">Adjust if font is too small/large</span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <Slider
                       id="fontScale"
                       min={0.5}
@@ -473,11 +473,11 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   />
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="icon" title="Open IPA Keyboard">
+                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title="Open IPA Keyboard">
                         <Keyboard className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
+                    <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-x-auto p-0" align="end">
                       <IPAKeyboard
                         currentValue={previewIpa}
                         onSelect={(symbol) => setPreviewIpa((prev) => prev + symbol)}

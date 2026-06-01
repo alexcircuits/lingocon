@@ -51,6 +51,10 @@ model User {
   auditLogs AuditLog[]
   userBadges UserBadge[]
   comments   Comment[]
+  modules        Module[]
+  moduleInstalls ModuleInstall[]
+  moduleReviews  ModuleReview[]
+  moduleReports  ModuleReport[]
 
   @@map("users")
 }
@@ -147,6 +151,7 @@ model Language {
   texts           Text[]
   comments        Comment[]
   slugReservations SlugReservation[]
+  moduleInstalls  ModuleInstall[]
 
   @@index([ownerId])
   @@index([slug])
@@ -663,4 +668,182 @@ model SurveyResponse {
   @@index([surveyId])
   @@index([surveyId, createdAt])
   @@map("survey_responses")
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Modules — community-authored, hosted add-ons (see docs/MODULES_MARKETPLACE.md)
+// ───────────────────────────────────────────────────────────────────────────
+
+enum ModuleType {
+  STUDIO_PANEL
+  READER_WIDGET
+  CONTENT_BLOCK
+  TRANSFORMER
+  GENERATOR
+  EXPORTER
+  IMPORTER
+  VISUALIZER
+  VALIDATOR
+  THEME
+}
+
+// Distribution/execution tier. Tier 0 is pure declarative data (no code);
+// Tier 1 is sandboxed client code; Tier 2 (reserved) is server/WASM.
+enum ModuleTier {
+  DECLARATIVE
+  CLIENT_SANDBOX
+  SERVER
+}
+
+enum ModuleStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  SUSPENDED
+  DEPRECATED
+}
+
+enum ModuleReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model Module {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  summary     String?      @db.Text  // Short one-liner for cards
+  description String?      @db.Text  // Long README-style markdown
+  type        ModuleType
+  tier        ModuleTier   @default(DECLARATIVE)
+  status      ModuleStatus @default(DRAFT)
+
+  icon        String?      // Lucide icon name or emoji
+  repoUrl     String?      // Source repository (trust signal)
+  homepageUrl String?
+  license     String?      // OSI license identifier, e.g. "MIT"
+  tags        Json?        // Array of tag strings
+
+  isOfficial       Boolean @default(false)
+  isVerifiedAuthor Boolean @default(false)
+
+  // Denormalized counters for cheap sort/display
+  addCount    Int @default(0)   // number of active installs
+  ratingSum   Int @default(0)   // sum of review ratings
+  ratingCount Int @default(0)   // number of reviews
+
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  versions  ModuleVersion[]
+  installs  ModuleInstall[]
+  reviews   ModuleReview[]
+  reports   ModuleReport[]
+
+  @@index([authorId])
+  @@index([slug])
+  @@index([status])
+  @@index([type])
+  @@index([status, type])
+  @@map("modules")
+}
+
+model ModuleVersion {
+  id          String   @id @default(cuid())
+  moduleId    String
+  version     String   // semver, e.g. "1.2.0"
+  manifest    Json     // Parsed module.json
+  permissions Json?    // Declared capability strings
+  sdkRange    String?  // Compatible SDK semver range
+  changelog   String?  @db.Text
+
+  // Tier 0 declarative payload (rules/theme/word list). Null for code modules.
+  data        Json?
+
+  // Tier 1+ hosted bundle. Null for declarative modules.
+  bundleUrl   String?
+  bundleHash  String?
+  // Inline sandboxed widget source (JS) for client-sandbox modules.
+  bundleCode  String?  @db.Text
+
+  yanked      Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  module   Module          @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  installs ModuleInstall[]
+
+  @@unique([moduleId, version])
+  @@index([moduleId])
+  @@index([moduleId, publishedAt])
+  @@map("module_versions")
+}
+
+// One add of a module by a user. languageId set => scoped to that language;
+// languageId null => account-wide (applies to all of the user's languages).
+model ModuleInstall {
+  id                 String   @id @default(cuid())
+  moduleId           String
+  versionId          String
+  userId             String
+  languageId         String?
+  settings           Json?    // User-configured options validated against settingsSchema
+  grantedPermissions Json?    // Capabilities the user consented to at add time
+  enabled            Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  module   Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  version  ModuleVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language Language?     @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  // Postgres treats NULLs as distinct, so an account-wide row and per-language
+  // rows for the same module/user can coexist.
+  @@unique([moduleId, userId, languageId])
+  @@index([moduleId])
+  @@index([userId])
+  @@index([languageId])
+  @@index([languageId, enabled])
+  @@map("module_installs")
+}
+
+model ModuleReview {
+  id        String   @id @default(cuid())
+  moduleId  String
+  userId    String
+  rating    Int      // 1–5
+  body      String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, userId])
+  @@index([moduleId])
+  @@index([userId])
+  @@map("module_reviews")
+}
+
+model ModuleReport {
+  id         String             @id @default(cuid())
+  moduleId   String
+  reporterId String
+  reason     String             @db.Text
+  status     ModuleReportStatus @default(OPEN)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  reporter User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@index([reporterId])
+  @@index([status])
+  @@map("module_reports")
 }

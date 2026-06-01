@@ -192,12 +192,12 @@ export function SoundChangeEditor({
       <div className="space-y-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center justify-between">
+            <CardTitle className="text-base font-medium flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500" />
+                <Zap className="h-4 w-4 text-primary" />
                 Rules
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -224,10 +224,10 @@ export function SoundChangeEditor({
               value={rulesText}
               onChange={(e) => setRulesText(e.target.value)}
               placeholder={`Enter rules, one per line:\na → e / _#\nk → tʃ / _i\ns → ∅ / V_V\n\n// Lines starting with // are comments`}
-              className="font-mono text-sm min-h-[300px] resize-y"
+              className="font-mono text-sm min-h-[200px] sm:min-h-[300px] resize-y"
               spellCheck={false}
             />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between">
               <span>
                 {rules.length} rule{rules.length !== 1 ? "s" : ""} parsed
               </span>
@@ -284,7 +284,7 @@ export function SoundChangeEditor({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Play className="h-4 w-4 text-green-500" />
+              <Play className="h-4 w-4 text-primary" />
               Test Words
             </CardTitle>
           </CardHeader>
@@ -336,18 +336,18 @@ export function SoundChangeEditor({
                 {rules.map((rule, i) => (
                   <div
                     key={rule.id}
-                    className="flex items-center gap-2 text-xs font-mono px-2 py-1 rounded bg-muted/30"
+                    className="flex flex-wrap items-center gap-2 text-xs font-mono px-2 py-1 rounded bg-muted/30"
                   >
                     <span className="text-muted-foreground w-5">{i + 1}.</span>
                     <span className="text-amber-600 dark:text-amber-400">{rule.target}</span>
-                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground" />
+                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                     <span className="text-green-600 dark:text-green-400">
                       {rule.replacement || "∅"}
                     </span>
                     {(rule.leftEnv || rule.rightEnv) && (
                       <>
                         <span className="text-muted-foreground">/</span>
-                        <span className="text-blue-600 dark:text-blue-400">
+                        <span className="min-w-0 break-all text-blue-600 dark:text-blue-400">
                           {rule.leftEnv || ""}_{rule.rightEnv || ""}
                         </span>
                       </>
@@ -364,9 +364,9 @@ export function SoundChangeEditor({
       <div className="space-y-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center justify-between">
+            <CardTitle className="text-base font-medium flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-500" />
+                <FileText className="h-4 w-4 text-primary" />
                 Dictionary Preview
                 {changedCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -374,7 +374,7 @@ export function SoundChangeEditor({
                   </Badge>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -414,6 +414,7 @@ export function SoundChangeEditor({
               </div>
             ) : (
               <ScrollArea className="h-[500px]">
+                <div className="overflow-x-auto scroll-fade-x">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -455,6 +456,7 @@ export function SoundChangeEditor({
                     })}
                   </TableBody>
                 </Table>
+                </div>
               </ScrollArea>
             )}
           </CardContent>
@@ -462,7 +464,7 @@ export function SoundChangeEditor({
 
         {/* Stats */}
         {changedCount > 0 && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Card className="p-3 text-center">
               <div className="text-2xl font-bold">{entries.length}</div>
               <div className="text-xs text-muted-foreground">Total Words</div>

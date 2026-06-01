@@ -39,7 +39,7 @@ export function HeroBackground() {
     const y = useTransform(scrollY, [0, 600], [0, 200])
     const opacity = useTransform(scrollY, [0, 400], [1, 0])
 
-    const glyphs = useMemo(() => generateGlyphs(15), [])
+    const glyphs = useMemo(() => generateGlyphs(9), [])
 
     return (
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">

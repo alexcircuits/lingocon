@@ -181,7 +181,7 @@ export function BulkAddDialog({
 
         <div
           ref={tableRef}
-          className="flex-1 overflow-auto border rounded-md min-h-0"
+          className="flex-1 overflow-auto scroll-fade-x border rounded-md min-h-0"
         >
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
@@ -262,7 +262,7 @@ export function BulkAddDialog({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      className="h-7 w-7 hover-reveal text-muted-foreground hover:text-destructive"
                       onClick={() => removeRow(row.id)}
                       disabled={submitting || rows.length <= 1}
                       tabIndex={-1}
@@ -276,7 +276,7 @@ export function BulkAddDialog({
           </table>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             type="button"
             variant="outline"

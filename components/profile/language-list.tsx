@@ -5,7 +5,7 @@ import { Search, Sparkles, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { LanguageCard } from "@/app/browse/components/language-card"
+import { BookCard } from "@/components/landing/book-card"
 
 interface Language {
     id: string
@@ -76,9 +76,9 @@ export function LanguageList({ languages, isOwnProfile }: LanguageListProps) {
 
             {/* Grid */}
             {filteredLanguages.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredLanguages.map((language) => (
-                        <LanguageCard key={language.id} language={language} />
+                        <BookCard key={language.id} language={language} />
                     ))}
                 </div>
             ) : (

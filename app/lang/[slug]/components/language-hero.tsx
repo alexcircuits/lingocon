@@ -7,13 +7,43 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
 import { ShareButtons } from "@/components/share-buttons"
-import { SparklesCore } from "@/components/ui/sparkles"
-import { Flag, Globe, MessageCircle, MessageSquare, ExternalLink, GitBranch } from "lucide-react"
+import {
+    Flag,
+    Globe,
+    MessageCircle,
+    MessageSquare,
+    GitBranch,
+    Heart,
+    FileText,
+    BookOpen,
+    Languages,
+    Newspaper,
+    BookMarked,
+} from "lucide-react"
 
 interface LanguageHeroProps {
-    language: Pick<Language, "id" | "name" | "slug" | "description" | "visibility" | "flagUrl" | "discordUrl" | "telegramUrl" | "websiteUrl" | "createdAt" | "updatedAt" | "ownerId"> & {
+    language: Pick<
+        Language,
+        | "id"
+        | "name"
+        | "slug"
+        | "description"
+        | "visibility"
+        | "flagUrl"
+        | "discordUrl"
+        | "telegramUrl"
+        | "websiteUrl"
+        | "createdAt"
+        | "updatedAt"
+        | "ownerId"
+    > & {
         _count: {
             favorites: number
+            scriptSymbols?: number
+            grammarPages?: number
+            dictionaryEntries?: number
+            articles?: number
+            texts?: number
         }
     }
     isFavorite: boolean
@@ -28,31 +58,33 @@ export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps
         setShareUrl(`${siteUrl}/lang/${language.slug}`)
     }, [language.slug])
 
+    const c = language._count
+    const stats = [
+        { label: "Words", value: c.dictionaryEntries ?? 0, icon: FileText },
+        { label: "Grammar", value: c.grammarPages ?? 0, icon: BookOpen },
+        { label: "Symbols", value: c.scriptSymbols ?? 0, icon: Languages },
+        { label: "Articles", value: c.articles ?? 0, icon: Newspaper },
+        { label: "Texts", value: c.texts ?? 0, icon: BookMarked },
+    ].filter((s) => s.value > 0)
+
     return (
-        <div className="relative w-full overflow-hidden rounded-3xl border border-border/40 bg-background/50 shadow-2xl">
-            {/* Background Ambience */}
-            <div className="absolute inset-0 bg-grid-white/[0.02] -z-10" />
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 via-transparent to-background -z-10" />
+        <div className="aurora-glass relative w-full overflow-hidden rounded-3xl">
+            {/* Aurora ambient blobs */}
+            <div
+                className="aurora-blob aurora-blob-animate -left-16 -top-24 h-64 w-64"
+                style={{ background: "hsl(var(--aurora-violet))" }}
+            />
+            <div
+                className="aurora-blob aurora-blob-animate -bottom-28 right-0 h-72 w-72"
+                style={{ background: "hsl(var(--aurora-magenta))", animationDelay: "-7s" }}
+            />
 
-            {/* Sparkles */}
-            <div className="absolute inset-0 h-full w-full opacity-30 pointer-events-none">
-                <SparklesCore
-                    id={`hero-sparkles-${language.id}`}
-                    background="transparent"
-                    minSize={0.4}
-                    maxSize={1}
-                    particleDensity={20}
-                    className="w-full h-full"
-                    particleColor="currentColor"
-                />
-            </div>
-
-            <div className="relative z-10 p-6 md:p-10 lg:p-14 flex flex-col md:flex-row gap-8 items-start">
+            <div className="relative z-10 flex flex-col items-start gap-7 p-6 md:flex-row md:items-center md:gap-9 md:p-10 lg:p-12">
                 {/* Flag / Cover */}
-                <div className="relative shrink-0 group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-1000"></div>
+                <div className="group relative shrink-0">
+                    <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-br from-primary/40 to-primary/5 opacity-70 blur transition duration-700 group-hover:opacity-100" />
                     {language.flagUrl ? (
-                        <div className="relative h-32 w-48 md:h-40 md:w-60 overflow-hidden rounded-xl border border-border/40 shadow-lg bg-card">
+                        <div className="relative h-32 w-48 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl md:h-40 md:w-60">
                             <Image
                                 src={language.flagUrl}
                                 alt={`Flag of the ${language.name} constructed language`}
@@ -62,63 +94,106 @@ export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps
                             />
                         </div>
                     ) : (
-                        <div className="flex h-32 w-48 md:h-40 md:w-60 items-center justify-center rounded-xl bg-secondary/30 border border-border/40 shadow-sm backdrop-blur-sm">
+                        <div className="relative flex h-32 w-48 items-center justify-center rounded-2xl border border-border/50 bg-card/70 shadow-xl backdrop-blur-sm md:h-40 md:w-60">
                             <Flag className="h-10 w-10 text-muted-foreground/30" />
                         </div>
                     )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 space-y-6">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 backdrop-blur-md">
+                <div className="min-w-0 flex-1 space-y-5">
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Badge
+                                variant="outline"
+                                className="border-primary/20 bg-primary/5 text-primary backdrop-blur-md"
+                            >
                                 {language.visibility}
                             </Badge>
-                            {/* Social Links */}
                             <div className="flex items-center gap-2">
                                 {language.discordUrl && (
-                                    <Link href={language.discordUrl} target="_blank" className="text-muted-foreground hover:text-[#5865F2] transition-colors">
+                                    <Link
+                                        href={language.discordUrl}
+                                        target="_blank"
+                                        aria-label="Discord"
+                                        className="text-muted-foreground transition-colors hover:text-[#5865F2]"
+                                    >
                                         <MessageSquare className="h-4 w-4" />
                                     </Link>
                                 )}
                                 {language.telegramUrl && (
-                                    <Link href={language.telegramUrl} target="_blank" className="text-muted-foreground hover:text-[#0088cc] transition-colors">
+                                    <Link
+                                        href={language.telegramUrl}
+                                        target="_blank"
+                                        aria-label="Telegram"
+                                        className="text-muted-foreground transition-colors hover:text-[#0088cc]"
+                                    >
                                         <MessageCircle className="h-4 w-4" />
                                     </Link>
                                 )}
                                 {language.websiteUrl && (
-                                    <Link href={language.websiteUrl} target="_blank" className="text-muted-foreground hover:text-primary transition-colors">
+                                    <Link
+                                        href={language.websiteUrl}
+                                        target="_blank"
+                                        aria-label="Website"
+                                        className="text-muted-foreground transition-colors hover:text-primary"
+                                    >
                                         <Globe className="h-4 w-4" />
                                     </Link>
                                 )}
                             </div>
                         </div>
 
-                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-medium tracking-tight text-foreground">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-6xl lg:text-7xl">
                             {language.name}
                         </h1>
                     </div>
 
                     {language.description && (
-                        <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl font-light">
+                        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
                             {language.description}
                         </p>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-4 pt-2">
+                    {/* Inline stats */}
+                    <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary">
+                            <Heart className="h-3.5 w-3.5" />
+                            <span className="font-semibold tabular-nums">{c.favorites}</span>
+                            <span className="text-primary/70">Favorites</span>
+                        </span>
+                        {stats.map((s) => {
+                            const Icon = s.icon
+                            return (
+                                <span
+                                    key={s.label}
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/60 px-3 py-1 text-sm backdrop-blur-sm"
+                                >
+                                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="font-semibold tabular-nums">{s.value}</span>
+                                    <span className="text-muted-foreground">{s.label}</span>
+                                </span>
+                            )
+                        })}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
                         <FavoriteButton
                             languageId={language.id}
                             isFavorite={isFavorite}
                             favoriteCount={language._count.favorites}
-                            className="h-10 px-6 rounded-full shadow-sm hover:shadow-md transition-all"
+                            className="h-10 rounded-full px-6 shadow-sm transition-all hover:shadow-md"
                         />
 
                         {userId && userId !== language.ownerId && language.visibility === "PUBLIC" && (
                             <Link href={`/dashboard/new-language?from=${language.slug}`}>
-                                <Badge variant="secondary" className="h-10 px-6 rounded-full cursor-pointer hover:bg-secondary/80 flex items-center gap-2">
+                                <Badge
+                                    variant="secondary"
+                                    className="flex h-10 cursor-pointer items-center gap-2 rounded-full px-6 hover:bg-secondary/80"
+                                >
                                     <GitBranch className="h-4 w-4" />
-                                    Fork & Evolve
+                                    Fork &amp; Evolve
                                 </Badge>
                             </Link>
                         )}

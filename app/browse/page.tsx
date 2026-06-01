@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Globe, ChevronLeft, ChevronRight } from "lucide-react"
-import { BookCard } from "@/components/landing/book-card"
+import { BrowseResults } from "./components/browse-results"
 import { SortSelector } from "./components/sort-selector"
 import { BrowseSearch } from "./components/browse-search"
 import { Navbar } from "@/components/navbar"
@@ -204,11 +204,7 @@ export default async function BrowsePage({
           </Card>
         ) : (
           <>
-            <div className="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {languages.map((language) => (
-                <BookCard key={language.id} language={language} />
-              ))}
-            </div>
+            <BrowseResults languages={languages} />
 
             {/* Pagination */}
             {totalPages > 1 && (

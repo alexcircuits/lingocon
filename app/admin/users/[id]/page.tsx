@@ -101,8 +101,8 @@ export default async function AdminUserDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-violet-500/10">
-                                <Activity className="h-4 w-4 text-violet-500" />
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Activity className="h-4 w-4 text-primary" />
                             </div>
                             <div>
                                 <p className="text-2xl font-serif">{user._count.activities}</p>
@@ -114,8 +114,8 @@ export default async function AdminUserDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-500/10">
-                                <FileText className="h-4 w-4 text-emerald-500" />
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <FileText className="h-4 w-4 text-primary" />
                             </div>
                             <div>
                                 <p className="text-2xl font-serif">{user._count.articles}</p>
@@ -127,8 +127,8 @@ export default async function AdminUserDetailPage({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-rose-500/10">
-                                <BookOpen className="h-4 w-4 text-rose-500" />
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <BookOpen className="h-4 w-4 text-primary" />
                             </div>
                             <div>
                                 <p className="text-2xl font-serif">{user._count.texts}</p>
@@ -221,7 +221,7 @@ export default async function AdminUserDetailPage({
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg font-medium flex items-center gap-2">
-                            <StickyNote className="h-4 w-4 text-amber-500" />
+                            <StickyNote className="h-4 w-4 text-primary" />
                             Admin Notes
                         </CardTitle>
                     </CardHeader>

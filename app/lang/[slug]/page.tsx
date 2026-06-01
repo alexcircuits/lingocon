@@ -19,6 +19,10 @@ import { CommentSection } from "@/components/comments/comment-section"
 import { getLanguageFamilyTree } from "@/app/actions/language-family"
 import { LanguageFamilyTree } from "@/components/language-family-tree"
 import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary"
+import { getPublicReaderModules, getVisitorAccountInstalls, getActiveThemeForLanguage } from "@/lib/services/module"
+import { ReaderModulesSection } from "@/components/modules/reader-modules-section"
+import { themeToStyle } from "@/lib/modules/theme"
+import { Palette } from "lucide-react"
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({
@@ -179,6 +183,15 @@ export default async function PublicLanguagePage({
     familyTree = await getLanguageFamilyTree(language.id)
   } catch {}
 
+  const [readerModules, activeTheme] = await Promise.all([
+    getPublicReaderModules(language.ownerId, language.id),
+    getActiveThemeForLanguage(language.ownerId, language.id),
+  ])
+  const visitorInstalls = userId
+    ? await getVisitorAccountInstalls(userId, readerModules.map((m) => m.moduleId))
+    : {}
+  const themeStyle = activeTheme ? themeToStyle(activeTheme.theme) : undefined
+
   const isOwner = userId === language.ownerId
 
   const sections = [
@@ -194,35 +207,35 @@ export default async function PublicLanguagePage({
       count: language._count.scriptSymbols, // shows symbol count as proxy for phonemes
       href: `/lang/${language.slug}/phonology`,
       iconName: "AudioWaveform" as const,
-      color: "text-cyan-500",
+      color: "text-primary",
     },
     {
       title: "Grammar Pages",
       count: language._count.grammarPages,
       href: `/lang/${language.slug}/grammar`,
       iconName: "BookOpen" as const,
-      color: "text-violet-500",
+      color: "text-primary",
     },
     {
       title: "Dictionary Entries",
       count: language._count.dictionaryEntries,
       href: `/lang/${language.slug}/dictionary`,
       iconName: "FileText" as const,
-      color: "text-emerald-500",
+      color: "text-primary",
     },
     {
       title: "Articles",
       count: language._count.articles,
       href: `/lang/${language.slug}/articles`,
       iconName: "Newspaper" as const,
-      color: "text-amber-500",
+      color: "text-primary",
     },
     {
       title: "Texts & Books",
       count: language._count.texts,
       href: `/lang/${language.slug}/texts`,
       iconName: "BookMarked" as const,
-      color: "text-rose-500",
+      color: "text-primary",
     },
   ]
 
@@ -251,7 +264,10 @@ export default async function PublicLanguagePage({
   }
 
   return (
-    <div className="space-y-12 pb-20">
+    <div
+      className={activeTheme ? "lc-themed space-y-12 rounded-[var(--radius)] pb-20" : "space-y-12 pb-20"}
+      style={themeStyle}
+    >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }} />
       <LanguageHero language={language} isFavorite={isFavorite} userId={userId} />
@@ -259,11 +275,11 @@ export default async function PublicLanguagePage({
       {/* Language Family */}
       {familyTree && (
         <section>
-          <h2 className="text-2xl font-serif font-medium mb-6 px-2 flex items-center gap-2">
+          <h2 className="mb-6 flex items-center gap-4 px-2 text-2xl font-bold tracking-tight">
             Language Family
-            <div className="h-px bg-border flex-1 ml-4" />
+            <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
           </h2>
-          <div className="bg-card border-none rounded-2xl p-6 lg:p-10 shadow-sm ring-1 ring-border/50">
+          <div className="aurora-glass rounded-3xl p-6 lg:p-10">
             <FamilyTreeErrorBoundary>
               <LanguageFamilyTree
                 tree={familyTree}
@@ -277,12 +293,21 @@ export default async function PublicLanguagePage({
 
       {/* Navigation Grid */}
       <section>
-        <h2 className="text-2xl font-serif font-medium mb-6 px-2 flex items-center gap-2">
+        <h2 className="mb-6 flex items-center gap-4 px-2 text-2xl font-bold tracking-tight">
           Explore Corpus
-          <div className="h-px bg-border flex-1 ml-4" />
+          <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
         </h2>
         <NavBento sections={sections} />
       </section>
+
+      {/* Modules / Tools */}
+      <ReaderModulesSection
+        modules={readerModules}
+        visitorInstalls={visitorInstalls}
+        isAuthenticated={Boolean(userId)}
+        languageId={language.id}
+        languageSlug={language.slug}
+      />
 
       {/* Content Feed */}
       {(language.articles.length > 0 || language.texts.length > 0) && (
@@ -290,13 +315,13 @@ export default async function PublicLanguagePage({
           {/* Recent Articles */}
           {language.articles.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6 px-2">
-                <h3 className="text-xl font-medium flex items-center gap-2">
-                  <Newspaper className="h-5 w-5 text-amber-500" />
+              <div className="mb-5 flex items-center justify-between px-2">
+                <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+                  <Newspaper className="h-5 w-5 text-primary" />
                   Latest Articles
                 </h3>
-                <Link href={`/lang/${language.slug}/articles`} className="text-sm text-primary hover:underline">
-                  View All
+                <Link href={`/lang/${language.slug}/articles`} className="text-sm font-medium text-primary hover:underline">
+                  View all
                 </Link>
               </div>
               <div className="flex flex-col gap-3">
@@ -304,12 +329,15 @@ export default async function PublicLanguagePage({
                   <Link
                     key={article.id}
                     href={`/lang/${language.slug}/articles/${article.slug}`}
-                    className="group flex flex-col p-5 rounded-2xl bg-secondary/20 border border-border/40 hover:bg-secondary/40 transition-all hover:border-primary/20"
+                    className="group flex items-center justify-between gap-3 rounded-2xl aurora-glass p-5 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10"
                   >
-                    <span className="font-serif text-lg group-hover:text-primary transition-colors">{article.title}</span>
-                    <span className="text-xs text-muted-foreground mt-2 font-mono">
-                      {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
+                    <span className="min-w-0">
+                      <span className="block truncate text-lg font-semibold transition-colors group-hover:text-primary">{article.title}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
+                      </span>
                     </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 -translate-x-1 text-primary opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                   </Link>
                 ))}
               </div>
@@ -319,13 +347,13 @@ export default async function PublicLanguagePage({
           {/* Recent Texts */}
           {language.texts.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6 px-2">
-                <h3 className="text-xl font-medium flex items-center gap-2">
-                  <BookMarked className="h-5 w-5 text-rose-500" />
+              <div className="mb-5 flex items-center justify-between px-2">
+                <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+                  <BookMarked className="h-5 w-5 text-primary" />
                   Recent Texts
                 </h3>
-                <Link href={`/lang/${language.slug}/texts`} className="text-sm text-primary hover:underline">
-                  View All
+                <Link href={`/lang/${language.slug}/texts`} className="text-sm font-medium text-primary hover:underline">
+                  View all
                 </Link>
               </div>
               <div className="flex flex-col gap-3">
@@ -333,12 +361,13 @@ export default async function PublicLanguagePage({
                   <Link
                     key={text.id}
                     href={`/lang/${language.slug}/texts/${text.slug}`}
-                    className="group flex flex-col p-5 rounded-2xl bg-secondary/20 border border-border/40 hover:bg-secondary/40 transition-all hover:border-primary/20"
+                    className="group flex items-center justify-between gap-3 rounded-2xl aurora-glass p-5 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10"
                   >
-                    <span className="font-serif text-lg group-hover:text-primary transition-colors">{text.title}</span>
-                    <span className="text-xs text-muted-foreground mt-2 font-mono">
-                      Read Text
+                    <span className="min-w-0">
+                      <span className="block truncate text-lg font-semibold transition-colors group-hover:text-primary">{text.title}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">Read text</span>
                     </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 -translate-x-1 text-primary opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                   </Link>
                 ))}
               </div>
@@ -348,16 +377,25 @@ export default async function PublicLanguagePage({
       )}
 
       {/* Meta/About */}
-      <section className="border-t border-border/40 pt-10">
-        <div className="grid gap-6 sm:grid-cols-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-4 w-4" />
-            <span>Created {formatDate(language.createdAt, "MMMM d, yyyy")}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Clock className="h-4 w-4" />
-            <span>Updated {formatDate(language.updatedAt, "MMMM d, yyyy")}</span>
-          </div>
+      <section className="border-t border-border/40 pt-8">
+        <div className="flex flex-wrap gap-2.5 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm">
+            <Calendar className="h-4 w-4 text-primary" />
+            Created {formatDate(language.createdAt, "MMMM d, yyyy")}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm">
+            <Clock className="h-4 w-4 text-primary" />
+            Updated {formatDate(language.updatedAt, "MMMM d, yyyy")}
+          </span>
+          {activeTheme && (
+            <Link
+              href={`/modules/${activeTheme.slug}`}
+              className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm transition-colors hover:text-primary"
+            >
+              <Palette className="h-4 w-4 text-primary" />
+              Theme: {activeTheme.name}
+            </Link>
+          )}
         </div>
       </section>
 

@@ -159,7 +159,7 @@ export function DerivationWizard({
 
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Derivation Type</Label>
                                 <Select
@@ -257,7 +257,7 @@ export function DerivationWizard({
                         </div>
 
                         {/* Preview Section */}
-                        <div className="rounded-lg border bg-muted/50 p-4 flex items-center justify-between gap-4">
+                        <div className="rounded-lg border bg-muted/50 p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                             <div className="text-center flex-1">
                                 <div className="text-sm text-muted-foreground">Source</div>
                                 <div className="font-serif text-lg">{sourceEntry?.lemma}</div>

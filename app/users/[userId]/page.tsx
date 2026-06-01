@@ -10,6 +10,7 @@ import { getFollowCounts, getFollowers, getFollowing } from "@/app/actions/follo
 import { getUserBadges } from "@/app/actions/badge"
 import { ActivityFeed } from "@/components/activity-feed"
 import { Footer } from "@/components/footer"
+import { Navbar } from "@/components/navbar"
 import { BadgeGrid } from "@/components/badges"
 
 // New Components
@@ -86,6 +87,12 @@ export default async function UserProfilePage({
   const following = followingResult.success ? followingResult.data : []
   const isOwnProfile = session?.user?.id === userId
 
+  const isDevMode = process.env.DEV_MODE === "true"
+  const navUser = session?.user?.id ? await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, name: true, email: true, image: true, isAdmin: true },
+  }) : null
+
   const stats = {
     languages: languages.length,
     followers: followCounts.success ? followCounts.followers : 0,
@@ -94,6 +101,8 @@ export default async function UserProfilePage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
+      <Navbar user={navUser} isDevMode={isDevMode} />
+      <div className="h-14" />
       <BackButton />
       <ProfileCover />
 

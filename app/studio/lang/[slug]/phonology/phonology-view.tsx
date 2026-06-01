@@ -237,13 +237,13 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                         </Badge>
                     )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                     {!isEditing ? (
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleStartEditing}
-                            className="gap-2"
+                            className="gap-2 w-full sm:w-auto"
                         >
                             <Pencil className="h-3.5 w-3.5" />
                             Edit Inventory
@@ -254,7 +254,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={handleResetToAuto}
-                                className="gap-2 text-muted-foreground"
+                                className="gap-2 text-muted-foreground w-full sm:w-auto"
                             >
                                 <RotateCcw className="h-3.5 w-3.5" />
                                 Reset to Auto
@@ -263,6 +263,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setIsEditing(false)}
+                                className="w-full sm:w-auto"
                             >
                                 Done Editing
                             </Button>
@@ -301,7 +302,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {consonantChart.manners.length > 0 ? (
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto scroll-fade-x">
                                 <table className="w-full text-sm border-collapse">
                                     <thead>
                                         <tr>
@@ -342,7 +343,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                         {isEditing && (
                                                                             <button
                                                                                 onClick={() => handleRemovePhoneme(cell.voiceless!)}
-                                                                                className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                                                                                className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
                                                                                 title="Remove"
                                                                             >
                                                                                 <X className="h-3 w-3" />
@@ -358,7 +359,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                         {isEditing && (
                                                                             <button
                                                                                 onClick={() => handleRemovePhoneme(cell.voiced!)}
-                                                                                className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                                                                                className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
                                                                                 title="Remove"
                                                                             >
                                                                                 <X className="h-3 w-3" />
@@ -424,7 +425,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {vowelChart.length > 0 ? (
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto scroll-fade-x">
                                 <table className="w-full text-sm border-collapse">
                                     <thead>
                                         <tr>
@@ -472,7 +473,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                                 {isEditing && (
                                                                                     <button
                                                                                         onClick={() => handleRemovePhoneme(v.ipa)}
-                                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                                                                                        className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
                                                                                         title="Remove"
                                                                                     >
                                                                                         <X className="h-3 w-3" />
@@ -583,7 +584,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
 
             {/* Save Button */}
             <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+                <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
                     <Save className="h-4 w-4" />
                     {isSaving ? "Saving..." : "Save Phonology"}
                 </Button>

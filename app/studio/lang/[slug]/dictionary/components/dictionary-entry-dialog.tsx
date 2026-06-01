@@ -18,7 +18,6 @@ import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
 import { AlertCircle, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ContextualHelp } from "@/components/contextual-help"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { validateStringAgainstAlphabet, validatePhonotactics } from "@/lib/utils/alphabet-validation"
@@ -216,28 +215,20 @@ export function DictionaryEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>
-                  {mode === "create" ? "Add Dictionary Entry" : "Edit Dictionary Entry"}
-                </DialogTitle>
-                <DialogDescription>
-                  {mode === "create"
-                    ? "Add a new entry to the dictionary"
-                    : "Update the dictionary entry details"}
-                </DialogDescription>
-              </div>
-              <ContextualHelp
-                content="Required fields are marked with *. Use Enter to save, Esc to cancel."
-                shortcut="Enter / Esc"
-              />
-            </div>
+            <DialogTitle>
+              {mode === "create" ? "Add Dictionary Entry" : "Edit Dictionary Entry"}
+            </DialogTitle>
+            <DialogDescription>
+              {mode === "create"
+                ? "Add a new entry to the dictionary"
+                : "Update the dictionary entry details"}
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 flex-1 overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="lemma">Lemma *</Label>
               <Input
@@ -262,7 +253,7 @@ export function DictionaryEntryDialog({
                 </div>
               )}
               {!errors.lemma && alphabetWarnings.length > 0 && (
-                <div className="flex items-center justify-between gap-2 p-2 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs">
+                <div className="flex flex-col gap-2 p-2 rounded-md bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-1.5">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                     <span>

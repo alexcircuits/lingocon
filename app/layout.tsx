@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -23,6 +23,15 @@ const jetBrainsMono = JetBrains_Mono({
   weight: ["400", "500"],
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
+// Geometric sans used by the redesigned (Aurora) landing page. Scoped via CSS var;
+// existing pages keep their system-ui body font.
+const plusJakarta = Plus_Jakarta_Sans({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -116,9 +125,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <meta name="theme-color" content="#267a6e" />
+        <meta name="theme-color" content="#7c5cff" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=localStorage.getItem('palette');if(p==='classic'){document.documentElement.setAttribute('data-palette','classic');}}catch(e){}})();`,
+          }}
+        />
       </head>
-      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} min-h-screen antialiased`}>
+      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} min-h-screen antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

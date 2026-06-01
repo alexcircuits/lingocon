@@ -120,7 +120,7 @@ export default function ContributionsPage() {
                             description="Found a typo? A button that does nothing? Logic that makes no sense?"
                             action="Open an Issue"
                             href="https://github.com/alexcircuits/lingocon/issues/new"
-                            color="text-red-500"
+                            color="text-primary"
                         />
 
                         {/* Path 2: AI / Content */}
@@ -132,7 +132,7 @@ export default function ContributionsPage() {
                             description="Generate description examples, glossaries, or grammar explanations. Don&apos;t worry about formatting."
                             action="Submit Markdown"
                             href="https://github.com/alexcircuits/lingocon/issues/new?labels=content"
-                            color="text-violet-500"
+                            color="text-primary"
                         />
 
                         {/* Path 3: Developer Micro-fixes */}
@@ -144,7 +144,7 @@ export default function ContributionsPage() {
                             description="Grab a &apos;good first issue&apos;. Fix a CSS alignment. Update a dependency. No strict style guide."
                             action="View Issues"
                             href="https://github.com/alexcircuits/lingocon/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
-                            color="text-blue-500"
+                            color="text-primary"
                         />
 
                         {/* Path 4: Linguistics */}
@@ -156,7 +156,7 @@ export default function ContributionsPage() {
                             description="Our IPA chart logic is flawed? The glossing abbreviations are wrong? Correct our data."
                             action="Edit Data Files"
                             href="https://github.com/alexcircuits/lingocon/tree/main/actions"
-                            color="text-emerald-500"
+                            color="text-primary"
                         />
 
                         {/* Path 5: Ideas */}
@@ -168,7 +168,7 @@ export default function ContributionsPage() {
                             description="Have a wild idea for a feature? Sketch it on a napkin. Take a photo. Upload it."
                             action="Pitch Idea"
                             href="https://github.com/alexcircuits/lingocon/discussions"
-                            color="text-amber-500"
+                            color="text-primary"
                         />
 
                         {/* Path 6: Fallback */}

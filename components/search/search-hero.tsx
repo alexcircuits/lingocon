@@ -40,15 +40,8 @@ export function SearchHero({ value, onChange, onSubmit, compact }: SearchHeroPro
                     onClick={(e) => { e.preventDefault(); onChange("") }}
                     className="shrink-0 hidden md:block"
                 >
-                    <span className="text-2xl font-bold tracking-tight">
-                        <span className="text-blue-500">L</span>
-                        <span className="text-red-500">i</span>
-                        <span className="text-amber-500">n</span>
-                        <span className="text-blue-500">g</span>
-                        <span className="text-green-500">o</span>
-                        <span className="text-red-500">C</span>
-                        <span className="text-amber-500">o</span>
-                        <span className="text-blue-500">n</span>
+                    <span className="text-2xl font-extrabold tracking-tight aurora-gradient-text">
+                        LingoCon
                     </span>
                 </Link>
                 
@@ -80,15 +73,8 @@ export function SearchHero({ value, onChange, onSubmit, compact }: SearchHeroPro
     return (
         <div className="flex w-full flex-col items-center justify-center text-center py-[120px] md:py-[140px]">
             <div className="mb-10">
-                <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight select-none">
-                    <span className="text-blue-500">L</span>
-                    <span className="text-red-500">i</span>
-                    <span className="text-amber-500">n</span>
-                    <span className="text-blue-500">g</span>
-                    <span className="text-green-500">o</span>
-                    <span className="text-red-500">C</span>
-                    <span className="text-amber-500">o</span>
-                    <span className="text-blue-500">n</span>
+                <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight select-none aurora-gradient-text">
+                    LingoCon
                 </h1>
             </div>
 

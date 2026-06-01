@@ -1,4 +1,3 @@
-import { useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     Table,
@@ -8,32 +7,44 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { ShieldAlert, Search } from "lucide-react"
+import { ShieldAlert } from "lucide-react"
 import { format } from "date-fns"
 import { Pagination } from "@/components/admin/pagination"
-import { getAuditLogs } from "@/app/actions/admin-audit"
-import { Input } from "@/components/ui/input"
+import { getAuditLogs, getAuditFilterOptions } from "@/app/actions/admin-audit"
+import { AuditFilters } from "@/components/admin/audit-filters"
 import { Badge } from "@/components/ui/badge"
-import { useRouter, useSearchParams } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-interface AuditLogPageProps {
-    searchParams: {
-        page?: string
-        action?: string
-        resource?: string
-    }
+const LIMIT = 20
+
+function formatDetails(details: unknown): string | null {
+    if (details === null || details === undefined) return null
+    if (typeof details !== "object") return String(details)
+    const entries = Object.entries(details as Record<string, unknown>)
+    if (entries.length === 0) return null
+    return entries
+        .map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : String(value)}`)
+        .join("  ·  ")
 }
 
-export default async function AuditLogPage({ searchParams }: AuditLogPageProps) {
-    const page = Number(searchParams.page) || 1
-    const { logs, pagination } = await getAuditLogs({
-        page,
-        limit: 20,
-        action: searchParams.action,
-        resource: searchParams.resource
-    })
+export default async function AuditLogPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; action?: string; resource?: string }>
+}) {
+    const params = await searchParams
+    const page = Number(params.page) || 1
+
+    const [{ logs, pagination }, filterOptions] = await Promise.all([
+        getAuditLogs({
+            page,
+            limit: LIMIT,
+            action: params.action,
+            resource: params.resource,
+        }),
+        getAuditFilterOptions(),
+    ])
 
     return (
         <div className="p-4 md:p-8">
@@ -46,84 +57,100 @@ export default async function AuditLogPage({ searchParams }: AuditLogPageProps) 
 
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <CardTitle className="text-lg font-medium flex items-center gap-2">
                             <ShieldAlert className="h-4 w-4 text-primary" />
                             Activity Log
+                            <span className="ml-1 text-sm font-normal text-muted-foreground">
+                                ({pagination.total.toLocaleString()})
+                            </span>
                         </CardTitle>
+                        <AuditFilters
+                            actions={filterOptions.actions}
+                            resources={filterOptions.resources}
+                        />
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Date & Time</TableHead>
-                                <TableHead>Admin</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead>Resource</TableHead>
-                                <TableHead>Details</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {logs.length === 0 ? (
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell
-                                        colSpan={5}
-                                        className="h-24 text-center text-muted-foreground"
-                                    >
-                                        No audit logs found
-                                    </TableCell>
+                                    <TableHead className="whitespace-nowrap">Date &amp; Time</TableHead>
+                                    <TableHead>Admin</TableHead>
+                                    <TableHead>Action</TableHead>
+                                    <TableHead>Resource</TableHead>
+                                    <TableHead>Details</TableHead>
                                 </TableRow>
-                            ) : (
-                                logs.map((log) => (
-                                    <TableRow key={log.id}>
-                                        <TableCell className="text-muted-foreground whitespace-nowrap">
-                                            {format(new Date(log.createdAt), "MMM d, HH:mm:ss")}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">
-                                                    {log.admin.name || "Unknown"}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {log.admin.email}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="font-mono">
-                                                {log.action}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-xs">
-                                                    {log.resource}
-                                                </span>
-                                                {log.resourceId && (
-                                                    <span className="text-xs text-muted-foreground font-mono truncate max-w-[100px]">
-                                                        {log.resourceId}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <pre className="text-xs text-muted-foreground max-w-[300px] overflow-x-auto p-2 bg-muted/50 rounded-md">
-                                                {JSON.stringify(log.details, null, 2)}
-                                            </pre>
+                            </TableHeader>
+                            <TableBody>
+                                {logs.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={5}
+                                            className="h-24 text-center text-muted-foreground"
+                                        >
+                                            No audit logs found
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : (
+                                    logs.map((log) => {
+                                        const details = formatDetails(log.details)
+                                        return (
+                                            <TableRow key={log.id}>
+                                                <TableCell className="text-muted-foreground whitespace-nowrap">
+                                                    {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">
+                                                            {log.admin.name || "Unknown"}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {log.admin.email}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="font-mono text-xs">
+                                                        {log.action}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-medium">
+                                                            {log.resource}
+                                                        </span>
+                                                        {log.resourceId && (
+                                                            <span className="max-w-[120px] truncate font-mono text-xs text-muted-foreground">
+                                                                {log.resourceId}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="max-w-[320px]">
+                                                    {details ? (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {details}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground/50">—</span>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
 
                     <div className="mt-4">
                         <Pagination
                             currentPage={page}
                             totalPages={pagination.pages}
                             totalItems={pagination.total}
-                            itemsPerPage={20}
+                            itemsPerPage={LIMIT}
                         />
                     </div>
                 </CardContent>

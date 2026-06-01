@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, ArrowRight, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, GripVertical, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import type { ScriptSymbol } from "./alphabet-manager"
 
 interface SortableSymbolProps {
@@ -55,20 +55,27 @@ export function SortableSymbol({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "relative group hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing",
+        "relative group hover:shadow-md transition-shadow",
         isDragging && "shadow-xl"
       )}
-      {...attributes}
-      {...listeners}
     >
       <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px]">
+        <button
+          type="button"
+          className="absolute top-2 left-2 hover-reveal flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground touch-none cursor-grab active:cursor-grabbing"
+          aria-label="Drag to reorder"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
         <div
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 hover-reveal"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -102,7 +109,7 @@ export function SortableSymbol({
           </DropdownMenu>
         </div>
 
-        <div className="text-4xl font-serif font-medium mb-2 flex items-center justify-center gap-1">
+        <div className="text-2xl sm:text-4xl font-serif font-medium mb-2 flex flex-wrap items-center justify-center gap-1 max-w-full truncate">
           {symbol.capitalSymbol ? (
             <>
               <span className="font-custom-script">{symbol.capitalSymbol}</span>

@@ -336,7 +336,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
             return (
               <Card key={paradigm.id} className="overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="bg-muted/30 pb-4">
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-xl font-semibold">{paradigm.name}</CardTitle>
                       {paradigm.notes && (
@@ -355,7 +355,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                           setIsContentEditOpen(true)
                         }}
                         disabled={isPending}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
                         title="Edit Content"
                       >
                         <Grid3X3 className="h-4 w-4 text-muted-foreground" />
@@ -365,7 +365,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                         size="sm"
                         onClick={() => handleEdit(paradigm)}
                         disabled={isPending}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
                         title="Edit Structure"
                       >
                         <Pencil className="h-4 w-4 text-muted-foreground" />
@@ -383,7 +383,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                           }
                         }}
                         disabled={isPending}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
                         title="Duplicate Paradigm"
                       >
                         <Copy className="h-4 w-4 text-muted-foreground" />
@@ -396,14 +396,15 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                           setIsDeleteOpen(true)
                         }}
                         disabled={isPending}
-                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Delete paradigm"
+                        className="h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0 overflow-x-auto">
+                <CardContent className="p-0 overflow-x-auto scroll-fade-x">
                   {rows.length > 0 && columns.length > 0 ? (
                     <Table>
                       <TableHeader>

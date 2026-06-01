@@ -3,7 +3,6 @@ import {
     Users,
     Languages,
     BookOpen,
-    FileText,
     Activity,
     TrendingUp,
     BarChart3,
@@ -11,6 +10,12 @@ import {
     PieChart
 } from "lucide-react"
 import { StatCard } from "@/components/admin/stat-card"
+import {
+    TrendAreaChart,
+    GroupedBarChart,
+    CategoryDonutChart,
+    CHART_COLORS
+} from "@/components/admin/charts"
 import {
     getPlatformOverview,
     getRecentSignups,
@@ -112,40 +117,23 @@ async function RecentSignups() {
 async function ActivityChart() {
     const growth = await getUserGrowth(14)
 
-    // Simple bar representation
-    const maxSignups = Math.max(...growth.map(d => d.signups), 1)
-
     return (
         <Card className="col-span-full lg:col-span-1">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium flex items-center gap-2">
                     <Activity className="h-4 w-4 text-primary" />
-                    User Signups (14 Days)
+                    User Signups
                 </CardTitle>
+                <CardDescription>New accounts over the last 14 days</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-end gap-1 h-32">
-                    {growth.map((day, i) => (
-                        <div
-                            key={i}
-                            className="flex-1 flex flex-col items-center gap-1 group relative"
-                        >
-                            <div
-                                className="w-full bg-primary/20 rounded-t transition-all hover:bg-primary/50"
-                                style={{
-                                    height: `${(day.signups / maxSignups) * 100}%`,
-                                    minHeight: day.signups > 0 ? "4px" : "0"
-                                }}
-                            />
-                            <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md pointer-events-none whitespace-nowrap z-10 transition-opacity">
-                                {day.signups} signups on {day.date}
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                                {i % 2 === 0 ? day.date.split(" ")[1] : ""}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                <TrendAreaChart
+                    data={growth}
+                    dataKey="signups"
+                    name="Signups"
+                    height={208}
+                    emptyMessage="No signups in this period"
+                />
             </CardContent>
         </Card>
     )
@@ -154,55 +142,25 @@ async function ActivityChart() {
 async function ContentGrowthChart() {
     const growth = await getContentGrowth(14)
 
-    // Normalize logic for visualization
-    const maxVal = Math.max(...growth.map(d => Math.max(d.languages, d.entries)), 1)
-
     return (
         <Card className="col-span-full lg:col-span-1">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-primary" />
-                    Content Growth (14 Days)
+                    Content Growth
                 </CardTitle>
+                <CardDescription>Languages &amp; entries created over 14 days</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-end gap-1 h-32">
-                    {growth.map((day, i) => (
-                        <div
-                            key={i}
-                            className="flex-1 flex flex-col items-center gap-1 group relative"
-                        >
-                            <div className="w-full flex gap-0.5 items-end justify-center h-full">
-                                <div
-                                    className="w-1/2 bg-blue-500/20 hover:bg-blue-500/40 rounded-t transition-colors"
-                                    style={{ height: `${(day.languages / maxVal) * 100}%`, minHeight: day.languages > 0 ? "2px" : "0" }}
-                                />
-                                <div
-                                    className="w-1/2 bg-green-500/20 hover:bg-green-500/40 rounded-t transition-colors"
-                                    style={{ height: `${(day.entries / maxVal) * 100}%`, minHeight: day.entries > 0 ? "2px" : "0" }}
-                                />
-                            </div>
-
-                            <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md pointer-events-none whitespace-nowrap z-10 transition-opacity">
-                                <div className="font-medium text-xs border-b border-border/50 mb-1 pb-1">{day.date}</div>
-                                <div className="flex gap-2 items-center"><div className="w-2 h-2 bg-blue-500/50 rounded-full" /> {day.languages} Langs</div>
-                                <div className="flex gap-2 items-center"><div className="w-2 h-2 bg-green-500/50 rounded-full" /> {day.entries} Entries</div>
-                            </div>
-
-                            <span className="text-[10px] text-muted-foreground">
-                                {i % 2 === 0 ? day.date.split(" ")[1] : ""}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-                <div className="flex justify-center gap-4 mt-2">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <div className="w-2 h-2 bg-blue-500/50 rounded-full" /> Languages
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <div className="w-2 h-2 bg-green-500/50 rounded-full" /> Entries
-                    </div>
-                </div>
+                <GroupedBarChart
+                    data={growth}
+                    height={208}
+                    series={[
+                        { key: "languages", name: "Languages", color: CHART_COLORS[0] },
+                        { key: "entries", name: "Entries", color: CHART_COLORS[1] }
+                    ]}
+                    emptyMessage="No content created in this period"
+                />
             </CardContent>
         </Card>
     )
@@ -211,40 +169,22 @@ async function ContentGrowthChart() {
 async function ActivityBreakdownChart() {
     const { byEntityType } = await getActivityBreakdown(30)
 
-    // Sort by value desc
-    const sortedDetails = [...byEntityType].sort((a, b) => b.value - a.value).slice(0, 5)
-    const maxVal = Math.max(...sortedDetails.map(d => d.value), 1)
+    const data = [...byEntityType]
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 6)
+        .map((item) => ({ name: item.name, value: item.value }))
 
     return (
         <Card className="col-span-full lg:col-span-1">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium flex items-center gap-2">
                     <PieChart className="h-4 w-4 text-primary" />
-                    Activity Breakdown (30 Days)
+                    Activity Breakdown
                 </CardTitle>
+                <CardDescription>By content type, last 30 days</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-3">
-                    {sortedDetails.map((item) => (
-                        <div key={item.name} className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                                <span className="font-medium capitalize">{item.name}s</span>
-                                <span className="text-muted-foreground">{item.value}</span>
-                            </div>
-                            <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary/50 rounded-full"
-                                    style={{ width: `${(item.value / maxVal) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    {sortedDetails.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                            No recent activity
-                        </p>
-                    )}
-                </div>
+                <CategoryDonutChart data={data} height={208} />
             </CardContent>
         </Card>
     )

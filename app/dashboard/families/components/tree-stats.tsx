@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { BarChart3, GitFork, BookOpen, Layers, TrendingUp } from "lucide-react"
-import { buildFamilyGraph, type FamilyLanguageData } from "@/lib/utils/family-graph"
+import { buildFamilyGraph, type FamilyLanguageData } from "@/lib/utils/family-graph-core"
 
 interface TreeStatsProps {
   languages: FamilyLanguageData[]

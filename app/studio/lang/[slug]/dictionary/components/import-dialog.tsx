@@ -106,7 +106,7 @@ export function ImportDialog({
           {preview && (
             <div className="space-y-2">
               <Label>Preview (first {Math.min(10, preview.length)} rows)</Label>
-              <div className="rounded-md border max-h-64 overflow-auto">
+              <div className="rounded-md border max-h-64 overflow-auto scroll-fade-x">
                 <Table>
                   <TableHeader>
                     <TableRow>
