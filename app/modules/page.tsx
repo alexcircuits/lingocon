@@ -12,12 +12,13 @@ import { ModuleCard } from "@/components/modules/module-card"
 import { MODULE_TYPES } from "@/lib/modules/types"
 import { listPublishedModules, type ModuleSort } from "@/lib/services/module"
 import type { ModuleType } from "@prisma/client"
+import { getSiteUrl } from "@/lib/seo"
 
 export const metadata: Metadata = {
   title: "Modules — Extend LingoCon",
   description:
     "Browse community-built modules for LingoCon: studio tools, reader widgets, generators, exporters, and themes. Add any module to your language in one click.",
-  alternates: { canonical: "https://lingocon.com/modules" },
+  alternates: { canonical: `${getSiteUrl()}/modules` },
 }
 
 export const dynamic = "force-dynamic"

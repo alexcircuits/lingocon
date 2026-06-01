@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils"
 import type { Metadata } from "next"
 import { GrammarContent } from "@/components/grammar-content"
 import { ArticleSidebar } from "@/components/article-sidebar"
+import { getSiteUrl, languageOgImage, resolveAssetUrl, SITE_NAME, DEFAULT_LOCALE } from "@/lib/seo"
 
 import { auth } from "@/auth"
 
@@ -101,12 +102,41 @@ export async function generateMetadata({
   const result = await getArticleData(slug, articleSlug, userId)
 
   if (!result) {
-    return { title: "Article Not Found" }
+    return { title: "Article Not Found", robots: { index: false, follow: false } }
   }
 
+  const { language, article } = result
+  const isUnlisted = language.visibility === "UNLISTED"
+  const isDraft = !article.published
+  const title = `${article.title} — ${language.name}`
+  const description = `Read "${article.title}", an article about ${language.name}, a constructed language documented on ${SITE_NAME}.`
+  const url = `${getSiteUrl()}/lang/${language.slug}/articles/${article.slug}`
+  const coverImage = resolveAssetUrl(article.coverImage)
+  const ogImage = coverImage ?? languageOgImage(language.id)
+
   return {
-    title: `${result.article.title} — ${result.language.name}`,
-    description: `Read "${result.article.title}" about ${result.language.name}`,
+    title,
+    description,
+    ...(isUnlisted || isDraft ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      type: "article",
+      locale: DEFAULT_LOCALE,
+      publishedTime: article.createdAt.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
+      authors: article.author?.name ? [article.author.name] : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: article.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    alternates: { canonical: url },
   }
 }
 

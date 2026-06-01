@@ -23,6 +23,7 @@ import { getPublicReaderModules, getVisitorAccountInstalls, getActiveThemeForLan
 import { ReaderModulesSection } from "@/components/modules/reader-modules-section"
 import { themeToStyle } from "@/lib/modules/theme"
 import { Palette } from "lucide-react"
+import { buildLanguageMetadata, breadcrumbJsonLd, getSiteUrl } from "@/lib/seo"
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({
@@ -96,68 +97,24 @@ export async function generateMetadata({
   if (!language) {
     return {
       title: "Language Not Found",
+      robots: { index: false, follow: false },
     }
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
-  const url = `${siteUrl}/lang/${language.slug}`
-  const title = `${language.name} — Constructed Language on LingoCon`
-
-  // Generate a rich description based on content
+  // Generate a rich, content-aware description when the author hasn't written one.
   let description = language.description
-
   if (!description) {
-    const parts = []
+    const parts: string[] = []
     if (language._count.dictionaryEntries > 0) parts.push(`${language._count.dictionaryEntries} dictionary entries`)
     if (language._count.grammarPages > 0) parts.push("grammar documentation")
     if (language._count.texts > 0) parts.push("translated texts")
-    if (language._count.scriptSymbols > 0) parts.push("custom script")
+    if (language._count.scriptSymbols > 0) parts.push("a custom script")
 
     const contentSummary = parts.length > 0 ? ` featuring ${parts.join(", ")}` : ""
     description = `Explore ${language.name}, a constructed language (conlang)${contentSummary}, documented on LingoCon — the free platform for conlang creators.`
   }
 
-  const ogImageUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://lingocon.com"}/api/og/family-tree/${language.id}`
-
-  // Build OG images array — include flag first if available for Google Images association
-  const ogImages: { url: string; width: number; height: number; alt: string }[] = []
-  if (language.flagUrl) {
-    const flagFull = language.flagUrl.startsWith("http") ? language.flagUrl : `${siteUrl}${language.flagUrl}`
-    ogImages.push({ url: flagFull, width: 800, height: 600, alt: `Flag of the ${language.name} constructed language` })
-  }
-  ogImages.push({ url: ogImageUrl, width: 1200, height: 630, alt: `${language.name} language family tree on LingoCon` })
-
-  return {
-    title,
-    description,
-    keywords: [
-      language.name,
-      `${language.name} conlang`,
-      `${language.name} constructed language`,
-      `${language.name} language`,
-      `${language.name} dictionary`,
-      `${language.name} grammar`,
-      "conlang", "constructed language", "LingoCon",
-    ],
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: "LingoCon",
-      type: "website",
-      locale: "en_US",
-      images: ogImages,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImages[0].url],
-    },
-    alternates: {
-      canonical: url,
-    },
-  }
+  return buildLanguageMetadata(language, { description })
 }
 
 export default async function PublicLanguagePage({
@@ -239,17 +196,13 @@ export default async function PublicLanguagePage({
     },
   ]
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
+  const siteUrl = getSiteUrl()
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: "Browse Languages", item: `${siteUrl}/browse` },
-      { "@type": "ListItem", position: 3, name: language.name, item: `${siteUrl}/lang/${language.slug}` },
-    ],
-  }
+  const breadcrumbSchema = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Browse Languages", path: "/browse" },
+    { name: language.name, path: `/lang/${language.slug}` },
+  ])
 
   const datasetSchema = {
     "@context": "https://schema.org",

@@ -16,6 +16,7 @@ import { ReportModuleButton } from "@/components/modules/report-module-button"
 import { getModuleBySlug, getInstallState } from "@/lib/services/module"
 import { getModuleTypeMeta, averageRating, PERMISSION_LABELS, type ModulePermission } from "@/lib/modules/types"
 import { formatSurfaces } from "@/lib/modules/surfaces"
+import { getSiteUrl } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
 
@@ -26,11 +27,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const mod = await getModuleBySlug(slug)
-  if (!mod) return { title: "Module not found" }
+  if (!mod) return { title: "Module not found", robots: { index: false, follow: false } }
   return {
     title: `${mod.name} — LingoCon module`,
     description: mod.summary ?? `A ${getModuleTypeMeta(mod.type).label} module for LingoCon.`,
-    alternates: { canonical: `https://lingocon.com/modules/${mod.slug}` },
+    ...(mod.status !== "PUBLISHED" ? { robots: { index: false, follow: true } } : {}),
+    alternates: { canonical: `${getSiteUrl()}/modules/${mod.slug}` },
   }
 }
 

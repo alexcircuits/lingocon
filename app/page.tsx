@@ -33,6 +33,7 @@ import { CommunityGlobe } from "@/components/landing/community-globe"
 // import { TestimonialsMarquee } from "@/components/landing/testimonials-marquee"
 
 import type { Metadata } from "next"
+import { getSiteUrl } from "@/lib/seo"
 
 export const metadata: Metadata = {
   title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
@@ -48,9 +49,12 @@ export const metadata: Metadata = {
     title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
     description: "The most complete free platform for creating constructed languages. Phonology, lexicon, grammar docs, custom scripts, and language family trees — all in one place.",
   },
+  alternates: {
+    canonical: getSiteUrl(),
+  },
 }
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
+const siteUrl = getSiteUrl()
 
 function JsonLd() {
   const websiteSchema = {
@@ -74,7 +78,7 @@ function JsonLd() {
     "@type": "Organization",
     name: "LingoCon",
     url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
+    logo: `${siteUrl}/icons/icon-512.png`,
     founder: {
       "@type": "Person",
       name: "Alexander Chepkov",

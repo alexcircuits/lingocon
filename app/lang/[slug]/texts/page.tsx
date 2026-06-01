@@ -1,9 +1,29 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { BookMarked, FileText, User, ArrowRight } from "lucide-react"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata } from "@/lib/seo"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Texts Not Found", robots: { index: false, follow: false } }
+
+  return buildLanguageMetadata(language, {
+    section: "texts",
+    sectionLabel: "Texts & Books",
+    description: `Read texts, books, and translations written in ${language.name}, a constructed language documented on LingoCon.`,
+    keywords: [`${language.name} texts`, `${language.name} books`, `${language.name} translations`, `${language.name} literature`],
+  })
+}
 
 async function getLanguageWithTexts(slug: string) {
   const language = await prisma.language.findUnique({

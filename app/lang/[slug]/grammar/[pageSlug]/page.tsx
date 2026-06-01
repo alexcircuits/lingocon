@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import { GrammarContent } from "@/components/grammar-content"
 import { GrammarSidebar } from "@/components/grammar-sidebar"
 import { GrammarTOC } from "@/components/grammar-toc"
@@ -8,9 +9,38 @@ import { extractHeadings } from "@/lib/utils/tiptap-headings"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata, truncate } from "@/lib/seo"
 
 // Public grammar pages are cached for 1 hour; revalidated on content update.
 export const revalidate = 3600
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; pageSlug: string }>
+}): Promise<Metadata> {
+  const { slug, pageSlug } = await params
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Grammar Page Not Found", robots: { index: false, follow: false } }
+
+  const page = await prisma.grammarPage.findFirst({
+    where: { language: { slug }, slug: pageSlug },
+    select: { title: true, content: true },
+  })
+  if (!page) return { title: "Grammar Page Not Found", robots: { index: false, follow: false } }
+
+  const excerpt = documentToPlainText(page.content)
+
+  return buildLanguageMetadata(language, {
+    section: `grammar/${pageSlug}`,
+    title: `${page.title} — ${language.name} Grammar`,
+    description: excerpt
+      ? truncate(excerpt, 180)
+      : `${page.title}: grammar documentation for the ${language.name} constructed language on LingoCon.`,
+    keywords: [`${language.name} grammar`, page.title, `${language.name} ${page.title}`],
+  })
+}
 
 async function getGrammarData(languageSlug: string, pageSlug: string) {
   const language = await prisma.language.findUnique({

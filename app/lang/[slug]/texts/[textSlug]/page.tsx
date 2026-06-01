@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils"
 import type { Metadata } from "next"
 import { GrammarContent } from "@/components/grammar-content"
 import { TextSidebar } from "@/components/text-sidebar"
+import { getSiteUrl, languageOgImage, resolveAssetUrl, SITE_NAME, DEFAULT_LOCALE } from "@/lib/seo"
 import { auth } from "@/auth"
 
 export const dynamic = "force-dynamic"
@@ -115,12 +116,40 @@ export async function generateMetadata({
   const result = await getTextData(slug, textSlug, userId)
 
   if (!result) {
-    return { title: "Text Not Found" }
+    return { title: "Text Not Found", robots: { index: false, follow: false } }
   }
 
+  const { language, text } = result
+  const isUnlisted = language.visibility === "UNLISTED"
+  const isDraft = !text.published
+  const title = `${text.title} — ${language.name}`
+  const description = `Read "${text.title}", a text written in ${language.name}, a constructed language documented on ${SITE_NAME}.`
+  const url = `${getSiteUrl()}/lang/${language.slug}/texts/${text.slug}`
+  const coverImage = resolveAssetUrl(text.coverImage)
+  const ogImage = coverImage ?? languageOgImage(language.id)
+
   return {
-    title: `${result.text.title} — ${result.language.name}`,
-    description: `Read "${result.text.title}" in ${result.language.name}`,
+    title,
+    description,
+    ...(isUnlisted || isDraft ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      type: "article",
+      locale: DEFAULT_LOCALE,
+      publishedTime: text.createdAt.toISOString(),
+      authors: text.author?.name ? [text.author.name] : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: text.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    alternates: { canonical: url },
   }
 }
 

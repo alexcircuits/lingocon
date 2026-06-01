@@ -1,17 +1,21 @@
 import { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com";
+    const siteUrl = getSiteUrl();
+
+    const disallow = ["/api/", "/studio/", "/dashboard/", "/settings/", "/favorites/", "/admin/"];
+    const publicAreas = ["/", "/lang/", "/browse", "/search", "/families", "/modules", "/docs", "/users/", "/uploads/"];
 
     return {
         rules: [
             // Allow Googlebot full access to public pages
             {
                 userAgent: "Googlebot",
-                allow: ["/", "/lang/", "/browse", "/search", "/families", "/docs", "/uploads/"],
-                disallow: ["/api/", "/studio/", "/dashboard/", "/settings/", "/favorites/", "/admin/"],
+                allow: publicAreas,
+                disallow,
             },
-            // Allow Google Image crawler to index language flags
+            // Allow Google Image crawler to index language flags and uploads
             {
                 userAgent: "Googlebot-Image",
                 allow: ["/uploads/"],
@@ -20,10 +24,11 @@ export default function robots(): MetadataRoute.Robots {
             // General rules for all other bots
             {
                 userAgent: "*",
-                allow: "/",
-                disallow: ["/api/", "/studio/", "/dashboard/", "/settings/", "/favorites/", "/admin/"],
+                allow: publicAreas,
+                disallow,
             },
         ],
         sitemap: `${siteUrl}/sitemap.xml`,
+        host: siteUrl,
     };
 }

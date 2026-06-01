@@ -1,10 +1,30 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table2, Info } from "lucide-react"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { parseParadigmSlots } from "@/lib/validations/paradigm"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata } from "@/lib/seo"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Paradigms Not Found", robots: { index: false, follow: false } }
+
+  return buildLanguageMetadata(language, {
+    section: "paradigms",
+    sectionLabel: "Paradigm Tables",
+    description: `Morphological paradigm tables for ${language.name} — declensions, conjugations, and inflection patterns of the ${language.name} constructed language on LingoCon.`,
+    keywords: [`${language.name} grammar tables`, `${language.name} conjugation`, `${language.name} declension`, `${language.name} morphology`],
+  })
+}
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({

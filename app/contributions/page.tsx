@@ -16,13 +16,14 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { DiscordIcon } from "@/components/icons/discord-icon"
+import { getSiteUrl } from "@/lib/seo"
 
 export const metadata = {
     title: "Contribute to LingoCon — Open Source Conlang Platform",
     description: "Help build the best open-source conlang tool. Contribute code, ideas, documentation, or AI-generated content. No experience required — all contributions welcome.",
     keywords: ["open source conlang", "contribute linguistics tool", "conlang community", "open source language tool"],
     alternates: {
-        canonical: "https://lingocon.com/contributions",
+        canonical: `${getSiteUrl()}/contributions`,
     },
 }
 

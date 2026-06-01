@@ -1,10 +1,30 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import Link from "next/link"
 import { BookOpen, ChevronRight } from "lucide-react"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata } from "@/lib/seo"
 
 export const revalidate = 3600
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Grammar Not Found", robots: { index: false, follow: false } }
+
+  return buildLanguageMetadata(language, {
+    section: "grammar",
+    sectionLabel: "Grammar",
+    description: `Grammar documentation for ${language.name} — syntax, morphology, and rules of the ${language.name} constructed language on LingoCon.`,
+    keywords: [`${language.name} grammar`, `${language.name} syntax`, `${language.name} morphology`, `${language.name} rules`],
+  })
+}
 
 async function getLanguage(slug: string) {
   const language = await prisma.language.findUnique({

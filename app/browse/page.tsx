@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { auth } from "@/auth"
+import { getSiteUrl } from "@/lib/seo"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   alternates: {
-    canonical: "https://lingocon.com/browse",
+    canonical: `${getSiteUrl()}/browse`,
   },
 }
 

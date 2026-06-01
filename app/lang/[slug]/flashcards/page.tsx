@@ -1,21 +1,25 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import { FlashcardSession } from "@/app/studio/lang/[slug]/flashcards/flashcard-session"
 import { Navbar } from "@/components/navbar"
 import { auth } from "@/auth"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const language = await prisma.language.findUnique({
-    where: { slug },
-    select: { name: true },
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Study Flashcards", robots: { index: false, follow: false } }
+
+  return buildLanguageMetadata(language, {
+    section: "flashcards",
+    title: `Study ${language.name} — Flashcards & Quizzes`,
+    description: `Practice and memorize ${language.name} vocabulary with spaced-repetition flashcards and quizzes on LingoCon.`,
+    keywords: [`${language.name} flashcards`, `learn ${language.name}`, `${language.name} vocabulary practice`],
   })
-  return {
-    title: language ? `Study ${language.name} — Flashcards` : "Study Flashcards",
-    description: language ? `Practice vocabulary for ${language.name} with flashcards and quizzes.` : undefined,
-  }
 }
 
 export default async function PublicFlashcardsPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { getSiteUrl } from "@/lib/seo"
 import { Navbar } from "@/components/navbar"
 import { FamiliesView } from "./families-view"
 
@@ -10,7 +11,7 @@ export const metadata = {
   description: "Explore all public constructed language families on LingoCon. Visualize how conlangs relate to each other through lineage, proto-languages, and dialect trees.",
   keywords: ["conlang family tree", "constructed language families", "language family map", "conlang genealogy", "proto-language", "conlang lineage"],
   alternates: {
-    canonical: "https://lingocon.com/families",
+    canonical: `${getSiteUrl()}/families`,
   },
 }
 

@@ -1,8 +1,10 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { User, Medal, Users } from "lucide-react"
+import { getSiteUrl, resolveAssetUrl, SITE_NAME, truncate } from "@/lib/seo"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -30,6 +32,54 @@ async function getUser(userId: string) {
     },
   })
   return user
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ userId: string }>
+}): Promise<Metadata> {
+  const { userId } = await params
+  const [user, languageCount] = await Promise.all([
+    getUser(userId),
+    prisma.language.count({ where: { ownerId: userId, visibility: "PUBLIC" } }),
+  ])
+
+  if (!user) {
+    return { title: "User Not Found", robots: { index: false, follow: false } }
+  }
+
+  const name = user.name || "Conlang creator"
+  const title = `${name} — Conlanger Profile`
+  const description = truncate(
+    `${name} has created ${languageCount} public constructed ${languageCount === 1 ? "language" : "languages"} on ${SITE_NAME}. Explore their conlangs, dictionaries, and grammar documentation.`,
+    200
+  )
+  const url = `${getSiteUrl()}/users/${user.id}`
+  const avatar = resolveAssetUrl(user.image)
+
+  return {
+    title,
+    description,
+    // Profiles with no public languages add little crawlable value — keep them
+    // followable but out of the index until the creator publishes work.
+    ...(languageCount === 0 ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      type: "profile",
+      images: avatar ? [{ url: avatar, width: 400, height: 400, alt: name }] : undefined,
+    },
+    twitter: {
+      card: avatar ? "summary" : "summary_large_image",
+      title,
+      description,
+      images: avatar ? [avatar] : undefined,
+    },
+    alternates: { canonical: url },
+  }
 }
 
 async function getUserLanguages(userId: string) {
@@ -99,8 +149,26 @@ export default async function UserProfilePage({
     following: followCounts.success ? followCounts.following : 0,
   }
 
+  const siteUrl = getSiteUrl()
+  const profileSchema = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    mainEntity: {
+      "@type": "Person",
+      name: user.name || "Conlang creator",
+      url: `${siteUrl}/users/${user.id}`,
+      ...(user.image ? { image: resolveAssetUrl(user.image) } : {}),
+    },
+    about: {
+      "@type": "Person",
+      name: user.name || "Conlang creator",
+    },
+    dateCreated: user.createdAt.toISOString(),
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema) }} />
       <Navbar user={navUser} isDevMode={isDevMode} />
       <div className="h-14" />
       <BackButton />

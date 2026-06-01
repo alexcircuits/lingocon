@@ -1,9 +1,29 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Newspaper, Calendar, User, ArrowRight } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { getLanguageSeoData } from "@/lib/seo-data"
+import { buildLanguageMetadata } from "@/lib/seo"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const language = await getLanguageSeoData(slug)
+  if (!language) return { title: "Articles Not Found", robots: { index: false, follow: false } }
+
+  return buildLanguageMetadata(language, {
+    section: "articles",
+    sectionLabel: "Articles & News",
+    description: `Articles and news about ${language.name}, a constructed language documented on LingoCon — the free platform for conlang creators.`,
+    keywords: [`${language.name} articles`, `${language.name} news`, `${language.name} blog`],
+  })
+}
 
 async function getLanguageWithArticles(slug: string) {
   const language = await prisma.language.findUnique({
