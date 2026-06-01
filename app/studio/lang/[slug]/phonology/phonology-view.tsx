@@ -129,8 +129,11 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
     }, [])
 
     const handleAddPhoneme = useCallback((symbol: string) => {
-        // Strip combining tie bar for affricate matching
-        const cleaned = symbol.replace(/\u0361/g, "")
+        // Normalize affricate tie bars and chart wrappers for lookup
+        const cleaned = symbol
+            .replace(/[\/\[\]]/g, "")
+            .replace(/[\u0361\u035C]/g, "")
+            .trim()
         if (addingTo === "consonants" && IPA_CONSONANT_MAP[cleaned]) {
             setCustomConsonants(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
         } else if (addingTo === "vowels" && IPA_VOWEL_MAP[cleaned]) {

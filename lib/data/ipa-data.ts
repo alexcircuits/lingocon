@@ -97,6 +97,8 @@ export const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; 
     "pf": { place: "Bilabial", manner: "Affricate", voiced: false },
     "bv": { place: "Bilabial", manner: "Affricate", voiced: true },
     "kx": { place: "Velar", manner: "Affricate", voiced: false },
+    "gɣ": { place: "Velar", manner: "Affricate", voiced: true },
+    "ɡɣ": { place: "Velar", manner: "Affricate", voiced: true },
 }
 
 // IPA vowel positions

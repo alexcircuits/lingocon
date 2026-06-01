@@ -29,7 +29,7 @@ const IPA_CONSONANTS = new Set([
     "ɬ", "ɮ", "ʋ", "ɹ", "ɻ", "j", "ɰ", "w",
     "l", "ɫ", "ɭ", "ʎ", "ʟ",
     // Affricates
-    "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ", "ʈʂ", "ɖʐ", "pf", "bv", "kx",
+    "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ", "ʈʂ", "ɖʐ", "pf", "bv", "kx", "gɣ", "ɡɣ",
 ])
 
 const IPA_VOWELS = new Set([

@@ -58,7 +58,7 @@ const DEFAULT_CONSONANTS = new Set([
   // Lateral fricatives
   "ɬ", "ɮ",
   // Affricates
-  "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ", "ʈʂ", "ɖʐ", "pf", "bv", "kx",
+  "ts", "dz", "tʃ", "dʒ", "tɕ", "dʑ", "ʈʂ", "ɖʐ", "pf", "bv", "kx", "gɣ", "ɡɣ",
   // Approximants
   "ʋ", "ɹ", "ɻ", "j", "ɰ", "w", "ɥ",
   // Lateral approximants

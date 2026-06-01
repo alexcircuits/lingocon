@@ -105,6 +105,8 @@ const IPA_CONSONANT_MAP: Record<string, { place: string; manner: string; voiced:
     "pf": { place: "Bilabial", manner: "Affricate", voiced: false },
     "bv": { place: "Bilabial", manner: "Affricate", voiced: true },
     "kx": { place: "Velar", manner: "Affricate", voiced: false },
+    "gɣ": { place: "Velar", manner: "Affricate", voiced: true },
+    "ɡɣ": { place: "Velar", manner: "Affricate", voiced: true },
 }
 
 const VOWEL_HEIGHTS = ["Close", "Near-close", "Close-mid", "Mid", "Open-mid", "Near-open", "Open"]
