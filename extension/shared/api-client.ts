@@ -47,7 +47,7 @@ export async function fetchDictionaryPage(
   page: number,
   ifNoneMatch?: string
 ): Promise<DictionaryPage | null> {
-  const headers = ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {}
+  const headers: Record<string, string> = ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {}
   const { data, status, etag } = await apiFetch<Omit<DictionaryPage, "etag">>(
     `/api/ext/dictionary?languageId=${languageId}&page=${page}`,
     token,
@@ -84,7 +84,7 @@ export async function fetchScript(
   languageId: string,
   ifNoneMatch?: string
 ): Promise<{ symbols: ScriptSymbol[]; etag: string | null } | null> {
-  const headers = ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {}
+  const headers: Record<string, string> = ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {}
   const { data, status, etag } = await apiFetch<{ symbols: ScriptSymbol[] }>(
     `/api/ext/script?languageId=${languageId}`,
     token,
