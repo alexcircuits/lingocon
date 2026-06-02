@@ -36,12 +36,12 @@ export async function inviteCollaborator(input: {
     if (validated.userId) {
       targetUser = await prisma.user.findUnique({
         where: { id: validated.userId },
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true },
       })
     } else if (validated.email) {
       targetUser = await prisma.user.findUnique({
         where: { email: validated.email },
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true },
       })
     }
 
@@ -88,7 +88,6 @@ export async function inviteCollaborator(input: {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true,
           },
         },
@@ -113,6 +112,51 @@ export async function inviteCollaborator(input: {
     return {
       error: "Failed to invite collaborator",
     }
+  }
+}
+
+/** Owner-only user lookup for invites / ownership transfer. Never returns email. */
+export async function searchCollaboratorCandidates(languageId: string, query: string) {
+  const userId = await getUserId()
+
+  if (!userId) {
+    return { error: "Unauthorized" }
+  }
+
+  const isOwner = await isLanguageOwner(languageId, userId)
+  if (!isOwner) {
+    return { error: "Unauthorized" }
+  }
+
+  const trimmed = query.trim()
+  if (trimmed.length < 2) {
+    return { success: true, data: [] }
+  }
+
+  try {
+    const emailLookup = trimmed.includes("@")
+
+    const users = await prisma.user.findMany({
+      where: emailLookup
+        ? {
+            email: { equals: trimmed, mode: "insensitive" },
+            NOT: { id: userId },
+          }
+        : {
+            name: { contains: trimmed, mode: "insensitive" },
+            NOT: { id: userId },
+          },
+      take: 10,
+      select: {
+        id: true,
+        name: true,
+        image: true,
+      },
+    })
+
+    return { success: true, data: users }
+  } catch {
+    return { error: "Failed to search users" }
   }
 }
 
@@ -325,7 +369,6 @@ export async function getCollaborators(languageId: string) {
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },

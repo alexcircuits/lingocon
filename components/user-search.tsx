@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown, User as UserIcon } from "lucide-react"
+import { Check, ChevronsUpDown } from "lucide-react"
 import { useDebounce } from "@/lib/hooks/use-debounce"
-import { searchUsers } from "@/app/actions/user"
+import { searchCollaboratorCandidates } from "@/app/actions/collaborator"
 import { Button } from "@/components/ui/button"
 import {
     Command,
@@ -24,17 +24,21 @@ import { cn } from "@/lib/utils"
 export interface User {
     id: string
     name: string | null
-    email: string | null
     image: string | null
 }
 
 interface UserSearchProps {
+    languageId: string
     onSelect: (user: User) => void
     label?: string
     className?: string
 }
 
-export function UserSearch({ onSelect, label = "Search user...", className }: UserSearchProps) {
+function displayName(user: User): string {
+    return user.name?.trim() || "Unnamed user"
+}
+
+export function UserSearch({ languageId, onSelect, label = "Search user...", className }: UserSearchProps) {
     const [open, setOpen] = React.useState(false)
     const [query, setQuery] = React.useState("")
     const [users, setUsers] = React.useState<User[]>([])
@@ -50,7 +54,7 @@ export function UserSearch({ onSelect, label = "Search user...", className }: Us
 
         const fetchUsers = async () => {
             setLoading(true)
-            const result = await searchUsers(debouncedQuery)
+            const result = await searchCollaboratorCandidates(languageId, debouncedQuery)
             if (result.success && result.data) {
                 setUsers(result.data)
             }
@@ -58,7 +62,7 @@ export function UserSearch({ onSelect, label = "Search user...", className }: Us
         }
 
         fetchUsers()
-    }, [debouncedQuery])
+    }, [debouncedQuery, languageId])
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -76,7 +80,7 @@ export function UserSearch({ onSelect, label = "Search user...", className }: Us
             <PopoverContent className="w-[300px] p-0 shadow-lg" align="start">
                 <Command shouldFilter={false}>
                     <CommandInput
-                        placeholder="Search by name or email..."
+                        placeholder="Search by display name..."
                         value={query}
                         onValueChange={setQuery}
                     />
@@ -92,7 +96,7 @@ export function UserSearch({ onSelect, label = "Search user...", className }: Us
                             {users.map((user) => (
                                 <CommandItem
                                     key={user.id}
-                                    value={user.id} // This is used for key handling, but onSelect is what matters
+                                    value={user.id}
                                     onSelect={() => {
                                         onSelect(user)
                                         setOpen(false)
@@ -105,15 +109,12 @@ export function UserSearch({ onSelect, label = "Search user...", className }: Us
                                             <AvatarImage src={user.image || undefined} />
                                             <AvatarFallback>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                                         </Avatar>
-                                        <div className="flex flex-col truncate">
-                                            <span className="text-sm font-medium truncate">{user.name || "Unknown"}</span>
-                                            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-                                        </div>
+                                        <span className="text-sm font-medium truncate">{displayName(user)}</span>
                                     </div>
                                     <Check
                                         className={cn(
                                             "ml-auto h-4 w-4",
-                                            "opacity-0" // Always hidden as we don't persist selection in the list
+                                            "opacity-0"
                                         )}
                                     />
                                 </CommandItem>

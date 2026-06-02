@@ -187,7 +187,11 @@ interface CollaboratorsProps {
 }
 
 type CollaboratorWithUser = LanguageCollaborator & {
-  user: { id: string; name: string | null; email: string | null; image: string | null }
+  user: { id: string; name: string | null; image: string | null }
+}
+
+function userLabel(user: { name: string | null }): string {
+  return user.name?.trim() || "Unnamed user"
 }
 
 export function Collaborators({ languageId, languageSlug, isOwner }: CollaboratorsProps) {
@@ -289,7 +293,7 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                       <AvatarImage src={collab.user.image || undefined} />
                       <AvatarFallback>{(collab.user.name || "U")[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <p className="font-medium">{collab.user.name || collab.user.email || "Anonymous"}</p>
+                    <p className="font-medium">{userLabel(collab.user)}</p>
                   </div>
                   <Badge variant="secondary">{resolvePresetLabel(collab.permissions)}</Badge>
                 </div>
@@ -322,17 +326,14 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                       <AvatarImage src={selectedUser.image || undefined} />
                       <AvatarFallback>{selectedUser.name?.[0]?.toUpperCase() ?? "U"}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{selectedUser.name ?? "Unknown"}</p>
-                      <p className="text-xs text-muted-foreground">{selectedUser.email}</p>
-                    </div>
+                    <p className="text-sm font-medium">{userLabel(selectedUser)}</p>
                   </div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedUser(null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <UserSearch onSelect={setSelectedUser} label="Search by name or email..." />
+                <UserSearch languageId={languageId} onSelect={setSelectedUser} label="Search by display name..." />
               )}
             </div>
             <div className="space-y-2">
@@ -382,10 +383,7 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                             <AvatarImage src={collab.user.image || undefined} />
                             <AvatarFallback>{(collab.user.name || "U")[0]?.toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium">{collab.user.name || collab.user.email || "Anonymous"}</p>
-                            {collab.user.email && <p className="text-xs text-muted-foreground">{collab.user.email}</p>}
-                          </div>
+                          <p className="font-medium">{userLabel(collab.user)}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -440,7 +438,7 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                       <AvatarFallback>{(collab.user.name || "U")[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{collab.user.name || collab.user.email || "Anonymous"}</p>
+                      <p className="truncate font-medium">{userLabel(collab.user)}</p>
                       <Badge variant="secondary" className="mt-1">{resolvePresetLabel(collab.permissions)}</Badge>
                     </div>
                   </div>
@@ -518,21 +516,18 @@ export function TransferOwnershipCard({ languageId, languageSlug }: { languageId
                 <AvatarImage src={transferUser.image || undefined} />
                 <AvatarFallback>{transferUser.name?.[0]?.toUpperCase() ?? "U"}</AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-medium">{transferUser.name ?? "Unknown"}</p>
-                <p className="text-xs text-muted-foreground">{transferUser.email}</p>
-              </div>
+              <p className="text-sm font-medium">{userLabel(transferUser)}</p>
             </div>
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setTransferUser(null); setConfirmed(false) }}>
               <X className="h-4 w-4" />
             </Button>
           </div>
         ) : (
-          <UserSearch onSelect={setTransferUser} label="Search for new owner..." />
+          <UserSearch languageId={languageId} onSelect={setTransferUser} label="Search for new owner..." />
         )}
         {confirmed && transferUser && (
           <p className="text-sm font-medium text-destructive">
-            Are you sure? <strong>{transferUser.name ?? transferUser.email}</strong> will become the owner and you will lose owner access.
+            Are you sure? <strong>{userLabel(transferUser)}</strong> will become the owner and you will lose owner access.
           </p>
         )}
         <Button variant="destructive" disabled={!transferUser || isPending} onClick={handleTransfer}>
