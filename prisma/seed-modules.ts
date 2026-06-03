@@ -42,14 +42,14 @@ const MODULES: SeedModule[] = [
   },
   {
     slug: "live-conjugator",
-    name: "Live Conjugator",
+    name: "Paradigm Browser",
     type: "READER_WIDGET",
     tier: "CLIENT_SANDBOX",
     icon: "LayoutGrid",
-    summary: "An interactive conjugation widget for your public language page.",
+    summary: "Browse your paradigm tables and see which words follow each inflection pattern.",
     description:
-      "# Live Conjugator\n\nLets readers pick a verb and a paradigm and see the inflected forms instantly — right on your public language page.",
-    permissions: ["read:paradigms", "read:dictionary"],
+      "# Paradigm Browser\n\nShows your paradigm tables — select any paradigm to see its rows and columns with the stored inflected forms, plus the words assigned to it. Works on both the studio and your public language page.",
+    permissions: ["read:paradigms"],
   },
   {
     slug: "anki-exporter",
@@ -96,17 +96,6 @@ const MODULES: SeedModule[] = [
     permissions: ["read:dictionary"],
   },
   {
-    slug: "flashcard-trainer",
-    name: "Flashcard Trainer",
-    type: "READER_WIDGET",
-    tier: "CLIENT_SANDBOX",
-    icon: "GraduationCap",
-    summary: "An interactive flip-card study widget for your public page.",
-    description:
-      "# Flashcard Trainer\n\nTurns your dictionary into a study deck right on your public language page. Visitors see a meaning, tap to reveal the word and its IPA, and shuffle through the lexicon — no account needed.",
-    permissions: ["read:dictionary"],
-  },
-  {
     slug: "script-gallery",
     name: "Script Gallery",
     type: "READER_WIDGET",
@@ -138,6 +127,39 @@ const MODULES: SeedModule[] = [
         headingFont: "Georgia, 'Times New Roman', serif",
       },
     },
+  },
+  {
+    slug: "random-word",
+    name: "Random Word",
+    type: "READER_WIDGET",
+    tier: "CLIENT_SANDBOX",
+    icon: "Dices",
+    summary: "Show a random word from your lexicon — great for a language's home page.",
+    description:
+      "# Random Word\n\nPicks a random entry from your dictionary and displays the word, IPA pronunciation, definition, and part of speech. Each click reveals a new word. A simple but fun widget for your public language page.",
+    permissions: ["read:dictionary"],
+  },
+  {
+    slug: "phoneme-frequency",
+    name: "Phoneme Frequency",
+    type: "VISUALIZER",
+    tier: "CLIENT_SANDBOX",
+    icon: "BarChart2",
+    summary: "A frequency chart of your alphabet symbols across all dictionary words.",
+    description:
+      "# Phoneme Frequency\n\nCounts how often each of your script symbols appears across every word in your dictionary, then displays a ranked bar chart. Useful for checking whether your phonology feels natural or if some sounds are over- or underused.",
+    permissions: ["read:dictionary", "read:phonology"],
+  },
+  {
+    slug: "grammar-index",
+    name: "Grammar Index",
+    type: "READER_WIDGET",
+    tier: "CLIENT_SANDBOX",
+    icon: "BookOpen",
+    summary: "A clickable table of contents for your grammar pages, embedded on your public page.",
+    description:
+      "# Grammar Index\n\nLists all your published grammar sections as a linked table of contents. Each entry links directly to the full grammar page. A great way to surface your grammar to visitors right from your language's home page.",
+    permissions: ["read:grammar"],
   },
   {
     slug: "midnight-neon-theme",

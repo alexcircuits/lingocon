@@ -22,6 +22,13 @@ const OFFICIAL_TRY_SLUGS = [
   "live-conjugator",
   "classic-sound-changes",
   "parchment-theme",
+  "midnight-neon-theme",
+  "phonotactics-linter",
+  "lexicon-stats",
+  "anki-exporter",
+  "random-word",
+  "phoneme-frequency",
+  "grammar-index",
 ] as const
 
 export default async function StudioModulesPage({

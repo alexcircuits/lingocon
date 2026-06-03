@@ -72,6 +72,26 @@ export async function loadModuleData(method: RuntimeMethod, languageId: string) 
       }
     }
 
+    case "getGrammar": {
+      const pages = await prisma.grammarPage.findMany({
+        where: { languageId },
+        select: { slug: true, title: true, order: true },
+        orderBy: { order: "asc" },
+        take: 200,
+      })
+      return { pages }
+    }
+
+    case "getTexts": {
+      const texts = await prisma.text.findMany({
+        where: { languageId, published: true },
+        select: { slug: true, title: true },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      })
+      return { texts }
+    }
+
     default:
       return {}
   }

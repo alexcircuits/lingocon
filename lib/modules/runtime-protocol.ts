@@ -16,6 +16,8 @@ export const RUNTIME_METHODS = {
   getDictionary: "read:dictionary",
   getPhonology: "read:phonology",
   getParadigms: "read:paradigms",
+  getGrammar: "read:grammar",
+  getTexts: "read:texts",
 } as const
 
 export type RuntimeMethod = keyof typeof RUNTIME_METHODS

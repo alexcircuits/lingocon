@@ -287,82 +287,114 @@ host.onInit(async function () {
 host.ready();
 `
 
-const WORD_EXPLORER = `
+const LIVE_CONJUGATOR = `
 host.onInit(async function () {
-  const root = document.getElementById("app");
-  root.textContent = "Loading…";
+  var root = document.getElementById("app");
+  root.textContent = "Loading paradigms\u2026";
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   try {
-    const dictRes = await host.request("getDictionary");
-    const parRes = await host.request("getParadigms").catch(function () { return { paradigms: [] }; });
-    const entries = (dictRes && dictRes.entries) || [];
-    const paradigms = (parRes && parRes.paradigms) || [];
+    var res = await host.request("getParadigms");
+    var paradigms = (res && res.paradigms) || [];
     root.textContent = "";
-
-    const controls = document.createElement("div");
+    if (!paradigms.length) {
+      root.innerHTML = "<p class=\"lc-muted\">No paradigm tables defined yet. Add them in Studio \u2192 Paradigms.</p>";
+      host.reportHeight();
+      return;
+    }
+    var controls = document.createElement("div");
     controls.className = "lc-row";
-    const search = document.createElement("input");
-    search.type = "search";
-    search.placeholder = "Search words…";
-    search.style.flex = "1";
-    controls.appendChild(search);
-
-    const select = document.createElement("select");
-    const allOpt = document.createElement("option");
-    allOpt.value = ""; allOpt.textContent = "All words (" + entries.length + ")";
-    select.appendChild(allOpt);
-    for (const p of paradigms) {
-      const o = document.createElement("option");
-      o.value = p.id; o.textContent = p.name + " (" + ((p.words && p.words.length) || 0) + ")";
-      select.appendChild(o);
-    }
-    if (paradigms.length) controls.appendChild(select);
+    controls.style.marginBottom = "10px";
+    var sel = document.createElement("select");
+    paradigms.forEach(function(p) {
+      var o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = p.name + (p.words && p.words.length ? " (" + p.words.length + " words)" : "");
+      sel.appendChild(o);
+    });
+    controls.appendChild(sel);
     root.appendChild(controls);
-
-    const tableWrap = document.createElement("div");
-    root.appendChild(tableWrap);
-
-    function rowsFor() {
-      let list = entries;
-      if (select.value) {
-        const p = paradigms.find(function (x) { return x.id === select.value; });
-        const lemmas = new Set((p && p.words || []).map(function (w) { return w.lemma; }));
-        list = entries.filter(function (e) { return lemmas.has(e.lemma); });
-      }
-      const q = search.value.trim().toLowerCase();
-      if (q) list = list.filter(function (e) {
-        return (e.lemma || "").toLowerCase().includes(q) || (e.gloss || "").toLowerCase().includes(q);
-      });
-      return list.slice(0, 200);
-    }
-    function render() {
-      const list = rowsFor();
-      const t = document.createElement("table");
-      t.innerHTML = "<thead><tr><th>Word</th><th>IPA</th><th>Meaning</th><th>POS</th></tr></thead>";
-      const tb = document.createElement("tbody");
-      for (const e of list) {
-        const tr = document.createElement("tr");
-        function cell(v) { const td = document.createElement("td"); td.textContent = v || ""; return td; }
-        tr.appendChild(cell(e.lemma));
-        const ipa = cell(e.ipa); ipa.className = "lc-muted"; tr.appendChild(ipa);
-        tr.appendChild(cell(e.gloss));
-        const pos = cell(e.partOfSpeech); pos.className = "lc-muted"; tr.appendChild(pos);
-        tb.appendChild(tr);
-      }
-      t.appendChild(tb);
-      tableWrap.innerHTML = "";
-      if (list.length === 0) {
-        const p = document.createElement("p"); p.className = "lc-muted"; p.textContent = "No matching words.";
-        tableWrap.appendChild(p);
+    var content = document.createElement("div");
+    root.appendChild(content);
+    function renderParadigm(id) {
+      var p = paradigms.find(function(x){return x.id===id;});
+      if (!p) return;
+      content.innerHTML = "";
+      var slots = p.slots || {};
+      var rows = Array.isArray(slots.rows) ? slots.rows : [];
+      var cols = Array.isArray(slots.columns) ? slots.columns : [];
+      var cells = (slots.cells && typeof slots.cells === "object") ? slots.cells : {};
+      if (rows.length && cols.length) {
+        var table = document.createElement("table");
+        table.className = "lc-vowel-table";
+        var thead = document.createElement("thead");
+        var htr = document.createElement("tr");
+        var empty = document.createElement("th");
+        empty.style.width = "90px";
+        htr.appendChild(empty);
+        cols.forEach(function(c) {
+          var th = document.createElement("th");
+          th.textContent = c;
+          htr.appendChild(th);
+        });
+        thead.appendChild(htr);
+        table.appendChild(thead);
+        var tbody = document.createElement("tbody");
+        rows.forEach(function(r, ri) {
+          var tr = document.createElement("tr");
+          var rh = document.createElement("th");
+          rh.textContent = r;
+          rh.style.textAlign = "left";
+          tr.appendChild(rh);
+          cols.forEach(function(_, ci) {
+            var td = document.createElement("td");
+            var v = cells[ri + "-" + ci];
+            td.textContent = v || "\u2014";
+            if (!v) td.className = "lc-muted";
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        content.appendChild(table);
       } else {
-        tableWrap.appendChild(t);
+        var msg = document.createElement("p");
+        msg.className = "lc-muted";
+        msg.textContent = "This paradigm has no table structure yet. Fill it in Studio \u2192 Paradigms.";
+        content.appendChild(msg);
+      }
+      var words = p.words || [];
+      if (words.length) {
+        var sec = document.createElement("div");
+        sec.style.marginTop = "12px";
+        var lbl = document.createElement("p");
+        lbl.style.cssText = "font-size:11px;font-weight:600;letter-spacing:0.05em;color:#64748b;text-transform:uppercase;margin-bottom:6px;";
+        lbl.textContent = "Words in this paradigm";
+        sec.appendChild(lbl);
+        var chips = document.createElement("div");
+        chips.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;";
+        words.slice(0, 60).forEach(function(w) {
+          var chip = document.createElement("span");
+          chip.style.cssText = "background:rgba(124,58,237,0.1);border-radius:6px;padding:3px 9px;font-size:13px;";
+          chip.textContent = esc(w.lemma);
+          if (w.gloss) chip.title = esc(w.gloss);
+          chips.appendChild(chip);
+        });
+        if (words.length > 60) {
+          var more = document.createElement("span");
+          more.className = "lc-muted";
+          more.style.cssText = "font-size:12px;padding:4px 0;";
+          more.textContent = "\u2026and " + (words.length - 60) + " more";
+          chips.appendChild(more);
+        }
+        sec.appendChild(chips);
+        content.appendChild(sec);
       }
       host.reportHeight();
     }
-    search.addEventListener("input", render);
-    select.addEventListener("change", render);
-    render();
-  } catch (e) {
-    root.innerHTML = '<p class="lc-muted">Could not load data.</p>';
+    sel.addEventListener("change", function(){renderParadigm(sel.value);});
+    renderParadigm(paradigms[0].id);
+  } catch(e) {
+    root.innerHTML = "<p class=\"lc-muted\">Could not load paradigms.</p>";
     host.reportHeight();
   }
 });
@@ -687,15 +719,205 @@ host.onInit(async function () {
 host.ready();
 `
 
+const RANDOM_WORD = `
+host.onInit(async function () {
+  var root = document.getElementById("app");
+  root.textContent = "Loading\u2026";
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function mkBtn(t){var b=document.createElement("button");b.textContent=t;b.style.cssText="padding:8px 18px;border-radius:8px;border:0;background:#7c3aed;color:#fff;cursor:pointer;font:inherit;font-size:13px;margin-top:10px;";return b;}
+  try {
+    var res = await host.request("getDictionary");
+    var entries = ((res && res.entries) || []).filter(function(e){return e.lemma && e.gloss;});
+    root.textContent = "";
+    if (!entries.length) {
+      root.innerHTML = "<p class=\"lc-muted\">Add dictionary entries with glosses to use this widget.</p>";
+      host.reportHeight();
+      return;
+    }
+    var card = document.createElement("div");
+    card.style.cssText = "border:1px solid rgba(127,127,127,0.2);border-radius:14px;padding:24px 18px;text-align:center;min-height:90px;";
+    root.appendChild(card);
+    var nextBtn = mkBtn("Next word \u203a");
+    root.appendChild(nextBtn);
+    var counter = document.createElement("p");
+    counter.className = "lc-muted";
+    counter.style.cssText = "text-align:center;font-size:11px;margin-top:6px;";
+    root.appendChild(counter);
+    var seen = 0;
+    function pick() {
+      var e = entries[Math.floor(Math.random() * entries.length)];
+      card.innerHTML = "";
+      var word = document.createElement("div");
+      word.style.cssText = "font-size:30px;font-weight:700;letter-spacing:-0.5px;";
+      word.textContent = esc(e.lemma);
+      card.appendChild(word);
+      if (e.ipa) {
+        var ipa = document.createElement("div");
+        ipa.className = "lc-muted";
+        ipa.style.cssText = "font-size:15px;margin-top:3px;font-family:ui-monospace,monospace;";
+        ipa.textContent = "/" + esc(e.ipa) + "/";
+        card.appendChild(ipa);
+      }
+      var gloss = document.createElement("div");
+      gloss.style.cssText = "font-size:16px;margin-top:10px;";
+      gloss.textContent = esc(e.gloss);
+      card.appendChild(gloss);
+      if (e.partOfSpeech) {
+        var pos = document.createElement("div");
+        pos.className = "lc-muted";
+        pos.style.cssText = "font-size:11px;margin-top:6px;border:1px solid rgba(127,127,127,0.25);display:inline-block;padding:2px 8px;border-radius:99px;";
+        pos.textContent = esc(e.partOfSpeech);
+        card.appendChild(pos);
+      }
+      seen++;
+      counter.textContent = seen + " word" + (seen===1?"":"s") + " shown \u00b7 " + entries.length + " in lexicon";
+      host.reportHeight();
+    }
+    nextBtn.addEventListener("click", pick);
+    pick();
+  } catch(e) {
+    root.innerHTML = "<p class=\"lc-muted\">Could not load dictionary.</p>";
+    host.reportHeight();
+  }
+});
+host.ready();
+`
+
+const PHONEME_FREQUENCY = `
+host.onInit(async function () {
+  var root = document.getElementById("app");
+  root.textContent = "Loading\u2026";
+  try {
+    var ph = await host.request("getPhonology");
+    var dict = await host.request("getDictionary");
+    var symbols = (ph && ph.symbols) || [];
+    var entries = (dict && dict.entries) || [];
+    root.textContent = "";
+    if (!symbols.length || !entries.length) {
+      root.innerHTML = "<p class=\"lc-muted\">Define your alphabet and add words to see phoneme frequencies.</p>";
+      host.reportHeight();
+      return;
+    }
+    var counts = {};
+    symbols.forEach(function(s){ if (s.symbol) counts[s.symbol] = 0; });
+    var total = 0;
+    entries.forEach(function(e){
+      String(e.lemma||"").split("").forEach(function(ch){
+        if (counts[ch] !== undefined){ counts[ch]++; total++; }
+      });
+    });
+    if (!total) {
+      root.innerHTML = "<p class=\"lc-muted\">No alphabet characters found in dictionary words yet.</p>";
+      host.reportHeight();
+      return;
+    }
+    var sorted = Object.keys(counts).map(function(k){return {sym:k,n:counts[k]};}).sort(function(a,b){return b.n-a.n;});
+    var max = sorted[0].n || 1;
+    var chart = document.createElement("div");
+    sorted.forEach(function(item){
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;margin:3px 0;";
+      var lbl = document.createElement("div");
+      lbl.style.cssText = "width:28px;text-align:center;font-size:18px;line-height:1;";
+      lbl.textContent = item.sym;
+      var wrap = document.createElement("div");
+      wrap.style.cssText = "flex:1;background:rgba(127,127,127,0.12);border-radius:4px;overflow:hidden;";
+      var bar = document.createElement("div");
+      bar.style.cssText = "height:16px;border-radius:4px;background:#7c3aed;";
+      bar.style.width = (item.n / max * 100) + "%";
+      bar.style.minWidth = item.n > 0 ? "2px" : "0";
+      wrap.appendChild(bar);
+      var val = document.createElement("span");
+      val.className = "lc-muted";
+      val.style.cssText = "font-size:12px;width:44px;text-align:right;";
+      val.textContent = item.n > 0 ? (item.n / total * 100).toFixed(1) + "%" : "0%";
+      row.appendChild(lbl);
+      row.appendChild(wrap);
+      row.appendChild(val);
+      chart.appendChild(row);
+    });
+    root.appendChild(chart);
+    var cap = document.createElement("p");
+    cap.className = "lc-muted";
+    cap.style.cssText = "margin-top:8px;font-size:11px;";
+    cap.textContent = entries.length + " words \u00b7 " + total + " characters sampled";
+    root.appendChild(cap);
+    host.reportHeight();
+  } catch(e) {
+    root.innerHTML = "<p class=\"lc-muted\">Could not load data.</p>";
+    host.reportHeight();
+  }
+});
+host.ready();
+`
+
+const GRAMMAR_INDEX = `
+host.onInit(async function () {
+  var root = document.getElementById("app");
+  root.textContent = "Loading grammar\u2026";
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  try {
+    var res = await host.request("getGrammar");
+    var ctx = host.context() || {};
+    var pages = (res && res.pages) || [];
+    root.textContent = "";
+    if (!pages.length) {
+      root.innerHTML = "<p class=\"lc-muted\">No grammar pages published yet. Add them in Studio \u2192 Grammar.</p>";
+      host.reportHeight();
+      return;
+    }
+    var list = document.createElement("div");
+    list.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+    pages.forEach(function(p) {
+      var a = document.createElement("a");
+      a.href = "/lang/" + esc(ctx.languageSlug) + "/grammar/" + esc(p.slug);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;text-decoration:none;color:inherit;border:1px solid transparent;transition:background 0.1s;";
+      a.onmouseover = function(){this.style.background="rgba(124,58,237,0.07)";this.style.borderColor="rgba(124,58,237,0.18)";};
+      a.onmouseout = function(){this.style.background="";this.style.borderColor="transparent";};
+      var icon = document.createElement("span");
+      icon.style.cssText = "color:#7c3aed;font-size:13px;font-weight:700;flex-shrink:0;";
+      icon.textContent = "\u00a7";
+      var title = document.createElement("span");
+      title.style.cssText = "flex:1;font-size:14px;";
+      title.textContent = esc(p.title);
+      var arrow = document.createElement("span");
+      arrow.className = "lc-muted";
+      arrow.style.cssText = "font-size:11px;flex-shrink:0;";
+      arrow.textContent = "\u2197";
+      a.appendChild(icon);
+      a.appendChild(title);
+      a.appendChild(arrow);
+      list.appendChild(a);
+    });
+    root.appendChild(list);
+    var cap = document.createElement("p");
+    cap.className = "lc-muted";
+    cap.style.cssText = "margin-top:8px;font-size:11px;";
+    cap.textContent = pages.length + " section" + (pages.length===1?"":"s");
+    root.appendChild(cap);
+    host.reportHeight();
+  } catch(e) {
+    root.innerHTML = "<p class=\"lc-muted\">Could not load grammar index.</p>";
+    host.reportHeight();
+  }
+});
+host.ready();
+`
+
 const BUNDLES: Record<string, string> = {
   "vowel-space-chart": VOWEL_CHART,
-  "live-conjugator": WORD_EXPLORER,
+  "live-conjugator": LIVE_CONJUGATOR,
   "anki-exporter": DICTIONARY_EXPORTER,
   "phonotactics-linter": PHONOTACTICS_LINTER,
   "lexicon-stats": LEXICON_STATS,
   "swadesh-tracker": SWADESH_TRACKER,
   "flashcard-trainer": FLASHCARD_TRAINER,
   "script-gallery": SCRIPT_GALLERY,
+  "random-word": RANDOM_WORD,
+  "phoneme-frequency": PHONEME_FREQUENCY,
+  "grammar-index": GRAMMAR_INDEX,
 }
 
 export function hasRuntimeBundle(slug: string): boolean {
