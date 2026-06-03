@@ -18,6 +18,8 @@ export async function middleware(request: NextRequest) {
   if (!match) return NextResponse.next()
 
   const slug = match[1]
+  const isValidSlug = /^[a-zA-Z0-9-]{1,100}$/.test(slug)
+  if (!isValidSlug) return NextResponse.next()
 
   try {
     // We cannot use Prisma in Edge middleware, so we call an internal API route.
@@ -26,7 +28,7 @@ export async function middleware(request: NextRequest) {
     // a TLS handshake against the plain-HTTP Next server (ERR_SSL_PACKET_LENGTH_TOO_LONG).
     const internalOrigin =
       process.env.INTERNAL_API_ORIGIN || `http://127.0.0.1:${process.env.PORT || "3000"}`
-    const url = new URL(`/api/internal/slug-reservation/${slug}`, internalOrigin)
+    const url = new URL(`/api/internal/slug-reservation/${encodeURIComponent(slug)}`, internalOrigin)
     
     // Add a short timeout so we don't hang requests if the DB is slow
     const controller = new AbortController()
