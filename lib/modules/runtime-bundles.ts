@@ -66,7 +66,7 @@ const host = (function () {
 const BASE_STYLE = `
   :root { color-scheme: light dark; }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 12px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #0f172a; background: transparent; }
+  body { margin: 0; padding: 12px; font: 14px/1.5 'Noto Sans', system-ui, -apple-system, "Segoe UI", sans-serif; color: #0f172a; background: transparent; }
   html[data-theme="dark"] body { color: #e2e8f0; }
   .lc-muted { color: #64748b; }
   html[data-theme="dark"] .lc-muted { color: #94a3b8; }
@@ -84,7 +84,7 @@ const BASE_STYLE = `
   .lc-vowel-legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 12px; }
   .lc-vowel-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .lc-vowel-table { margin-top: 4px; font-size: 12px; }
-  .lc-vowel-table code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .lc-vowel-table code { font-family: 'Noto Sans', ui-monospace, SFMono-Regular, Menlo, monospace; }
 `
 
 // ── Widget bundles ──────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ host.onInit(async function () {
       label.setAttribute("x", "9");
       label.setAttribute("y", "4");
       label.setAttribute("font-size", "13");
-      label.setAttribute("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace");
+      label.setAttribute("font-family", "'Noto Sans', ui-monospace, SFMono-Regular, Menlo, monospace");
       label.setAttribute("fill", "currentColor");
       label.textContent = p.ipa;
       g.appendChild(label);
@@ -754,7 +754,7 @@ host.onInit(async function () {
       if (e.ipa) {
         var ipa = document.createElement("div");
         ipa.className = "lc-muted";
-        ipa.style.cssText = "font-size:15px;margin-top:3px;font-family:ui-monospace,monospace;";
+        ipa.style.cssText = "font-size:15px;margin-top:3px;font-family:'Noto Sans',ui-sans-serif,sans-serif;font-synthesis:none;";
         ipa.textContent = "/" + esc(e.ipa) + "/";
         card.appendChild(ipa);
       }

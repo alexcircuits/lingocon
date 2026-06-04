@@ -10,7 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Serif, JetBrains_Mono, Noto_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -33,6 +35,17 @@ const plusJakarta = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
   variable: "--font-jakarta",
+  display: "swap",
+});
+
+// Noto Sans — loaded for its comprehensive Unicode/IPA coverage.
+// Acts as a harmonious fallback for any character not in Plus Jakarta Sans
+// or JetBrains Mono, preventing the OS from substituting a mismatched
+// system font that renders IPA glyphs at incorrect weight or size.
+const notoSans = Noto_Sans({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-noto",
   display: "swap",
 });
 
@@ -110,13 +123,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="theme-color" content="#7c5cff" />
@@ -126,7 +142,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} min-h-screen antialiased`}>
+      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} ${notoSans.variable} min-h-screen antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -134,14 +150,16 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>
-            {children}
-            <AchievementListener />
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                className: "border-border/50 bg-card shadow-soft",
-              }}
-            />
+            <NextIntlClientProvider messages={messages}>
+              {children}
+              <AchievementListener />
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  className: "border-border/50 bg-card shadow-soft",
+                }}
+              />
+            </NextIntlClientProvider>
           </SessionProvider>
         </ThemeProvider>
         <script

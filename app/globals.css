@@ -162,7 +162,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Noto Sans sits before the generic fallbacks to cover IPA and other
+       Unicode ranges that Plus Jakarta Sans is missing, ensuring all
+       glyphs render at a consistent weight and size (no more random bold). */
+    font-family: var(--font-jakarta), var(--font-noto), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
   /* Geometric-sans headings (Aurora) */
@@ -170,16 +173,17 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-jakarta), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
     font-weight: 800;
     letter-spacing: -0.03em;
   }
 
-  /* Monospace for technical elements */
+  /* Monospace for technical elements — Noto Sans before generic monospace
+     so IPA characters inside <code> / .font-mono are always consistent. */
   code,
   kbd,
   .font-mono {
-    font-family: var(--font-jetbrains-mono), 'Fira Code', monospace;
+    font-family: var(--font-jetbrains-mono), 'Fira Code', var(--font-noto), monospace;
   }
 }
 
@@ -542,7 +546,16 @@
    so these helpers (glass, gradient text, blobs, ring glow) work app-wide.
    ═══════════════════════════════════════════════════════════════════════ */
 .font-display {
-  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-jakarta), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Dedicated IPA typography class — use on any element rendering IPA text.
+   Noto Sans is the primary face because it covers every IPA character
+   with uniform metrics (no weight or size jumps between glyphs). */
+.font-ipa {
+  font-family: var(--font-noto), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;    /* prevent browser from faking bold/italic */
+  font-feature-settings: normal;
 }
 
 .aurora-gradient-text {
@@ -792,7 +805,7 @@
 
 /* Legacy typography: system body + Instrument Serif editorial headings */
 [data-palette="classic"] body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: system-ui, var(--font-noto), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 [data-palette="classic"] :is(h1, h2, h3) {

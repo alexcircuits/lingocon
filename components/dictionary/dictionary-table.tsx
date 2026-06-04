@@ -148,7 +148,7 @@ export function DictionaryTable({
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{entry.gloss}</TableCell>
-                  <TableCell className="font-mono text-sm text-muted-foreground">
+                  <TableCell className="font-ipa text-sm text-muted-foreground">
                     {entry.ipa ? (
                       <div className="flex items-center gap-2 bg-secondary/30 w-fit px-2 py-0.5 rounded">
                         <span>/{entry.ipa}/</span>
