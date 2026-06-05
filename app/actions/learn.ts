@@ -933,3 +933,63 @@ function fsrsStateToDb(s: State): "NEW" | "LEARNING" | "REVIEW" | "RELEARNING" {
   }
   return map[s] ?? "NEW"
 }
+
+// ─── Course editor search ─────────────────────────────────────────────────────
+
+export async function searchDictEntries(
+  languageId: string,
+  query: string,
+): Promise<{ id: string; lemma: string; gloss: string; partOfSpeech: string | null }[]> {
+  const userId = await getUserId()
+  if (!userId) return []
+
+  const canEdit = await canEditLanguage(languageId, userId)
+  if (!canEdit) return []
+
+  const q = query.trim()
+  return prisma.dictionaryEntry.findMany({
+    where: {
+      languageId,
+      ...(q
+        ? {
+            OR: [
+              { lemma: { contains: q, mode: "insensitive" } },
+              { gloss: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    select: { id: true, lemma: true, gloss: true, partOfSpeech: true },
+    orderBy: { lemma: "asc" },
+    take: 60,
+  })
+}
+
+export async function searchCourseSentences(
+  languageId: string,
+  query: string,
+): Promise<{ id: string; sentence: string; translation: string }[]> {
+  const userId = await getUserId()
+  if (!userId) return []
+
+  const canEdit = await canEditLanguage(languageId, userId)
+  if (!canEdit) return []
+
+  const q = query.trim()
+  return prisma.exampleSentence.findMany({
+    where: {
+      entry: { languageId },
+      ...(q
+        ? {
+            OR: [
+              { sentence: { contains: q, mode: "insensitive" } },
+              { translation: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    select: { id: true, sentence: true, translation: true },
+    orderBy: { createdAt: "desc" },
+    take: 60,
+  })
+}

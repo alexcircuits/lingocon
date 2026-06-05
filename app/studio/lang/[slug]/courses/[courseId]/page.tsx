@@ -49,14 +49,6 @@ async function getCourseEditorData(slug: string, courseId: string, userId: strin
   })
   if (!course) return null
 
-  // Dictionary entries for adding vocab items
-  const dictEntries = await prisma.dictionaryEntry.findMany({
-    where: { languageId: language.id },
-    select: { id: true, lemma: true, gloss: true, partOfSpeech: true },
-    orderBy: { lemma: "asc" },
-    take: 200,
-  })
-
   const grammarPages = await prisma.grammarPage.findMany({
     where: { languageId: language.id },
     select: { id: true, title: true },
@@ -69,14 +61,7 @@ async function getCourseEditorData(slug: string, courseId: string, userId: strin
     orderBy: { title: "asc" },
   })
 
-  const sentences = await prisma.exampleSentence.findMany({
-    where: { entry: { languageId: language.id } },
-    select: { id: true, sentence: true, translation: true },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  })
-
-  return { language, course, dictEntries, grammarPages, texts, sentences }
+  return { language, course, grammarPages, texts }
 }
 
 export default async function CourseEditorPage({
@@ -93,7 +78,7 @@ export default async function CourseEditorPage({
   const data = await getCourseEditorData(slug, courseId, userId)
   if (!data) notFound()
 
-  const { language, course, dictEntries, grammarPages, texts, sentences } = data
+  const { language, course, grammarPages, texts } = data
 
   const user = session?.user ? {
     id: session.user.id!,
@@ -120,10 +105,8 @@ export default async function CourseEditorPage({
         <CourseEditor
           course={course}
           language={language}
-          dictEntries={dictEntries}
           grammarPages={grammarPages}
           texts={texts}
-          sentences={sentences}
           slug={slug}
         />
       </main>
