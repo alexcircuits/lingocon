@@ -82,9 +82,9 @@ export default async function ArticlesPage({
     ? await articleService.getDraftArticles(language.id, userId)
     : []
 
-  // My own drafts (only for pure draft contributors — write:articles users see their own drafts in the main list)
+  // My own drafts — shown for all contributors (canWrite users are excluded from pendingDrafts by design)
   const myDrafts =
-    !canWrite && canDraft && userId
+    canContribute && userId
       ? language.articles.filter((a) => !a.published && a.authorId === userId)
       : []
 
@@ -171,8 +171,8 @@ export default async function ArticlesPage({
         </section>
       )}
 
-      {/* My Drafts (draft contributors only) */}
-      {!canWrite && myDrafts.length > 0 && (
+      {/* My Drafts */}
+      {myDrafts.length > 0 && (
         <section className="space-y-4">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Clock className="h-5 w-5 text-muted-foreground" />
