@@ -77,12 +77,21 @@ export async function applySoundChangesToDictionary(
   })
 
   // Compute which entries actually change
-  const updates: { id: string; lemma: string }[] = []
+  const updates: { id: string; lemma: string; ipa: string | null }[] = []
 
   for (const entry of entries) {
-    const result = applyPipeline(entry.lemma, rules, vowels, consonants)
-    if (result.changed !== result.original) {
-      updates.push({ id: entry.id, lemma: result.changed })
+    const lemmaResult = applyPipeline(entry.lemma, rules, vowels, consonants)
+    const ipaResult = entry.ipa ? applyPipeline(entry.ipa, rules, vowels, consonants) : null
+
+    const lemmaChanged = lemmaResult.changed !== lemmaResult.original
+    const ipaChanged = ipaResult ? ipaResult.changed !== ipaResult.original : false
+
+    if (lemmaChanged || ipaChanged) {
+      updates.push({
+        id: entry.id,
+        lemma: lemmaResult.changed,
+        ipa: ipaResult ? ipaResult.changed : entry.ipa,
+      })
     }
   }
 
@@ -95,7 +104,7 @@ export async function applySoundChangesToDictionary(
     updates.map(u =>
       prisma.dictionaryEntry.update({
         where: { id: u.id },
-        data: { lemma: u.lemma },
+        data: { lemma: u.lemma, ipa: u.ipa },
       })
     )
   )
@@ -106,7 +115,7 @@ export async function applySoundChangesToDictionary(
     entityId: languageId,
     languageId,
     userId,
-    description: `Applied sound change rules to ${updates.length} dictionary entries`,
+    description: `Applied sound change rules to ${updates.length} dictionary entries (lemma + IPA)`,
     metadata: { ruleCount: rules.length, updatedCount: updates.length },
   })
 

@@ -560,8 +560,18 @@ export async function deriveWords(
 
   if (sourceEntries.length === 0) throw new NotFoundError("No valid source entries found")
 
+  // Skip entries already imported (sourceEntryId already present in target)
+  const alreadyImported = await prisma.dictionaryEntry.findMany({
+    where: { languageId: targetLanguageId, sourceEntryId: { in: entryIds } },
+    select: { sourceEntryId: true },
+  })
+  const alreadyImportedIds = new Set(alreadyImported.map((e) => e.sourceEntryId))
+  const entriesToCreate = sourceEntries.filter((e) => !alreadyImportedIds.has(e.id))
+
+  if (entriesToCreate.length === 0) return { count: 0 }
+
   const created = await prisma.dictionaryEntry.createMany({
-    data: sourceEntries.map((entry) => ({
+    data: entriesToCreate.map((entry) => ({
       lemma: entry.lemma,
       gloss: entry.gloss,
       ipa: entry.ipa,

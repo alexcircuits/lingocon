@@ -120,10 +120,11 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
     }, [])
 
     const handleRemovePhoneme = useCallback((ipa: string) => {
-        if (IPA_CONSONANT_MAP[ipa]) {
+        const base = ipa.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        if (IPA_CONSONANT_MAP[ipa] || IPA_CONSONANT_MAP[base]) {
             setCustomConsonants(prev => prev.filter(s => s !== ipa))
         }
-        if (IPA_VOWEL_MAP[ipa]) {
+        if (IPA_VOWEL_MAP[ipa] || IPA_VOWEL_MAP[base]) {
             setCustomVowels(prev => prev.filter(s => s !== ipa))
         }
     }, [])
@@ -134,13 +135,20 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             .replace(/[\/\[\]]/g, "")
             .replace(/[\u0361\u035C]/g, "")
             .trim()
-        if (addingTo === "consonants" && IPA_CONSONANT_MAP[cleaned]) {
+        // For diacritic symbols not directly in the map (e.g. ɑ̃), fall back to
+        // the base character for classification while storing the full symbol.
+        const base = cleaned.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
+        const isConsonant = !!IPA_CONSONANT_MAP[cleaned] || (!IPA_VOWEL_MAP[cleaned] && !!IPA_CONSONANT_MAP[base])
+        const isVowel = !!IPA_VOWEL_MAP[cleaned] || (!IPA_CONSONANT_MAP[cleaned] && !!IPA_VOWEL_MAP[base])
+
+        if (addingTo === "consonants" && isConsonant) {
             setCustomConsonants(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
-        } else if (addingTo === "vowels" && IPA_VOWEL_MAP[cleaned]) {
+        } else if (addingTo === "vowels" && isVowel) {
             setCustomVowels(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
-        } else if (IPA_CONSONANT_MAP[cleaned]) {
+        } else if (isConsonant) {
             setCustomConsonants(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
-        } else if (IPA_VOWEL_MAP[cleaned]) {
+        } else if (isVowel) {
             setCustomVowels(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
         } else {
             toast.error("This symbol is not recognized as a consonant or vowel in the chart")
@@ -154,7 +162,8 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
         const usedManners = new Set<string>()
 
         ipaSymbols.forEach((ipa) => {
-            const info = IPA_CONSONANT_MAP[ipa]
+            const base = ipa.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            const info = IPA_CONSONANT_MAP[ipa] ?? IPA_CONSONANT_MAP[base]
             if (info) {
                 usedPlaces.add(info.place)
                 usedManners.add(info.manner)
@@ -180,7 +189,8 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
         const vowels: Array<{ ipa: string; height: string; backness: string; rounded: boolean }> = []
 
         ipaSymbols.forEach((ipa) => {
-            const info = IPA_VOWEL_MAP[ipa]
+            const base = ipa.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            const info = IPA_VOWEL_MAP[ipa] ?? IPA_VOWEL_MAP[base]
             if (info) {
                 vowels.push({ ipa, ...info })
             }
@@ -216,8 +226,14 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
         }
     }
 
-    const consonantCount = Array.from(ipaSymbols).filter((s) => IPA_CONSONANT_MAP[s]).length
-    const vowelCount = Array.from(ipaSymbols).filter((s) => IPA_VOWEL_MAP[s]).length
+    const consonantCount = Array.from(ipaSymbols).filter((s) => {
+        const b = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        return IPA_CONSONANT_MAP[s] || IPA_CONSONANT_MAP[b]
+    }).length
+    const vowelCount = Array.from(ipaSymbols).filter((s) => {
+        const b = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        return IPA_VOWEL_MAP[s] || IPA_VOWEL_MAP[b]
+    }).length
 
     return (
         <div className="space-y-8">

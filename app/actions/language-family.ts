@@ -159,10 +159,22 @@ export async function deriveWords(
   try {
     const result = await familyService.deriveWords(sourceLanguageId, targetLanguageId, entryIds, userId)
     revalidateFamilies()
+    revalidatePath(`/studio/lang`)
     return { success: true as const, data: { count: result.count } }
   } catch (error) {
     return handleError(error, "Failed to derive words")
   }
+}
+
+export async function getImportedSourceIds(targetLanguageId: string): Promise<string[]> {
+  const userId = await getUserId()
+  if (!userId) return []
+
+  const rows = await prisma.dictionaryEntry.findMany({
+    where: { languageId: targetLanguageId, sourceEntryId: { not: null } },
+    select: { sourceEntryId: true },
+  })
+  return rows.map((r) => r.sourceEntryId!).filter(Boolean)
 }
 
 export async function getLanguageDictionary(

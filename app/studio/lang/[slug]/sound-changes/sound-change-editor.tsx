@@ -257,8 +257,8 @@ export function SoundChangeEditor({
                     </AlertDialogTitle>
                     <AlertDialogDescription className="space-y-2">
                       <span className="block">
-                        This will permanently update <strong>{changedCount}</strong> lemma{changedCount !== 1 ? "s" : ""} in your dictionary
-                        using the currently <em>saved</em> sound change rules.
+                        This will permanently update <strong>{changedCount}</strong> entr{changedCount !== 1 ? "ies" : "y"} in your dictionary
+                        (lemma and IPA where present) using the currently <em>saved</em> sound change rules.
                       </span>
                       <span className="block text-amber-600 font-medium">
                         This action cannot be undone. Consider forking (evolving) your language first to keep the original forms.

@@ -14,6 +14,7 @@ import { FamilyTreeErrorBoundary } from "@/components/family-tree-error-boundary
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+import { SyncFromParentDialog } from "./sync-from-parent-dialog"
 
 interface SearchResult {
   id: string
@@ -469,6 +470,13 @@ export function ParentLanguageCard({
                 </Button>
               )}
             </div>
+            {parentId && isOwner && (
+              <SyncFromParentDialog
+                sourceLanguageId={parentId}
+                sourceLanguageName={parentName}
+                targetLanguageId={languageId}
+              />
+            )}
             <p className="text-xs text-muted-foreground">Search to link with public languages from any user.</p>
           </div>
         </div>
