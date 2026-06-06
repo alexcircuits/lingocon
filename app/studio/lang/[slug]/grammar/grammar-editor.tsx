@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import type { Editor, JSONContent } from "@tiptap/react"
 import { RichTextEditor } from "@/components/rich-text-editor"
@@ -47,6 +48,8 @@ export function GrammarEditor({
   grammarPages = [],
 }: GrammarEditorProps) {
   const router = useRouter()
+  const t = useTranslations("studio.grammar")
+  const tc = useTranslations("studio.common")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -95,7 +98,7 @@ export function GrammarEditor({
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Grammar page updated successfully")
+          toast.success(t("updatedToast"))
           router.refresh()
         }
       } else {
@@ -115,7 +118,7 @@ export function GrammarEditor({
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Grammar page created successfully")
+          toast.success(t("createdToast"))
           router.push(`/studio/lang/${languageSlug}/grammar`)
         }
       }
@@ -132,7 +135,7 @@ export function GrammarEditor({
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Grammar page deleted")
+        toast.success(t("deletedShortToast"))
         router.push(`/studio/lang/${languageSlug}/grammar`)
       }
     })
@@ -144,7 +147,7 @@ export function GrammarEditor({
         <Link href={`/studio/lang/${languageSlug}/grammar`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Grammar
+            {t("backToGrammar")}
           </Button>
         </Link>
       </div>
@@ -159,12 +162,12 @@ export function GrammarEditor({
         <Card className="p-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t("title")}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={handleTitleChange}
-                placeholder="Noun Declension"
+                placeholder={t("titlePlaceholder")}
                 required
                 disabled={isPending}
                 maxLength={200}
@@ -173,32 +176,32 @@ export function GrammarEditor({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
+              <Label htmlFor="slug">{t("slug")}</Label>
               <Input
                 id="slug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                placeholder="noun-declension"
+                placeholder={t("slugPlaceholder")}
                 pattern="[a-z0-9-]+"
                 required
                 disabled={isPending}
                 maxLength={200}
               />
               <p className="text-xs text-muted-foreground">
-                URL-friendly identifier (lowercase letters, numbers, and hyphens only)
+                {t("slugHint")}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Cover Image</Label>
+              <Label>{t("coverImage")}</Label>
               <FileUpload
                 type="image"
                 value={imageUrl || undefined}
                 onChange={(url) => setImageUrl(url)}
-                placeholder="Upload a cover image for this grammar page"
+                placeholder={t("coverImagePlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                Optional image to display with this grammar page
+                {t("coverImageHint")}
               </p>
             </div>
           </div>
@@ -233,7 +236,7 @@ export function GrammarEditor({
               className="w-full sm:w-auto"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Page
+              {t("deletePage")}
             </Button>
           ) : (
             <div className="hidden sm:block" />
@@ -241,7 +244,7 @@ export function GrammarEditor({
 
           <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
             <Save className="mr-2 h-4 w-4" />
-            {isPending ? "Saving..." : page ? "Update Page" : "Create Page"}
+            {isPending ? tc("saving") : page ? t("updatePage") : t("createPage")}
           </Button>
         </div>
       </form>
@@ -252,11 +255,10 @@ export function GrammarEditor({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Delete Grammar Page
+              {t("deleteTitle")}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this grammar page? This action cannot be
-              undone.
+              {t("deleteConfirmDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -266,7 +268,7 @@ export function GrammarEditor({
               onClick={() => setIsDeleteOpen(false)}
               disabled={isPending}
             >
-              Cancel
+              {tc("cancel")}
             </Button>
             <Button
               type="button"
@@ -274,7 +276,7 @@ export function GrammarEditor({
               onClick={handleDelete}
               disabled={isPending}
             >
-              {isPending ? "Deleting..." : "Delete"}
+              {isPending ? t("deleting") : tc("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

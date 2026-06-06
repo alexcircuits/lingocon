@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   createDictionaryEntry,
@@ -86,6 +87,7 @@ export function DictionaryManager({
   languageName = "Language",
 }: DictionaryManagerProps) {
   const router = useRouter()
+  const t = useTranslations("studio.dictionary")
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
@@ -303,25 +305,23 @@ export function DictionaryManager({
     if (!deletingId) return
 
     const deletedEntry = initialEntries.find(e => e.id === deletingId)
-    const entryLemma = deletedEntry?.lemma || "entry"
+    const entryLemma = deletedEntry?.lemma || t("entryFallback")
 
     const result = await deleteDictionaryEntry(deletingId, languageId)
 
     if ('error' in result) {
       toast.error(result.error, {
         action: {
-          label: "Retry",
+          label: t("retry"),
           onClick: () => handleDelete(),
         },
       })
     } else {
-      toast.success(`"${entryLemma}" deleted successfully`, {
+      toast.success(t("entryDeleted", { lemma: entryLemma }), {
         action: {
-          label: "Undo",
+          label: t("undo"),
           onClick: async () => {
-            // Note: Undo would require restoring the entry
-            // This is a placeholder for future implementation
-            toast.info("Undo functionality coming soon")
+            toast.info(t("undoComingSoon"))
           },
         },
       })
@@ -350,7 +350,7 @@ export function DictionaryManager({
     if ('error' in result) {
       toast.error(result.error)
     } else {
-      toast.success(`Deleted ${result.data?.deletedCount} entries`)
+      toast.success(t("bulkDeleted", { count: result.data?.deletedCount ?? 0 }))
       setIsBulkDeleteOpen(false)
       setSelectedEntries(new Set())
       startTransition(() => {
@@ -365,7 +365,7 @@ export function DictionaryManager({
     if ('error' in result) {
       toast.error(result.error)
     } else {
-      toast.success(`Deleted all ${result.data?.deletedCount} entries`)
+      toast.success(t("allDeleted", { count: result.data?.deletedCount ?? 0 }))
       setIsDeleteAllOpen(false)
       setSelectedEntries(new Set())
       startTransition(() => {
@@ -388,21 +388,23 @@ export function DictionaryManager({
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "Import failed")
+        throw new Error(result.error || t("importFailed"))
       }
 
       toast.success(
-        `Imported ${result.imported} entries${result.skipped > 0 ? `, skipped ${result.skipped} duplicates` : ""}`,
+        result.skipped > 0
+          ? t("importedSkipped", { imported: result.imported, skipped: result.skipped })
+          : t("importedCount", { imported: result.imported }),
         {
-          description: result.errors > 0 ? `${result.errors} errors occurred` : undefined,
+          description: result.errors > 0 ? t("errorsOccurred", { count: result.errors }) : undefined,
         }
       )
 
       setIsImportOpen(false)
       router.refresh()
     } catch (error) {
-      toast.error("Import failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      toast.error(t("importFailed"), {
+        description: error instanceof Error ? error.message : t("unknownError"),
       })
     }
   }
@@ -413,8 +415,8 @@ export function DictionaryManager({
       {selectedEntries.size === 0 && initialEntries.length > 0 && (
         <FeatureHighlight
           id="bulk-operations"
-          title="Bulk Operations"
-          description="Select multiple entries to edit, export, or delete them at once. Use the checkboxes to select items."
+          title={t("bulkOpsTitle")}
+          description={t("bulkOpsDesc")}
           variant="tip"
         />
       )}
@@ -432,13 +434,13 @@ export function DictionaryManager({
           <Select defaultValue={initialSort} onValueChange={handleSort}>
             <SelectTrigger className="h-9 w-[140px] sm:w-[160px] gap-1 text-sm">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <SelectValue placeholder="Sort by…" />
+              <SelectValue placeholder={t("sortBy")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="lemma">A → Z (lemma)</SelectItem>
-              <SelectItem value="gloss">A → Z (gloss)</SelectItem>
-              <SelectItem value="createdAt">Newest first</SelectItem>
-              <SelectItem value="partOfSpeech">Part of speech</SelectItem>
+              <SelectItem value="lemma">{t("sortLemma")}</SelectItem>
+              <SelectItem value="gloss">{t("sortGloss")}</SelectItem>
+              <SelectItem value="createdAt">{t("sortNewest")}</SelectItem>
+              <SelectItem value="partOfSpeech">{t("sortPos")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -453,10 +455,10 @@ export function DictionaryManager({
             onClick={() => {
               const url = `/api/export/csv?languageId=${languageId}`
               window.open(url, "_blank")
-              toast.success("Dictionary exported successfully")
+              toast.success(t("exportSuccess"))
             }}
             disabled={isPending || totalEntries === 0}
-            title="Export CSV"
+            title={t("exportCsv")}
           >
             <Download className="h-4 w-4" />
           </Button>
@@ -466,7 +468,7 @@ export function DictionaryManager({
             size="icon"
             onClick={() => setIsImportOpen(true)}
             disabled={isPending}
-            title="Import CSV"
+            title={t("importCsv")}
           >
             <Upload className="h-4 w-4" />
           </Button>
@@ -476,7 +478,7 @@ export function DictionaryManager({
             size="icon"
             onClick={() => setIsGeneratorOpen(true)}
             disabled={isPending}
-            title="Generate Words"
+            title={t("generateWords")}
           >
             <Sparkles className="h-4 w-4" />
           </Button>
@@ -486,13 +488,13 @@ export function DictionaryManager({
             size="icon"
             onClick={() => setIsBorrowOpen(true)}
             disabled={isPending}
-            title="Borrow Word"
+            title={t("borrowWord")}
           >
             <Languages className="h-4 w-4" />
           </Button>
 
           <ContextualHelp
-            content="Use Cmd+N to quickly add a new entry. Cmd+/ shows all keyboard shortcuts."
+            content={t("shortcutHelp")}
             shortcut="⌘N"
           />
 
@@ -503,7 +505,7 @@ export function DictionaryManager({
                 size="icon"
                 onClick={() => setIsBulkEditOpen(true)}
                 disabled={isPending}
-                title={`Bulk Edit (${selectedEntries.size})`}
+                title={t("bulkEdit", { count: selectedEntries.size })}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -512,7 +514,7 @@ export function DictionaryManager({
                 size="icon"
                 onClick={() => setIsBulkDeleteOpen(true)}
                 disabled={isPending}
-                title={`Delete Selected (${selectedEntries.size})`}
+                title={t("deleteSelected", { count: selectedEntries.size })}
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
@@ -525,15 +527,15 @@ export function DictionaryManager({
             variant="outline"
             onClick={() => setIsBulkAddOpen(true)}
             className="gap-2 shrink-0"
-            title="Bulk Add Entries"
+            title={t("bulkAddEntries")}
           >
             <Table2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Bulk Add</span>
+            <span className="hidden sm:inline">{t("bulkAdd")}</span>
           </Button>
 
           <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto sm:ml-0">
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Entry</span>
+            <span className="hidden sm:inline">{t("addEntry")}</span>
           </Button>
         </div>
 
@@ -542,13 +544,13 @@ export function DictionaryManager({
           <Select defaultValue={initialSort} onValueChange={handleSort}>
             <SelectTrigger className="h-9 w-[140px] gap-1 text-sm">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <SelectValue placeholder="Sort by…" />
+              <SelectValue placeholder={t("sortBy")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="lemma">A → Z (lemma)</SelectItem>
-              <SelectItem value="gloss">A → Z (gloss)</SelectItem>
-              <SelectItem value="createdAt">Newest first</SelectItem>
-              <SelectItem value="partOfSpeech">Part of speech</SelectItem>
+              <SelectItem value="lemma">{t("sortLemma")}</SelectItem>
+              <SelectItem value="gloss">{t("sortGloss")}</SelectItem>
+              <SelectItem value="createdAt">{t("sortNewest")}</SelectItem>
+              <SelectItem value="partOfSpeech">{t("sortPos")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -559,7 +561,7 @@ export function DictionaryManager({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9" title="More actions">
+              <Button variant="outline" size="icon" className="h-9 w-9" title={t("moreActions")}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -568,35 +570,35 @@ export function DictionaryManager({
                 onClick={() => {
                   const url = `/api/export/csv?languageId=${languageId}`
                   window.open(url, "_blank")
-                  toast.success("Dictionary exported successfully")
+                  toast.success(t("exportSuccess"))
                 }}
                 disabled={isPending || totalEntries === 0}
               >
                 <Download className="h-4 w-4" />
-                Export CSV
+                {t("exportCsv")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsImportOpen(true)} disabled={isPending}>
                 <Upload className="h-4 w-4" />
-                Import CSV
+                {t("importCsv")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsGeneratorOpen(true)} disabled={isPending}>
                 <Sparkles className="h-4 w-4" />
-                Generate Words
+                {t("generateWords")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsBorrowOpen(true)} disabled={isPending}>
                 <Languages className="h-4 w-4" />
-                Borrow Word
+                {t("borrowWord")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsBulkAddOpen(true)}>
                 <Table2 className="h-4 w-4" />
-                Bulk Add
+                {t("bulkAdd")}
               </DropdownMenuItem>
               {selectedEntries.size > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setIsBulkEditOpen(true)} disabled={isPending}>
                     <Edit className="h-4 w-4" />
-                    Bulk Edit ({selectedEntries.size})
+                    {t("bulkEdit", { count: selectedEntries.size })}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setIsBulkDeleteOpen(true)}
@@ -604,7 +606,7 @@ export function DictionaryManager({
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete Selected ({selectedEntries.size})
+                    {t("deleteSelected", { count: selectedEntries.size })}
                   </DropdownMenuItem>
                 </>
               )}
@@ -613,7 +615,7 @@ export function DictionaryManager({
 
           <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto">
             <Plus className="h-4 w-4" />
-            Add Entry
+            {t("addEntry")}
           </Button>
         </div>
       </div>
@@ -622,11 +624,11 @@ export function DictionaryManager({
         initialQuery ? (
           <div className="rounded-lg border border-dashed p-12 text-center space-y-2">
             <p className="text-muted-foreground">
-              No entries match your search.
+              {t("noMatchesSearch")}
             </p>
             <div className="flex items-center justify-center gap-2">
               <Button type="button" variant="link" onClick={() => handleSearch("")}>
-                Clear search
+                {t("clearSearch")}
               </Button>
               <Button
                 type="button"
@@ -639,17 +641,17 @@ export function DictionaryManager({
                 }}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Add &ldquo;{initialQuery}&rdquo;
+                {t("addQuoted", { query: initialQuery })}
               </Button>
             </div>
           </div>
         ) : (
           <EmptyState
             icon={Plus}
-            title="No dictionary entries yet"
-            description="Start building your lexicon by adding your first word."
+            title={t("emptyTitle")}
+            description={t("emptyDesc")}
             action={{
-              label: "Add Entry",
+              label: t("addEntry"),
               onClick: () => setIsAddOpen(true),
             }}
           />
@@ -658,7 +660,7 @@ export function DictionaryManager({
         <>
           <div className="flex flex-col items-start gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
-              Showing {initialEntries.length} of {totalEntries} entries
+              {t("showingOf", { shown: initialEntries.length, total: totalEntries })}
             </span>
             {selectedEntries.size > 0 && (
               <Button
@@ -667,7 +669,7 @@ export function DictionaryManager({
                 onClick={() => setSelectedEntries(new Set())}
                 className="h-auto p-0 hover:bg-transparent hover:text-foreground"
               >
-                Clear selection ({selectedEntries.size})
+                {t("clearSelection", { count: selectedEntries.size })}
               </Button>
             )}
           </div>
@@ -737,7 +739,7 @@ export function DictionaryManager({
                 className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete All {totalEntries} Entries
+                {t("deleteAllN", { count: totalEntries })}
               </Button>
             </div>
           )}
@@ -777,7 +779,7 @@ export function DictionaryManager({
         onConfirm={handleDelete}
         isPending={isPending}
         itemName={deletingId ? initialEntries?.find(e => e.id === deletingId)?.lemma : undefined}
-        description={deletingId ? `This will permanently delete the dictionary entry "${initialEntries?.find(e => e.id === deletingId)?.lemma}". This action cannot be undone.` : undefined}
+        description={deletingId ? t("deleteEntryDesc", { lemma: initialEntries?.find(e => e.id === deletingId)?.lemma ?? "" }) : undefined}
       />
 
       <DeleteConfirmDialog
@@ -785,8 +787,8 @@ export function DictionaryManager({
         onOpenChange={setIsBulkDeleteOpen}
         onConfirm={handleBulkDelete}
         isPending={isPending}
-        title={`Delete ${selectedEntries.size} entries?`}
-        description={`This will permanently delete ${selectedEntries.size} selected dictionary entries. This action cannot be undone.`}
+        title={t("deleteBulkTitle", { count: selectedEntries.size })}
+        description={t("deleteBulkDesc", { count: selectedEntries.size })}
       />
 
       <DeleteConfirmDialog
@@ -794,8 +796,8 @@ export function DictionaryManager({
         onOpenChange={setIsDeleteAllOpen}
         onConfirm={handleDeleteAll}
         isPending={isPending}
-        title={`Delete all ${totalEntries} entries?`}
-        description={`This will permanently delete ALL ${totalEntries} dictionary entries for this language. This action cannot be undone.`}
+        title={t("deleteAllTitle", { count: totalEntries })}
+        description={t("deleteAllDesc", { count: totalEntries })}
       />
 
       <ImportDialog

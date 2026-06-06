@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -55,17 +56,26 @@ interface NavbarProps {
   isDevMode?: boolean
 }
 
-const mainNavItems = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Browse", href: "/browse", icon: Globe },
-  { name: "Learn", href: "/learn", icon: GraduationCap },
-  { name: "Families", href: "/families", icon: GitBranch },
-  { name: "Favorites", href: "/favorites", icon: Heart, requiresAuth: true },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
+type NavItem = {
+  key: string
+  href: string
+  icon: typeof Home
+  requiresAuth?: boolean
+}
+
+const mainNavItems: NavItem[] = [
+  { key: "home", href: "/", icon: Home },
+  { key: "browse", href: "/browse", icon: Globe },
+  { key: "learn", href: "/learn", icon: GraduationCap },
+  { key: "families", href: "/families", icon: GitBranch },
+  { key: "favorites", href: "/favorites", icon: Heart, requiresAuth: true },
+  { key: "dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
 ]
 
 export function Navbar({ user, isDevMode = false }: NavbarProps) {
   const pathname = usePathname()
+  const tNav = useTranslations("nav")
+  const tCommon = useTranslations("common")
   const [mobileOpen, setMobileOpen] = useState(false)
   const isAuthenticated = !!user || isDevMode
 
@@ -101,7 +111,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {item.name}
+                  {tNav(item.key)}
                 </Button>
               </Link>
             )
@@ -120,7 +130,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
             <Link href="/dashboard/new-language" className="hidden sm:block">
               <Button size="sm" className="gap-1.5">
                 <Plus className="h-4 w-4" />
-                <span className="hidden lg:inline">Create</span>
+                <span className="hidden lg:inline">{tNav("create")}</span>
               </Button>
             </Link>
           )}
@@ -149,7 +159,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden md:block max-w-[100px] truncate text-sm">
-                    {user?.name || "User"}
+                    {user?.name || tNav("userFallback")}
                   </span>
                   {isDevMode && !user && (
                     <Badge variant="secondary" className="text-xs">Dev</Badge>
@@ -159,9 +169,9 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{user?.name || "Developer"}</p>
+                    <p className="text-sm font-medium">{user?.name || tNav("developer")}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {user?.email || "dev@localhost"}
+                      {user?.email || tNav("devEmail")}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -169,41 +179,41 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="cursor-pointer">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
+                    {tNav("dashboard")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/families" className="cursor-pointer">
                     <GitBranch className="mr-2 h-4 w-4" />
-                    Family Tree
+                    {tNav("familyTree")}
                   </Link>
                 </DropdownMenuItem>
                 {user?.isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin" className="cursor-pointer">
                       <Shield className="mr-2 h-4 w-4" />
-                      Admin Panel
+                      {tNav("adminPanel")}
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/favorites" className="cursor-pointer">
                     <Heart className="mr-2 h-4 w-4" />
-                    Favorites
+                    {tNav("favorites")}
                   </Link>
                 </DropdownMenuItem>
                 {user && (
                   <DropdownMenuItem asChild>
                     <Link href={`/users/${user.id}`} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {tNav("profile")}
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    {tNav("settings")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -217,7 +227,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                     <DropdownMenuItem asChild>
                       <button type="submit" className="w-full cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
-                        Sign out
+                        {tNav("signOut")}
                       </button>
                     </DropdownMenuItem>
                   </form>
@@ -226,7 +236,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
             </DropdownMenu>
           ) : (
             <Link href="/login">
-              <Button size="sm">Sign in</Button>
+              <Button size="sm">{tCommon("signIn")}</Button>
             </Link>
           )}
 
@@ -235,14 +245,14 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
+                <span className="sr-only">{tNav("toggleMenu")}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   <Languages className="h-5 w-5 text-primary" />
-                  Navigation
+                  {tNav("navigation")}
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-2">
@@ -272,7 +282,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                         )}
                       >
                         <Icon className="h-4 w-4" />
-                        {item.name}
+                        {tNav(item.key)}
                       </Button>
                     </Link>
                   )
@@ -288,7 +298,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                     >
                       <Button className="w-full gap-2">
                         <Plus className="h-4 w-4" />
-                        Create Language
+                        {tNav("createLanguage")}
                       </Button>
                     </Link>
                   </>
@@ -299,7 +309,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                   <>
                     <div className="my-2 border-t border-border" />
                     <Link href="/login" onClick={() => setMobileOpen(false)}>
-                      <Button className="w-full">Sign in</Button>
+                      <Button className="w-full">{tCommon("signIn")}</Button>
                     </Link>
                   </>
                 )}

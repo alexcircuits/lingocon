@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns"
 import { EmptyState } from "@/components/empty-state"
 import { publishArticle } from "@/app/actions/article"
 import * as articleService from "@/lib/services/article"
+import { getTranslations } from "next-intl/server"
 
 async function publishDraftAction(formData: FormData) {
   "use server"
@@ -93,25 +94,27 @@ export default async function ArticlesPage({
     (a) => a.published || (canWrite) || (canDraft && a.authorId === userId)
   )
 
+  const t = await getTranslations("studio.articles")
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-border/40 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold tracking-tight">Articles</h1>
+          <h1 className="mb-1 text-3xl font-bold tracking-tight">{t("pageTitle")}</h1>
           <p className="text-muted-foreground">
             {canWrite
-              ? "Write, manage, and publish articles for your language community."
+              ? t("writeDesc")
               : canDraft
-              ? "Submit article drafts for review by the language maintainers."
-              : "Browse articles for this language."}
+              ? t("draftDesc")
+              : t("browseDesc")}
           </p>
         </div>
         {canContribute && (
           <Link href={`/studio/lang/${slug}/articles/new`}>
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              {canWrite ? "New Article" : "Submit Draft"}
+              {canWrite ? t("newArticle") : t("submitDraft")}
             </Button>
           </Link>
         )}
@@ -122,7 +125,7 @@ export default async function ArticlesPage({
         <section className="space-y-4">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Clock className="h-5 w-5 text-amber-500" />
-            Pending Review
+            {t("pendingReview")}
             <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">
               {pendingDrafts.length}
             </Badge>
@@ -135,7 +138,7 @@ export default async function ArticlesPage({
                     <div className="mb-1 flex items-center gap-2">
                       <h3 className="truncate font-semibold">{draft.title}</h3>
                       <Badge variant="outline" className="shrink-0 border-amber-500/40 text-amber-600 dark:text-amber-400">
-                        Draft
+                        {t("draftBadge")}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -144,7 +147,7 @@ export default async function ArticlesPage({
                           <AvatarImage src={(draft.author as any).image || undefined} />
                           <AvatarFallback className="text-[8px]">{(draft.author.name || "U")[0]}</AvatarFallback>
                         </Avatar>
-                        {draft.author.name || "Unknown"}
+                        {draft.author.name || t("unknown")}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5" />
@@ -154,13 +157,13 @@ export default async function ArticlesPage({
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <Link href={`/studio/lang/${slug}/articles/${draft.slug}`}>
-                      <Button variant="outline" size="sm">Review</Button>
+                      <Button variant="outline" size="sm">{t("review")}</Button>
                     </Link>
                     <form action={publishDraftAction}>
                       <input type="hidden" name="id" value={draft.id} />
                       <Button type="submit" size="sm" className="gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Publish
+                        {t("publish")}
                       </Button>
                     </form>
                   </div>
@@ -176,7 +179,7 @@ export default async function ArticlesPage({
         <section className="space-y-4">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Clock className="h-5 w-5 text-muted-foreground" />
-            My Drafts
+            {t("myDrafts")}
           </h2>
           <div className="grid gap-3">
             {myDrafts.map((draft) => (
@@ -186,7 +189,7 @@ export default async function ArticlesPage({
                     <h3 className="truncate font-semibold">{draft.title}</h3>
                     <div className="flex shrink-0 items-center gap-2">
                       <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">
-                        Pending review
+                        {t("pendingReviewBadge")}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(draft.createdAt), { addSuffix: true })}
@@ -203,23 +206,23 @@ export default async function ArticlesPage({
       {/* All published articles */}
       <section className="space-y-4">
         {(pendingDrafts.length > 0 || myDrafts.length > 0) && (
-          <h2 className="text-lg font-semibold">Published Articles</h2>
+          <h2 className="text-lg font-semibold">{t("publishedArticles")}</h2>
         )}
 
         {visibleArticles.filter((a) => a.published).length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="No published articles yet"
+            title={t("noPublishedTitle")}
             description={
               canWrite
-                ? "Create your first article to share news and updates with your community."
+                ? t("noPublishedWrite")
                 : canDraft
-                ? "Submit a draft and a maintainer will review and publish it."
-                : "No articles have been published for this language yet."
+                ? t("noPublishedDraft")
+                : t("noPublishedBrowse")
             }
             action={
               canContribute
-                ? { label: canWrite ? "Write Your First Article" : "Submit a Draft", href: `/studio/lang/${slug}/articles/new` }
+                ? { label: canWrite ? t("writeFirst") : t("submitADraft"), href: `/studio/lang/${slug}/articles/new` }
                 : undefined
             }
           />
@@ -235,13 +238,13 @@ export default async function ArticlesPage({
                         <div className="mb-1 flex items-center gap-2">
                           <h3 className="truncate text-lg font-semibold">{article.title}</h3>
                           <Badge className="shrink-0 border-green-500/20 bg-green-500/15 text-green-700 hover:bg-green-500/20 dark:text-green-400">
-                            Published
+                            {t("publishedBadge")}
                           </Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User className="h-3.5 w-3.5" />
-                            {article.author.name || "Unknown"}
+                            {article.author.name || t("unknown")}
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />

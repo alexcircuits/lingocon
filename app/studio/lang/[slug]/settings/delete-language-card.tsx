@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { deleteLanguage } from "@/app/actions/language"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,7 @@ interface DeleteLanguageCardProps {
 
 export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageCardProps) {
   const router = useRouter()
+  const t = useTranslations("studio.settings")
   const [isPending, startTransition] = useTransition()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState("")
@@ -31,7 +33,7 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
 
   const handleDelete = async () => {
     if (deleteConfirm !== languageName) {
-      setError("Language name does not match")
+      setError(t("nameMismatch"))
       return
     }
 
@@ -42,7 +44,7 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Language deleted successfully")
+        toast.success(t("deletedToast"))
         router.push("/dashboard")
       }
     })
@@ -53,10 +55,10 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
       <div className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-destructive mb-2">
-            Danger Zone
+            {t("dangerZone")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Once you delete a language, there is no going back. Please be certain.
+            {t("dangerZoneDesc")}
           </p>
         </div>
 
@@ -71,19 +73,19 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
-                Delete Language
+                {t("deleteLanguage")}
               </DialogTitle>
               <DialogDescription>
-                This action cannot be undone. This will permanently delete the
-                language and all associated data (alphabet, grammar pages,
-                dictionary entries).
+                {t("deleteDesc")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <p className="text-sm">
-                To confirm, type the language name{" "}
-                <strong>{languageName}</strong> below:
+                {t.rich("deleteConfirmPrompt", {
+                  name: languageName,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
               <Input
                 value={deleteConfirm}
@@ -104,7 +106,7 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
                 }}
                 disabled={isPending}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 type="button"
@@ -112,7 +114,7 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
                 onClick={handleDelete}
                 disabled={isPending || deleteConfirm !== languageName}
               >
-                {isPending ? "Deleting..." : "Delete Language"}
+                {isPending ? t("deleting") : t("deleteLanguage")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -124,7 +126,7 @@ export function DeleteLanguageCard({ languageId, languageName }: DeleteLanguageC
           onClick={() => setIsDeleteOpen(true)}
           disabled={isPending}
         >
-          Delete Language
+          {t("deleteLanguage")}
         </Button>
       </div>
     </Card>

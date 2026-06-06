@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { GraduationCap, Plus, ListChecks, Users, Eye, EyeOff, Archive } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { getTranslations } from "next-intl/server"
 import { CreateCourseDialog } from "./create-course-dialog"
 
 export const dynamic = "force-dynamic"
@@ -50,6 +51,8 @@ export default async function StudioCoursesPage({
   const data = await getStudioCourseData(slug, userId)
   if (!data) notFound()
 
+  const t = await getTranslations("studio.courses")
+
   const { language, courses } = data
 
   const user = session?.user ? {
@@ -83,14 +86,14 @@ export default async function StudioCoursesPage({
                 {language.name}
               </Link>
               <span className="text-muted-foreground">/</span>
-              <span className="text-sm font-medium">Courses</span>
+              <span className="text-sm font-medium">{t("breadcrumb")}</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-primary" />
-              Manage Courses
+              {t("manageCourses")}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Create structured learning paths for your language learners.
+              {t("subtitle")}
             </p>
           </div>
           <CreateCourseDialog languageId={language.id} slug={slug} />
@@ -98,10 +101,10 @@ export default async function StudioCoursesPage({
 
         {/* Stats row */}
         <div className="mb-6 flex flex-wrap gap-4">
-          <StatPill label="Total Courses" value={courses.length} />
-          <StatPill label="Published" value={courses.filter(c => c.visibility === "PUBLISHED").length} />
+          <StatPill label={t("totalCourses")} value={courses.length} />
+          <StatPill label={t("published")} value={courses.filter(c => c.visibility === "PUBLISHED").length} />
           <StatPill
-            label="Total Learners"
+            label={t("totalLearners")}
             value={courses.reduce((s, c) => s + c._count.enrollments, 0)}
           />
         </div>
@@ -113,9 +116,9 @@ export default async function StudioCoursesPage({
               <div className="mb-4 h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <GraduationCap className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("emptyTitle")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                Create your first course to give learners a structured path through your language.
+                {t("emptyDesc")}
               </p>
               <CreateCourseDialog languageId={language.id} slug={slug} />
             </CardContent>
@@ -145,17 +148,17 @@ export default async function StudioCoursesPage({
                     <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <ListChecks className="h-3 w-3" />
-                        {course._count.lessons} lesson{course._count.lessons !== 1 ? "s" : ""}
+                        {t("lessons", { count: course._count.lessons })}
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {course._count.enrollments} learner{course._count.enrollments !== 1 ? "s" : ""}
+                        {t("learners", { count: course._count.enrollments })}
                       </span>
                     </div>
                   </div>
                   <Button asChild variant="outline" size="sm" className="shrink-0">
                     <Link href={`/studio/lang/${slug}/courses/${course.id}`}>
-                      Edit
+                      {t("edit")}
                     </Link>
                   </Button>
                 </CardContent>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { createText, updateText, deleteText } from "@/app/actions/text"
 import { Button } from "@/components/ui/button"
@@ -49,6 +50,7 @@ function generateSlug(title: string): string {
 
 export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) {
   const router = useRouter()
+  const t = useTranslations("studio.texts")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -110,9 +112,9 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         slug: prev.slug || generateSlug(metadata?.filename?.replace(/\.[^/.]+$/, "") || "untitled"),
       }))
 
-      toast.success("File content loaded successfully")
+      toast.success(t("loadedToast"))
     } catch (err) {
-      toast.error("Failed to read file content")
+      toast.error(t("readFailed"))
     }
   }, [])
 
@@ -142,7 +144,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Text updated successfully")
+          toast.success(t("updatedToast"))
           router.refresh()
         }
       } else {
@@ -164,7 +166,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Text created successfully")
+          toast.success(t("createdToast"))
           router.push(`/studio/lang/${languageSlug}/texts`)
         }
       }
@@ -181,7 +183,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Text deleted")
+        toast.success(t("deletedToast"))
         router.push(`/studio/lang/${languageSlug}/texts`)
       }
     })
@@ -193,7 +195,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         <Link href={`/studio/lang/${languageSlug}/texts`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Texts
+            {t("backToTexts")}
           </Button>
         </Link>
       </div>
@@ -208,12 +210,12 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         <Card className="p-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t("titleLabel")}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Enter text title..."
+                placeholder={t("titlePlaceholder")}
                 required
                 disabled={isPending}
                 className="text-lg font-medium"
@@ -221,20 +223,20 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
+              <Label htmlFor="slug">{t("slugLabel")}</Label>
               <Input
                 id="slug"
                 value={formData.slug}
                 onChange={(e) =>
                   setFormData({ ...formData, slug: e.target.value })
                 }
-                placeholder="text-slug"
+                placeholder={t("slugPlaceholder")}
                 required
                 disabled={isPending}
                 pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
               />
               <p className="text-xs text-muted-foreground">
-                URL-friendly identifier (lowercase, hyphens only)
+                {t("slugHint")}
               </p>
             </div>
 
@@ -246,15 +248,15 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
             />
 
             <div className="space-y-2">
-              <Label>Cover Image</Label>
+              <Label>{t("coverImage")}</Label>
               <FileUpload
                 type="image"
                 value={coverImage || undefined}
                 onChange={(url) => setCoverImage(url)}
-                placeholder="Upload a cover image for this text"
+                placeholder={t("coverImagePlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                Optional image to display with this text
+                {t("coverImageHint")}
               </p>
             </div>
           </div>
@@ -264,7 +266,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Label>Content Source</Label>
+                <Label>{t("contentSource")}</Label>
                 <div className="flex flex-col gap-2 sm:flex-row sm:ml-auto">
                   <Button
                     type="button"
@@ -274,7 +276,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
                     className="w-full sm:w-auto"
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    Paste Text
+                    {t("pasteText")}
                   </Button>
                   <Button
                     type="button"
@@ -284,7 +286,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
                     className="w-full sm:w-auto"
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload File
+                    {t("uploadFile")}
                   </Button>
                 </div>
               </div>
@@ -293,7 +295,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
                 <FileUpload
                   type="file"
                   onChange={handleFileUpload}
-                  placeholder="Upload a text file (.txt, .pdf, .epub)"
+                  placeholder={t("uploadPlaceholder")}
                   maxSize={10 * 1024 * 1024}
                 />
               )}
@@ -302,7 +304,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         )}
 
         <div className="space-y-2">
-          <Label>Content</Label>
+          <Label>{t("content")}</Label>
           <Card className="overflow-hidden">
             <RichTextEditor
               content={formData.content}
@@ -320,7 +322,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="inline-flex min-h-11 items-center gap-3 self-start">
             <span className="text-xs text-muted-foreground">
-              {isPublished ? "Public" : "Draft"}
+              {isPublished ? t("public") : t("draft")}
             </span>
             <button
               type="button"
@@ -350,13 +352,13 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
                 className="w-full sm:w-auto"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Text
+                {t("deleteText")}
               </Button>
             ) : null}
 
             <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              {isPending ? "Saving..." : text ? "Save Changes" : "Save Text"}
+              {isPending ? t("saving") : text ? t("saveChanges") : t("saveText")}
             </Button>
           </div>
         </div>
@@ -368,11 +370,10 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Delete Text
+              {t("deleteTitle")}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this text? This action cannot be
-              undone.
+              {t("deleteDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -382,7 +383,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
               onClick={() => setIsDeleteOpen(false)}
               disabled={isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="button"
@@ -390,7 +391,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
               onClick={handleDelete}
               disabled={isPending}
             >
-              {isPending ? "Deleting..." : "Delete"}
+              {isPending ? t("deleting") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { searchCollaboratorCandidates } from "@/app/actions/collaborator"
@@ -34,11 +35,12 @@ interface UserSearchProps {
     className?: string
 }
 
-function displayName(user: User): string {
-    return user.name?.trim() || "Unnamed user"
+function displayName(user: User, fallback: string): string {
+    return user.name?.trim() || fallback
 }
 
-export function UserSearch({ languageId, onSelect, label = "Search user...", className }: UserSearchProps) {
+export function UserSearch({ languageId, onSelect, label, className }: UserSearchProps) {
+    const t = useTranslations("userSearch")
     const [open, setOpen] = React.useState(false)
     const [query, setQuery] = React.useState("")
     const [users, setUsers] = React.useState<User[]>([])
@@ -73,24 +75,24 @@ export function UserSearch({ languageId, onSelect, label = "Search user...", cla
                     aria-expanded={open}
                     className={cn("w-full justify-between", className)}
                 >
-                    {label}
+                    {label ?? t("searchPlaceholder")}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0 shadow-lg" align="start">
                 <Command shouldFilter={false}>
                     <CommandInput
-                        placeholder="Search by display name..."
+                        placeholder={t("searchPlaceholder")}
                         value={query}
                         onValueChange={setQuery}
                     />
                     <CommandList>
-                        {loading && <div className="py-6 text-center text-sm text-muted-foreground">Searching...</div>}
+                        {loading && <div className="py-6 text-center text-sm text-muted-foreground">{t("searching")}</div>}
                         {!loading && users.length === 0 && query.length >= 2 && (
-                            <CommandEmpty>No users found.</CommandEmpty>
+                            <CommandEmpty>{t("noUsers")}</CommandEmpty>
                         )}
                         {!loading && users.length === 0 && query.length < 2 && (
-                            <div className="py-6 text-center text-sm text-muted-foreground">Type at least 2 characters</div>
+                            <div className="py-6 text-center text-sm text-muted-foreground">{t("typeMore")}</div>
                         )}
                         <CommandGroup>
                             {users.map((user) => (
@@ -109,7 +111,7 @@ export function UserSearch({ languageId, onSelect, label = "Search user...", cla
                                             <AvatarImage src={user.image || undefined} />
                                             <AvatarFallback>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                                         </Avatar>
-                                        <span className="text-sm font-medium truncate">{displayName(user)}</span>
+                                        <span className="text-sm font-medium truncate">{displayName(user, t("unnamed"))}</span>
                                     </div>
                                     <Check
                                         className={cn(

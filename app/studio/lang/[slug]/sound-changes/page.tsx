@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { SoundChangeEditor } from "./sound-change-editor"
 
 async function getLanguageDetails(slug: string, userId: string | null) {
@@ -47,6 +48,7 @@ export default async function SoundChangesPage({
 
   const { slug } = await params
   const language = await getLanguageDetails(slug, userId)
+  const t = await getTranslations("studio.soundChanges")
 
   if (!language) {
     notFound()
@@ -59,9 +61,9 @@ export default async function SoundChangesPage({
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Sound Changes</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
         <p className="text-muted-foreground">
-          Define ordered phonological rules and apply them to derive daughter language forms
+          {t("pageDescription")}
         </p>
       </div>
 

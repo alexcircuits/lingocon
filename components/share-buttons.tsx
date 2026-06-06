@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import {
   Twitter,
@@ -24,16 +25,17 @@ export function ShareButtons({
   description,
   className = "",
 }: ShareButtonsProps) {
+  const t = useTranslations("share")
   const [copied, setCopied] = useState(false)
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      toast.success("Link copied to clipboard")
+      toast.success(t("linkCopied"))
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      toast.error("Failed to copy link")
+      toast.error(t("copyFailed"))
     }
   }
 
@@ -99,12 +101,12 @@ export function ShareButtons({
         {copied ? (
           <>
             <Check className="h-4 w-4" />
-            <span className="hidden sm:inline">Copied!</span>
+            <span className="hidden sm:inline">{t("copied")}</span>
           </>
         ) : (
           <>
             <Link2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Copy Link</span>
+            <span className="hidden sm:inline">{t("copyLink")}</span>
           </>
         )}
       </Button>

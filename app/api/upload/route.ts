@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     // Use "cover" directory for "image" type as well
     const uploadType = type === "image" ? "cover" : type
 
-    let isValidType = allowedTypes.includes(file.type)
+    const mimeType = file.type.split(';')[0].trim()
+    let isValidType = allowedTypes.includes(mimeType)
 
     // Fallback for fonts that might have missing or generic MIME types on some OS
     if (!isValidType && type === "font") {

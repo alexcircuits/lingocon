@@ -60,7 +60,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
       <DropdownMenuGroup>
         <DropdownMenuItem onClick={() => switchLocale("en")} className="cursor-pointer">
           <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">English</span>
+          <span className="flex-1">{t("english")}</span>
           <span className="text-xs text-muted-foreground ml-2">100%</span>
           {currentLocale === "en" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
@@ -70,7 +70,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
         <>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-            Conlang Translations
+            {t("conlangTranslations")}
           </DropdownMenuLabel>
           <DropdownMenuGroup>
             {translations.map((lang) => (
@@ -100,7 +100,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
 
       <DropdownMenuSeparator />
       <DropdownMenuItem asChild>
-        <Link href="/dashboard/new-language" className="cursor-pointer text-primary">
+        <Link href="/dashboard/translate-ui" className="cursor-pointer text-primary">
           <Plus className="mr-2 h-4 w-4" />
           {t("addConlang")}
         </Link>
@@ -114,7 +114,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
         <div className="p-2 flex flex-col gap-1">
           <div onClick={() => switchLocale("en")} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
             <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-            <span className="flex-1">English</span>
+            <span className="flex-1">{t("english")}</span>
             <span className="text-xs text-muted-foreground ml-2">100%</span>
             {currentLocale === "en" && <Check className="ml-2 h-4 w-4" />}
           </div>
@@ -123,7 +123,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
             <>
               <div className="-mx-1 my-1 h-px bg-muted" />
               <div className="px-2 py-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                Conlang Translations
+                {t("conlangTranslations")}
               </div>
               <div className="flex flex-col">
                 {translations.map((lang) => (
@@ -152,7 +152,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
           )}
 
           <div className="-mx-1 my-1 h-px bg-muted" />
-          <Link href="/dashboard/new-language" className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-primary hover:bg-accent hover:text-primary">
+          <Link href="/dashboard/translate-ui" className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-primary hover:bg-accent hover:text-primary">
             <Plus className="mr-2 h-4 w-4" />
             {t("addConlang")}
           </Link>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { getParadigmsForLanguage } from "@/app/actions/paradigm"
 import {
   Select,
@@ -25,6 +26,7 @@ export function ParadigmSelector({
   onValueChange,
   disabled = false,
 }: ParadigmSelectorProps) {
+  const t = useTranslations("studio.paradigms")
   const [paradigms, setParadigms] = useState<Array<{ id: string; name: string; notes: string | null }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,10 +52,10 @@ export function ParadigmSelector({
   if (loading) {
     return (
       <div className="space-y-2">
-        <Label>Paradigm</Label>
+        <Label>{t("paradigm")}</Label>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Loading paradigms...</span>
+          <span>{t("loadingParadigms")}</span>
         </div>
       </div>
     )
@@ -62,7 +64,7 @@ export function ParadigmSelector({
   if (error) {
     return (
       <div className="space-y-2">
-        <Label>Paradigm</Label>
+        <Label>{t("paradigm")}</Label>
         <div className="text-sm text-destructive">{error}</div>
       </div>
     )
@@ -72,7 +74,7 @@ export function ParadigmSelector({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="paradigm">Paradigm</Label>
+      <Label htmlFor="paradigm">{t("paradigm")}</Label>
       <Select
         value={value || NONE_VALUE}
         onValueChange={(val) => {
@@ -85,10 +87,10 @@ export function ParadigmSelector({
         disabled={disabled}
       >
         <SelectTrigger id="paradigm">
-          <SelectValue placeholder="Select a paradigm (optional)" />
+          <SelectValue placeholder={t("selectParadigm")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={NONE_VALUE}>None</SelectItem>
+          <SelectItem value={NONE_VALUE}>{t("none")}</SelectItem>
           {paradigms.map((paradigm) => (
             <SelectItem key={paradigm.id} value={paradigm.id}>
               {paradigm.name}
@@ -98,7 +100,7 @@ export function ParadigmSelector({
       </Select>
       {paradigms.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          No paradigms available. Create one in the Paradigms section.
+          {t("noParadigmsHint")}
         </p>
       )}
     </div>

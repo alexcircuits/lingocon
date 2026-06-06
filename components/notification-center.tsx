@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { getPlatformUpdates } from "@/app/actions/platform-update"
 import { getRecentAchievements } from "@/app/actions/badge"
 import {
@@ -49,6 +50,7 @@ type NotificationItem = {
 }
 
 export function NotificationCenter() {
+    const t = useTranslations("notifications")
     const [notifications, setNotifications] = useState<NotificationItem[]>([])
     const [loading, setLoading] = useState(true)
     const [isOpen, setIsOpen] = useState(false)
@@ -139,11 +141,11 @@ export function NotificationCenter() {
             </PopoverTrigger>
             <PopoverContent align="end" className="w-[350px] p-0 overflow-hidden border-border/40 bg-background/95 backdrop-blur-xl">
                 <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/30">
-                    <h3 className="text-sm font-semibold">Notifications</h3>
+                    <h3 className="text-sm font-semibold">{t("title")}</h3>
                 </div>
                 <ScrollArea className="h-[400px]">
                     {loading ? (
-                        <div className="p-4 text-center text-xs text-muted-foreground">Loading...</div>
+                        <div className="p-4 text-center text-xs text-muted-foreground">{t("loading")}</div>
                     ) : notifications.length > 0 ? (
                         <div className="divide-y divide-border/40">
                             {notifications.map((item) => (
@@ -164,7 +166,7 @@ export function NotificationCenter() {
                     ) : (
                         <div className="p-8 text-center text-muted-foreground">
                             <Bell className="mx-auto h-8 w-8 opacity-20 mb-2" />
-                            <p className="text-sm">No notifications</p>
+                            <p className="text-sm">{t("empty")}</p>
                         </div>
                     )}
                 </ScrollArea>

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
+import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { Blocks } from "lucide-react"
 import { getEnabledInstallsForUser } from "@/lib/services/module"
@@ -93,21 +94,22 @@ export default async function StudioModulesPage({
     languageSlug: language.slug,
   }))
 
+  const t = await getTranslations("studio.modules")
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 font-bold text-2xl tracking-tight">
             <Blocks className="h-6 w-6 text-primary" />
-            Modules
+            {t("pageTitle")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tools and widgets for <strong>{language.name}</strong>. What you enable here is what
-            runs in the studio and on your public page.
+            {t("pageDescriptionPrefix")}<strong>{language.name}</strong>{t("pageDescriptionSuffix")}
           </p>
         </div>
         <Link href="/modules">
-          <Button variant="outline">Browse catalog</Button>
+          <Button variant="outline">{t("browseCatalog")}</Button>
         </Link>
       </div>
 

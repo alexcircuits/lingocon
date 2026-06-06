@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import { GrammarPagesManager } from "./grammar-pages-manager"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
 
@@ -52,6 +53,7 @@ export default async function GrammarPage({
 
   const { slug } = await params
   const language = await getLanguage(slug, userId)
+  const t = await getTranslations("studio.grammar")
 
   if (!language) {
     notFound()
@@ -71,30 +73,30 @@ export default async function GrammarPage({
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Grammar</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
           <p className="text-muted-foreground">
-            Create and organize grammar documentation pages
+            {t("pageDescription")}
           </p>
           {language.grammarPages.length > 0 && (
             <span className="mt-2 block text-xs text-muted-foreground tabular-nums sm:hidden">
-              {language.grammarPages.length} page{language.grammarPages.length !== 1 ? "s" : ""}
+              {t("pageCount", { count: language.grammarPages.length })}
               {" · "}
-              {totalWords.toLocaleString()} word{totalWords !== 1 ? "s" : ""}
+              {t("wordCount", { count: totalWords })}
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
           {language.grammarPages.length > 0 && (
             <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
-              {language.grammarPages.length} page{language.grammarPages.length !== 1 ? "s" : ""}
+              {t("pageCount", { count: language.grammarPages.length })}
               {" · "}
-              {totalWords.toLocaleString()} word{totalWords !== 1 ? "s" : ""}
+              {t("wordCount", { count: totalWords })}
             </span>
           )}
           <Link href={`/studio/lang/${slug}/grammar/new`}>
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              New Page
+              {t("newPage")}
             </Button>
           </Link>
         </div>

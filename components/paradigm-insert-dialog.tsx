@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { getParadigmsForLanguage } from "@/app/actions/paradigm"
 import {
   Dialog,
@@ -26,6 +27,7 @@ export function ParadigmInsertDialog({
   languageId,
   onSelect,
 }: ParadigmInsertDialogProps) {
+  const t = useTranslations("studio.paradigms")
   const [paradigms, setParadigms] = useState<Array<{ id: string; name: string; notes: string | null }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -57,9 +59,9 @@ export function ParadigmInsertDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Insert Paradigm</DialogTitle>
+          <DialogTitle>{t("insertTitle")}</DialogTitle>
           <DialogDescription>
-            Select a paradigm table to embed in your content
+            {t("insertDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -67,7 +69,7 @@ export function ParadigmInsertDialog({
           {loading ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading paradigms...</span>
+              <span className="ml-2 text-sm text-muted-foreground">{t("loadingParadigms")}</span>
             </div>
           ) : error ? (
             <div className="p-4 border border-destructive/50 rounded-lg bg-destructive/10">
@@ -76,8 +78,8 @@ export function ParadigmInsertDialog({
           ) : paradigms.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Table2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">No paradigms available.</p>
-              <p className="text-xs mt-1">Create paradigms in the Paradigms section first.</p>
+              <p className="text-sm">{t("noParadigms")}</p>
+              <p className="text-xs mt-1">{t("noParadigmsCreateFirst")}</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">

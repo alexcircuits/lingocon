@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import { IPAInput } from "@/components/ui/ipa-input"
 import { Label } from "@/components/ui/label"
@@ -20,11 +21,12 @@ interface SymbolFormFieldsProps {
 }
 
 export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: SymbolFormFieldsProps) {
+  const t = useTranslations("studio.alphabet")
   return (
     <div className="space-y-4 py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-symbol`}>Lowercase</Label>
+          <Label htmlFor={`${idPrefix}-symbol`}>{t("lowercase")}</Label>
           <Input
             id={`${idPrefix}-symbol`}
             value={formData.symbol}
@@ -39,7 +41,7 @@ export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: Sy
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-capital`}>Uppercase (optional)</Label>
+          <Label htmlFor={`${idPrefix}-capital`}>{t("uppercaseOptional")}</Label>
           <Input
             id={`${idPrefix}-capital`}
             value={formData.capitalSymbol}
@@ -56,7 +58,7 @@ export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: Sy
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-ipa`}>IPA (optional)</Label>
+          <Label htmlFor={`${idPrefix}-ipa`}>{t("ipaOptional")}</Label>
           <IPAInput
             id={`${idPrefix}-ipa`}
             value={formData.ipa}
@@ -70,7 +72,7 @@ export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: Sy
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-latin`}>Latin (optional)</Label>
+          <Label htmlFor={`${idPrefix}-latin`}>{t("latinOptional")}</Label>
           <Input
             id={`${idPrefix}-latin`}
             value={formData.latin}
@@ -86,14 +88,14 @@ export function SymbolFormFields({ formData, onChange, isPending, idPrefix }: Sy
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-name`}>Name (optional)</Label>
+        <Label htmlFor={`${idPrefix}-name`}>{t("nameOptional")}</Label>
         <Input
           id={`${idPrefix}-name`}
           value={formData.name}
           onChange={(e) =>
             onChange({ ...formData, name: e.target.value })
           }
-          placeholder="Letter A"
+          placeholder={t("letterPlaceholder")}
           disabled={isPending}
           maxLength={200}
         />

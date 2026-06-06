@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { createParadigm, updateParadigm, deleteParadigm, cloneParadigm } from "@/app/actions/paradigm"
 import { parseParadigmSlots } from "@/lib/validations/paradigm"
@@ -54,6 +55,8 @@ interface ParadigmManagerProps {
 
 export function ParadigmManager({ languageId, paradigms: initialParadigms }: ParadigmManagerProps) {
   const router = useRouter()
+  const t = useTranslations("studio.paradigms")
+  const tc = useTranslations("studio.common")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [editingParadigm, setEditingParadigm] = useState<Paradigm | null>(null)
@@ -101,15 +104,15 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Paradigm created successfully")
+          toast.success(t("createdToast"))
           setIsAddOpen(false)
           setFormData({ name: "", rows: "", columns: "", notes: "" })
           router.refresh()
         }
       })
     } catch (err) {
-      setError("Invalid table structure")
-      toast.error("Invalid table structure")
+      setError(t("invalidTable"))
+      toast.error(t("invalidTable"))
     }
   }
 
@@ -162,7 +165,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Paradigm updated successfully")
+          toast.success(t("updatedToast"))
           setIsEditOpen(false)
           setEditingParadigm(null)
           setFormData({ name: "", rows: "", columns: "", notes: "" })
@@ -170,8 +173,8 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         }
       })
     } catch (err) {
-      setError("Invalid table structure")
-      toast.error("Invalid table structure")
+      setError(t("invalidTable"))
+      toast.error(t("invalidTable"))
     }
   }
 
@@ -194,7 +197,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Paradigm content updated successfully")
+        toast.success(t("contentUpdatedToast"))
         router.refresh()
       }
     })
@@ -210,7 +213,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Paradigm deleted successfully")
+        toast.success(t("deletedToast"))
         setDeletingId(null)
         setIsDeleteOpen(false)
         router.refresh()
@@ -225,26 +228,26 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Paradigm
+              {t("addParadigm")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <form onSubmit={handleAdd}>
               <DialogHeader>
-                <DialogTitle>Create Paradigm Table</DialogTitle>
+                <DialogTitle>{t("createTitle")}</DialogTitle>
                 <DialogDescription>
-                  Define a declension or conjugation table. Row and column labels define the grid.
+                  {t("createDesc")}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-name">Name *</Label>
+                  <Label htmlFor="add-name">{t("nameLabel")}</Label>
                   <Input
                     id="add-name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. First Declension, Present Tense"
+                    placeholder={t("namePlaceholder")}
                     required
                     disabled={isPending}
                     maxLength={200}
@@ -253,13 +256,13 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="add-rows">Row Labels *</Label>
-                    <p className="text-xs text-muted-foreground">One per line (e.g. cases)</p>
+                    <Label htmlFor="add-rows">{t("rowLabels")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("rowLabelsHint")}</p>
                     <Textarea
                       id="add-rows"
                       value={formData.rows}
                       onChange={(e) => setFormData({ ...formData, rows: e.target.value })}
-                      placeholder="Singular&#10;Plural"
+                      placeholder={t("rowsPlaceholder")}
                       required
                       disabled={isPending}
                       rows={6}
@@ -268,13 +271,13 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="add-columns">Column Labels *</Label>
-                    <p className="text-xs text-muted-foreground">One per line (e.g. persons)</p>
+                    <Label htmlFor="add-columns">{t("columnLabels")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("columnLabelsHint")}</p>
                     <Textarea
                       id="add-columns"
                       value={formData.columns}
                       onChange={(e) => setFormData({ ...formData, columns: e.target.value })}
-                      placeholder="Nominative&#10;Genitive&#10;Dative"
+                      placeholder={t("columnsPlaceholder")}
                       required
                       disabled={isPending}
                       rows={6}
@@ -284,12 +287,12 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="add-notes">Notes (optional)</Label>
+                  <Label htmlFor="add-notes">{t("notesLabel")}</Label>
                   <Textarea
                     id="add-notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Additional context or usage notes..."
+                    placeholder={t("notesPlaceholder")}
                     disabled={isPending}
                     rows={3}
                     maxLength={2000}
@@ -304,10 +307,10 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                   onClick={() => setIsAddOpen(false)}
                   disabled={isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? "Creating..." : "Create Paradigm"}
+                  {isPending ? t("creating") : t("createParadigm")}
                 </Button>
               </DialogFooter>
             </form>
@@ -318,11 +321,11 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
       {initialParadigms.length === 0 ? (
         <EmptyState
           icon={Plus}
-          title="No paradigm tables yet"
-          description="Create your first declension or conjugation table to organize word forms."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={{
-            label: "Add Paradigm",
-            href: "#", // Handled by onClick below
+            label: t("addParadigm"),
+            href: "#",
           }}
         />
       ) : (
@@ -356,7 +359,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                         }}
                         disabled={isPending}
                         className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title="Edit Content"
+                        title={t("editContent")}
                       >
                         <Grid3X3 className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -366,7 +369,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                         onClick={() => handleEdit(paradigm)}
                         disabled={isPending}
                         className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title="Edit Structure"
+                        title={t("editStructure")}
                       >
                         <Pencil className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -378,13 +381,13 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                           if ("error" in result) {
                             toast.error(result.error)
                           } else {
-                            toast.success(`Duplicated "${paradigm.name}"`)
+                            toast.success(t("duplicatedToast", { name: paradigm.name }))
                             startTransition(() => router.refresh())
                           }
                         }}
                         disabled={isPending}
                         className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title="Duplicate Paradigm"
+                        title={t("duplicateParadigm")}
                       >
                         <Copy className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -396,7 +399,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                           setIsDeleteOpen(true)
                         }}
                         disabled={isPending}
-                        aria-label="Delete paradigm"
+                        aria-label={t("deleteParadigm")}
                         className="h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -448,7 +451,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                     </Table>
                   ) : (
                     <div className="p-8 text-center text-muted-foreground text-sm italic">
-                      No table structure defined
+                      {t("noStructure")}
                     </div>
                   )}
                 </CardContent>
@@ -462,13 +465,13 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         <DialogContent className="max-w-2xl">
           <form onSubmit={handleUpdate}>
             <DialogHeader>
-              <DialogTitle>Edit Paradigm Table</DialogTitle>
-              <DialogDescription>Update the paradigm table structure</DialogDescription>
+              <DialogTitle>{t("editTitle")}</DialogTitle>
+              <DialogDescription>{t("editDesc")}</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-name">Name *</Label>
+                <Label htmlFor="edit-name">{t("nameLabel")}</Label>
                 <Input
                   id="edit-name"
                   value={formData.name}
@@ -481,7 +484,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-rows">Row Labels *</Label>
+                  <Label htmlFor="edit-rows">{t("rowLabels")}</Label>
                   <Textarea
                     id="edit-rows"
                     value={formData.rows}
@@ -494,7 +497,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-columns">Column Labels *</Label>
+                  <Label htmlFor="edit-columns">{t("columnLabels")}</Label>
                   <Textarea
                     id="edit-columns"
                     value={formData.columns}
@@ -508,7 +511,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-notes">Notes (optional)</Label>
+                <Label htmlFor="edit-notes">{t("notesLabel")}</Label>
                 <Textarea
                   id="edit-notes"
                   value={formData.notes}
@@ -531,10 +534,10 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                 }}
                 disabled={isPending}
               >
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Updating..." : "Update Paradigm"}
+                {isPending ? t("updating") : t("updateParadigm")}
               </Button>
             </DialogFooter>
           </form>

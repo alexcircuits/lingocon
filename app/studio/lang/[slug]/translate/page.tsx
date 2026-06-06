@@ -74,7 +74,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to load translations");
+        toast.error(t("loadFailed"));
         setLoading(false);
       });
   }, [params.slug]);
@@ -93,7 +93,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
       router.refresh(); // Refresh to update language switcher progress if they are using it
     } catch (error) {
       console.error(error);
-      toast.error("Error saving translations");
+      toast.error(t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -129,7 +129,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("translationEditor")}</h1>
           <p className="text-muted-foreground mt-1">
-            Translate the LingoCon interface into your language.
+            {t("editorSubtitle")}
           </p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
@@ -155,7 +155,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
               className="w-full justify-start"
               onClick={() => setSelectedSection("all")}
             >
-              All Sections
+              {t("allSections")}
             </Button>
             {sections.map((section) => {
               const sectionTotal = flatEnMessages.filter((m) => m.section === section).length;
@@ -239,7 +239,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
             ))}
             {filteredMessages.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                No strings found matching your filters.
+                {t("noStringsFound")}
               </div>
             )}
           </div>

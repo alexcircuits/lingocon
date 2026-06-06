@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +33,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSidebarProps) {
+  const t = useTranslations("studio.grammar")
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<GrammarSearchResult[]>([])
@@ -56,7 +58,7 @@ export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSide
       {isSearching ? (
         results.length === 0 ? (
           <p className="px-4 text-sm text-muted-foreground italic">
-            {isPending ? "Searching…" : "No results"}
+            {isPending ? t("searching") : t("noResults")}
           </p>
         ) : (
           results.map((r) => (
@@ -81,7 +83,7 @@ export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSide
           ))
         )
       ) : pages.length === 0 ? (
-        <p className="px-4 text-sm text-muted-foreground italic">No pages yet</p>
+        <p className="px-4 text-sm text-muted-foreground italic">{t("noPages")}</p>
       ) : (
         pages.map((page) => (
           <Link
@@ -108,7 +110,7 @@ export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSide
       <Input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search pages…"
+        placeholder={t("searchPages")}
         className="h-8 pl-8 pr-8 text-sm"
       />
       {query && (

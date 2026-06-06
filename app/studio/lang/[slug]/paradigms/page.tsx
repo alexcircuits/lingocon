@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { getTranslations } from "next-intl/server"
 import { ParadigmManager } from "./paradigm-manager"
 
 async function getLanguage(slug: string) {
@@ -27,9 +28,8 @@ export default async function ParadigmsPage({
 }) {
   const { slug } = await params
   const language = await getLanguage(slug)
+  const t = await getTranslations("studio.paradigms")
 
-  // If language doesn't exist, layout will handle 404
-  // If we get here, user has access (checked by layout)
   if (!language) {
     return null
   }
@@ -37,9 +37,9 @@ export default async function ParadigmsPage({
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Paradigm Tables</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
         <p className="text-muted-foreground">
-          Define declension and conjugation tables for morphological patterns
+          {t("pageDescription")}
         </p>
       </div>
 

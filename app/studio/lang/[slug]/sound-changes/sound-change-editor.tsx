@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -77,6 +78,7 @@ export function SoundChangeEditor({
   phonology,
 }: SoundChangeEditorProps) {
   const router = useRouter()
+  const t = useTranslations("studio.soundChanges")
   const [isPending, startTransition] = useTransition()
   const [isApplying, setIsApplying] = useState(false)
 
@@ -131,10 +133,10 @@ export function SoundChangeEditor({
       await updateLanguageMetadata(languageId, {
         soundChangeRules: rulesText,
       })
-      toast.success("Sound change rules saved!")
+      toast.success(t("rulesSaved"))
       startTransition(() => router.refresh())
     } catch {
-      toast.error("Failed to save rules")
+      toast.error(t("saveFailed"))
     }
   }, [languageId, rulesText, router])
 
@@ -145,7 +147,7 @@ export function SoundChangeEditor({
       .map((r) => `${r.original} → ${r.changed}`)
       .join("\n")
     navigator.clipboard.writeText(text)
-    toast.success("Copied to clipboard!")
+    toast.success(t("copiedToClipboard"))
   }, [dictionaryResults])
 
   // Apply rules to the actual dictionary (irreversible)
@@ -156,13 +158,11 @@ export function SoundChangeEditor({
       if ("error" in result) {
         toast.error(result.error)
       } else {
-        toast.success(
-          `Applied to dictionary: ${result.data.applied} entr${result.data.applied === 1 ? "y" : "ies"} updated, ${result.data.unchanged} unchanged`
-        )
+        toast.success(t("appliedToast", { applied: result.data.applied, unchanged: result.data.unchanged }))
         startTransition(() => router.refresh())
       }
     } catch {
-      toast.error("Failed to apply sound changes")
+      toast.error(t("applyFailed"))
     } finally {
       setIsApplying(false)
     }
@@ -183,7 +183,7 @@ export function SoundChangeEditor({
     a.download = `${languageName}-sound-changes.tsv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Exported as TSV!")
+    toast.success(t("exportedToast"))
   }, [dictionaryResults, languageName])
 
   return (
@@ -195,7 +195,7 @@ export function SoundChangeEditor({
             <CardTitle className="text-base font-medium flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Rules
+                {t("rules")}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -205,7 +205,7 @@ export function SoundChangeEditor({
                   className="text-xs"
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />
-                  Load Example
+                  {t("loadExample")}
                 </Button>
                 <Button
                   variant="outline"
@@ -214,7 +214,7 @@ export function SoundChangeEditor({
                   disabled={isPending}
                 >
                   <Save className="h-3 w-3 mr-1" />
-                  Save
+                  {t("save")}
                 </Button>
               </div>
             </CardTitle>
@@ -223,17 +223,17 @@ export function SoundChangeEditor({
             <Textarea
               value={rulesText}
               onChange={(e) => setRulesText(e.target.value)}
-              placeholder={`Enter rules, one per line:\na → e / _#\nk → tʃ / _i\ns → ∅ / V_V\n\n// Lines starting with // are comments`}
+              placeholder={t("rulesPlaceholder")}
               className="font-mono text-sm min-h-[200px] sm:min-h-[300px] resize-y"
               spellCheck={false}
             />
             <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between">
               <span>
-                {rules.length} rule{rules.length !== 1 ? "s" : ""} parsed
+                {t("rulesParsed", { count: rules.length })}
               </span>
               <div className="flex items-center gap-1.5">
                 <Info className="h-3 w-3" />
-                <span>V = vowel, C = consonant, # = boundary, ∅ = delete</span>
+                <span>{t("legend")}</span>
               </div>
             </div>
             {rules.length > 0 && (
@@ -246,32 +246,31 @@ export function SoundChangeEditor({
                     disabled={isApplying || changedCount === 0}
                   >
                     <Wand2 className="h-3.5 w-3.5" />
-                    {isApplying ? "Applying…" : `Apply to Dictionary (${changedCount} changes)`}
+                    {isApplying ? t("applying") : t("applyToDict", { count: changedCount })}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="flex items-center gap-2">
                       <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      Apply Sound Changes
+                      {t("applyTitle")}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="space-y-2">
                       <span className="block">
-                        This will permanently update <strong>{changedCount}</strong> entr{changedCount !== 1 ? "ies" : "y"} in your dictionary
-                        (lemma and IPA where present) using the currently <em>saved</em> sound change rules.
+                        {t("applyDescStart", { count: changedCount })}
                       </span>
                       <span className="block text-amber-600 font-medium">
-                        This action cannot be undone. Consider forking (evolving) your language first to keep the original forms.
+                        {t("applyDescEnd")}
                       </span>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleApplyToDictionary}
                       className="bg-amber-600 hover:bg-amber-700"
                     >
-                      Apply Changes
+                      {t("applyChanges")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -285,14 +284,14 @@ export function SoundChangeEditor({
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <Play className="h-4 w-4 text-primary" />
-              Test Words
+              {t("testWords")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Input
               value={testWords}
               onChange={(e) => setTestWords(e.target.value)}
-              placeholder="Type words to test (comma-separated)..."
+              placeholder={t("testWordsPlaceholder")}
               className="font-serif"
             />
             {testResults.length > 0 && (
@@ -315,7 +314,7 @@ export function SoundChangeEditor({
                     </span>
                     {result.rulesApplied.length > 0 && (
                       <Badge variant="outline" className="text-[10px] ml-auto shrink-0">
-                        {result.rulesApplied.length} rule{result.rulesApplied.length > 1 ? "s" : ""}
+                        {t("ruleSuffix", { count: result.rulesApplied.length })}
                       </Badge>
                     )}
                   </div>
@@ -329,7 +328,7 @@ export function SoundChangeEditor({
         {rules.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium">Parsed Rules</CardTitle>
+              <CardTitle className="text-base font-medium">{t("parsedRules")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
@@ -367,10 +366,10 @@ export function SoundChangeEditor({
             <CardTitle className="text-base font-medium flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
-                Dictionary Preview
+                {t("dictionaryPreview")}
                 {changedCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {changedCount} changed
+                    {t("changed", { count: changedCount })}
                   </Badge>
                 )}
               </div>
@@ -383,7 +382,7 @@ export function SoundChangeEditor({
                   className="text-xs"
                 >
                   <Copy className="h-3 w-3 mr-1" />
-                  Copy
+                  {t("copy")}
                 </Button>
                 <Button
                   variant="outline"
@@ -392,14 +391,14 @@ export function SoundChangeEditor({
                   disabled={changedCount === 0}
                   className="text-xs"
                 >
-                  Export TSV
+                  {t("exportTsv")}
                 </Button>
               </div>
             </CardTitle>
             {entries.length > PREVIEW_LIMIT && (
               <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
                 <AlertTriangle className="h-3 w-3 shrink-0" />
-                Previewing first {PREVIEW_LIMIT} of {entries.length} entries. Apply to dictionary to process all.
+                {t("previewLimit", { limit: PREVIEW_LIMIT, total: entries.length })}
               </p>
             )}
           </CardHeader>
@@ -407,9 +406,9 @@ export function SoundChangeEditor({
             {rules.length === 0 ? (
               <div className="py-12 text-center text-sm text-muted-foreground">
                 <Zap className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                <p>Add rules on the left to see how they transform your dictionary.</p>
+                <p>{t("noRulesHint")}</p>
                 <p className="mt-1 text-xs">
-                  Example: <code className="px-1 py-0.5 rounded bg-muted">a → e / _#</code>
+                  {t("exampleLabel")} <code className="px-1 py-0.5 rounded bg-muted">a → e / _#</code>
                 </p>
               </div>
             ) : (
@@ -418,10 +417,10 @@ export function SoundChangeEditor({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Original</TableHead>
+                      <TableHead>{t("original")}</TableHead>
                       <TableHead></TableHead>
-                      <TableHead>Changed</TableHead>
-                      <TableHead className="text-right">Gloss</TableHead>
+                      <TableHead>{t("changedCol")}</TableHead>
+                      <TableHead className="text-right">{t("gloss")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -467,17 +466,17 @@ export function SoundChangeEditor({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Card className="p-3 text-center">
               <div className="text-2xl font-bold">{entries.length}</div>
-              <div className="text-xs text-muted-foreground">Total Words</div>
+              <div className="text-xs text-muted-foreground">{t("totalWords")}</div>
             </Card>
             <Card className="p-3 text-center">
               <div className="text-2xl font-bold text-primary">{changedCount}</div>
-              <div className="text-xs text-muted-foreground">Changed</div>
+              <div className="text-xs text-muted-foreground">{t("changedLabel")}</div>
             </Card>
             <Card className="p-3 text-center">
               <div className="text-2xl font-bold">
                 {Math.round((changedCount / entries.length) * 100)}%
               </div>
-              <div className="text-xs text-muted-foreground">Affected</div>
+              <div className="text-xs text-muted-foreground">{t("affected")}</div>
             </Card>
           </div>
         )}

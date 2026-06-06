@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FileDown } from "lucide-react"
@@ -10,13 +11,14 @@ interface ExportDataCardProps {
 }
 
 export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
+  const t = useTranslations("studio.settings")
   return (
     <Card className="p-6">
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Export Data</h3>
+          <h3 className="text-lg font-semibold mb-2">{t("exportData")}</h3>
           <p className="text-sm text-muted-foreground">
-            Download your language data in various formats.
+            {t("exportDesc")}
           </p>
         </div>
 
@@ -31,8 +33,8 @@ export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
             className="h-auto py-4 flex flex-col gap-2 items-center text-center"
           >
             <FileDown className="h-6 w-6" />
-            <span>Google Docs / Word</span>
-            <span className="text-xs text-muted-foreground font-normal">Editable Document</span>
+            <span>{t("exportDocx")}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t("exportDocxDesc")}</span>
           </Button>
 
           <Button
@@ -45,8 +47,8 @@ export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
             className="h-auto py-4 flex flex-col gap-2 items-center text-center"
           >
             <FileDown className="h-6 w-6" />
-            <span>Excel Spreadsheet</span>
-            <span className="text-xs text-muted-foreground font-normal">Multi-sheet Workbook</span>
+            <span>{t("exportXlsx")}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t("exportXlsxDesc")}</span>
           </Button>
 
           <Button
@@ -59,8 +61,8 @@ export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
             className="h-auto py-4 flex flex-col gap-2 items-center text-center"
           >
             <FileDown className="h-6 w-6" />
-            <span>CSV (Dictionary)</span>
-            <span className="text-xs text-muted-foreground font-normal">Spreadsheet Compatible</span>
+            <span>{t("exportCsv")}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t("exportCsvDesc")}</span>
           </Button>
 
           <Button
@@ -73,8 +75,8 @@ export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
             className="h-auto py-4 flex flex-col gap-2 items-center text-center"
           >
             <FileDown className="h-6 w-6" />
-            <span>JSON Data</span>
-            <span className="text-xs text-muted-foreground font-normal">Raw Database Export</span>
+            <span>{t("exportJson")}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t("exportJsonDesc")}</span>
           </Button>
         </div>
       </div>

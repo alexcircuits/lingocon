@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { cn } from "@/lib/utils"
@@ -37,12 +38,16 @@ interface StudioLayoutProps {
 
 export function StudioLayout({ language, moduleTabs = [], userPermissions = [], isOwner = false, children }: StudioLayoutProps) {
   const pathname = usePathname()
+  const tTabs = useTranslations("studio.tabs")
+  const tNav = useTranslations("nav")
+  const tLayout = useTranslations("studio.layout")
   const basePath = `/studio/lang/${language.slug}`
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const activeTab = getActiveTab(pathname, basePath)
   const activeModuleTab = moduleTabs.find((t) => pathname === t.href)
-  const activeName = activeModuleTab?.name ?? activeTab?.name
+  const activeTabLabel = activeTab ? tTabs(activeTab.i18nKey) : undefined
+  const activeName = activeModuleTab?.name ?? activeTabLabel
   const primaryTabs = STUDIO_TABS.filter((t) => t.primary)
 
   return (
@@ -84,10 +89,10 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
             {/* Breadcrumbs */}
             <Breadcrumbs
               items={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: tNav("dashboard"), href: "/dashboard" },
                 { label: language.name, href: basePath },
                 ...(pathname !== basePath
-                  ? [{ label: activeModuleTab?.name ?? activeTab?.name ?? "Page" }]
+                  ? [{ label: activeModuleTab?.name ?? activeTabLabel ?? tLayout("page") }]
                   : []),
               ]}
               className="hidden md:flex"
@@ -97,8 +102,8 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
           <Link href={`/lang/${language.slug}`} target="_blank" className="shrink-0">
             <Button variant="outline" size="sm" className="h-8 border-border/60 bg-background/50 hover:bg-background hover:shadow-sm transition-all">
               <ExternalLink className="mr-2 h-3.5 w-3.5" />
-              <span className="hidden sm:inline">View Public</span>
-              <span className="sm:hidden">View</span>
+              <span className="hidden sm:inline">{tLayout("viewPublic")}</span>
+              <span className="sm:hidden">{tLayout("view")}</span>
             </Button>
           </Link>
         </div>
@@ -132,7 +137,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
               )}
             >
               <Icon className="h-5 w-5" />
-              <span className="max-w-full truncate">{tab.name}</span>
+              <span className="max-w-full truncate">{tTabs(tab.i18nKey)}</span>
             </Link>
           )
         })}
@@ -142,7 +147,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
           className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors"
         >
           <Menu className="h-5 w-5" />
-          <span>More</span>
+          <span>{tLayout("more")}</span>
         </button>
       </nav>
     </div>

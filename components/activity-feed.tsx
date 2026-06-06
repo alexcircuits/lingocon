@@ -240,7 +240,7 @@ function ActivityIcon({ type, entityType }: { type: string, entityType: string }
   }
 
   return (
-    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${colorClass}`}>
+    <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${colorClass}`}>
       <Icon className="h-5 w-5" />
       <div className="absolute -bottom-0.5 -right-0.5 bg-background rounded-full p-0.5">
         {type === "CREATED" && <Plus className="h-3 w-3 text-green-600" />}

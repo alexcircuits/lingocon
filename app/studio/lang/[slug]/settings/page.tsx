@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId, isLanguageOwner, canEditLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { LanguageSettings } from "./language-settings"
 import { Collaborators, TransferOwnershipCard } from "./collaborators"
 import { ParentLanguageCard } from "./parent-language-card"
@@ -125,12 +126,14 @@ export default async function SettingsPage({
     familyTree = await getLanguageFamilyTree(language.id)
   } catch {}
 
+  const t = await getTranslations("studio.settings")
+
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
         <p className="text-muted-foreground">
-          Manage language settings and preferences
+          {t("pageDescription")}
         </p>
       </div>
 

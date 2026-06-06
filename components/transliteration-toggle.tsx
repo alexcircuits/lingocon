@@ -25,11 +25,15 @@ export function TransliterationToggle({
     <Button
       type="button"
       variant={showLatin ? "secondary" : "outline"}
-      size="icon"
+      size="sm"
       onClick={handleToggle}
-      title={showLatin ? "Show Native Script" : "Show Latin Transliteration"}
+      title={showLatin ? "Show Native Script" : "Show Romanization"}
+      className="h-9 w-9 sm:w-auto px-0 sm:px-3 gap-2"
     >
       <Languages className="h-4 w-4" />
+      <span className="hidden sm:inline">
+        {showLatin ? "Native Script" : "Romanization"}
+      </span>
     </Button>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   createScriptSymbol,
@@ -62,6 +63,8 @@ const emptyForm: SymbolFormData = { symbol: "", capitalSymbol: "", ipa: "", lati
 
 export function AlphabetManager({ languageId, symbols: initialSymbols }: AlphabetManagerProps) {
   const router = useRouter()
+  const t = useTranslations("studio.alphabet")
+  const tc = useTranslations("studio.common")
   const [isPending, startTransition] = useTransition()
   const [symbols, setSymbols] = useState<ScriptSymbol[]>(initialSymbols)
   const [editingSymbol, setEditingSymbol] = useState<ScriptSymbol | null>(null)
@@ -101,7 +104,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Symbol added successfully")
+        toast.success(t("symbolAdded"))
         setIsAddOpen(false)
         setFormData(emptyForm)
         router.refresh()
@@ -146,7 +149,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Symbol updated successfully")
+        toast.success(t("symbolUpdated"))
         setIsEditOpen(false)
         setEditingSymbol(null)
         setFormData(emptyForm)
@@ -163,7 +166,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Symbol deleted successfully")
+        toast.success(t("symbolDeleted"))
         router.refresh()
       }
     })
@@ -222,15 +225,15 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Add Symbol
+              {t("addSymbol")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleAdd}>
               <DialogHeader>
-                <DialogTitle>Add Script Symbol</DialogTitle>
+                <DialogTitle>{t("addSymbolTitle")}</DialogTitle>
                 <DialogDescription>
-                  Add a new symbol to the alphabet
+                  {t("addSymbolDesc")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -248,10 +251,10 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
                   onClick={() => setIsAddOpen(false)}
                   disabled={isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? "Adding..." : "Add Symbol"}
+                  {isPending ? t("addingSymbol") : t("addSymbol")}
                 </Button>
               </DialogFooter>
             </form>
@@ -268,10 +271,10 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
       {symbols.length === 0 ? (
         <EmptyState
           icon={Plus}
-          title="No symbols yet"
-          description="Start building your alphabet by adding your first symbol."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={{
-            label: "Add Symbol",
+            label: t("addSymbol"),
             onClick: () => setIsAddOpen(true),
           }}
         />
@@ -307,9 +310,9 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
         <DialogContent>
           <form onSubmit={handleUpdate}>
             <DialogHeader>
-              <DialogTitle>Edit Script Symbol</DialogTitle>
+              <DialogTitle>{t("editSymbolTitle")}</DialogTitle>
               <DialogDescription>
-                Update the symbol details
+                {t("editSymbolDesc")}
               </DialogDescription>
             </DialogHeader>
 
@@ -331,10 +334,10 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
                 }}
                 disabled={isPending}
               >
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Updating..." : "Update Symbol"}
+                {isPending ? t("updating") : t("updateSymbol")}
               </Button>
             </DialogFooter>
           </form>

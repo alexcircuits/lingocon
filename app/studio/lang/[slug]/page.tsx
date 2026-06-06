@@ -18,6 +18,7 @@ import { SwadeshTracker } from "@/components/analytics/swadesh-tracker"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Calendar, Eye, FileText, Activity, Plus, BookOpen, PenLine } from "lucide-react"
 import { Prisma } from "@prisma/client"
 import { InlineLanguageEdit } from "./components/inline-language-edit"
@@ -86,21 +87,23 @@ export default async function OverviewPage({
     language.paradigms
   )
 
+  const t = await getTranslations("studio.overview")
+
   const quickActions = [
     {
-      label: "Add Word",
+      label: t("addWord"),
       href: `/studio/lang/${language.slug}/dictionary`,
       icon: Plus,
       color: "emerald"
     },
     {
-      label: "New Page",
+      label: t("newPage"),
       href: `/studio/lang/${language.slug}/grammar/new`,
       icon: BookOpen,
       color: "violet"
     },
     {
-      label: "Write Article",
+      label: t("writeArticle"),
       href: `/studio/lang/${language.slug}/articles/new`,
       icon: PenLine,
       color: "amber"
@@ -113,7 +116,7 @@ export default async function OverviewPage({
       <div className="pb-6 border-b border-border/40">
         <h1 className="text-3xl font-bold tracking-tight mb-1">{language.name}</h1>
         <p className="text-muted-foreground">
-          Overview and analytics for your language
+          {t("subtitle")}
         </p>
       </div>
 
@@ -162,16 +165,16 @@ export default async function OverviewPage({
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
-              Language Details
+              {t("languageDetails")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Name</span>
+                  <span className="text-xs text-muted-foreground">{t("name")}</span>
                   <ContextualHelp
-                    content="Click to edit. Press Enter to save."
+                    content={t("editHint")}
                     variant="icon"
                   />
                 </div>
@@ -184,17 +187,17 @@ export default async function OverviewPage({
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Slug</span>
+                  <span className="text-xs text-muted-foreground">{t("slug")}</span>
                 </div>
                 <div className="flex items-center gap-2 min-w-0">
                   <code className="text-sm bg-muted px-2 py-1 rounded truncate min-w-0">{language.slug}</code>
-                  <CopyButton text={language.slug} message="Copied!" size="sm" />
+                  <CopyButton text={language.slug} message={t("copied")} size="sm" />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Description</span>
+              <span className="text-xs text-muted-foreground">{t("description")}</span>
               <InlineLanguageEdit
                 languageId={language.id}
                 field="description"
@@ -221,7 +224,7 @@ export default async function OverviewPage({
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" />
-              Recent Activity
+              {t("recentActivity")}
             </CardTitle>
           </CardHeader>
           <CardContent>

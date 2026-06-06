@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { createArticle, updateArticle, deleteArticle } from "@/app/actions/article"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,7 @@ function generateSlug(title: string): string {
 
 export function ArticleEditor({ languageId, languageSlug, article, grammarPages = [] }: ArticleEditorProps) {
   const router = useRouter()
+  const t = useTranslations("studio.articles")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -111,7 +113,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Article updated successfully")
+          toast.success(t("updatedToast"))
           router.refresh()
         }
       } else {
@@ -129,7 +131,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
-          toast.success("Article created successfully")
+          toast.success(t("createdToast"))
           router.push(`/studio/lang/${languageSlug}/articles`)
         }
       }
@@ -146,7 +148,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Article deleted")
+        toast.success(t("deletedToast"))
         router.push(`/studio/lang/${languageSlug}/articles`)
       }
     })
@@ -158,7 +160,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
         <Link href={`/studio/lang/${languageSlug}/articles`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Articles
+            {t("backToArticles")}
           </Button>
         </Link>
       </div>
@@ -173,12 +175,12 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
         <Card className="p-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t("titleLabel")}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Enter article title..."
+                placeholder={t("titlePlaceholder")}
                 required
                 disabled={isPending}
                 className="text-lg font-medium"
@@ -186,33 +188,33 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
+              <Label htmlFor="slug">{t("slugLabel")}</Label>
               <Input
                 id="slug"
                 value={formData.slug}
                 onChange={(e) =>
                   setFormData({ ...formData, slug: e.target.value })
                 }
-                placeholder="article-slug"
+                placeholder={t("slugPlaceholder")}
                 required
                 disabled={isPending}
                 pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
               />
               <p className="text-xs text-muted-foreground">
-                URL-friendly identifier (lowercase, hyphens only)
+                {t("slugHint")}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Cover Image</Label>
+              <Label>{t("coverImage")}</Label>
               <FileUpload
                 type="image"
                 value={coverImage || undefined}
                 onChange={(url) => setCoverImage(url)}
-                placeholder="Upload a cover image for this article"
+                placeholder={t("coverImagePlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                Optional image to display with this article
+                {t("coverImageHint")}
               </p>
             </div>
 
@@ -238,7 +240,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="inline-flex min-h-11 items-center gap-3 self-start">
             <span className="text-xs text-muted-foreground">
-              {isPublished ? "Public" : "Draft"}
+              {isPublished ? t("public") : t("draft")}
             </span>
             <button
               type="button"
@@ -268,13 +270,13 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
                 className="w-full sm:w-auto"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Article
+                {t("deleteArticle")}
               </Button>
             ) : null}
 
             <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              {isPending ? "Saving..." : article ? "Save Changes" : "Save Article"}
+              {isPending ? t("saving") : article ? t("saveChanges") : t("saveArticle")}
             </Button>
           </div>
         </div>
@@ -286,11 +288,10 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Delete Article
+              {t("deleteTitle")}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this article? This action cannot be
-              undone.
+              {t("deleteDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -300,7 +301,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
               onClick={() => setIsDeleteOpen(false)}
               disabled={isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="button"
@@ -308,7 +309,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
               onClick={handleDelete}
               disabled={isPending}
             >
-              {isPending ? "Deleting..." : "Delete"}
+              {isPending ? t("deleting") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { BookOpen, FileText, Table2, Languages, Clock, Lock } from "lucide-react"
 import { formatDate } from "@/lib/utils"
@@ -43,13 +44,15 @@ export function StudioNavContent({
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const tTabs = useTranslations("studio.tabs")
+  const tSide = useTranslations("studio.sidebar")
 
   const stats = language._count
     ? [
-        { label: "Entries", value: language._count.dictionaryEntries, icon: FileText },
-        { label: "Pages", value: language._count.grammarPages, icon: BookOpen },
-        { label: "Symbols", value: language._count.scriptSymbols, icon: Languages },
-        { label: "Paradigms", value: language._count.paradigms, icon: Table2 },
+        { label: tSide("entries"), value: language._count.dictionaryEntries, icon: FileText },
+        { label: tSide("pages"), value: language._count.grammarPages, icon: BookOpen },
+        { label: tSide("symbols"), value: language._count.scriptSymbols, icon: Languages },
+        { label: tSide("paradigmsStat"), value: language._count.paradigms, icon: Table2 },
       ]
     : []
 
@@ -60,7 +63,7 @@ export function StudioNavContent({
         <h3 className="mb-1 truncate text-lg font-bold tracking-tight">{language.name}</h3>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
-          <span>Updated {formatDate(language.updatedAt)}</span>
+          <span>{tSide("updatedPrefix")}{formatDate(language.updatedAt)}</span>
         </div>
       </div>
 
@@ -84,7 +87,7 @@ export function StudioNavContent({
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3 thin-scrollbar">
         <div className="mb-2 px-3 py-1.5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Navigation</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tSide("navigation")}</h2>
         </div>
         <ul className="space-y-1">
           {STUDIO_TABS.map((tab) => {
@@ -111,7 +114,7 @@ export function StudioNavContent({
                       active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
                     )}
                   />
-                  <span className="flex-1">{tab.name}</span>
+                  <span className="flex-1">{tTabs(tab.i18nKey)}</span>
                   {locked && <Lock className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
                 </Link>
               </li>
@@ -123,7 +126,7 @@ export function StudioNavContent({
         {moduleTabs.length > 0 && (
           <>
             <div className="mb-2 mt-4 px-3 py-1.5">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modules</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tSide("modules")}</h2>
             </div>
             <ul className="space-y-1">
               {moduleTabs.map((tab) => {

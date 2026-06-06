@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Mic, Square, Play, Trash2, Loader2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
@@ -19,6 +20,7 @@ export function AudioRecorder({
   initialAudioUrl,
   className,
 }: AudioRecorderProps) {
+  const t = useTranslations("audioRecorder")
   const [isRecording, setIsRecording] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -85,8 +87,8 @@ export function AudioRecorder({
 
     } catch (error) {
       console.error("Error accessing microphone:", error)
-      toast.error("Could not access microphone", {
-        description: "Please check your browser permissions."
+      toast.error(t("noMic"), {
+        description: t("checkPermissions"),
       })
     }
   }
@@ -123,10 +125,10 @@ export function AudioRecorder({
 
       setAudioUrl(data.url)
       onRecordingComplete(data.url)
-      toast.success("Recording saved")
+      toast.success(t("saved"))
     } catch (error) {
       console.error("Error uploading audio:", error)
-      toast.error("Failed to save recording")
+      toast.error(t("saveFailed"))
     } finally {
       setIsUploading(false)
     }
@@ -142,7 +144,7 @@ export function AudioRecorder({
     } else {
       audioRef.current.play().catch(error => {
         console.error("Error playing audio:", error)
-        toast.error("Could not play recording")
+        toast.error(t("playFailed"))
       })
       setIsPlaying(true)
     }
@@ -202,7 +204,7 @@ export function AudioRecorder({
               size="sm"
               className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
               onClick={handleDelete}
-              title="Record again"
+              title={t("recordAgain")}
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
@@ -229,7 +231,7 @@ export function AudioRecorder({
       ) : isUploading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Saving...</span>
+          <span>{t("saving")}</span>
         </div>
       ) : (
         <Button
@@ -240,7 +242,7 @@ export function AudioRecorder({
           onClick={startRecording}
         >
           <Mic className="h-3.5 w-3.5" />
-          Record Pronunciation
+          {t("recordPronunciation")}
         </Button>
       )}
     </div>

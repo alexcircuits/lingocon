@@ -7,6 +7,7 @@ import { WizardEntry } from "./wizard-entry"
 import { prisma } from "@/lib/prisma"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { getTranslations } from "next-intl/server"
 
 export const dynamic = "force-dynamic"
 
@@ -15,6 +16,7 @@ export default async function NewLanguagePage({
 }: {
   searchParams: Promise<{ wizard?: string, from?: string }>
 }) {
+  const t = await getTranslations("dashboard")
   const userId = await getUserId()
 
   // In dev mode, allow access without auth
@@ -63,9 +65,9 @@ export default async function NewLanguagePage({
 
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Create New Language</h1>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("createTitle")}</h1>
           <p className="mt-2 text-muted-foreground">
-            Start documenting your constructed language
+            {t("createSubtitle")}
           </p>
         </div>
 

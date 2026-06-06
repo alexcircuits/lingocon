@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import { FlashcardCard } from "./flashcard-card"
 import { QuizCard } from "./quiz-card"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function FlashcardSession({ entries, languageName, languageSlug, isPublic }: FlashcardSessionProps) {
+  const t = useTranslations("studio.flashcards")
   const [mode, setMode] = useState<Mode>("flashcard")
   const [direction, setDirection] = useState<Direction>("conlang")
   const [cardCount, setCardCount] = useState("25")
@@ -171,8 +173,8 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Layers className="h-6 w-6 text-primary" />
             </div>
-            <div className="font-medium">Flashcards</div>
-            <p className="text-xs text-muted-foreground text-center">Flip cards to reveal answers</p>
+            <div className="font-medium">{t("flashcards")}</div>
+            <p className="text-xs text-muted-foreground text-center">{t("flashcardsHint")}</p>
           </button>
 
           <button
@@ -187,44 +189,44 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
             <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <Brain className="h-6 w-6 text-primary" />
             </div>
-            <div className="font-medium">Quiz</div>
-            <p className="text-xs text-muted-foreground text-center">Multiple choice questions</p>
+            <div className="font-medium">{t("quiz")}</div>
+            <p className="text-xs text-muted-foreground text-center">{t("quizHint")}</p>
           </button>
         </div>
 
         {/* Options */}
         <Card className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label>Direction</Label>
+            <Label>{t("direction")}</Label>
             <Select value={direction} onValueChange={(v: Direction) => setDirection(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="conlang">{languageName} → English</SelectItem>
-                <SelectItem value="english">English → {languageName}</SelectItem>
+                <SelectItem value="conlang">{languageName} → {t("english")}</SelectItem>
+                <SelectItem value="english">{t("english")} → {languageName}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Number of Cards</Label>
+            <Label>{t("numberOfCards")}</Label>
             <Select value={cardCount} onValueChange={setCardCount}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">10 cards</SelectItem>
-                <SelectItem value="25">25 cards</SelectItem>
-                <SelectItem value="50">50 cards</SelectItem>
-                <SelectItem value="all">All ({availableCount})</SelectItem>
+                <SelectItem value="10">{t("tenCards")}</SelectItem>
+                <SelectItem value="25">{t("twentyFiveCards")}</SelectItem>
+                <SelectItem value="50">{t("fiftyCards")}</SelectItem>
+                <SelectItem value="all">{t("allCards", { count: availableCount })}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {posOptions.length > 0 && (
             <div className="space-y-2">
-              <Label>Filter by Part of Speech</Label>
+              <Label>{t("filterByPos")}</Label>
               <Select value={posFilter} onValueChange={setPosFilter}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All parts of speech</SelectItem>
+                  <SelectItem value="all">{t("allParts")}</SelectItem>
                   {posOptions.map(pos => (
                     <SelectItem key={pos} value={pos}>{pos}</SelectItem>
                   ))}
@@ -241,8 +243,8 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
           disabled={availableCount < (mode === "quiz" ? 4 : 1)}
         >
           {availableCount < (mode === "quiz" ? 4 : 1)
-            ? `Need at least ${mode === "quiz" ? 4 : 1} words`
-            : `Start Studying (${Math.min(parseInt(cardCount) || availableCount, availableCount)} cards)`
+            ? t("needAtLeast", { count: mode === "quiz" ? 4 : 1 })
+            : t("startStudying", { count: Math.min(parseInt(cardCount) || availableCount, availableCount) })
           }
         </Button>
       </div>
@@ -254,7 +256,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
     const isConlangDirection = direction === "conlang"
     const front = isConlangDirection ? currentEntry.lemma : currentEntry.gloss
     const back = isConlangDirection ? currentEntry.gloss : currentEntry.lemma
-    const subtitle = isConlangDirection ? languageName : "English"
+    const subtitle = isConlangDirection ? languageName : t("english")
 
     return (
       <div className="max-w-xl mx-auto space-y-4">
@@ -263,7 +265,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
           <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ml-2">
             <Link href={isPublic ? `/lang/${languageSlug}` : `/studio/lang/${languageSlug}/flashcards`}>
               <X className="h-4 w-4" />
-              Exit
+              {t("exit")}
             </Link>
           </Button>
         </div>
@@ -272,7 +274,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
         {streak >= 3 && (
           <div className="flex items-center justify-center gap-2 text-amber-500 font-medium animate-in fade-in zoom-in duration-300">
             <Flame className="h-5 w-5" />
-            <span className="text-lg">{streak} streak!</span>
+            <span className="text-lg">{t("streak", { count: streak })}</span>
           </div>
         )}
 
@@ -291,7 +293,7 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
           <QuizCard
             question={front}
             options={quizOptions}
-            questionLabel={`What is this in ${isConlangDirection ? "English" : languageName}?`}
+            questionLabel={t("quizQuestion", { target: isConlangDirection ? t("english") : languageName })}
             onAnswer={handleResult}
             index={currentIndex}
             total={deck.length}
@@ -326,10 +328,12 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
 
       <div className="space-y-1">
         <h2 className="text-3xl font-bold tracking-tight">
-          {isPerfect ? "Perfect Score!" : accuracy >= 70 ? "Great Job!" : "Keep Practicing!"}
+          {isPerfect ? t("perfectScore") : accuracy >= 70 ? t("greatJob") : t("keepPracticing")}
         </h2>
         <p className="text-muted-foreground">
-          Session complete — {languageName} {mode === "flashcard" ? "flashcards" : "quiz"}
+          {mode === "flashcard"
+            ? t("sessionCompleteFlashcards", { name: languageName })
+            : t("sessionCompleteQuiz", { name: languageName })}
         </p>
       </div>
 
@@ -338,17 +342,17 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
         <Card className="p-4 space-y-1">
           <div className="text-3xl font-bold text-primary">{accuracy}%</div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <Target className="h-3 w-3" /> Accuracy
+            <Target className="h-3 w-3" /> {t("accuracy")}
           </div>
         </Card>
         <Card className="p-4 space-y-1">
           <div className="text-3xl font-bold text-emerald-500">{correct}/{total}</div>
-          <div className="text-xs text-muted-foreground">Correct</div>
+          <div className="text-xs text-muted-foreground">{t("correct")}</div>
         </Card>
         <Card className="p-4 space-y-1">
           <div className="text-3xl font-bold text-amber-500">{bestStreak}</div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <Flame className="h-3 w-3" /> Best Streak
+            <Flame className="h-3 w-3" /> {t("bestStreak")}
           </div>
         </Card>
       </div>
@@ -356,16 +360,16 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
       {/* Actions */}
       <div className="flex flex-col gap-3">
         <Button size="lg" className="w-full h-12 gap-2" onClick={startSession}>
-          <RotateCcw className="h-4 w-4" /> Study Again
+          <RotateCcw className="h-4 w-4" /> {t("studyAgain")}
         </Button>
         <Button size="lg" variant="outline" className="w-full h-12 gap-2" onClick={() => setSessionState("setup")}>
-          <ArrowLeft className="h-4 w-4" /> Change Settings
+          <ArrowLeft className="h-4 w-4" /> {t("changeSettings")}
         </Button>
           <Link
             href={isPublic ? `/lang/${languageSlug}` : `/studio/lang/${languageSlug}`}
             className="text-sm text-muted-foreground hover:text-primary transition-colors"
           >
-            ← Back to {isPublic ? "language page" : "studio"}
+            {isPublic ? t("backToLangPage") : t("backToStudio")}
           </Link>
       </div>
     </div>

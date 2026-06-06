@@ -19,6 +19,8 @@ import type { ComponentType } from "react"
 
 export interface StudioTab {
     name: string
+    /** i18n key under `studio.tabs`. Consumers should prefer this over `name`. */
+    i18nKey: string
     /** Path segment appended to the language base path. Empty string = overview. */
     segment: string
     icon: ComponentType<{ className?: string }>
@@ -28,20 +30,20 @@ export interface StudioTab {
 
 /** Single source of truth for studio navigation (sidebar, mobile drawer, bottom bar). */
 export const STUDIO_TABS: StudioTab[] = [
-    { name: "Overview", segment: "", icon: LayoutDashboard, primary: true },
-    { name: "Alphabet", segment: "alphabet", icon: Languages, primary: true },
-    { name: "Phonology", segment: "phonology", icon: AudioWaveform },
-    { name: "Sound Changes", segment: "sound-changes", icon: Workflow },
-    { name: "Grammar", segment: "grammar", icon: BookOpen, primary: true },
-    { name: "Dictionary", segment: "dictionary", icon: FileText, primary: true },
-    { name: "Paradigms", segment: "paradigms", icon: Table2 },
-    { name: "Articles", segment: "articles", icon: Newspaper },
-    { name: "Texts", segment: "texts", icon: BookMarked },
-    { name: "Courses", segment: "courses", icon: ListChecks },
-    { name: "Flashcards", segment: "flashcards", icon: GraduationCap },
-    { name: "Translate", segment: "translate", icon: Globe },
-    { name: "Modules", segment: "modules", icon: Blocks },
-    { name: "Settings", segment: "settings", icon: Settings },
+    { name: "Overview", i18nKey: "overview", segment: "", icon: LayoutDashboard, primary: true },
+    { name: "Alphabet", i18nKey: "alphabet", segment: "alphabet", icon: Languages, primary: true },
+    { name: "Phonology", i18nKey: "phonology", segment: "phonology", icon: AudioWaveform },
+    { name: "Sound Changes", i18nKey: "soundChanges", segment: "sound-changes", icon: Workflow },
+    { name: "Grammar", i18nKey: "grammar", segment: "grammar", icon: BookOpen, primary: true },
+    { name: "Dictionary", i18nKey: "dictionary", segment: "dictionary", icon: FileText, primary: true },
+    { name: "Paradigms", i18nKey: "paradigms", segment: "paradigms", icon: Table2 },
+    { name: "Articles", i18nKey: "articles", segment: "articles", icon: Newspaper },
+    { name: "Texts", i18nKey: "texts", segment: "texts", icon: BookMarked },
+    { name: "Courses", i18nKey: "courses", segment: "courses", icon: ListChecks },
+    { name: "Flashcards", i18nKey: "flashcards", segment: "flashcards", icon: GraduationCap },
+    { name: "Translate", i18nKey: "translate", segment: "translate", icon: Globe },
+    { name: "Modules", i18nKey: "modules", segment: "modules", icon: Blocks },
+    { name: "Settings", i18nKey: "settings", segment: "settings", icon: Settings },
 ]
 
 /**

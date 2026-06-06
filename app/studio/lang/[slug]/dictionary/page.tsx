@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { DictionaryManager } from "./dictionary-manager"
 import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
@@ -120,6 +121,7 @@ export default async function DictionaryPage({
     : "lemma") as SortOption
 
   const language = await getLanguageDetails(slug, userId)
+  const t = await getTranslations("studio.dictionary")
 
   if (!language) {
     notFound()
@@ -138,9 +140,9 @@ export default async function DictionaryPage({
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Dictionary</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
         <p className="text-muted-foreground">
-          Build your lexicon with lemmas, glosses, IPA, and part of speech
+          {t("pageDescription")}
         </p>
       </div>
 

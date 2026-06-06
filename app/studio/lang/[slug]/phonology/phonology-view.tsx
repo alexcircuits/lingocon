@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,6 +43,7 @@ interface PhonologyViewProps {
 }
 
 export function PhonologyView({ language, symbols }: PhonologyViewProps) {
+    const t = useTranslations("studio.phonology")
     const metadata = languageMetadataSchema.parse(language.metadata ?? {})
     const [syllableStructure, setSyllableStructure] = useState(metadata.syllableStructure ?? "")
     const [allophonyRules, setAllophonyRules] = useState(metadata.allophonyRules ?? "")
@@ -151,7 +153,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
         } else if (isVowel) {
             setCustomVowels(prev => prev.includes(cleaned) ? prev : [...prev, cleaned])
         } else {
-            toast.error("This symbol is not recognized as a consonant or vowel in the chart")
+            toast.error(t("unrecognizedSymbol"))
         }
     }, [addingTo])
 
@@ -216,11 +218,11 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             if (result && 'error' in result) {
                 toast.error(result.error)
             } else {
-                toast.success("Phonology settings saved")
+                toast.success(t("saveSuccess"))
                 setIsEditing(false)
             }
         } catch {
-            toast.error("Failed to save")
+            toast.error(t("saveError"))
         } finally {
             setIsSaving(false)
         }
@@ -242,17 +244,17 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                 <div className="flex gap-4 flex-wrap">
                     <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2">
                         <AudioWaveform className="h-3.5 w-3.5" />
-                        {consonantCount} consonants
+                        {t("consonants", { count: consonantCount })}
                     </Badge>
                     <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2">
-                        {vowelCount} vowels
+                        {t("vowels", { count: vowelCount })}
                     </Badge>
                     <Badge variant="outline" className="text-sm px-3 py-1.5 gap-2">
-                        {ipaSymbols.size} total phonemes
+                        {t("totalPhonemes", { count: ipaSymbols.size })}
                     </Badge>
                     {overrideEnabled && (
                         <Badge variant="secondary" className="text-sm px-3 py-1.5 gap-2">
-                            Manual override
+                            {t("manualOverride")}
                         </Badge>
                     )}
                 </div>
@@ -265,7 +267,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             className="gap-2 w-full sm:w-auto"
                         >
                             <Pencil className="h-3.5 w-3.5" />
-                            Edit Inventory
+                            {t("editInventory")}
                         </Button>
                     ) : (
                         <>
@@ -276,7 +278,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 className="gap-2 text-muted-foreground w-full sm:w-auto"
                             >
                                 <RotateCcw className="h-3.5 w-3.5" />
-                                Reset to Auto
+                                {t("resetToAuto")}
                             </Button>
                             <Button
                                 variant="outline"
@@ -284,7 +286,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 onClick={() => setIsEditing(false)}
                                 className="w-full sm:w-auto"
                             >
-                                Done Editing
+                                {t("doneEditing")}
                             </Button>
                         </>
                     )}
@@ -295,9 +297,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                 <Card className="border-dashed border-primary/30 bg-primary/5">
                     <CardContent className="py-4 text-sm text-muted-foreground flex items-start gap-2">
                         <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span>
-                            Click the <X className="h-3 w-3 inline" /> next to a sound to remove it. Use the &quot;Add Sound&quot; buttons below each chart to add new phonemes via the IPA keyboard. Click &quot;Save Phonology&quot; to persist your changes.
-                        </span>
+                        <span>{t("editingHint")}</span>
                     </CardContent>
                 </Card>
             )}
@@ -306,9 +306,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                 <Card className="border-dashed">
                     <CardContent className="py-8 text-center">
                         <Info className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
-                        <p className="text-muted-foreground">
-                            No IPA data found. Add IPA values to your alphabet symbols to auto-generate the phonology charts, or click &quot;Edit Inventory&quot; to manually build your phoneme inventory.
-                        </p>
+                        <p className="text-muted-foreground">{t("noIpaData")}</p>
                     </CardContent>
                 </Card>
             )}
@@ -317,7 +315,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             {(consonantChart.manners.length > 0 || isEditing) && (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-lg font-serif">Consonant Inventory</CardTitle>
+                        <CardTitle className="text-lg font-serif">{t("consonantInventory")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {consonantChart.manners.length > 0 ? (
@@ -326,7 +324,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                     <thead>
                                         <tr>
                                             <th className="text-left p-2 border-b border-border/60 text-xs text-muted-foreground font-medium">
-                                                Manner
+                                                {t("manner")}
                                             </th>
                                             {consonantChart.places.map((place) => (
                                                 <th
@@ -363,7 +361,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                             <button
                                                                                 onClick={() => handleRemovePhoneme(cell.voiceless!)}
                                                                                 className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
-                                                                                title="Remove"
+                                                                                title={t("remove")}
                                                                             >
                                                                                 <X className="h-3 w-3" />
                                                                             </button>
@@ -379,7 +377,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                             <button
                                                                                 onClick={() => handleRemovePhoneme(cell.voiced!)}
                                                                                 className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
-                                                                                title="Remove"
+                                                                                title={t("remove")}
                                                                             >
                                                                                 <X className="h-3 w-3" />
                                                                             </button>
@@ -400,7 +398,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             </div>
                         ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                                No consonants in inventory. Add some using the button below.
+                                {t("noConsonants")}
                             </p>
                         )}
 
@@ -415,7 +413,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" size="sm" className="gap-2">
                                         <Plus className="h-3.5 w-3.5" />
-                                        Add Consonant
+                                        {t("addConsonant")}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent
@@ -440,7 +438,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             {(vowelChart.length > 0 || isEditing) && (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-lg font-serif">Vowel Inventory</CardTitle>
+                        <CardTitle className="text-lg font-serif">{t("vowelInventory")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {vowelChart.length > 0 ? (
@@ -449,7 +447,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                     <thead>
                                         <tr>
                                             <th className="text-left p-2 border-b border-border/60 text-xs text-muted-foreground font-medium">
-                                                Height
+                                                {t("height")}
                                             </th>
                                             {VOWEL_BACKNESS.map((b) => (
                                                 <th
@@ -493,7 +491,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                                     <button
                                                                                         onClick={() => handleRemovePhoneme(v.ipa)}
                                                                                         className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
-                                                                                        title="Remove"
+                                                                                        title={t("remove")}
                                                                                     >
                                                                                         <X className="h-3 w-3" />
                                                                                     </button>
@@ -515,7 +513,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             </div>
                         ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                                No vowels in inventory. Add some using the button below.
+                                {t("noVowels")}
                             </p>
                         )}
 
@@ -530,7 +528,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" size="sm" className="gap-2">
                                         <Plus className="h-3.5 w-3.5" />
-                                        Add Vowel
+                                        {t("addVowel")}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent
@@ -554,23 +552,22 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             {/* Syllable Structure */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg font-serif">Syllable Structure</CardTitle>
+                    <CardTitle className="text-lg font-serif">{t("syllableStructure")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="syllable" className="text-sm">
-                            Syllable Template
+                            {t("syllableTemplate")}
                         </Label>
                         <Input
                             id="syllable"
                             value={syllableStructure}
                             onChange={(e) => setSyllableStructure(e.target.value)}
-                            placeholder="(C)(C)V(C)  — C = consonant, V = vowel, () = optional"
+                            placeholder={t("syllablePlaceholder")}
                             className="font-mono"
                         />
                         <p className="text-xs text-muted-foreground">
-                            Use C for consonant slots, V for vowel slots. Parentheses mark optional positions.
-                            Examples: CV, CVC, (C)CV(C)(C)
+                            {t("syllableHint")}
                         </p>
                     </div>
                 </CardContent>
@@ -579,12 +576,12 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             {/* Allophony Rules */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg font-serif">Phonological Rules</CardTitle>
+                    <CardTitle className="text-lg font-serif">{t("phonologicalRules")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="allophony" className="text-sm">
-                            Allophony & Sound Rules
+                            {t("allophony")}
                         </Label>
                         <Textarea
                             id="allophony"
@@ -595,7 +592,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             rows={5}
                         />
                         <p className="text-xs text-muted-foreground">
-                            Write one rule per line. Format: /phoneme/ → [allophone] / environment
+                            {t("allophonyHint")}
                         </p>
                     </div>
                 </CardContent>
@@ -605,7 +602,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             <div className="flex justify-end">
                 <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
                     <Save className="h-4 w-4" />
-                    {isSaving ? "Saving..." : "Save Phonology"}
+                    {isSaving ? t("savingPhonology") : t("savePhonology")}
                 </Button>
             </div>
         </div>

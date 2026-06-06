@@ -15,7 +15,7 @@ export function Footer() {
         { name: t("dashboard"), href: "/dashboard" },
         { name: t("browseLanguages"), href: "/browse" },
         { name: t("languageFamilies"), href: "/families" },
-        { name: "Search", href: "/search" },
+        { name: t("search"), href: "/search" },
     ]
 
     const communityLinks = [
@@ -59,7 +59,7 @@ export function Footer() {
                                 href="https://github.com/alexcircuits/lingocon"
                                 target="_blank"
                                 className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/10 hover:bg-background/20 transition-colors"
-                                aria-label="GitHub"
+                                aria-label={t("github")}
                             >
                                 <Github className="h-4 w-4" />
                             </Link>
@@ -67,7 +67,7 @@ export function Footer() {
                                 href="https://discord.gg/EaVRggatDQ"
                                 target="_blank"
                                 className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/10 hover:bg-background/20 transition-colors"
-                                aria-label="Discord"
+                                aria-label={t("discord")}
                             >
                                 <DiscordIcon className="h-4 w-4" />
                             </Link>
@@ -75,7 +75,7 @@ export function Footer() {
                                 href="https://opencollective.com/lingocon"
                                 target="_blank"
                                 className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/10 hover:bg-background/20 transition-colors"
-                                aria-label="OpenCollective"
+                                aria-label={t("openCollective")}
                             >
                                 <Heart className="h-4 w-4" />
                             </Link>

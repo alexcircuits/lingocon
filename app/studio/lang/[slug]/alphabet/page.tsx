@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { AlphabetManager } from "./alphabet-manager"
 
 async function getLanguage(slug: string, userId: string | null) {
@@ -40,6 +41,7 @@ export default async function AlphabetPage({
   params: Promise<{ slug: string }>
 }) {
   const userId = await getUserId()
+  const t = await getTranslations("studio.alphabet")
 
   // In dev mode, allow access without auth
   if (!userId && process.env.DEV_MODE !== "true") {
@@ -56,9 +58,9 @@ export default async function AlphabetPage({
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Alphabet</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
         <p className="text-muted-foreground">
-          Manage script symbols, IPA notation, and transliteration mappings
+          {t("pageDescription")}
         </p>
       </div>
 

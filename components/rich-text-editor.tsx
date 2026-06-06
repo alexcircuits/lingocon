@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useEditor, EditorContent, Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { Table } from "@tiptap/extension-table"
@@ -68,6 +69,7 @@ export function RichTextEditor({
     languageSlug = "",
     grammarPages = [],
 }: RichTextEditorProps) {
+    const t = useTranslations("editor")
     const [isIpaChartOpen, setIsIpaChartOpen] = useState(false)
     const [isWikiLinkDialogOpen, setIsWikiLinkDialogOpen] = useState(false)
 
@@ -147,7 +149,7 @@ export function RichTextEditor({
                     onClick={() => editor.chain().focus().toggleMark('customFont').run()}
                     className={cn(editor.isActive('customFont') && "bg-secondary text-primary")}
                     disabled={disabled}
-                    title="Toggle Custom Font"
+                    title={t("toggleCustomFont")}
                 >
                     <Type className="h-4 w-4" />
                 </Button>
@@ -216,7 +218,7 @@ export function RichTextEditor({
                             size="sm"
                             className={cn(editor.isActive("table") && "bg-secondary")}
                             disabled={disabled}
-                            title="Table Operations"
+                            title={t("tableOperations")}
                         >
                             <Table2 className="h-4 w-4" />
                         </Button>
@@ -231,7 +233,7 @@ export function RichTextEditor({
                                 disabled={disabled}
                             >
                                 <Plus className="h-4 w-4 mr-2" />
-                                Insert Table (3x3)
+                                {t("insertTable")}
                             </Button>
 
                             {editor.isActive('table') && (
@@ -245,7 +247,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().addColumnBefore()}
                                     >
                                         <LayoutPanelLeft className="h-4 w-4 mr-2" />
-                                        Add Column Before
+                                        {t("addColumnBefore")}
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -255,7 +257,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().addColumnAfter()}
                                     >
                                         <LayoutPanelLeft className="h-4 w-4 mr-2 rotate-180" />
-                                        Add Column After
+                                        {t("addColumnAfter")}
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -265,7 +267,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().deleteColumn()}
                                     >
                                         <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete Column
+                                        {t("deleteColumn")}
                                     </Button>
                                     <div className="h-px bg-border my-1" />
                                     <Button
@@ -276,7 +278,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().addRowBefore()}
                                     >
                                         <LayoutPanelTop className="h-4 w-4 mr-2" />
-                                        Add Row Before
+                                        {t("addRowBefore")}
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -286,7 +288,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().addRowAfter()}
                                     >
                                         <LayoutPanelTop className="h-4 w-4 mr-2 rotate-180" />
-                                        Add Row After
+                                        {t("addRowAfter")}
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -296,7 +298,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().deleteRow()}
                                     >
                                         <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete Row
+                                        {t("deleteRow")}
                                     </Button>
                                     <div className="h-px bg-border my-1" />
                                     <Button
@@ -307,7 +309,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().mergeCells()}
                                     >
                                         <Merge className="h-4 w-4 mr-2" />
-                                        Merge Cells
+                                        {t("mergeCells")}
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -317,7 +319,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().splitCell()}
                                     >
                                         <Split className="h-4 w-4 mr-2" />
-                                        Split Cell
+                                        {t("splitCell")}
                                     </Button>
                                     <div className="h-px bg-border my-1" />
                                     <Button
@@ -328,7 +330,7 @@ export function RichTextEditor({
                                         disabled={!editor.can().deleteTable()}
                                     >
                                         <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete Table
+                                        {t("deleteTable")}
                                     </Button>
                                 </>
                             )}
@@ -348,7 +350,7 @@ export function RichTextEditor({
                             editor.chain().focus().setIGT({ sentence: "", gloss: "", translation: "" }).run()
                         }
                         disabled={disabled}
-                        title="Insert IGT Block"
+                        title={t("insertIgt")}
                     >
                         <span className="text-xs font-semibold">IGT</span>
                     </Button>
@@ -361,7 +363,7 @@ export function RichTextEditor({
                         size="sm"
                         onClick={() => onParadigmClick?.(editor)}
                         disabled={disabled}
-                        title="Insert Paradigm Table (Structured)"
+                        title={t("insertParadigm")}
                     >
                         <Table2 className="h-4 w-4" />
                     </Button>
@@ -374,7 +376,7 @@ export function RichTextEditor({
                         size="sm"
                         onClick={() => setIsWikiLinkDialogOpen(true)}
                         disabled={disabled}
-                        title="Insert wiki-link — or type [[slug]] inline"
+                        title={t("insertWikiLink")}
                     >
                         <span className="text-xs font-semibold text-primary">[[]]</span>
                     </Button>
@@ -387,7 +389,7 @@ export function RichTextEditor({
                         size="sm"
                         onClick={() => setIsIpaChartOpen(true)}
                         disabled={disabled}
-                        title="Generate IPA Chart"
+                        title={t("generateIpaChart")}
                     >
                         <span className="text-xs font-bold border rounded px-0.5 border-current">IPA</span>
                     </Button>
