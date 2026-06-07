@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/auth-helpers"
+import { getTranslations } from "next-intl/server"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -11,8 +12,15 @@ import { ModuleIcon } from "@/components/modules/module-icon"
 import { getAuthorModules } from "@/lib/services/module"
 import { getModuleTypeMeta, averageRating } from "@/lib/modules/types"
 import { prisma } from "@/lib/prisma"
+import type { Metadata } from "next"
 
-export const metadata = { title: "My Modules", robots: { index: false, follow: false } }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboardModules")
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  }
+}
 export const dynamic = "force-dynamic"
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -27,12 +35,13 @@ export default async function DashboardModulesPage() {
   const userId = await getUserId()
   if (!userId) redirect("/login")
 
-  const [modules, navUser] = await Promise.all([
+  const [modules, navUser, t] = await Promise.all([
     getAuthorModules(userId),
     prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, image: true, isAdmin: true },
     }),
+    getTranslations("dashboardModules"),
   ])
 
   return (
@@ -45,27 +54,27 @@ export default async function DashboardModulesPage() {
           <div>
             <h1 className="flex items-center gap-2 font-serif text-3xl tracking-tight">
               <Blocks className="h-7 w-7 text-primary" />
-              My Modules
+              {t("pageTitle")}
             </h1>
-            <p className="mt-1 text-muted-foreground">Build and publish modules for the community.</p>
+            <p className="mt-1 text-muted-foreground">{t("subtitle")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/modules/docs">
               <Button variant="ghost">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Docs
+                {t("docs")}
               </Button>
             </Link>
             <Link href="/dashboard/modules/playground">
               <Button variant="outline">
                 <FlaskConical className="mr-2 h-4 w-4" />
-                Playground
+                {t("playground")}
               </Button>
             </Link>
             <Link href="/dashboard/modules/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                New module
+                {t("newModule")}
               </Button>
             </Link>
           </div>
@@ -77,9 +86,9 @@ export default async function DashboardModulesPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Blocks className="h-5 w-5 text-primary" />
               </div>
-              <p className="font-medium">You haven&apos;t built any modules yet</p>
+              <p className="font-medium">{t("emptyTitle")}</p>
               <Link href="/dashboard/modules/new">
-                <Button>Create your first module</Button>
+                <Button>{t("createFirst")}</Button>
               </Link>
             </CardContent>
           </Card>

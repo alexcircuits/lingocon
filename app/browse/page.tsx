@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { getSiteUrl } from "@/lib/seo"
 import { prisma } from "@/lib/prisma"
+import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,18 +13,21 @@ import { BrowseSearch } from "./components/browse-search"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
-export const metadata: Metadata = {
-  title: "Browse Conlangs — Explore Constructed Languages",
-  description: "Explore hundreds of public constructed languages created by the LingoCon community. Discover conlang dictionaries, grammar docs, custom scripts, and more.",
-  keywords: ["browse conlangs", "conlang list", "constructed languages", "conlang examples", "conlang community", "invented languages", "fictional languages"],
-  openGraph: {
-    title: "Browse Conlangs — Explore Constructed Languages",
-    description: "Explore hundreds of public constructed languages. Discover conlang dictionaries, grammar documentation, custom scripts, and language family trees.",
-    type: "website",
-  },
-  alternates: {
-    canonical: `${getSiteUrl()}/browse`,
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("seo.browse")
+  return {
+    title: t("title"),
+    description: t("description"),
+    keywords: ["browse conlangs", "conlang list", "constructed languages", "conlang examples", "conlang community", "invented languages", "fictional languages"],
+    openGraph: {
+      title: t("ogTitle"),
+      description: t("ogDescription"),
+      type: "website",
+    },
+    alternates: {
+      canonical: `${getSiteUrl()}/browse`,
+    },
+  }
 }
 
 export const dynamic = "force-dynamic"
@@ -162,6 +166,8 @@ export default async function BrowsePage({
     image: session.user.image,
   } : null
 
+  const t = await getTranslations("browse")
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} isDevMode={isDevMode} />
@@ -171,9 +177,9 @@ export default async function BrowsePage({
       <main className="container mx-auto px-4 py-10 max-w-6xl">
         {/* Page header */}
         <div className="mb-10 pb-6 border-b border-border/40">
-          <h1 className="text-4xl md:text-5xl font-serif tracking-tight mb-2">Browse</h1>
+          <h1 className="text-4xl md:text-5xl font-serif tracking-tight mb-2">{t("pageTitle")}</h1>
           <p className="text-muted-foreground">
-            Discover {total} public constructed {total === 1 ? 'language' : 'languages'}
+            {t("discoverCount", { count: total })}
           </p>
         </div>
 
@@ -184,7 +190,7 @@ export default async function BrowsePage({
           </div>
           <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
             <span className="text-sm text-muted-foreground">
-              {languages.length} of {total}
+              {t("countOfTotal", { shown: languages.length, total })}
             </span>
             <SortSelector currentSort={sortBy} />
           </div>
@@ -197,9 +203,9 @@ export default async function BrowsePage({
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Globe className="h-5 w-5 text-primary" />
               </div>
-              <CardTitle className="text-lg font-serif">No languages found</CardTitle>
+              <CardTitle className="text-lg font-serif">{t("emptyTitle")}</CardTitle>
               <CardDescription className="max-w-sm mx-auto mt-2">
-                {query ? "Try a different search term" : "Be the first to create and share a constructed language!"}
+                {query ? t("emptySearchHint") : t("emptyFirstHint")}
               </CardDescription>
             </CardHeader>
             {!query && (
@@ -207,7 +213,7 @@ export default async function BrowsePage({
                 <Link href="/dashboard/new-language">
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Language
+                    {t("createLanguage")}
                   </Button>
                 </Link>
               </CardContent>
@@ -224,13 +230,13 @@ export default async function BrowsePage({
                   <Link href={`/browse?sort=${sortBy}&page=${page - 1}${query ? `&q=${query}` : ""}`}>
                     <Button variant="outline" size="sm">
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Previous
+                      {t("previous")}
                     </Button>
                   </Link>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
+                    {t("previous")}
                   </Button>
                 )}
 
@@ -254,13 +260,13 @@ export default async function BrowsePage({
                 {page < totalPages ? (
                   <Link href={`/browse?sort=${sortBy}&page=${page + 1}${query ? `&q=${query}` : ""}`}>
                     <Button variant="outline" size="sm">
-                      Next
+                      {t("next")}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </Link>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
-                    Next
+                    {t("next")}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 )}

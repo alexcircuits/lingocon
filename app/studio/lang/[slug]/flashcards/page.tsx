@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
+import { getTranslations } from "next-intl/server"
 import { redirect, notFound } from "next/navigation"
 import { FlashcardSession } from "./flashcard-session"
 
@@ -7,12 +8,12 @@ export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const language = await prisma.language.findUnique({
-    where: { slug },
-    select: { name: true },
-  })
+  const [language, t] = await Promise.all([
+    prisma.language.findUnique({ where: { slug }, select: { name: true } }),
+    getTranslations("studio.flashcards"),
+  ])
   return {
-    title: language ? `Flashcards — ${language.name}` : "Flashcards",
+    title: language ? t("metaTitleWith", { name: language.name }) : t("metaTitle"),
   }
 }
 

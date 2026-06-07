@@ -1,18 +1,20 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { getDevUserId } from "@/lib/dev-auth"
+import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { FamilyViewSwitcher } from "./components/family-view-switcher"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
 import { getAncestorIds } from "@/lib/utils/family-graph"
+import type { Metadata } from "next"
 
-export const metadata = {
-  title: "Language Families | Dashboard",
-  robots: {
-    index: false,
-    follow: false,
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("seo.dashboardFamilies")
+  return {
+    title: t("title"),
+    robots: { index: false, follow: false },
+  }
 }
 
 export const dynamic = "force-dynamic"

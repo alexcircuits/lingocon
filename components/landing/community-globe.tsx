@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import { useTranslations } from "next-intl"
 import { NumberTicker } from "@/components/ui/number-ticker"
 
 const Globe = dynamic(
@@ -17,25 +18,29 @@ export function CommunityGlobe({
     wordCount: number
     userCount: number
 }) {
+    const t = useTranslations("landing.globe")
+    const tStats = useTranslations("landing.socialProof")
     const stats = [
-        { label: "Languages", value: languageCount },
-        { label: "Words defined", value: wordCount },
-        { label: "Conlangers", value: userCount },
+        { key: "languages", label: tStats("languages"), value: languageCount },
+        { key: "words", label: tStats("words"), value: wordCount },
+        { key: "conlangers", label: tStats("conlangers"), value: userCount },
     ]
     return (
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[36px] aurora-glass px-6 pt-14 pb-0 text-center">
             <h2 className="mx-auto max-w-3xl text-4xl font-extrabold tracking-tight md:text-5xl">
-                A <span className="aurora-gradient-text">global universe</span> of invented
-                languages
+                {t.rich("title", {
+                    accent: (chunks) => (
+                        <span className="aurora-gradient-text">{chunks}</span>
+                    ),
+                })}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-                Conlangers from every continent are building worlds on LingoCon. Spin the globe
-                and join them.
+                {t("subtitle")}
             </p>
 
             <div className="mx-auto mt-8 flex max-w-2xl justify-center gap-10 sm:gap-16">
                 {stats.map((s) => (
-                    <div key={s.label}>
+                    <div key={s.key}>
                         <div className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
                             <NumberTicker value={s.value} className="text-foreground" />
                             {s.value >= 25 ? "+" : ""}

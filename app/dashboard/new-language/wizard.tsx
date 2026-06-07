@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createLanguage } from "@/app/actions/language"
@@ -39,6 +40,7 @@ interface WizardData {
 }
 
 export function LanguageWizard() {
+  const t = useTranslations("wizard")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState<WizardStep>(1)
@@ -80,12 +82,11 @@ export function LanguageWizard() {
 
   const handleFinish = () => {
     if (!data.name || !data.slug) {
-      toast.error("Name and slug are required")
+      toast.error(t("errorNameSlugRequired"))
       return
     }
 
     startTransition(async () => {
-      // Create language with metadata
       const metadata: Record<string, any> = {}
       if (data.wordOrder) metadata.wordOrder = data.wordOrder
       if (data.morphologicalTendency) metadata.morphologicalTendency = data.morphologicalTendency
@@ -106,80 +107,77 @@ export function LanguageWizard() {
 
       const languageId = result.data.id
 
-      // Create alphabet if requested
       if (data.createAlphabet && data.alphabetType === "latin") {
         await createLatinAlphabet(languageId)
       }
 
-      // Create grammar scaffold if requested
       if (data.createGrammarPages) {
         await createGrammarScaffold(languageId)
       }
 
-      toast.success("Language created successfully")
+      toast.success(t("createdToast"))
       router.push(`/studio/lang/${data.slug}`)
       router.refresh()
     })
   }
 
+  const stepDescriptions: Record<WizardStep, string> = {
+    1: t("step1Desc"),
+    2: t("step2Desc"),
+    3: t("step3Desc"),
+    4: t("step4Desc"),
+    5: t("step5Desc"),
+  }
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Create Language - Step {step} of 5</CardTitle>
-        <CardDescription>
-          {step === 1 && "Basic information about your language"}
-          {step === 2 && "Typological characteristics (optional)"}
-          {step === 3 && "Script and alphabet setup (optional)"}
-          {step === 4 && "Grammar documentation scaffold (optional)"}
-          {step === 5 && "Review and finish"}
-        </CardDescription>
+        <CardTitle>{t("title", { step })}</CardTitle>
+        <CardDescription>{stepDescriptions[step]}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Step 1: Language Basics */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="wizard-name">Name *</Label>
+              <Label htmlFor="wizard-name">{t("nameLabel")}</Label>
               <Input
                 id="wizard-name"
                 value={data.name}
                 onChange={handleNameChange}
-                placeholder="My Conlang"
+                placeholder={t("namePlaceholder")}
                 required
                 disabled={isPending}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wizard-slug">Slug *</Label>
+              <Label htmlFor="wizard-slug">{t("slugLabel")}</Label>
               <Input
                 id="wizard-slug"
                 value={data.slug}
                 onChange={(e) => setData((prev) => ({ ...prev, slug: e.target.value }))}
-                placeholder="my-conlang"
+                placeholder={t("slugPlaceholder")}
                 pattern="[a-z0-9-]+"
                 required
                 disabled={isPending}
               />
-              <p className="text-xs text-muted-foreground">
-                URL-friendly identifier (lowercase letters, numbers, and hyphens only)
-              </p>
+              <p className="text-xs text-muted-foreground">{t("slugHint")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wizard-description">Description (optional)</Label>
+              <Label htmlFor="wizard-description">{t("descriptionLabel")}</Label>
               <Textarea
                 id="wizard-description"
                 value={data.description}
                 onChange={(e) => setData((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="A brief description of your language..."
+                placeholder={t("descriptionPlaceholder")}
                 rows={4}
                 disabled={isPending}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wizard-visibility">Visibility</Label>
+              <Label htmlFor="wizard-visibility">{t("visibilityLabel")}</Label>
               <Select
                 value={data.visibility}
                 onValueChange={(value: "PRIVATE" | "UNLISTED" | "PUBLIC") =>
@@ -191,46 +189,43 @@ export function LanguageWizard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PRIVATE">Private</SelectItem>
-                  <SelectItem value="UNLISTED">Unlisted</SelectItem>
-                  <SelectItem value="PUBLIC">Public</SelectItem>
+                  <SelectItem value="PRIVATE">{t("visibilityPrivate")}</SelectItem>
+                  <SelectItem value="UNLISTED">{t("visibilityUnlisted")}</SelectItem>
+                  <SelectItem value="PUBLIC">{t("visibilityPublic")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         )}
 
-        {/* Step 2: Typology */}
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              These choices help organize your language but don&apos;t restrict what you can create.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("typologyHint")}</p>
 
             <div className="space-y-2">
-              <Label htmlFor="word-order">Word Order (optional)</Label>
+              <Label htmlFor="word-order">{t("wordOrderLabel")}</Label>
               <Select
                 value={data.wordOrder || ""}
                 onValueChange={(value) => setData((prev) => ({ ...prev, wordOrder: value }))}
                 disabled={isPending}
               >
                 <SelectTrigger id="word-order">
-                  <SelectValue placeholder="Select word order" />
+                  <SelectValue placeholder={t("wordOrderPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SVO">SVO (Subject-Verb-Object)</SelectItem>
-                  <SelectItem value="SOV">SOV (Subject-Object-Verb)</SelectItem>
-                  <SelectItem value="VSO">VSO (Verb-Subject-Object)</SelectItem>
-                  <SelectItem value="VOS">VOS (Verb-Object-Subject)</SelectItem>
-                  <SelectItem value="OVS">OVS (Object-Verb-Subject)</SelectItem>
-                  <SelectItem value="OSV">OSV (Object-Subject-Verb)</SelectItem>
-                  <SelectItem value="FREE">Free word order</SelectItem>
+                  <SelectItem value="SVO">{t("svo")}</SelectItem>
+                  <SelectItem value="SOV">{t("sov")}</SelectItem>
+                  <SelectItem value="VSO">{t("vso")}</SelectItem>
+                  <SelectItem value="VOS">{t("vos")}</SelectItem>
+                  <SelectItem value="OVS">{t("ovs")}</SelectItem>
+                  <SelectItem value="OSV">{t("osv")}</SelectItem>
+                  <SelectItem value="FREE">{t("freeOrder")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="morphology">Morphological Tendency (optional)</Label>
+              <Label htmlFor="morphology">{t("morphologyLabel")}</Label>
               <Select
                 value={data.morphologicalTendency || ""}
                 onValueChange={(value) =>
@@ -239,19 +234,19 @@ export function LanguageWizard() {
                 disabled={isPending}
               >
                 <SelectTrigger id="morphology">
-                  <SelectValue placeholder="Select tendency" />
+                  <SelectValue placeholder={t("morphologyPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="isolating">Isolating</SelectItem>
-                  <SelectItem value="agglutinative">Agglutinative</SelectItem>
-                  <SelectItem value="fusional">Fusional</SelectItem>
-                  <SelectItem value="mixed">Mixed</SelectItem>
+                  <SelectItem value="isolating">{t("isolating")}</SelectItem>
+                  <SelectItem value="agglutinative">{t("agglutinative")}</SelectItem>
+                  <SelectItem value="fusional">{t("fusional")}</SelectItem>
+                  <SelectItem value="mixed">{t("mixed")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phonology">Phonological Complexity (optional)</Label>
+              <Label htmlFor="phonology">{t("phonologyComplexityLabel")}</Label>
               <Select
                 value={data.phonologicalComplexity || ""}
                 onValueChange={(value) =>
@@ -260,23 +255,22 @@ export function LanguageWizard() {
                 disabled={isPending}
               >
                 <SelectTrigger id="phonology">
-                  <SelectValue placeholder="Select complexity" />
+                  <SelectValue placeholder={t("phonologyPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="simple">Simple</SelectItem>
-                  <SelectItem value="moderate">Moderate</SelectItem>
-                  <SelectItem value="complex">Complex</SelectItem>
+                  <SelectItem value="simple">{t("simple")}</SelectItem>
+                  <SelectItem value="moderate">{t("moderate")}</SelectItem>
+                  <SelectItem value="complex">{t("complex")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         )}
 
-        {/* Step 3: Script/Alphabet */}
         {step === 3 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Create alphabet now?</Label>
+              <Label>{t("createAlphabetQ")}</Label>
               <div className="flex gap-4">
                 <Button
                   type="button"
@@ -284,7 +278,7 @@ export function LanguageWizard() {
                   onClick={() => setData((prev) => ({ ...prev, createAlphabet: true }))}
                   disabled={isPending}
                 >
-                  Yes
+                  {t("yes")}
                 </Button>
                 <Button
                   type="button"
@@ -292,14 +286,14 @@ export function LanguageWizard() {
                   onClick={() => setData((prev) => ({ ...prev, createAlphabet: false }))}
                   disabled={isPending}
                 >
-                  Skip
+                  {t("skip")}
                 </Button>
               </div>
             </div>
 
             {data.createAlphabet && (
               <div className="space-y-2">
-                <Label htmlFor="alphabet-type">Alphabet Type</Label>
+                <Label htmlFor="alphabet-type">{t("alphabetTypeLabel")}</Label>
                 <Select
                   value={data.alphabetType || ""}
                   onValueChange={(value: "latin" | "custom") =>
@@ -308,29 +302,24 @@ export function LanguageWizard() {
                   disabled={isPending}
                 >
                   <SelectTrigger id="alphabet-type">
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t("alphabetTypePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="latin">Latin-based (a-z pre-filled)</SelectItem>
-                    <SelectItem value="custom">Custom script (create manually)</SelectItem>
+                    <SelectItem value="latin">{t("alphabetLatin")}</SelectItem>
+                    <SelectItem value="custom">{t("alphabetCustom")}</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  You can always add or edit symbols later in the Studio.
-                </p>
+                <p className="text-xs text-muted-foreground">{t("alphabetHint")}</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Step 4: Grammar Scaffold */}
         {step === 4 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Create starter grammar pages?</Label>
-              <p className="text-sm text-muted-foreground">
-                This will create empty pages: Phonology, Nouns, Verbs, Syntax
-              </p>
+              <Label>{t("createGrammarQ")}</Label>
+              <p className="text-sm text-muted-foreground">{t("createGrammarHint")}</p>
               <div className="flex gap-4">
                 <Button
                   type="button"
@@ -338,7 +327,7 @@ export function LanguageWizard() {
                   onClick={() => setData((prev) => ({ ...prev, createGrammarPages: true }))}
                   disabled={isPending}
                 >
-                  Yes
+                  {t("yes")}
                 </Button>
                 <Button
                   type="button"
@@ -346,58 +335,56 @@ export function LanguageWizard() {
                   onClick={() => setData((prev) => ({ ...prev, createGrammarPages: false }))}
                   disabled={isPending}
                 >
-                  Skip
+                  {t("skip")}
                 </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 5: Finish */}
         {step === 5 && (
           <div className="space-y-4">
-            <h3 className="font-semibold">Summary</h3>
+            <h3 className="font-semibold">{t("summary")}</h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="font-medium">Name:</span> {data.name}
+                <span className="font-medium">{t("summaryName")}</span> {data.name}
               </div>
               <div>
-                <span className="font-medium">Slug:</span> {data.slug}
+                <span className="font-medium">{t("summarySlug")}</span> {data.slug}
               </div>
               {data.description && (
                 <div>
-                  <span className="font-medium">Description:</span> {data.description}
+                  <span className="font-medium">{t("summaryDescription")}</span> {data.description}
                 </div>
               )}
               <div>
-                <span className="font-medium">Visibility:</span> {data.visibility}
+                <span className="font-medium">{t("summaryVisibility")}</span> {data.visibility}
               </div>
               {data.wordOrder && (
                 <div>
-                  <span className="font-medium">Word Order:</span> {data.wordOrder}
+                  <span className="font-medium">{t("summaryWordOrder")}</span> {data.wordOrder}
                 </div>
               )}
               {data.createAlphabet && (
                 <div>
-                  <span className="font-medium">Alphabet:</span>{" "}
-                  {data.alphabetType === "latin" ? "Latin-based (a-z)" : "Custom"}
+                  <span className="font-medium">{t("summaryAlphabet")}</span>{" "}
+                  {data.alphabetType === "latin" ? t("alphabetLatinShort") : t("alphabetCustomShort")}
                 </div>
               )}
               {data.createGrammarPages && (
                 <div>
-                  <span className="font-medium">Grammar Pages:</span> Starter pages will be created
+                  <span className="font-medium">{t("summaryGrammar")}</span> {t("starterPagesWillBeCreated")}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Navigation */}
         <div className="flex justify-between gap-4">
           <div>
             {step > 1 && (
               <Button type="button" variant="outline" onClick={handleBack} disabled={isPending}>
-                Back
+                {t("back")}
               </Button>
             )}
           </div>
@@ -405,16 +392,16 @@ export function LanguageWizard() {
             {step < 5 && (
               <>
                 <Button type="button" variant="ghost" onClick={handleSkip} disabled={isPending}>
-                  Skip Step
+                  {t("skipStep")}
                 </Button>
                 <Button type="button" onClick={handleNext} disabled={isPending}>
-                  Next
+                  {t("next")}
                 </Button>
               </>
             )}
             {step === 5 && (
               <Button type="button" onClick={handleFinish} disabled={isPending || !data.name}>
-                {isPending ? "Creating..." : "Create Language"}
+                {isPending ? t("creating") : t("createLanguage")}
               </Button>
             )}
           </div>
@@ -423,4 +410,3 @@ export function LanguageWizard() {
     </Card>
   )
 }
-

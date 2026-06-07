@@ -134,6 +134,18 @@
         "answer": "A conlang (constructed language) is a language created by a person rather than having evolved naturally. Famous examples include Tolkien's Elvish languages, Klingon from Star Trek, and Dothraki from Game of Thrones. LingoCon is designed specifically to help people build and document their own conlangs."
       }
     },
+    "socialProof": {
+      "languages": "languages",
+      "words": "words defined",
+      "conlangers": "conlangers"
+    },
+    "globe": {
+      "title": "A <accent>global universe</accent> of invented languages",
+      "subtitle": "Conlangers from every continent are building worlds on LingoCon. Spin the globe and join them."
+    },
+    "searchDemo": {
+      "placeholder": "Search the lexicon…"
+    },
     "bento": {
       "igtCaption": "“The star soars, blue.”",
       "dictionary": {
@@ -578,6 +590,18 @@
       "applyFailed": "Failed to apply sound changes",
       "exportedToast": "Exported as TSV!"
     },
+    "textsPage": {
+      "pageTitle": "Texts",
+      "pageDescription": "Upload and manage texts, books, and other written content in your language",
+      "addText": "Add Text",
+      "emptyTitle": "No texts yet",
+      "emptyDesc": "Add your first text to build a corpus of content in your language. Upload books, stories, poems, or any other written material.",
+      "addFirst": "Add Your First Text",
+      "published": "Published",
+      "draft": "Draft",
+      "wordsCount": "{count, number} {count, plural, =1 {word} other {words}}",
+      "unknownAuthor": "Unknown"
+    },
     "texts": {
       "backToTexts": "Back to Texts",
       "titleLabel": "Title",
@@ -687,6 +711,8 @@
       "deletedToast": "Article deleted"
     },
     "flashcards": {
+      "metaTitle": "Flashcards",
+      "metaTitleWith": "Flashcards — {name}",
       "flashcards": "Flashcards",
       "flashcardsHint": "Flip cards to reveal answers",
       "quiz": "Quiz",
@@ -776,6 +802,153 @@
     "import": "Import",
     "successToast": "Successfully imported {name} with {count} entries",
     "errorToast": "An error occurred during import"
+  },
+  "wizard": {
+    "title": "Create Language - Step {step} of 5",
+    "step1Desc": "Basic information about your language",
+    "step2Desc": "Typological characteristics (optional)",
+    "step3Desc": "Script and alphabet setup (optional)",
+    "step4Desc": "Grammar documentation scaffold (optional)",
+    "step5Desc": "Review and finish",
+    "nameLabel": "Name *",
+    "namePlaceholder": "My Conlang",
+    "slugLabel": "Slug *",
+    "slugPlaceholder": "my-conlang",
+    "slugHint": "URL-friendly identifier (lowercase letters, numbers, and hyphens only)",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "A brief description of your language...",
+    "visibilityLabel": "Visibility",
+    "visibilityPrivate": "Private",
+    "visibilityUnlisted": "Unlisted",
+    "visibilityPublic": "Public",
+    "typologyHint": "These choices help organize your language but don't restrict what you can create.",
+    "wordOrderLabel": "Word Order (optional)",
+    "wordOrderPlaceholder": "Select word order",
+    "svo": "SVO (Subject-Verb-Object)",
+    "sov": "SOV (Subject-Object-Verb)",
+    "vso": "VSO (Verb-Subject-Object)",
+    "vos": "VOS (Verb-Object-Subject)",
+    "ovs": "OVS (Object-Verb-Subject)",
+    "osv": "OSV (Object-Subject-Verb)",
+    "freeOrder": "Free word order",
+    "morphologyLabel": "Morphological Tendency (optional)",
+    "morphologyPlaceholder": "Select tendency",
+    "isolating": "Isolating",
+    "agglutinative": "Agglutinative",
+    "fusional": "Fusional",
+    "mixed": "Mixed",
+    "phonologyComplexityLabel": "Phonological Complexity (optional)",
+    "phonologyPlaceholder": "Select complexity",
+    "simple": "Simple",
+    "moderate": "Moderate",
+    "complex": "Complex",
+    "createAlphabetQ": "Create alphabet now?",
+    "yes": "Yes",
+    "skip": "Skip",
+    "alphabetTypeLabel": "Alphabet Type",
+    "alphabetTypePlaceholder": "Select type",
+    "alphabetLatin": "Latin-based (a-z pre-filled)",
+    "alphabetCustom": "Custom script (create manually)",
+    "alphabetLatinShort": "Latin-based (a-z)",
+    "alphabetCustomShort": "Custom",
+    "alphabetHint": "You can always add or edit symbols later in the Studio.",
+    "createGrammarQ": "Create starter grammar pages?",
+    "createGrammarHint": "This will create empty pages: Phonology, Nouns, Verbs, Syntax",
+    "summary": "Summary",
+    "summaryName": "Name:",
+    "summarySlug": "Slug:",
+    "summaryDescription": "Description:",
+    "summaryVisibility": "Visibility:",
+    "summaryWordOrder": "Word Order:",
+    "summaryAlphabet": "Alphabet:",
+    "summaryGrammar": "Grammar Pages:",
+    "starterPagesWillBeCreated": "Starter pages will be created",
+    "back": "Back",
+    "skipStep": "Skip Step",
+    "next": "Next",
+    "creating": "Creating...",
+    "createLanguage": "Create Language",
+    "errorNameSlugRequired": "Name and slug are required",
+    "createdToast": "Language created successfully"
+  },
+  "createForm": {
+    "evolveLabel": "Evolve from Parent Language (Optional)",
+    "noneFromScratch": "None (Create from scratch)",
+    "evolveHint": "If selected, this new daughter language will automatically inherit the parent's dictionary, script, and phonology!",
+    "visibilityHint": "Private: Only you can see it. Unlisted: Accessible via direct link. Public: Listed publicly.",
+    "cancel": "Cancel",
+    "createdToast": "Language created successfully",
+    "evolvedToast": "Language evolved successfully"
+  },
+  "feed": {
+    "metaTitle": "Social Feed | Dashboard",
+    "pageTitle": "Social Feed",
+    "subtitle": "Recent updates from conlang creators you follow.",
+    "emptyTitle": "Your feed is quiet",
+    "emptyDesc": "Follow other creators to see their latest grammar pages, dictionary entries, and new languages here."
+  },
+  "dashboardModules": {
+    "metaTitle": "My Modules",
+    "pageTitle": "My Modules",
+    "subtitle": "Build and publish modules for the community.",
+    "docs": "Docs",
+    "playground": "Playground",
+    "newModule": "New module",
+    "emptyTitle": "You haven't built any modules yet",
+    "createFirst": "Create your first module"
+  },
+  "inlineLanguageEdit": {
+    "nameUpdated": "Name updated successfully",
+    "descriptionUpdated": "Description updated successfully",
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be 100 characters or less",
+    "descriptionTooLong": "Description must be 1000 characters or less",
+    "namePlaceholder": "Language name",
+    "descriptionPlaceholder": "Add a description..."
+  },
+  "browse": {
+    "pageTitle": "Browse",
+    "discoverCount": "Discover {count} public constructed {count, plural, =1 {language} other {languages}}",
+    "countOfTotal": "{shown} of {total}",
+    "emptyTitle": "No languages found",
+    "emptySearchHint": "Try a different search term",
+    "emptyFirstHint": "Be the first to create and share a constructed language!",
+    "createLanguage": "Create Language",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "families": {
+    "emptyTitle": "No Public Languages Yet",
+    "emptyDesc": "Once users publish their constructed languages, they'll appear here as an interactive family map."
+  },
+  "seo": {
+    "browse": {
+      "title": "Browse Conlangs — Explore Constructed Languages",
+      "description": "Explore hundreds of public constructed languages created by the LingoCon community. Discover conlang dictionaries, grammar docs, custom scripts, and more.",
+      "ogTitle": "Browse Conlangs — Explore Constructed Languages",
+      "ogDescription": "Explore hundreds of public constructed languages. Discover conlang dictionaries, grammar documentation, custom scripts, and language family trees."
+    },
+    "families": {
+      "title": "Conlang Family Map — Constructed Language Families",
+      "description": "Explore all public constructed language families on LingoCon. Visualize how conlangs relate to each other through lineage, proto-languages, and dialect trees."
+    },
+    "dashboardFamilies": {
+      "title": "Language Families | Dashboard"
+    },
+    "root": {
+      "title": "LingoCon — Conlang Tool & Constructed Language Platform",
+      "description": "LingoCon is the free platform for conlang creators. Build lexicons, write grammar documentation, design scripts, and share your constructed languages with the world.",
+      "ogTitle": "LingoCon — The #1 Free Conlang Tool & Constructed Language Platform",
+      "ogDescription": "The most complete free conlang tool available. Build structured lexicons, write grammar documentation, design custom scripts, and share your constructed languages with the world.",
+      "twitterTitle": "LingoCon — The #1 Free Conlang Tool",
+      "twitterDescription": "Build lexicons, grammar docs, custom scripts, and share your constructed languages — all free. Trusted by the conlang community."
+    },
+    "home": {
+      "title": "LingoCon — #1 Conlang Tool & Constructed Language Platform",
+      "description": "The most complete free platform for creating constructed languages. Build lexicons, write grammar docs, design custom scripts, and share your conlang with the world. Free forever.",
+      "ogTitle": "LingoCon — #1 Conlang Tool & Constructed Language Platform",
+      "ogDescription": "The most complete free platform for creating constructed languages. Phonology, lexicon, grammar docs, custom scripts, and language family trees — all in one place."
+    }
   },
   "i18n": {
     "switcherLabel": "Interface Language",

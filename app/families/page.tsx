@@ -3,16 +3,21 @@ import { auth } from "@/auth"
 import { getSiteUrl } from "@/lib/seo"
 import { Navbar } from "@/components/navbar"
 import { FamiliesView } from "./families-view"
+import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = {
-  title: "Conlang Family Map — Constructed Language Families",
-  description: "Explore all public constructed language families on LingoCon. Visualize how conlangs relate to each other through lineage, proto-languages, and dialect trees.",
-  keywords: ["conlang family tree", "constructed language families", "language family map", "conlang genealogy", "proto-language", "conlang lineage"],
-  alternates: {
-    canonical: `${getSiteUrl()}/families`,
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("seo.families")
+  return {
+    title: t("title"),
+    description: t("description"),
+    keywords: ["conlang family tree", "constructed language families", "language family map", "conlang genealogy", "proto-language", "conlang lineage"],
+    alternates: {
+      canonical: `${getSiteUrl()}/families`,
+    },
+  }
 }
 
 export default async function PublicFamiliesPage() {
@@ -51,6 +56,8 @@ export default async function PublicFamiliesPage() {
       }
     : null
 
+  const t = await getTranslations("families")
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       <Navbar user={user} isDevMode={isDevMode} />
@@ -66,9 +73,9 @@ export default async function PublicFamiliesPage() {
                   <path d="M2 12h20" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-serif font-medium">No Public Languages Yet</h2>
+              <h2 className="text-2xl font-serif font-medium">{t("emptyTitle")}</h2>
               <p className="text-muted-foreground">
-                Once users publish their constructed languages, they&apos;ll appear here as an interactive family map.
+                {t("emptyDesc")}
               </p>
             </div>
           </div>

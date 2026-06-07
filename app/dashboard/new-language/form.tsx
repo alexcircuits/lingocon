@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createLanguage } from "@/app/actions/language"
@@ -23,6 +24,8 @@ interface CreateLanguageFormProps {
 }
 
 export function CreateLanguageForm({ userLanguages = [], initialParentId = "none" }: CreateLanguageFormProps) {
+  const t = useTranslations("createForm")
+  const tWizard = useTranslations("wizard")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -68,15 +71,14 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success(parentId !== "none" ? "Language evolved successfully" : "Language created successfully")
-        
+        toast.success(parentId !== "none" ? t("evolvedToast") : t("createdToast"))
+
         if (parentId !== "none") {
-          // If evolved, take them straight to sound changes to derive the daughter!
           router.push(`/studio/lang/${slug}/sound-changes`)
         } else {
           router.push("/dashboard")
         }
-        
+
         router.refresh()
       }
     })
@@ -92,70 +94,66 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
 
       {userLanguages.length > 0 && (
         <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border/50">
-          <Label htmlFor="parentId" className="text-primary font-medium">Evolve from Parent Language (Optional)</Label>
+          <Label htmlFor="parentId" className="text-primary font-medium">{t("evolveLabel")}</Label>
           <Select
             value={parentId}
             onValueChange={setParentId}
             disabled={isPending}
           >
             <SelectTrigger id="parentId" className="bg-background">
-              <SelectValue placeholder="None (Create from scratch)" />
+              <SelectValue placeholder={t("noneFromScratch")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None (Create from scratch)</SelectItem>
+              <SelectItem value="none">{t("noneFromScratch")}</SelectItem>
               {userLanguages.map(lang => (
                 <SelectItem key={lang.id} value={lang.id}>{lang.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground mt-1">
-            If selected, this new daughter language will automatically inherit the parent&apos;s dictionary, script, and phonology!
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t("evolveHint")}</p>
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{tWizard("nameLabel")}</Label>
         <Input
           id="name"
           value={name}
           onChange={handleNameChange}
-          placeholder="My Conlang"
+          placeholder={tWizard("namePlaceholder")}
           required
           disabled={isPending}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="slug">Slug</Label>
+        <Label htmlFor="slug">{tWizard("slugLabel")}</Label>
         <Input
           id="slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder="my-conlang"
+          placeholder={tWizard("slugPlaceholder")}
           pattern="[a-z0-9-]+"
           required
           disabled={isPending}
         />
-        <p className="text-xs text-muted-foreground">
-          URL-friendly identifier (lowercase letters, numbers, and hyphens only)
-        </p>
+        <p className="text-xs text-muted-foreground">{tWizard("slugHint")}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description (optional)</Label>
+        <Label htmlFor="description">{tWizard("descriptionLabel")}</Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="A brief description of your language..."
+          placeholder={tWizard("descriptionPlaceholder")}
           rows={4}
           disabled={isPending}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="visibility">Visibility</Label>
+        <Label htmlFor="visibility">{tWizard("visibilityLabel")}</Label>
         <Select
           value={visibility}
           onValueChange={(value: "PRIVATE" | "UNLISTED" | "PUBLIC") =>
@@ -167,20 +165,17 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="PRIVATE">Private</SelectItem>
-            <SelectItem value="UNLISTED">Unlisted</SelectItem>
-            <SelectItem value="PUBLIC">Public</SelectItem>
+            <SelectItem value="PRIVATE">{tWizard("visibilityPrivate")}</SelectItem>
+            <SelectItem value="UNLISTED">{tWizard("visibilityUnlisted")}</SelectItem>
+            <SelectItem value="PUBLIC">{tWizard("visibilityPublic")}</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Private: Only you can see it. Unlisted: Accessible via direct link. Public: Listed
-          publicly.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("visibilityHint")}</p>
       </div>
 
       <div className="flex gap-4">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Creating..." : "Create Language"}
+          {isPending ? tWizard("creating") : tWizard("createLanguage")}
         </Button>
         <Button
           type="button"
@@ -188,10 +183,9 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
           onClick={() => router.back()}
           disabled={isPending}
         >
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>
   )
 }
-

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { updateLanguage } from "@/app/actions/language"
@@ -20,6 +21,7 @@ export function InlineLanguageEdit({
   value,
   maxLength,
 }: InlineLanguageEditProps) {
+  const t = useTranslations("inlineLanguageEdit")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -34,7 +36,7 @@ export function InlineLanguageEdit({
         toast.error(result.error)
         throw new Error(result.error)
       } else {
-        toast.success(`${field === "name" ? "Name" : "Description"} updated successfully`)
+        toast.success(field === "name" ? t("nameUpdated") : t("descriptionUpdated"))
         router.refresh()
       }
     })
@@ -43,14 +45,14 @@ export function InlineLanguageEdit({
   const validate = (val: string) => {
     if (field === "name") {
       if (!val.trim()) {
-        return "Name is required"
+        return t("nameRequired")
       }
       if (val.length > 100) {
-        return "Name must be 100 characters or less"
+        return t("nameTooLong")
       }
     }
     if (field === "description" && val.length > 1000) {
-      return "Description must be 1000 characters or less"
+      return t("descriptionTooLong")
     }
     return null
   }
@@ -59,11 +61,10 @@ export function InlineLanguageEdit({
     <InlineEdit
       value={value}
       onSave={handleSave}
-      placeholder={field === "name" ? "Language name" : "Add a description..."}
+      placeholder={field === "name" ? t("namePlaceholder") : t("descriptionPlaceholder")}
       maxLength={maxLength}
       validate={validate}
       disabled={isPending}
     />
   )
 }
-

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { Search } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { DEMO_ENTRIES } from "./studio-demo/demo-data"
@@ -9,6 +10,7 @@ const QUERIES = ["ae", "lum", "so", "ne"]
 const VISIBLE_ROWS = 3
 
 export function TypingSearchDemo() {
+  const t = useTranslations("landing.searchDemo")
   const reduceMotion = useReducedMotion()
   const [text, setText] = useState("")
   const qIndex = useRef(0)
@@ -69,7 +71,7 @@ export function TypingSearchDemo() {
       <div className="flex shrink-0 items-center gap-2.5 rounded-full border border-border/60 bg-card/80 px-4 py-2.5 shadow-sm backdrop-blur">
         <Search className="h-4 w-4 shrink-0 text-primary" />
         <span className="truncate text-sm font-medium text-foreground">
-          {text || <span className="text-muted-foreground">Search the lexicon…</span>}
+          {text || <span className="text-muted-foreground">{t("placeholder")}</span>}
           <span className="ml-0.5 inline-block h-4 w-[2px] -mb-0.5 animate-pulse bg-primary align-middle" />
         </span>
       </div>

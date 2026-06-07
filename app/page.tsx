@@ -36,23 +36,26 @@ import { CommunityGlobe } from "@/components/landing/community-globe"
 import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
-  description: "The most complete free platform for creating constructed languages. Build lexicons, write grammar docs, design custom scripts, and share your conlang with the world. Free forever.",
-  keywords: [
-    "conlang tool", "conlang maker", "conlang builder", "conlang creator", "best conlang tool",
-    "constructed language tool", "constructed language maker", "create a conlang",
-    "conlang platform", "conlang software", "conlang documentation", "conlang community",
-    "fictional language maker", "invented language tool", "worldbuilding language tool",
-    "free conlang tool", "online conlang maker",
-  ],
-  openGraph: {
-    title: "LingoCon — #1 Conlang Tool & Constructed Language Platform",
-    description: "The most complete free platform for creating constructed languages. Phonology, lexicon, grammar docs, custom scripts, and language family trees — all in one place.",
-  },
-  alternates: {
-    canonical: getSiteUrl(),
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("seo.home")
+  return {
+    title: t("title"),
+    description: t("description"),
+    keywords: [
+      "conlang tool", "conlang maker", "conlang builder", "conlang creator", "best conlang tool",
+      "constructed language tool", "constructed language maker", "create a conlang",
+      "conlang platform", "conlang software", "conlang documentation", "conlang community",
+      "fictional language maker", "invented language tool", "worldbuilding language tool",
+      "free conlang tool", "online conlang maker",
+    ],
+    openGraph: {
+      title: t("ogTitle"),
+      description: t("ogDescription"),
+    },
+    alternates: {
+      canonical: getSiteUrl(),
+    },
+  }
 }
 
 const siteUrl = getSiteUrl()

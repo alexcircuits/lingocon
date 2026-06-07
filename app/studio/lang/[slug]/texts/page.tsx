@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
+import { getTranslations } from "next-intl/server"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -80,19 +81,21 @@ export default async function TextsPage({
     notFound()
   }
 
+  const t = await getTranslations("studio.textsPage")
+
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Texts</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">{t("pageTitle")}</h1>
           <p className="text-muted-foreground">
-            Upload and manage texts, books, and other written content in your language
+            {t("pageDescription")}
           </p>
         </div>
         <Link href={`/studio/lang/${slug}/texts/new`}>
           <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Text
+            {t("addText")}
           </Button>
         </Link>
       </div>
@@ -100,10 +103,10 @@ export default async function TextsPage({
       {language.texts.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="No texts yet"
-          description="Add your first text to build a corpus of content in your language. Upload books, stories, poems, or any other written material."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={{
-            label: "Add Your First Text",
+            label: t("addFirst"),
             href: `/studio/lang/${slug}/texts/new`,
           }}
         />
@@ -123,11 +126,11 @@ export default async function TextsPage({
                       </h3>
                       {text.published ? (
                         <Badge className="shrink-0 bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 hover:bg-green-500/20">
-                          Published
+                          {t("published")}
                         </Badge>
                       ) : (
                         <Badge className="shrink-0 bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20">
-                          Draft
+                          {t("draft")}
                         </Badge>
                       )}
                     </div>
@@ -141,11 +144,11 @@ export default async function TextsPage({
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <FileText className="h-3.5 w-3.5" />
-                              {words.toLocaleString()} words
+                              {t("wordsCount", { count: words })}
                             </span>
                             <span className="flex items-center gap-1">
                               <User className="h-3.5 w-3.5" />
-                              {text.author.name || "Unknown"}
+                              {text.author.name || t("unknownAuthor")}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
