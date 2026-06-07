@@ -1,6 +1,7 @@
 "use client"
 
 import { type ReactNode } from "react"
+import { useTranslations } from "next-intl"
 import {
     Search,
     PenTool,
@@ -82,20 +83,21 @@ function ScriptVisual() {
 }
 
 function GrammarVisual() {
+    const t = useTranslations("landing.bento")
     return (
         <div className="rounded-2xl border border-border/50 bg-card/70 p-4">
             <div className="flex gap-5">
-                {IGT_TOKENS.map((t) => (
-                    <div key={t.word}>
-                        <div className="font-semibold leading-none">{t.word}</div>
+                {IGT_TOKENS.map((token) => (
+                    <div key={token.word}>
+                        <div className="font-semibold leading-none">{token.word}</div>
                         <div className="mt-1.5 font-mono text-[10px] uppercase tracking-wide text-primary">
-                            {t.gloss}
+                            {token.gloss}
                         </div>
                     </div>
                 ))}
             </div>
             <p className="mt-4 border-t border-border/40 pt-3 text-xs italic text-muted-foreground">
-                &ldquo;The star soars, blue.&rdquo;
+                {t("igtCaption")}
             </p>
         </div>
     )
@@ -174,26 +176,27 @@ function ExportVisual() {
 }
 
 export function FeatureBento() {
+    const t = useTranslations("landing.bento")
     return (
         <div className="grid auto-rows-auto grid-cols-1 gap-4 sm:gap-5 md:auto-rows-[minmax(20rem,auto)] md:grid-cols-3">
             <Cell
                 className="md:col-span-2"
                 wide
                 beam
-                title="Smart Dictionary"
-                description="Instant search, IPA, part-of-speech, etymologies and live derivation trees — a lexicon that scales to thousands of words."
+                title={t("dictionary.title")}
+                description={t("dictionary.description")}
                 Icon={Search}
                 visual={<TypingSearchDemo />}
             />
             <Cell
-                title="Custom Scripts"
-                description="Design a writing system with IPA mapping and romanization."
+                title={t("scripts.title")}
+                description={t("scripts.description")}
                 Icon={PenTool}
                 visual={<ScriptVisual />}
             />
             <Cell
-                title="Grammar & Glossing"
-                description="Rich grammar docs with interlinear glossing, linked to your lexicon."
+                title={t("grammar.title")}
+                description={t("grammar.description")}
                 Icon={BookOpen}
                 visual={<GrammarVisual />}
             />
@@ -201,22 +204,22 @@ export function FeatureBento() {
                 className="md:col-span-2"
                 wide
                 beam
-                title="Morphology Tables"
-                description="Build conjugation and declension paradigms with reusable slots that generate inflected forms automatically."
+                title={t("morphology.title")}
+                description={t("morphology.description")}
                 Icon={Library}
                 visual={<ParadigmVisual />}
             />
             <Cell
-                title="Phonology & Sound Change"
-                description="Define inventories, syllable structure and sound-change rules."
+                title={t("phonology.title")}
+                description={t("phonology.description")}
                 Icon={AudioWaveform}
                 visual={<PhonologyVisual />}
             />
             <Cell
                 className="md:col-span-2"
                 wide
-                title="Built to share & export"
-                description="Publish to the community, connect a family tree, and export anywhere — your data is always yours."
+                title={t("share.title")}
+                description={t("share.description")}
                 Icon={Share2}
                 visual={<ExportVisual />}
             />

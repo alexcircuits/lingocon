@@ -25,7 +25,7 @@ import { UniverseMapLazy } from "@/components/landing/universe-map-lazy"
 import { HeroSocialProof } from "@/components/landing/hero-social-proof"
 import { HowItWorks } from "@/components/landing/how-it-works"
 import { FaqSection } from "@/components/landing/faq-section"
-import { FAQ_ITEMS, HOW_IT_WORKS_STEPS } from "@/lib/landing-content"
+import { getFaqItems, getHowItWorksSteps, type FaqItem } from "@/lib/landing-content"
 import { StudioDemo } from "@/components/landing/studio-demo/studio-demo"
 import { AuroraBackground } from "@/components/landing/aurora-background"
 import { FeatureBento } from "@/components/landing/feature-bento"
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 
 const siteUrl = getSiteUrl()
 
-function JsonLd() {
+function JsonLd({ faqItems }: { faqItems: FaqItem[] }) {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -131,7 +131,7 @@ function JsonLd() {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: faqItems.map((item) => ({
       "@type": "Question",
       name: item.question,
       acceptedAnswer: {
@@ -263,6 +263,8 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 export default async function Home() {
   const t = await getTranslations("landing");
+  const faqItems = getFaqItems(t)
+  const howItWorksSteps = getHowItWorksSteps(t)
   const session = await auth()
   const isDevMode = process.env.DEV_MODE === "true"
   const [featuredLanguages, topLanguages, universeLanguages, stats] = await Promise.all([
@@ -282,7 +284,7 @@ export default async function Home() {
 
   return (
     <main className="landing-aurora font-display min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
-      <JsonLd />
+      <JsonLd faqItems={faqItems} />
       <Navbar user={user} isDevMode={isDevMode} />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -427,7 +429,7 @@ export default async function Home() {
               Three steps from a blank page to a documented, shareable conlang.
             </p>
           </div>
-          <HowItWorks steps={HOW_IT_WORKS_STEPS} />
+          <HowItWorks steps={howItWorksSteps} />
         </div>
       </section>
 
@@ -594,7 +596,7 @@ export default async function Home() {
               Everything you need to know about building languages with LingoCon.
             </p>
           </div>
-          <FaqSection items={FAQ_ITEMS} />
+          <FaqSection items={faqItems} />
         </div>
       </section>
 

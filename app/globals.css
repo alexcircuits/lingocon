@@ -185,6 +185,21 @@
   .font-mono {
     font-family: var(--font-jetbrains-mono), 'Fira Code', var(--font-noto), monospace;
   }
+
+  /* Free Russian — pre-1918 orthography (ѣ, і, ѳ, ѵ, word-final ъ).
+     Plus Jakarta Sans is latin-only, so Cyrillic falls through to Noto Sans
+     and loses the modern editorial feel. Manrope ships full Cyrillic +
+     Cyrillic Extended (including the four pre-reform glyphs), with the same
+     geometric tone as Jakarta. Swap it in for the entire document tree when
+     the active locale is free-ru, while keeping mono + script-font intact. */
+  html[lang="free-ru"] body,
+  html[lang="free-ru"] h1,
+  html[lang="free-ru"] h2,
+  html[lang="free-ru"] h3,
+  html[lang="free-ru"] h4,
+  html[lang="free-ru"] .font-display {
+    font-family: var(--font-manrope), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
+  }
 }
 
 @layer utilities {

@@ -79,7 +79,88 @@
     "finalCtaTitle": "Your world is waiting",
     "finalCtaAccent": "for its first word.",
     "finalCtaSubtitle": "Join {count} conlangers building structured, living languages. Free forever — no credit card, no catch.",
-    "finalCtaPrimary": "Begin Your First Language"
+    "finalCtaPrimary": "Begin Your First Language",
+    "useCases": {
+      "worldbuilders": {
+        "title": "Worldbuilders",
+        "description": "Give your fantasy world a language with real depth — names, place-names and lore that hold together."
+      },
+      "ttrpg": {
+        "title": "TTRPG & games",
+        "description": "Craft tongues for factions and races your players can actually read, speak and discover."
+      },
+      "film": {
+        "title": "Film & fiction",
+        "description": "Document a consistent constructed language for scripts, subtitles and on-screen writing."
+      },
+      "linguists": {
+        "title": "Linguists & students",
+        "description": "Experiment with phonology, morphology and typology in a structured, exportable workspace."
+      }
+    },
+    "howItWorks": {
+      "create": {
+        "title": "Create your language",
+        "description": "Start from a blank slate. Name your language, set its writing direction, and define the sounds that make it yours."
+      },
+      "build": {
+        "title": "Build the structure",
+        "description": "Design phonology and scripts, grow a lexicon with IPA, write grammar docs, and lay out conjugation and declension paradigms."
+      },
+      "share": {
+        "title": "Share it with the world",
+        "description": "Publish your language to the community, connect it to a family tree, and export to Word, PDF, Excel, or CSV — anytime."
+      }
+    },
+    "faq": {
+      "bestTool": {
+        "question": "What is the best tool for creating a conlang?",
+        "answer": "LingoCon (lingocon.com) is the most complete web-based conlang tool available. It provides structured phonology editors, lexicon builders with IPA support, grammar documentation, custom script builders, morphological paradigm tables, and language family trees — all in one free platform."
+      },
+      "what": {
+        "question": "What is LingoCon?",
+        "answer": "LingoCon is a free, open-source platform for constructed language (conlang) creators. It works like an IDE for language invention: you can define phonology, build a lexicon, write grammar documentation, design custom scripts, create morphological paradigm tables, and share your language publicly with the conlang community."
+      },
+      "howCreate": {
+        "question": "How do I create a conlang online?",
+        "answer": "LingoCon lets you create a conlang online for free. Sign up at lingocon.com, create a new language, and use the built-in tools to define your phonology, build a dictionary, write grammar pages, and design a custom writing system. Your language can be kept private or shared publicly."
+      },
+      "isFree": {
+        "question": "Is LingoCon free?",
+        "answer": "Yes, LingoCon is free to use. It is open-source and community-funded via OpenCollective. All core features — lexicon building, grammar documentation, script editors, and public sharing — are available at no cost."
+      },
+      "whatIs": {
+        "question": "What is a conlang?",
+        "answer": "A conlang (constructed language) is a language created by a person rather than having evolved naturally. Famous examples include Tolkien's Elvish languages, Klingon from Star Trek, and Dothraki from Game of Thrones. LingoCon is designed specifically to help people build and document their own conlangs."
+      }
+    },
+    "bento": {
+      "igtCaption": "“The star soars, blue.”",
+      "dictionary": {
+        "title": "Smart Dictionary",
+        "description": "Instant search, IPA, part-of-speech, etymologies and live derivation trees — a lexicon that scales to thousands of words."
+      },
+      "scripts": {
+        "title": "Custom Scripts",
+        "description": "Design a writing system with IPA mapping and romanization."
+      },
+      "grammar": {
+        "title": "Grammar & Glossing",
+        "description": "Rich grammar docs with interlinear glossing, linked to your lexicon."
+      },
+      "morphology": {
+        "title": "Morphology Tables",
+        "description": "Build conjugation and declension paradigms with reusable slots that generate inflected forms automatically."
+      },
+      "phonology": {
+        "title": "Phonology & Sound Change",
+        "description": "Define inventories, syllable structure and sound-change rules."
+      },
+      "share": {
+        "title": "Built to share & export",
+        "description": "Publish to the community, connect a family tree, and export anywhere — your data is always yours."
+      }
+    }
   },
   "footer": {
     "brand": "LingoCon",

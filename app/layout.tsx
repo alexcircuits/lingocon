@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Instrument_Serif, JetBrains_Mono, Noto_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Serif, JetBrains_Mono, Manrope, Noto_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -46,6 +46,18 @@ const notoSans = Noto_Sans({
   weight: ["400", "500", "700"],
   subsets: ["latin"],
   variable: "--font-noto",
+  display: "swap",
+});
+
+// Manrope — modern geometric sans with full Cyrillic + Cyrillic Extended
+// coverage (yat ѣ, decimal і, fita ѳ, izhitsa ѵ). Same family of "modern
+// stylish" as Plus Jakarta Sans, just with the Russian glyphs Jakarta lacks.
+// Applied via `html[lang="free-ru"]` selector in globals.css; English keeps
+// Jakarta untouched.
+const manrope = Manrope({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -142,7 +154,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} ${notoSans.variable} min-h-screen antialiased`}>
+      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} ${notoSans.variable} ${manrope.variable} min-h-screen antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
