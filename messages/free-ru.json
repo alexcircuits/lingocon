@@ -821,6 +821,16 @@
     "visibilityPrivate": "Скрытый",
     "visibilityUnlisted": "По ссылкѣ",
     "visibilityPublic": "Публичный",
+    "categoryLabel": "Разрядъ",
+    "categoryHint": "Опредѣлите разрядъ вашего языка — сіе поможетъ инымъ его обрѣсти.",
+    "categoryConlang": "Искусственный (конлангъ)",
+    "categoryNatural": "Естественный",
+    "categoryEndangered": "Исчезающій",
+    "categoryRestored": "Возрождённый",
+    "categoryHistorical": "Историческій / древній",
+    "categoryFictional": "Вымышленный",
+    "categoryAuxiliary": "Вспомогательный",
+    "categoryOther": "Иной",
     "typologyHint": "Сіи выборы помогаютъ упорядочить вашъ языкъ, но не ограничиваютъ того, что вы можете создать.",
     "wordOrderLabel": "Порядокъ словъ (по желанію)",
     "wordOrderPlaceholder": "Выберите порядокъ словъ",
@@ -915,7 +925,17 @@
     "emptyFirstHint": "Будьте первымъ, кто создастъ и подѣлится искусственнымъ языкомъ!",
     "createLanguage": "Создать языкъ",
     "previous": "Назадъ",
-    "next": "Впередъ"
+    "next": "Впередъ",
+    "filterCategoryLabel": "Разрядъ:",
+    "categoryAll": "Всѣ разряды",
+    "categoryConlang": "Искусственный",
+    "categoryNatural": "Естественный",
+    "categoryEndangered": "Исчезающій",
+    "categoryRestored": "Возрождённый",
+    "categoryHistorical": "Историческій",
+    "categoryFictional": "Вымышленный",
+    "categoryAuxiliary": "Вспомогательный",
+    "categoryOther": "Иной"
   },
   "families": {
     "emptyTitle": "Публичныхъ языковъ пока нѣтъ",
@@ -977,6 +997,7 @@
     "allSections": "Всѣ разделы",
     "noStringsFound": "Строкъ, подходящихъ подъ ваши условія, не найдено.",
     "loadFailed": "Не удалось загрузить переводы",
-    "saveFailed": "Ошибка при сохраненіи переводовъ"
+    "saveFailed": "Ошибка при сохраненіи переводовъ",
+    "previewBadge": "Предпросмотръ"
   }
 }

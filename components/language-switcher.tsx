@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Globe, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ interface ConlangTranslation {
   flagUrl: string | null;
   ownerName: string;
   percentage: number;
+  isOwnerPreview?: boolean;
 }
 
 export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown" | "list" }) {
@@ -31,6 +32,13 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
   const router = useRouter();
   const [currentLocale, setCurrentLocale] = useState("en");
   const [translations, setTranslations] = useState<ConlangTranslation[]>([]);
+
+  const fetchTranslations = useCallback(() => {
+    fetch("/api/translations/available", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setTranslations(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     // Read current locale from cookie
@@ -42,12 +50,8 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
     };
     setCurrentLocale(getCookie(LOCALE_COOKIE));
 
-    // Fetch available conlang translations
-    fetch("/api/translations/available")
-      .then((res) => res.json())
-      .then((data) => setTranslations(data))
-      .catch(console.error);
-  }, []);
+    fetchTranslations();
+  }, [fetchTranslations]);
 
   const switchLocale = (locale: string) => {
     document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000`;
@@ -93,6 +97,11 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
                     <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
                   )}
                   <span className="flex-1 truncate">{lang.name}</span>
+                  {lang.isOwnerPreview && (
+                    <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {t("previewBadge")}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground ml-2">{lang.percentage}%</span>
                   {currentLocale === `conlang:${lang.id}` && <Check className="ml-2 h-4 w-4" />}
                 </div>
@@ -152,6 +161,11 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
                         <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
                       )}
                       <span className="flex-1 truncate">{lang.name}</span>
+                      {lang.isOwnerPreview && (
+                        <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {t("previewBadge")}
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground ml-2">{lang.percentage}%</span>
                       {currentLocale === `conlang:${lang.id}` && <Check className="ml-2 h-4 w-4" />}
                     </div>
@@ -174,7 +188,7 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (open) fetchTranslations(); }}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <Globe className="h-[1.2rem] w-[1.2rem]" />

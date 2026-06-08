@@ -111,6 +111,7 @@ model Language {
   description String?  @db.Text
   flagUrl     String?  // URL to flag image
   visibility  Visibility @default(PRIVATE)
+  category    LanguageCategory @default(CONLANG)
   metadata    Json?    // Typology and wizard data (wordOrder, morphologicalTendency, etc.)
   
   // Social & Community Links
@@ -128,6 +129,11 @@ model Language {
 
   // Whether other users can fork/evolve this language
   allowForking Boolean @default(false)
+
+  // Lesson grading: accept romanized (Latin transliteration) answers as correct.
+  // Default off — for many conlangs the romanization is lossy or ambiguous, so
+  // owners must opt in per language.
+  acceptRomanizedAnswers Boolean @default(false)
 
   // Language Family Tree
   parentLanguageId String?
@@ -165,7 +171,25 @@ model Language {
   @@index([slug])
   @@index([parentLanguageId])
   @@index([familyId])
+  @@index([category])
   @@map("languages")
+}
+
+// Broad categorization of a language by origin/use.
+// CONLANG covers user-created constructed languages (default).
+// NATURAL covers documented natural languages.
+// ENDANGERED, RESTORED, HISTORICAL describe natural-language status.
+// FICTIONAL covers conlangs designed for fiction (Quenya, Klingon...).
+// AUXILIARY covers international auxiliary languages (Esperanto...).
+enum LanguageCategory {
+  CONLANG
+  NATURAL
+  ENDANGERED
+  RESTORED
+  HISTORICAL
+  FICTIONAL
+  AUXILIARY
+  OTHER
 }
 
 // Reserves an old slug for 180 days after a language renames itself.

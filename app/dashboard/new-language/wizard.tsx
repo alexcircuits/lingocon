@@ -22,12 +22,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 type WizardStep = 1 | 2 | 3 | 4 | 5
 
+type LanguageCategory =
+  | "CONLANG"
+  | "NATURAL"
+  | "ENDANGERED"
+  | "RESTORED"
+  | "HISTORICAL"
+  | "FICTIONAL"
+  | "AUXILIARY"
+  | "OTHER"
+
 interface WizardData {
   // Step 1
   name: string
   slug: string
   description: string
   visibility: "PRIVATE" | "UNLISTED" | "PUBLIC"
+  category: LanguageCategory
   // Step 2
   wordOrder?: string
   morphologicalTendency?: string
@@ -49,6 +60,7 @@ export function LanguageWizard() {
     slug: "",
     description: "",
     visibility: "PRIVATE",
+    category: "CONLANG",
     createAlphabet: false,
     createGrammarPages: false,
   })
@@ -97,6 +109,7 @@ export function LanguageWizard() {
         slug: data.slug,
         description: data.description || undefined,
         visibility: data.visibility,
+        category: data.category,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       })
 
@@ -174,6 +187,32 @@ export function LanguageWizard() {
                 rows={4}
                 disabled={isPending}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wizard-category">{t("categoryLabel")}</Label>
+              <Select
+                value={data.category}
+                onValueChange={(value: LanguageCategory) =>
+                  setData((prev) => ({ ...prev, category: value }))
+                }
+                disabled={isPending}
+              >
+                <SelectTrigger id="wizard-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CONLANG">{t("categoryConlang")}</SelectItem>
+                  <SelectItem value="NATURAL">{t("categoryNatural")}</SelectItem>
+                  <SelectItem value="ENDANGERED">{t("categoryEndangered")}</SelectItem>
+                  <SelectItem value="RESTORED">{t("categoryRestored")}</SelectItem>
+                  <SelectItem value="HISTORICAL">{t("categoryHistorical")}</SelectItem>
+                  <SelectItem value="FICTIONAL">{t("categoryFictional")}</SelectItem>
+                  <SelectItem value="AUXILIARY">{t("categoryAuxiliary")}</SelectItem>
+                  <SelectItem value="OTHER">{t("categoryOther")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t("categoryHint")}</p>
             </div>
 
             <div className="space-y-2">

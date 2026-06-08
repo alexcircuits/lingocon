@@ -32,6 +32,16 @@ import { FlagGenerator } from "@/components/flag-generator"
 import { ExportDataCard } from "./export-data-card"
 import { DeleteLanguageCard } from "./delete-language-card"
 
+type LanguageCategoryValue =
+  | "CONLANG"
+  | "NATURAL"
+  | "ENDANGERED"
+  | "RESTORED"
+  | "HISTORICAL"
+  | "FICTIONAL"
+  | "AUXILIARY"
+  | "OTHER"
+
 interface LanguageSettingsProps {
   language: {
     id: string
@@ -39,6 +49,7 @@ interface LanguageSettingsProps {
     slug: string
     description: string | null
     visibility: string
+    category?: LanguageCategoryValue | string
     flagUrl: string | null
     discordUrl?: string | null
     telegramUrl?: string | null
@@ -48,6 +59,7 @@ interface LanguageSettingsProps {
     fontScale: number
     allowsDiacritics?: boolean
     allowForking?: boolean
+    acceptRomanizedAnswers?: boolean
     metadata?: unknown
   }
   languageSlug: string
@@ -92,6 +104,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
     slug: language.slug,
     description: language.description || "",
     visibility: language.visibility as "PRIVATE" | "UNLISTED" | "PUBLIC",
+    category: (language.category as LanguageCategoryValue) || "CONLANG",
     flagUrl: language.flagUrl || "",
     discordUrl: language.discordUrl || "",
     telegramUrl: language.telegramUrl || "",
@@ -101,6 +114,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
     fontScale: language.fontScale || 1.0,
     allowsDiacritics: language.allowsDiacritics ?? false,
     allowForking: language.allowForking ?? false,
+    acceptRomanizedAnswers: language.acceptRomanizedAnswers ?? false,
     ttsVoice: parsedMetadata.tts?.voiceId ?? "Joanna",
     ttsSpeed: parsedMetadata.tts?.speed ?? "slow",
   })
@@ -116,6 +130,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         name: String(formData.name),
         slug: String(formData.slug),
         visibility: formData.visibility,
+        category: formData.category,
         description: formData.description,
         flagUrl: formData.flagUrl || null,
         discordUrl: formData.discordUrl || "",
@@ -126,6 +141,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         fontScale: Number(formData.fontScale),
         allowsDiacritics: Boolean(formData.allowsDiacritics),
         allowForking: Boolean(formData.allowForking),
+        acceptRomanizedAnswers: Boolean(formData.acceptRomanizedAnswers),
         metadata: {
           ...parsedMetadata,
           tts: {
@@ -237,6 +253,25 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="allowForking"
               checked={formData.allowForking}
               onCheckedChange={(checked) => setFormData({ ...formData, allowForking: checked })}
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="acceptRomanizedAnswers" className="text-base font-medium">
+                Accept Romanized Answers
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                In lessons, mark answers correct if learners type the Latin transliteration
+                (using each symbol&apos;s <code>latin</code> mapping) instead of your script.
+                Leave off if your romanization is lossy or ambiguous.
+              </p>
+            </div>
+            <Switch
+              id="acceptRomanizedAnswers"
+              checked={formData.acceptRomanizedAnswers}
+              onCheckedChange={(checked) => setFormData({ ...formData, acceptRomanizedAnswers: checked })}
               disabled={isPending}
             />
           </div>
@@ -503,6 +538,34 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 </IPASpeaker>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category: value as LanguageCategoryValue })
+              }
+              disabled={isPending}
+            >
+              <SelectTrigger id="category">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CONLANG">Constructed (Conlang)</SelectItem>
+                <SelectItem value="NATURAL">Natural</SelectItem>
+                <SelectItem value="ENDANGERED">Endangered</SelectItem>
+                <SelectItem value="RESTORED">Restored / Revived</SelectItem>
+                <SelectItem value="HISTORICAL">Historical / Ancient</SelectItem>
+                <SelectItem value="FICTIONAL">Fictional</SelectItem>
+                <SelectItem value="AUXILIARY">Auxiliary</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Classify your language by origin or use — helps people discover it through browse filters.
+            </p>
           </div>
 
           <div className="space-y-2">

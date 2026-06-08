@@ -23,6 +23,7 @@ async function getLessonData(lessonId: string, userId: string) {
             select: {
               id: true, name: true, slug: true,
               fontUrl: true, fontFamily: true, fontScale: true,
+              acceptRomanizedAnswers: true,
               scriptSymbols: {
                 select: { symbol: true, latin: true },
                 orderBy: { order: "asc" as const },
@@ -185,6 +186,7 @@ export default async function LessonPage({
         fontFamily={lesson.course.language.fontFamily}
         fontScale={lesson.course.language.fontScale ?? 1}
         scriptSymbols={lesson.course.language.scriptSymbols}
+        acceptRomanizedAnswers={lesson.course.language.acceptRomanizedAnswers ?? false}
       />
     </div>
   )

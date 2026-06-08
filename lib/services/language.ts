@@ -33,6 +33,7 @@ export async function createLanguage(input: CreateLanguageInput, userId: string)
       slug: validated.slug,
       description: validated.description || null,
       visibility: validated.visibility,
+      category: validated.category ?? "CONLANG",
       metadata: validated.metadata ? (validated.metadata as any) : null,
       ownerId: userId,
     },
@@ -113,6 +114,8 @@ export async function updateLanguage(input: UpdateLanguageInput, userId: string)
   if (validated.fontScale !== undefined) updateData.fontScale = validated.fontScale
   if (validated.allowsDiacritics !== undefined) updateData.allowsDiacritics = validated.allowsDiacritics
   if (validated.allowForking !== undefined) updateData.allowForking = validated.allowForking
+  if (validated.acceptRomanizedAnswers !== undefined) updateData.acceptRomanizedAnswers = validated.acceptRomanizedAnswers
+  if (validated.category !== undefined) updateData.category = validated.category
   if (validated.metadata !== undefined) updateData.metadata = validated.metadata
 
   return prisma.language.update({

@@ -1,21 +1,35 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getTotalKeyCount } from '@/lib/i18n/config';
+import { getUserId } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
-    // We get languages that have at least one translation
+    const userId = await getUserId();
+
+    // Languages that show up in the site-wide switcher: public + has at least
+    // one translated string. Additionally, the signed-in user's *own* languages
+    // (or ones they collaborate on) are surfaced regardless of visibility so
+    // they can preview their own translations before publishing.
     const translatedLanguages = await prisma.language.findMany({
       where: {
-        uiTranslations: {
-          some: {},
-        },
-        visibility: "PUBLIC"
+        uiTranslations: { some: {} },
+        OR: [
+          { visibility: "PUBLIC" },
+          ...(userId
+            ? [
+                { ownerId: userId },
+                { collaborators: { some: { userId } } },
+              ]
+            : []),
+        ],
       },
       select: {
         id: true,
         name: true,
         flagUrl: true,
+        visibility: true,
+        ownerId: true,
         owner: {
           select: {
             name: true,
@@ -45,6 +59,9 @@ export async function GET() {
         translatedCount,
         totalKeys,
         percentage,
+        // Owner-only preview when the language isn't public yet — lets the
+        // creator switch the UI to test their own work before publishing.
+        isOwnerPreview: lang.visibility !== "PUBLIC" && userId !== null && lang.ownerId === userId,
       };
     }).sort((a, b) => b.percentage - a.percentage);
 

@@ -6,12 +6,23 @@ import { motion } from "motion/react"
 import { Languages, BookOpen, FileText, Heart, ArrowRight, GraduationCap } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
 
+export type BookCardCategory =
+    | "CONLANG"
+    | "NATURAL"
+    | "ENDANGERED"
+    | "RESTORED"
+    | "HISTORICAL"
+    | "FICTIONAL"
+    | "AUXILIARY"
+    | "OTHER"
+
 export interface BookCardLanguage {
     id: string
     name: string
     slug: string
     description?: string | null
     flagUrl?: string | null
+    category?: BookCardCategory | string | null
     createdAt?: Date | string
     owner: { name: string | null; image?: string | null }
     _count: {
@@ -21,6 +32,33 @@ export interface BookCardLanguage {
         favorites?: number
         courses?: number
     }
+}
+
+const CATEGORY_LABELS: Record<BookCardCategory, string> = {
+    CONLANG: "Conlang",
+    NATURAL: "Natural",
+    ENDANGERED: "Endangered",
+    RESTORED: "Restored",
+    HISTORICAL: "Historical",
+    FICTIONAL: "Fictional",
+    AUXILIARY: "Auxiliary",
+    OTHER: "Other",
+}
+
+function CategoryBadge({ category, className }: { category?: BookCardCategory | string | null; className?: string }) {
+    if (!category || category === "CONLANG") return null
+    const label = CATEGORY_LABELS[category as BookCardCategory] ?? null
+    if (!label) return null
+    return (
+        <span
+            className={cn(
+                "inline-flex items-center rounded-full bg-secondary/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-secondary-foreground backdrop-blur",
+                className,
+            )}
+        >
+            {label}
+        </span>
+    )
 }
 
 function getGradientFromName(name: string): [string, string] {
@@ -158,6 +196,7 @@ export function BookCard({ language, view = "grid", className }: BookCardProps) 
                         )}
                     </div>
                     <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                        <CategoryBadge category={language.category} />
                         <LearnBadge language={language} />
                         <Stats language={language} />
                     </div>
@@ -187,6 +226,7 @@ export function BookCard({ language, view = "grid", className }: BookCardProps) 
                             textClassName="text-5xl"
                         />
                         <LearnBadge language={language} className="absolute right-2 top-2 z-10" />
+                        <CategoryBadge category={language.category} className="absolute left-3.5 top-2 z-10" />
                     </div>
                     <div className="flex flex-1 flex-col p-4">
                         <h3 className="line-clamp-2 text-lg font-bold leading-tight tracking-tight transition-colors group-hover:text-primary">

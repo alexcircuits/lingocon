@@ -821,6 +821,16 @@
     "visibilityPrivate": "Private",
     "visibilityUnlisted": "Unlisted",
     "visibilityPublic": "Public",
+    "categoryLabel": "Category",
+    "categoryHint": "Classify your language by origin or use — helps others discover it.",
+    "categoryConlang": "Constructed (Conlang)",
+    "categoryNatural": "Natural",
+    "categoryEndangered": "Endangered",
+    "categoryRestored": "Restored / Revived",
+    "categoryHistorical": "Historical / Ancient",
+    "categoryFictional": "Fictional",
+    "categoryAuxiliary": "Auxiliary",
+    "categoryOther": "Other",
     "typologyHint": "These choices help organize your language but don't restrict what you can create.",
     "wordOrderLabel": "Word Order (optional)",
     "wordOrderPlaceholder": "Select word order",
@@ -915,7 +925,17 @@
     "emptyFirstHint": "Be the first to create and share a constructed language!",
     "createLanguage": "Create Language",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "filterCategoryLabel": "Category:",
+    "categoryAll": "All categories",
+    "categoryConlang": "Constructed",
+    "categoryNatural": "Natural",
+    "categoryEndangered": "Endangered",
+    "categoryRestored": "Restored",
+    "categoryHistorical": "Historical",
+    "categoryFictional": "Fictional",
+    "categoryAuxiliary": "Auxiliary",
+    "categoryOther": "Other"
   },
   "families": {
     "emptyTitle": "No Public Languages Yet",
@@ -977,6 +997,7 @@
     "allSections": "All Sections",
     "noStringsFound": "No strings found matching your filters.",
     "loadFailed": "Failed to load translations",
-    "saveFailed": "Error saving translations"
+    "saveFailed": "Error saving translations",
+    "previewBadge": "Preview"
   }
 }

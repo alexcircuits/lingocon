@@ -1,5 +1,19 @@
 import { z } from "zod"
 
+export const LANGUAGE_CATEGORIES = [
+  "CONLANG",
+  "NATURAL",
+  "ENDANGERED",
+  "RESTORED",
+  "HISTORICAL",
+  "FICTIONAL",
+  "AUXILIARY",
+  "OTHER",
+] as const
+
+export const languageCategorySchema = z.enum(LANGUAGE_CATEGORIES)
+export type LanguageCategory = z.infer<typeof languageCategorySchema>
+
 export const languageMetadataSchema = z.object({
   wordOrder: z.string().optional(),
   morphologicalTendency: z.string().optional(),
@@ -26,6 +40,7 @@ export const createLanguageSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   description: z.string().max(1000).optional(),
   visibility: z.enum(["PRIVATE", "UNLISTED", "PUBLIC"]),
+  category: languageCategorySchema.optional(),
   metadata: languageMetadataSchema.optional(), // Typology data from wizard
 })
 
@@ -49,6 +64,8 @@ export const updateLanguageSchema = z.object({
   fontScale: z.number().min(0.5).max(3.0).optional(),
   allowsDiacritics: z.boolean().optional(),
   allowForking: z.boolean().optional(),
+  acceptRomanizedAnswers: z.boolean().optional(),
+  category: languageCategorySchema.optional(),
   metadata: languageMetadataSchema.optional(),
 })
 

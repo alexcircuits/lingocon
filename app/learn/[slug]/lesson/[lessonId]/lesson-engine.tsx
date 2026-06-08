@@ -50,18 +50,38 @@ function normalizeForCompare(s: string): string {
   return stripDiacritics(s.trim().toLowerCase())
 }
 
-function isAnswerCorrect(userInput: string, expected: string): boolean {
-  const raw = userInput.trim().toLowerCase()
-  const target = expected.trim().toLowerCase()
-  if (raw === target) return true
-  // Diacritic-insensitive compare: a missed combining mark shouldn't fail
-  // the learner. Normalize both sides before measuring edit distance.
-  const a = normalizeForCompare(raw)
+function matchWithTolerance(rawInput: string, target: string): boolean {
+  const a = normalizeForCompare(rawInput)
   const b = normalizeForCompare(target)
   if (a === b) return true
   // Allow 1 typo for words longer than 4 chars, 2 for words longer than 8
   const tolerance = b.length <= 4 ? 0 : b.length <= 8 ? 1 : 2
   return levenshtein(a, b) <= tolerance
+}
+
+function isAnswerCorrect(
+  userInput: string,
+  expected: string,
+  options?: { acceptRomanized?: boolean; scriptSymbols?: ScriptSymbol[] },
+): boolean {
+  const raw = userInput.trim().toLowerCase()
+  const target = expected.trim().toLowerCase()
+  if (raw === target) return true
+  // Diacritic-insensitive compare: a missed combining mark shouldn't fail
+  // the learner. Normalize both sides before measuring edit distance.
+  if (matchWithTolerance(raw, target)) return true
+
+  // Optional: accept the Latin transliteration of the expected answer as
+  // correct. Opt-in per language because for many conlangs the romanization
+  // is lossy or ambiguous (Luna's case in #bug-reports).
+  if (options?.acceptRomanized && options.scriptSymbols && options.scriptSymbols.length > 0) {
+    const romanizedTarget = romanize(target, options.scriptSymbols).toLowerCase()
+    if (romanizedTarget && romanizedTarget !== target && matchWithTolerance(raw, romanizedTarget)) {
+      return true
+    }
+  }
+
+  return false
 }
 
 // ─── Props / State types ──────────────────────────────────────────────────────
@@ -77,6 +97,7 @@ interface LessonEngineProps {
   fontFamily?: string | null
   fontScale?: number
   scriptSymbols: ScriptSymbol[]
+  acceptRomanizedAnswers?: boolean
 }
 
 type FeedbackState =
@@ -90,7 +111,7 @@ type Screen = "lesson" | "complete" | "failed"
 
 export function LessonEngine({
   lessonId, lessonTitle, exercises, languageSlug, languageName, courseId,
-  fontUrl, fontFamily, fontScale, scriptSymbols,
+  fontUrl, fontFamily, fontScale, scriptSymbols, acceptRomanizedAnswers = false,
 }: LessonEngineProps) {
   const [queue, setQueue]         = useState<Exercise[]>(exercises)
   const [idx, setIdx]             = useState(0)
@@ -144,12 +165,18 @@ export function LessonEngine({
       correct = option?.correct ?? false
       correctText = current.options.find(o => o.correct)?.text ?? ""
     } else if (current.type === "TRANSLATE") {
-      correct = isAnswerCorrect(typedAnswer, current.answer)
+      correct = isAnswerCorrect(typedAnswer, current.answer, {
+        acceptRomanized: acceptRomanizedAnswers,
+        scriptSymbols,
+      })
       correctText = current.answer
       hint = current.hint
     } else if (current.type === "SENTENCE_BUILDER") {
       const selectedTexts = selectedBuilderWords.map(id => current.words.find(w => w.id === id)?.text).join(" ")
-      correct = isAnswerCorrect(selectedTexts, current.sentence)
+      correct = isAnswerCorrect(selectedTexts, current.sentence, {
+        acceptRomanized: acceptRomanizedAnswers,
+        scriptSymbols,
+      })
       correctText = current.sentence
     }
 
@@ -167,7 +194,7 @@ export function LessonEngine({
         setTimeout(() => setScreen("failed"), 1400)
       }
     }
-  }, [current, feedback.status, selected, typedAnswer, hearts, selectedBuilderWords, recordMistake])
+  }, [current, feedback.status, selected, typedAnswer, hearts, selectedBuilderWords, recordMistake, acceptRomanizedAnswers, scriptSymbols])
 
   // ── Match-pairs wrong match — counts toward accuracy but doesn't cost a
   // heart. Match-pairs is a warm-up; the production round is where mistakes
@@ -180,6 +207,10 @@ export function LessonEngine({
   // ── Advance to next exercise ───────────────────────────────────────────────
 
   const advance = useCallback(async () => {
+    // Track the *effective* queue length so end-of-lesson detection is correct
+    // even when we just enqueued a retry card.
+    let effectiveQueueLength = queue.length
+
     if (feedback.status === "wrong" && hearts > 0) {
       // Re-queue the card near the end so learner sees it again
       const failed = queue[idx]
@@ -187,10 +218,11 @@ export function LessonEngine({
       const insertAt = Math.min(idx + 3, newQueue.length)
       newQueue.splice(insertAt, 0, { ...failed, id: `${failed.id}-retry` } as Exercise)
       setQueue(newQueue)
+      effectiveQueueLength = newQueue.length
     }
 
     const nextIdx = idx + 1
-    if (nextIdx >= queue.length || (feedback.status === "wrong" && hearts === 0)) {
+    if (nextIdx >= effectiveQueueLength || (feedback.status === "wrong" && hearts === 0)) {
       // Reviewing past mistakes never re-awards XP or re-saves completion.
       if (reviewMode) {
         setScreen("complete")
@@ -444,12 +476,18 @@ export function LessonEngine({
 
       {/* ── Bottom action / feedback bar ── */}
       {current.type !== "MATCH_PAIRS" && (
-        <div className={cn(
-          "sticky bottom-0 border-t transition-colors duration-300",
-          feedback.status === "correct" ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
-            : feedback.status === "wrong" ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"
-            : "bg-background border-border"
-        )}>
+        <div
+          className={cn(
+            "sticky bottom-0 border-t transition-colors duration-300",
+            feedback.status === "correct" ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
+              : feedback.status === "wrong" ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"
+              : "bg-background border-border"
+          )}
+          // Keep the Check / Continue button clear of iOS home-indicator and
+          // the Chrome bottom URL bar. Without this the button can be hidden on
+          // mobile, which looks like "the lesson won't let me complete".
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           <div className="container mx-auto max-w-2xl px-4 py-4">
             {feedback.status === "answering" ? (
               current.type === "INFO" || current.type === "WORD_INTRO" ? (

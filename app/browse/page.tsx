@@ -10,6 +10,7 @@ import { Plus, Globe, ChevronLeft, ChevronRight } from "lucide-react"
 import { BrowseResults } from "./components/browse-results"
 import { SortSelector } from "./components/sort-selector"
 import { BrowseSearch } from "./components/browse-search"
+import { CategoryFilter, CATEGORY_FILTER_VALUES, type CategoryFilter as CategoryFilterValue } from "./components/category-filter"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
@@ -34,6 +35,13 @@ export const dynamic = "force-dynamic"
 
 type SortOption = "recent" | "updated" | "entries" | "name" | "likes"
 
+const CATEGORY_VALUES = new Set<CategoryFilterValue>(CATEGORY_FILTER_VALUES)
+
+function parseCategory(raw: string | undefined): CategoryFilterValue {
+  if (!raw) return "all"
+  return CATEGORY_VALUES.has(raw as CategoryFilterValue) ? (raw as CategoryFilterValue) : "all"
+}
+
 /** A sliding window of page numbers centered on the current page. */
 function pageWindow(current: number, total: number, size = 5): number[] {
   const half = Math.floor(size / 2)
@@ -43,7 +51,12 @@ function pageWindow(current: number, total: number, size = 5): number[] {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i)
 }
 
-async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 1, query: string = "") {
+async function getPublicLanguages(
+  sortBy: SortOption = "recent",
+  page: number = 1,
+  query: string = "",
+  category: CategoryFilterValue = "all",
+) {
   const pageSize = 20
   const skip = (page - 1) * pageSize
 
@@ -54,7 +67,9 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
       ] }
     : {}
 
-  const where = { visibility: "PUBLIC" as const, ...searchClause }
+  const categoryClause = category !== "all" ? { category } : {}
+
+  const where = { visibility: "PUBLIC" as const, ...searchClause, ...categoryClause }
 
   const sharedSelect = {
     id: true,
@@ -68,6 +83,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
     createdAt: true,
     updatedAt: true,
     visibility: true,
+    category: true,
     metadata: true,
     discordUrl: true,
     telegramUrl: true,
@@ -146,7 +162,7 @@ async function getPublicLanguages(sortBy: SortOption = "recent", page: number = 
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; page?: string; q?: string }>
+  searchParams: Promise<{ sort?: string; page?: string; q?: string; category?: string }>
 }) {
   const [session, params] = await Promise.all([
     auth(),
@@ -156,7 +172,8 @@ export default async function BrowsePage({
   const sortBy = (params.sort as SortOption) || "recent"
   const page = parseInt(params.page || "1", 10)
   const query = params.q || ""
-  const { languages, total, totalPages } = await getPublicLanguages(sortBy, page, query)
+  const category = parseCategory(params.category)
+  const { languages, total, totalPages } = await getPublicLanguages(sortBy, page, query, category)
 
   const isDevMode = process.env.DEV_MODE === "true"
   const user = session?.user ? {
@@ -188,10 +205,11 @@ export default async function BrowsePage({
           <div className="w-full md:w-auto">
             <BrowseSearch />
           </div>
-          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-between md:justify-end">
             <span className="text-sm text-muted-foreground">
               {t("countOfTotal", { shown: languages.length, total })}
             </span>
+            <CategoryFilter currentCategory={category} />
             <SortSelector currentSort={sortBy} />
           </div>
         </div>
@@ -227,7 +245,7 @@ export default async function BrowsePage({
             {totalPages > 1 && (
               <div className="mt-16 flex items-center justify-center gap-2">
                 {page > 1 ? (
-                  <Link href={`/browse?sort=${sortBy}&page=${page - 1}${query ? `&q=${query}` : ""}`}>
+                  <Link href={`/browse?sort=${sortBy}&page=${page - 1}${query ? `&q=${query}` : ""}${category !== "all" ? `&category=${category}` : ""}`}>
                     <Button variant="outline" size="sm">
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       {t("previous")}
@@ -242,7 +260,7 @@ export default async function BrowsePage({
 
                 <div className="flex items-center gap-1 mx-4">
                   {pageWindow(page, totalPages).map((pageNum) => (
-                    <Link key={pageNum} href={`/browse?sort=${sortBy}&page=${pageNum}${query ? `&q=${query}` : ""}`}>
+                    <Link key={pageNum} href={`/browse?sort=${sortBy}&page=${pageNum}${query ? `&q=${query}` : ""}${category !== "all" ? `&category=${category}` : ""}`}>
                       <Button
                         variant={page === pageNum ? "default" : "ghost"}
                         size="sm"
@@ -258,7 +276,7 @@ export default async function BrowsePage({
                 </div>
 
                 {page < totalPages ? (
-                  <Link href={`/browse?sort=${sortBy}&page=${page + 1}${query ? `&q=${query}` : ""}`}>
+                  <Link href={`/browse?sort=${sortBy}&page=${page + 1}${query ? `&q=${query}` : ""}${category !== "all" ? `&category=${category}` : ""}`}>
                     <Button variant="outline" size="sm">
                       {t("next")}
                       <ChevronRight className="h-4 w-4 ml-1" />

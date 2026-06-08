@@ -33,6 +33,9 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
   const [visibility, setVisibility] = useState<"PRIVATE" | "UNLISTED" | "PUBLIC">("PRIVATE")
+  const [category, setCategory] = useState<
+    "CONLANG" | "NATURAL" | "ENDANGERED" | "RESTORED" | "HISTORICAL" | "FICTIONAL" | "AUXILIARY" | "OTHER"
+  >("CONLANG")
   const [parentId, setParentId] = useState<string>(initialParentId)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +67,7 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
           slug,
           description: description || undefined,
           visibility: visibility as any,
+          category,
         })
       }
 
@@ -150,6 +154,30 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
           rows={4}
           disabled={isPending}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="category">{tWizard("categoryLabel")}</Label>
+        <Select
+          value={category}
+          onValueChange={(value) => setCategory(value as typeof category)}
+          disabled={isPending}
+        >
+          <SelectTrigger id="category">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CONLANG">{tWizard("categoryConlang")}</SelectItem>
+            <SelectItem value="NATURAL">{tWizard("categoryNatural")}</SelectItem>
+            <SelectItem value="ENDANGERED">{tWizard("categoryEndangered")}</SelectItem>
+            <SelectItem value="RESTORED">{tWizard("categoryRestored")}</SelectItem>
+            <SelectItem value="HISTORICAL">{tWizard("categoryHistorical")}</SelectItem>
+            <SelectItem value="FICTIONAL">{tWizard("categoryFictional")}</SelectItem>
+            <SelectItem value="AUXILIARY">{tWizard("categoryAuxiliary")}</SelectItem>
+            <SelectItem value="OTHER">{tWizard("categoryOther")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">{tWizard("categoryHint")}</p>
       </div>
 
       <div className="space-y-2">

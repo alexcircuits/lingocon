@@ -73,6 +73,7 @@ export async function evolveLanguage(input: EvolveLanguageInput) {
           fontFamily: parent.fontFamily,
           fontScale: parent.fontScale,
           allowsDiacritics: parent.allowsDiacritics,
+          category: parent.category,
           metadata: parent.metadata as Prisma.InputJsonValue ?? Prisma.JsonNull,
         },
       })
