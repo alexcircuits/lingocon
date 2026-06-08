@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { updateLanguage } from "@/app/actions/language"
@@ -91,6 +92,7 @@ const availableVoices = [
 ]
 
 export function LanguageSettings({ language, languageSlug, dictionaryEntries, isOwner = false }: LanguageSettingsProps) {
+  const t = useTranslations("studio.settings")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -157,7 +159,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
-        toast.success("Settings updated successfully")
+        toast.success(t("savedToast"))
         if (result.slugChanged) {
           router.push(`/studio/lang/${formData.slug}/settings`)
         } else {
@@ -178,11 +180,11 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-4">General Settings</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("generalHeading")}</h3>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("nameLabel")}</Label>
             <Input
               id="name"
               value={formData.name}
@@ -194,7 +196,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug">{t("slugLabel")}</Label>
             <Input
               id="slug"
               value={formData.slug}
@@ -204,19 +206,19 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               maxLength={100}
             />
             <p className="text-xs text-muted-foreground">
-              Changing your slug will reserve the old one for 180 days, redirecting visitors to your new URL.
+              {t("slugHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("descriptionLabel")}</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              placeholder="A brief description of your language..."
+              placeholder={t("descriptionPlaceholder")}
               disabled={isPending}
               rows={4}
               maxLength={1000}
@@ -226,10 +228,10 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
             <div className="space-y-0.5">
               <Label htmlFor="allowsDiacritics" className="text-base font-medium">
-                Diacritical Language
+                {t("diacriticalTitle")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Allow diacritics (ě, á, ą, etc.) without adding each as a separate alphabet symbol
+                {t("diacriticalDesc")}
               </p>
             </div>
             <Switch
@@ -243,10 +245,10 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
             <div className="space-y-0.5">
               <Label htmlFor="allowForking" className="text-base font-medium">
-                Allow Forking
+                {t("allowForkingTitle")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Let other users evolve new daughter languages from yours
+                {t("allowForkingDesc")}
               </p>
             </div>
             <Switch
@@ -260,12 +262,10 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border/40 p-4">
             <div className="space-y-0.5">
               <Label htmlFor="acceptRomanizedAnswers" className="text-base font-medium">
-                Accept Romanized Answers
+                {t("acceptRomanizedTitle")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                In lessons, mark answers correct if learners type the Latin transliteration
-                (using each symbol&apos;s <code>latin</code> mapping) instead of your script.
-                Leave off if your romanization is lossy or ambiguous.
+                {t("acceptRomanizedDesc")}
               </p>
             </div>
             <Switch
@@ -280,7 +280,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div className="flex items-center justify-between mb-2">
               <Label className="flex items-center gap-2">
                 <Flag className="h-4 w-4" />
-                Language Flag
+                {t("flagLabel")}
               </Label>
               <FlagGenerator
                 languageName={language.name}
@@ -291,11 +291,11 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               type="flag"
               value={formData.flagUrl}
               onChange={(url) => setFormData({ ...formData, flagUrl: url || "" })}
-              placeholder="Upload a flag image for your language"
+              placeholder={t("flagPlaceholder")}
               maxSize={2 * 1024 * 1024}
             />
             <p className="text-xs text-muted-foreground">
-              Upload a flag or emblem to represent your language. Recommended: square or flag ratio (max 2MB)
+              {t("flagHint")}
             </p>
           </div>
 
@@ -303,41 +303,41 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div>
               <Label className="text-base font-medium flex items-center gap-2 mb-1">
                 <Type className="h-4 w-4" />
-                Custom Script Font
+                {t("fontHeading")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Upload a custom font file (.ttf, .otf, .woff, .woff2) to display your language&apos;s script correctly.
+                {t("fontDesc")}
               </p>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="fontUpload">Font File</Label>
+                <Label htmlFor="fontUpload">{t("fontFileLabel")}</Label>
                 <FileUpload
                   type="font"
                   value={formData.fontUrl}
                   onChange={(url) => setFormData({ ...formData, fontUrl: url || "" })}
-                  placeholder="Upload font file"
+                  placeholder={t("fontFilePlaceholder")}
                   maxSize={15 * 1024 * 1024} // 15MB
                 />
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fontFamily">Font Family Name (Optional)</Label>
+                  <Label htmlFor="fontFamily">{t("fontFamilyLabel")}</Label>
                   <Input
                     id="fontFamily"
                     value={formData.fontFamily}
                     onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
-                    placeholder="e.g. MyConlangScript"
+                    placeholder={t("fontFamilyPlaceholder")}
                     disabled={isPending}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="fontScale">Font Scale ({formData.fontScale.toFixed(1)}x)</Label>
-                    <span className="text-xs text-muted-foreground">Adjust if font is too small/large</span>
+                    <Label htmlFor="fontScale">{t("fontScaleLabel", { scale: formData.fontScale.toFixed(1) })}</Label>
+                    <span className="text-xs text-muted-foreground">{t("fontScaleHint")}</span>
                   </div>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <Slider
@@ -369,7 +369,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
 
                 {formData.fontUrl && (
                   <div className="space-y-2">
-                    <Label>Preview</Label>
+                    <Label>{t("fontPreviewLabel")}</Label>
                     <div className="p-4 rounded-lg border border-border/40 bg-secondary/20 overflow-hidden">
                       <style dangerouslySetInnerHTML={{
                         __html: `
@@ -388,11 +388,11 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                         contentEditable
                         suppressContentEditableWarning
                       >
-                        The quick brown fox jumps over the lazy dog.
-                        1234567890
+                        {t("fontPreviewSample")}
+                        {" "}1234567890
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Editable preview area with {formData.fontScale}x scaling
+                        {t("fontPreviewCaption", { scale: formData.fontScale })}
                       </p>
                     </div>
                   </div>
@@ -405,16 +405,16 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div>
               <Label className="text-base font-medium flex items-center gap-2 mb-1">
                 <Volume2 className="h-4 w-4" />
-                Pronunciation (TTS)
+                {t("ttsHeading")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Customize how the IPA speaker sounds. Some languages (like Italian) may handle pure vowels better than English voices.
+                {t("ttsDesc")}
               </p>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="ttsVoice">Voice</Label>
+                <Label htmlFor="ttsVoice">{t("ttsVoiceLabel")}</Label>
                 <Select
                   value={formData.ttsVoice}
                   onValueChange={(value) => setFormData({ ...formData, ttsVoice: value })}
@@ -436,13 +436,13 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="ttsSpeed">Speed ({typeof formData.ttsSpeed === 'string' && formData.ttsSpeed.endsWith('%') ? (parseInt(formData.ttsSpeed) / 100).toFixed(1) : (
+                    <Label htmlFor="ttsSpeed">{t("ttsSpeedLabel", { speed: typeof formData.ttsSpeed === 'string' && formData.ttsSpeed.endsWith('%') ? (parseInt(formData.ttsSpeed) / 100).toFixed(1) : (
                       formData.ttsSpeed === 'x-slow' ? '0.5' :
                         formData.ttsSpeed === 'slow' ? '0.7' :
                           formData.ttsSpeed === 'medium' ? '1.0' :
                             formData.ttsSpeed === 'fast' ? '1.2' :
                               formData.ttsSpeed === 'x-fast' ? '1.5' : '1.0'
-                    )}x)</Label>
+                    ) })}</Label>
                   </div>
                   <div className="flex items-center gap-4">
                     <Slider
@@ -496,19 +496,19 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
           </div>
 
           <div className="mt-6 pt-6 border-t border-border/40">
-            <Label className="text-sm font-medium mb-3 block">Preview Voice</Label>
+            <Label className="text-sm font-medium mb-3 block">{t("ttsPreviewLabel")}</Label>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 space-y-2">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter IPA to preview..."
+                    placeholder={t("ttsPreviewPlaceholder")}
                     value={previewIpa}
                     onChange={(e) => setPreviewIpa(e.target.value)}
                     className="font-mono flex-1"
                   />
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title="Open IPA Keyboard">
+                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title={t("openIpaKeyboard")}>
                         <Keyboard className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -522,7 +522,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   </Popover>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Type IPA directly or use the keyboard to test the voice.
+                  {t("ttsPreviewHint")}
                 </p>
               </div>
               <div className="flex items-start pt-1">
@@ -534,14 +534,14 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   className="gap-2"
                 >
                   <Volume2 className="h-4 w-4" />
-                  Test
+                  {t("ttsTest")}
                 </IPASpeaker>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">{t("categoryLabel")}</Label>
             <Select
               value={formData.category}
               onValueChange={(value) =>
@@ -553,23 +553,23 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="CONLANG">Constructed (Conlang)</SelectItem>
-                <SelectItem value="NATURAL">Natural</SelectItem>
-                <SelectItem value="ENDANGERED">Endangered</SelectItem>
-                <SelectItem value="RESTORED">Restored / Revived</SelectItem>
-                <SelectItem value="HISTORICAL">Historical / Ancient</SelectItem>
-                <SelectItem value="FICTIONAL">Fictional</SelectItem>
-                <SelectItem value="AUXILIARY">Auxiliary</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                <SelectItem value="CONLANG">{t("categoryConlang")}</SelectItem>
+                <SelectItem value="NATURAL">{t("categoryNatural")}</SelectItem>
+                <SelectItem value="ENDANGERED">{t("categoryEndangered")}</SelectItem>
+                <SelectItem value="RESTORED">{t("categoryRestored")}</SelectItem>
+                <SelectItem value="HISTORICAL">{t("categoryHistorical")}</SelectItem>
+                <SelectItem value="FICTIONAL">{t("categoryFictional")}</SelectItem>
+                <SelectItem value="AUXILIARY">{t("categoryAuxiliary")}</SelectItem>
+                <SelectItem value="OTHER">{t("categoryOther")}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Classify your language by origin or use — helps people discover it through browse filters.
+              {t("categoryHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="visibility">Visibility</Label>
+            <Label htmlFor="visibility">{t("visibilityLabel")}</Label>
             <Select
               value={formData.visibility}
               onValueChange={(value: "PRIVATE" | "UNLISTED" | "PUBLIC") =>
@@ -581,14 +581,13 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PRIVATE">Private</SelectItem>
-                <SelectItem value="UNLISTED">Unlisted</SelectItem>
-                <SelectItem value="PUBLIC">Public</SelectItem>
+                <SelectItem value="PRIVATE">{t("visibilityPrivate")}</SelectItem>
+                <SelectItem value="UNLISTED">{t("visibilityUnlisted")}</SelectItem>
+                <SelectItem value="PUBLIC">{t("visibilityPublic")}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Private: Only you can see it. Unlisted: Accessible via direct link.
-              Public: Listed publicly.
+              {t("visibilityHint")}
             </p>
           </div>
 
@@ -596,7 +595,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div className="space-y-2">
               <Label htmlFor="discordUrl" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Discord Server
+                {t("discordLabel")}
               </Label>
               <Input
                 id="discordUrl"
@@ -611,7 +610,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div className="space-y-2">
               <Label htmlFor="telegramUrl" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                Telegram Group
+                {t("telegramLabel")}
               </Label>
               <Input
                 id="telegramUrl"
@@ -626,13 +625,13 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="websiteUrl" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Website
+                {t("websiteLabel")}
               </Label>
               <Input
                 id="websiteUrl"
                 value={formData.websiteUrl}
                 onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                placeholder="https://example.com"
+                placeholder={t("websitePlaceholder")}
                 disabled={isPending}
               />
             </div>
@@ -640,7 +639,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Save Changes"}
+              {isPending ? t("saving") : t("save")}
             </Button>
           </div>
         </form>

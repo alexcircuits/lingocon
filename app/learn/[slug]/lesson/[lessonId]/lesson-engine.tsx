@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { completeLesson } from "@/app/actions/learn"
 import {
@@ -113,6 +114,7 @@ export function LessonEngine({
   lessonId, lessonTitle, exercises, languageSlug, languageName, courseId,
   fontUrl, fontFamily, fontScale, scriptSymbols, acceptRomanizedAnswers = false,
 }: LessonEngineProps) {
+  const t = useTranslations("learn.engine")
   const [queue, setQueue]         = useState<Exercise[]>(exercises)
   const [idx, setIdx]             = useState(0)
   const [hearts, setHearts]       = useState(MAX_HEARTS)
@@ -239,7 +241,7 @@ export function LessonEngine({
           setScreen("complete")
         }
       } catch {
-        toast.error("Failed to save progress")
+        toast.error(t("failedToSaveProgress"))
       } finally {
         setSaving(false)
       }
@@ -376,7 +378,7 @@ export function LessonEngine({
                 "flex items-center rounded-lg p-1.5 transition-colors",
                 showRoman ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
               )}
-              title={showRoman ? "Hide romanization / show script" : "Show romanization / hide script font"}
+              title={showRoman ? t("toggleRomanHide") : t("toggleRomanShow")}
             >
               <Languages className="h-4 w-4" />
             </button>
@@ -418,7 +420,7 @@ export function LessonEngine({
                     setAwardedXp(result?.data?.xpEarned ?? 0)
                     setScreen("complete")
                   })
-                  .catch(() => toast.error("Failed to save progress"))
+                  .catch(() => toast.error(t("failedToSaveProgress")))
                   .finally(() => setSaving(false))
               } else {
                 setIdx(nextIdx)
@@ -497,7 +499,7 @@ export function LessonEngine({
                   onClick={advance}
                   disabled={saving}
                 >
-                  Continue
+                  {t("continue")}
                 </Button>
               ) : (
                 <Button
@@ -506,7 +508,7 @@ export function LessonEngine({
                   disabled={!canCheck}
                   onClick={checkAnswer}
                 >
-                  Check
+                  {t("check")}
                 </Button>
               )
             ) : (
@@ -523,11 +525,11 @@ export function LessonEngine({
                       feedback.status === "correct" ? "text-emerald-700 dark:text-emerald-400"
                         : "text-red-700 dark:text-red-400"
                     )}>
-                      {feedback.status === "correct" ? "Correct!" : "Incorrect"}
+                      {feedback.status === "correct" ? t("correct") : t("incorrect")}
                     </p>
                     {feedback.status === "wrong" && (
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        Correct answer: <span className="font-semibold text-foreground">{feedback.correctText}</span>
+                        {t("correctAnswer")} <span className="font-semibold text-foreground">{feedback.correctText}</span>
                         {feedback.hint && <span className="text-muted-foreground ml-2">{feedback.hint}</span>}
                       </p>
                     )}
@@ -567,6 +569,7 @@ function WordIntroCard({
   scriptSymbols: ScriptSymbol[]
   showRoman: boolean
 }) {
+  const t = useTranslations("learn.engine")
   const [revealed, setRevealed] = useState(false)
   // Each new intro card resets reveal state.
   useEffect(() => { setRevealed(false) }, [exercise.id])
@@ -581,7 +584,7 @@ function WordIntroCard({
           <Sparkles className="h-5 w-5" />
         </div>
         <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          New word
+          {t("newWord")}
         </span>
       </div>
 
@@ -610,9 +613,9 @@ function WordIntroCard({
             ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
             : "border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-foreground",
         )}
-        aria-label={revealed ? "Translation revealed" : "Tap to reveal translation"}
+        aria-label={revealed ? t("translationRevealed") : t("tapToReveal")}
       >
-        {revealed ? exercise.gloss : "Tap to reveal translation"}
+        {revealed ? exercise.gloss : t("tapToReveal")}
       </button>
 
       {revealed && exercise.example && (
@@ -707,6 +710,7 @@ function TranslateCard({
   scriptSymbols: ScriptSymbol[]
   showRoman: boolean
 }) {
+  const t = useTranslations("learn.engine")
   const revealed = feedback.status !== "answering"
   const isConlangWord = exercise.direction === "to_native"
   const useScriptFont = isConlangWord && !showRoman
@@ -735,7 +739,7 @@ function TranslateCard({
           onChange={e => !revealed && onChange(e.target.value)}
           onKeyDown={e => e.key === "Enter" && value.trim() && !revealed && onSubmit()}
           disabled={revealed}
-          placeholder="Type your answer…"
+          placeholder={t("typeYourAnswer")}
           className={cn(
             "w-full rounded-2xl border-2 bg-card px-5 py-4 text-xl font-medium outline-none transition-all",
             "placeholder:text-muted-foreground/40 disabled:cursor-default",
@@ -757,6 +761,7 @@ function TranslateCard({
 // ─── Info / Concept Card ──────────────────────────────────────────────────────
 
 function InfoCard({ exercise }: { exercise: InfoExercise }) {
+  const t = useTranslations("learn.engine")
   const isGrammar = exercise.kind === "GRAMMAR"
   return (
     <div className="space-y-6">
@@ -768,7 +773,7 @@ function InfoCard({ exercise }: { exercise: InfoExercise }) {
           {isGrammar ? <BookOpen className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
         </div>
         <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          {isGrammar ? "Grammar" : "Reading"}
+          {isGrammar ? t("grammarLabel") : t("readingLabel")}
         </span>
       </div>
 
@@ -779,7 +784,7 @@ function InfoCard({ exercise }: { exercise: InfoExercise }) {
           {exercise.body}
         </div>
       ) : (
-        <p className="text-muted-foreground">Open the full page to study this section.</p>
+        <p className="text-muted-foreground">{t("openFullPage")}</p>
       )}
 
       {exercise.href && (
@@ -790,7 +795,7 @@ function InfoCard({ exercise }: { exercise: InfoExercise }) {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
         >
           <ExternalLink className="h-4 w-4" />
-          {isGrammar ? "Read full grammar page" : "Open full text"}
+          {isGrammar ? t("readFullGrammar") : t("openFullText")}
         </Link>
       )}
     </div>
@@ -808,6 +813,7 @@ function MatchPairsCard({
   scriptSymbols: ScriptSymbol[]
   showRoman: boolean
 }) {
+  const t = useTranslations("learn.engine")
   const [selectedLeft, setSelectedLeft]   = useState<string | null>(null)
   const [selectedRight, setSelectedRight] = useState<string | null>(null)
   const [matched, setMatched]             = useState<Set<string>>(new Set())
@@ -821,8 +827,8 @@ function MatchPairsCard({
   useEffect(() => {
     if (matched.size === exercise.pairs.length) {
       // Brief pause before advancing
-      const t = setTimeout(onComplete, 600)
-      return () => clearTimeout(t)
+      const timer = setTimeout(onComplete, 600)
+      return () => clearTimeout(timer)
     }
   }, [matched.size, exercise.pairs.length, onComplete])
 
@@ -859,7 +865,7 @@ function MatchPairsCard({
   return (
     <div className="space-y-6">
       <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-        Match the pairs
+        {t("matchPairs")}
       </p>
 
       <div className="grid grid-cols-2 gap-3">
@@ -939,6 +945,7 @@ function SentenceBuilderCard({
   scriptSymbols: ScriptSymbol[]
   showRoman: boolean
 }) {
+  const t = useTranslations("learn.engine")
   const isRevealed = feedback.status !== "answering"
 
   const handleBankClick = (id: string) => {
@@ -955,7 +962,7 @@ function SentenceBuilderCard({
     <div className="space-y-10">
       <div>
         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-          Translate this sentence
+          {t("translateSentence")}
         </p>
         <p className="text-3xl font-bold tracking-tight">{exercise.prompt}</p>
       </div>
@@ -1027,6 +1034,7 @@ function CompleteScreen({
   mistakeCount: number
   onReviewMistakes: () => void
 }) {
+  const t = useTranslations("learn.engine")
   const isPerfect = heartsLeft === maxHearts
 
   useEffect(() => {
@@ -1076,7 +1084,7 @@ function CompleteScreen({
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {reviewMode ? "Mistakes reviewed!" : isPerfect ? "Flawless!" : accuracy >= 70 ? "Lesson Complete!" : "Well done!"}
+          {reviewMode ? t("mistakesReviewed") : isPerfect ? t("flawless") : accuracy >= 70 ? t("lessonComplete") : t("wellDone")}
         </h1>
         <p className="text-muted-foreground mt-1">{lessonTitle}</p>
       </div>
@@ -1084,18 +1092,18 @@ function CompleteScreen({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 w-full">
         <StatTile
-          label="Accuracy"
+          label={t("statAccuracy")}
           value={`${accuracy}%`}
           color="text-primary"
         />
         <StatTile
-          label="XP Earned"
+          label={t("statXpEarned")}
           value={`+${xpEarned}`}
           color="text-amber-500"
           icon={<Zap className="h-4 w-4" />}
         />
         <StatTile
-          label="Hearts"
+          label={t("statHearts")}
           value={`${heartsLeft}/${maxHearts}`}
           color="text-red-500"
           icon={<Heart className="h-4 w-4 fill-current" />}
@@ -1106,19 +1114,19 @@ function CompleteScreen({
         {mistakeCount > 0 && (
           <Button size="lg" className="h-12 gap-2 bg-amber-500 hover:bg-amber-600 text-white" onClick={onReviewMistakes}>
             <Target className="h-4 w-4" />
-            Review {mistakeCount} mistake{mistakeCount === 1 ? "" : "s"}
+            {t("reviewMistakes", { count: mistakeCount })}
           </Button>
         )}
         <Button asChild size="lg" variant={mistakeCount > 0 ? "outline" : "default"} className="h-12 gap-2">
           <Link href={`/learn/${languageSlug}/courses/${courseId}`}>
             <ArrowLeft className="h-4 w-4" />
-            Back to Course
+            {t("backToCourse")}
           </Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="h-12 gap-2">
           <Link href={`/learn/${languageSlug}/study`}>
             <Sparkles className="h-4 w-4" />
-            Practice with SRS
+            {t("practiceSrs")}
           </Link>
         </Button>
       </div>
@@ -1136,6 +1144,7 @@ function FailedScreen({
   languageSlug: string
   courseId: string
 }) {
+  const t = useTranslations("learn.engine")
   return (
     <div className="container mx-auto max-w-md px-4 py-16 flex flex-col items-center text-center gap-8">
       <div className="h-28 w-28 rounded-full bg-red-500/10 ring-4 ring-red-500/20 flex items-center justify-center mx-auto">
@@ -1143,10 +1152,10 @@ function FailedScreen({
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Out of hearts!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("outOfHearts")}</h1>
         <p className="text-muted-foreground mt-1">{lessonTitle}</p>
         <p className="text-muted-foreground text-sm mt-2">
-          Don&apos;t worry — practice makes perfect.
+          {t("outOfHeartsHint")}
         </p>
       </div>
 
@@ -1154,13 +1163,13 @@ function FailedScreen({
         <Button asChild size="lg" className="h-12 gap-2">
           <Link href={`/learn/${languageSlug}/lesson/${lessonId}`}>
             <RotateCcw className="h-4 w-4" />
-            Try Again
+            {t("tryAgain")}
           </Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="h-12 gap-2">
           <Link href={`/learn/${languageSlug}/courses/${courseId}`}>
             <ArrowLeft className="h-4 w-4" />
-            Back to Course
+            {t("backToCourse")}
           </Link>
         </Button>
       </div>

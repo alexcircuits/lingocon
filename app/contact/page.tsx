@@ -6,15 +6,20 @@ import { Footer } from "@/components/footer"
 import { Mail, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/auth"
+import { getTranslations } from "next-intl/server"
 
-export const metadata = {
-    title: "Contact Us | LingoCon",
-    description: "Get in touch with the LingoCon team for support, feedback, or inquiries.",
+export async function generateMetadata() {
+    const t = await getTranslations("contact")
+    return {
+        title: t("metaTitle"),
+        description: t("metaDescription"),
+    }
 }
 
 export default async function ContactPage() {
     const session = await auth()
     const isDevMode = process.env.DEV_MODE === "true"
+    const t = await getTranslations("contact")
 
     const user = session?.user ? {
         id: session.user.id!,
@@ -35,16 +40,15 @@ export default async function ContactPage() {
                         variant="outline"
                         className="mb-8 px-4 py-1.5 text-sm font-medium border-primary/20 bg-primary/5 text-primary rounded-full backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700 font-mono tracking-wide"
                     >
-                        Get in Touch
+                        {t("eyebrow")}
                     </Badge>
 
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-medium tracking-tight mb-8 leading-[1.1] text-foreground">
-                        We&apos;d love to hear from you
+                        {t("headline")}
                     </h1>
 
                     <p className="text-xl text-muted-foreground mb-16 max-w-2xl mx-auto leading-relaxed font-light">
-                        Have a question, suggestion, or just want to say hello?
-                        We&apos;re always looking for feedback to make LingoCon better.
+                        {t("subhead")}
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -53,9 +57,9 @@ export default async function ContactPage() {
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 text-primary group-hover:scale-110 transition-transform">
                                 <Mail className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">Support</h3>
+                            <h3 className="text-xl font-semibold mb-2">{t("supportTitle")}</h3>
                             <p className="text-muted-foreground mb-6 text-sm">
-                                For technical issues, account help, or bug reports.
+                                {t("supportDesc")}
                             </p>
                             <Button asChild variant="outline" className="rounded-full">
                                 <Link href="mailto:support@noirsystems.com">
@@ -69,9 +73,9 @@ export default async function ContactPage() {
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 text-primary group-hover:scale-110 transition-transform">
                                 <MessageSquare className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">General Inquiries</h3>
+                            <h3 className="text-xl font-semibold mb-2">{t("generalTitle")}</h3>
                             <p className="text-muted-foreground mb-6 text-sm">
-                                For feedback, feature requests, or partnerships.
+                                {t("generalDesc")}
                             </p>
                             <Button asChild variant="outline" className="rounded-full">
                                 <Link href="mailto:hello@noirsystems.com">

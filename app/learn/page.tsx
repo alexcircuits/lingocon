@@ -11,10 +11,14 @@ import { xpToNextLevel } from "@/lib/fsrs"
 import { getLearnableLanguages } from "@/lib/learn-catalog"
 import { LearnLanguageCard } from "./components/learn-language-card"
 import { cn } from "@/lib/utils"
+import { getTranslations } from "next-intl/server"
 
-export const metadata = {
-  title: "Learn — LingoCon",
-  description: "Learn constructed languages with community-built courses, spaced repetition, XP, and streaks.",
+export async function generateMetadata() {
+  const t = await getTranslations("learn.dashboard")
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  }
 }
 
 export const dynamic = "force-dynamic"
@@ -50,6 +54,7 @@ export default async function LearnDashboardPage() {
   const session = await auth()
   const isDevMode = process.env.DEV_MODE === "true"
   const userId = session?.user?.id || (isDevMode ? await getDevUserId() : null)
+  const t = await getTranslations("learn.dashboard")
 
   const enrollments = userId ? await getLearnDashboardData(userId) : []
   const enrolledIds = enrollments.map((e) => e.language.id)
@@ -71,32 +76,32 @@ export default async function LearnDashboardPage() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-primary" />
-              <span className="text-sm font-medium text-primary">{userId ? "My Learning" : "Learn"}</span>
+              <span className="text-sm font-medium text-primary">{userId ? t("myLearningEyebrow") : t("learnEyebrow")}</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {userId ? "Your Language Journey" : "Learn a constructed language"}
+              {userId ? t("headingSignedIn") : t("headingGuest")}
             </h1>
             <p className="mt-1 text-muted-foreground">
               {!userId
-                ? "Enroll in a community-built course and learn with spaced repetition, XP, and streaks."
+                ? t("subheadGuest")
                 : enrollments.length === 0
-                  ? "Pick a course below to start learning."
-                  : `${enrollments.length} language${enrollments.length !== 1 ? "s" : ""} · ${totalDue} cards due today`}
+                  ? t("subheadEmpty")
+                  : t("subheadActive", { count: enrollments.length, due: totalDue })}
             </p>
           </div>
           <Button asChild size="lg" className="shrink-0 gap-2">
             <Link href="/learn/browse">
               <Compass className="h-4 w-4" />
-              Course Catalog
+              {t("courseCatalog")}
             </Link>
           </Button>
         </div>
 
         {enrollments.length > 0 && (
           <div className="relative mt-6 flex flex-wrap gap-4">
-            <StatPill icon={<Flame className="h-4 w-4 text-amber-500" />} label="Best Streak" value={`${totalStreak} days`} />
-            <StatPill icon={<Trophy className="h-4 w-4 text-amber-400" />} label="Total XP" value={totalXP.toLocaleString()} />
-            <StatPill icon={<BookOpen className="h-4 w-4 text-primary" />} label="Due Today" value={totalDue.toString()} />
+            <StatPill icon={<Flame className="h-4 w-4 text-amber-500" />} label={t("bestStreak")} value={t("streakDays", { count: totalStreak })} />
+            <StatPill icon={<Trophy className="h-4 w-4 text-amber-400" />} label={t("totalXp")} value={totalXP.toLocaleString()} />
+            <StatPill icon={<BookOpen className="h-4 w-4 text-primary" />} label={t("dueToday")} value={totalDue.toString()} />
           </div>
         )}
       </div>
@@ -104,7 +109,7 @@ export default async function LearnDashboardPage() {
       {/* Enrolled languages */}
       {enrollments.length > 0 && (
         <section className="mb-12">
-          <h2 className="mb-4 text-lg font-semibold">Continue learning</h2>
+          <h2 className="mb-4 text-lg font-semibold">{t("continueLearning")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {enrollments.map((e) => (
               <EnrollmentCard key={e.id} enrollment={e} />
@@ -117,11 +122,11 @@ export default async function LearnDashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {enrollments.length > 0 ? "Discover more courses" : "Courses to explore"}
+            {enrollments.length > 0 ? t("discoverMore") : t("exploreCourses")}
           </h2>
           <Button asChild variant="ghost" size="sm" className="gap-1">
             <Link href="/learn/browse">
-              View all
+              {t("viewAll")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -141,9 +146,9 @@ export default async function LearnDashboardPage() {
       {!userId && (
         <p className="mt-10 text-center text-sm text-muted-foreground">
           <Link href="/login?callbackUrl=/learn" className="font-medium text-primary hover:underline">
-            Sign in
+            {t("signInPromptLink")}
           </Link>{" "}
-          to track your progress, XP, and streaks.
+          {t("signInPromptSuffix")}
         </p>
       )}
     </div>
@@ -160,9 +165,10 @@ function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string
   )
 }
 
-function EnrollmentCard({ enrollment }: { enrollment: Awaited<ReturnType<typeof getLearnDashboardData>>[number] }) {
+async function EnrollmentCard({ enrollment }: { enrollment: Awaited<ReturnType<typeof getLearnDashboardData>>[number] }) {
   const { language, dueCount, streak, levelInfo, course } = enrollment
   const hasDue = dueCount > 0
+  const t = await getTranslations("learn.dashboard")
 
   return (
     <Card className={cn(
@@ -192,15 +198,15 @@ function EnrollmentCard({ enrollment }: { enrollment: Awaited<ReturnType<typeof 
                 {streak}
               </Badge>
             )}
-            {hasDue && <Badge className="gap-1">{dueCount} due</Badge>}
+            {hasDue && <Badge className="gap-1">{t("dueBadge", { count: dueCount })}</Badge>}
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Level {levelInfo.level}</span>
-            <span>{levelInfo.current}/{levelInfo.needed} XP</span>
+            <span>{t("level", { level: levelInfo.level })}</span>
+            <span>{t("xpRatio", { current: levelInfo.current, needed: levelInfo.needed })}</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
             <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all" style={{ width: `${levelInfo.percent}%` }} />
@@ -211,7 +217,7 @@ function EnrollmentCard({ enrollment }: { enrollment: Awaited<ReturnType<typeof 
           <Button asChild className="flex-1 gap-2" size="sm">
             <Link href={`/learn/${language.slug}/study`}>
               <Sparkles className="h-3.5 w-3.5" />
-              {hasDue ? `Study (${dueCount})` : "Study"}
+              {hasDue ? t("studyDueLabel", { count: dueCount }) : t("study")}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="gap-1">
@@ -225,22 +231,21 @@ function EnrollmentCard({ enrollment }: { enrollment: Awaited<ReturnType<typeof 
   )
 }
 
-function EmptyDiscover({ hasEnrollments }: { hasEnrollments: boolean }) {
+async function EmptyDiscover({ hasEnrollments }: { hasEnrollments: boolean }) {
+  const t = await getTranslations("learn.dashboard")
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-16 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
         <GraduationCap className="h-7 w-7 text-primary" />
       </div>
       <h3 className="mb-2 text-lg font-semibold">
-        {hasEnrollments ? "You're enrolled in everything!" : "No courses yet"}
+        {hasEnrollments ? t("emptyAllEnrolledTitle") : t("emptyNoCoursesTitle")}
       </h3>
       <p className="mb-6 max-w-sm text-muted-foreground">
-        {hasEnrollments
-          ? "There are no other published courses right now. Check back soon."
-          : "No published courses are available yet. Browse all languages to explore the community."}
+        {hasEnrollments ? t("emptyAllEnrolledDesc") : t("emptyNoCoursesDesc")}
       </p>
       <Button asChild variant="outline">
-        <Link href="/browse">Browse all languages</Link>
+        <Link href="/browse">{t("browseAllLanguages")}</Link>
       </Button>
     </div>
   )

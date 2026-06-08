@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { BookCard } from "@/components/landing/book-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,7 @@ export default async function FavoritesPage() {
   }
 
   const languages = await getFavorites(session.user.id)
+  const t = await getTranslations("favorites")
 
   const user = {
     id: session.user.id,
@@ -68,12 +70,9 @@ export default async function FavoritesPage() {
       <main className="container mx-auto py-10 px-4 max-w-6xl">
         {/* Page header */}
         <div className="mb-10 pb-6 border-b border-border/40">
-          <h1 className="text-4xl md:text-5xl font-serif tracking-tight mb-2">Favorites</h1>
+          <h1 className="text-4xl md:text-5xl font-serif tracking-tight mb-2">{t("pageTitle")}</h1>
           <p className="text-muted-foreground">
-            {languages.length === 0
-              ? "Languages you save will appear here"
-              : `${languages.length} ${languages.length === 1 ? "language" : "languages"} saved`
-            }
+            {languages.length === 0 ? t("emptyHint") : t("countSaved", { count: languages.length })}
           </p>
         </div>
 
@@ -83,15 +82,15 @@ export default async function FavoritesPage() {
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10">
                 <Heart className="h-5 w-5 text-rose-500" />
               </div>
-              <CardTitle className="text-lg font-serif">No favorites yet</CardTitle>
+              <CardTitle className="text-lg font-serif">{t("emptyTitle")}</CardTitle>
               <CardDescription className="max-w-sm mx-auto mt-2">
-                Explore languages and add them to your favorites by clicking the heart icon
+                {t("emptyDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center pb-16">
               <Link href="/browse">
                 <Button>
-                  Browse Languages
+                  {t("browseLanguages")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
