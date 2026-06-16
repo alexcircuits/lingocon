@@ -22,7 +22,9 @@ describe("vowel-inventory", () => {
   it("maps vowels to chart coordinates", () => {
     const front = vowelToChartPoint("i")
     const back = vowelToChartPoint("u")
-    expect(front?.y).toBeLessThan(back?.y ?? 1)
+    // "i" and "u" are both CLOSE vowels → same height (same y); they differ on
+    // backness (x: front < back) and rounding.
+    expect(front?.y).toBe(back?.y)
     expect(front?.x).toBeLessThan(back?.x ?? 1)
     expect(front?.rounded).toBe(false)
     expect(back?.rounded).toBe(true)

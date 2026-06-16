@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { UnauthorizedError, NotFoundError, ValidationError } from "@/lib/errors"
 
 // Hoisted mocks (vi.mock factories run before variable declarations)
-const { mockPrisma, mockCanEditLanguage } = vi.hoisted(() => ({
+const { mockPrisma, mockCanEditScope } = vi.hoisted(() => ({
   mockPrisma: {
     dictionaryEntry: {
       create: vi.fn(),
@@ -17,7 +17,7 @@ const { mockPrisma, mockCanEditLanguage } = vi.hoisted(() => ({
       findUnique: vi.fn(),
     },
   },
-  mockCanEditLanguage: vi.fn(),
+  mockCanEditScope: vi.fn(),
 }))
 
 vi.mock("@/lib/prisma", () => ({
@@ -25,7 +25,7 @@ vi.mock("@/lib/prisma", () => ({
 }))
 
 vi.mock("@/lib/auth-helpers", () => ({
-  canEditLanguage: (...args: any[]) => mockCanEditLanguage(...args),
+  canEditScope: (...args: any[]) => mockCanEditScope(...args),
 }))
 
 import {
@@ -43,7 +43,7 @@ const ENTRY_ID = "entry-789"
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockCanEditLanguage.mockResolvedValue(true)
+  mockCanEditScope.mockResolvedValue(true)
 })
 
 describe("createEntry", () => {
@@ -60,7 +60,7 @@ describe("createEntry", () => {
     const result = await createEntry(validInput, USER_ID)
 
     expect(result).toEqual(mockEntry)
-    expect(mockCanEditLanguage).toHaveBeenCalledWith(LANGUAGE_ID, USER_ID)
+    expect(mockCanEditScope).toHaveBeenCalledWith(LANGUAGE_ID, USER_ID, "write:dictionary")
     expect(mockPrisma.dictionaryEntry.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         lemma: "tala",
@@ -72,7 +72,7 @@ describe("createEntry", () => {
   })
 
   it("throws UnauthorizedError when user cannot edit", async () => {
-    mockCanEditLanguage.mockResolvedValue(false)
+    mockCanEditScope.mockResolvedValue(false)
 
     await expect(createEntry(validInput, USER_ID)).rejects.toThrow(UnauthorizedError)
   })
@@ -131,7 +131,7 @@ describe("updateEntry", () => {
   })
 
   it("throws UnauthorizedError when user cannot edit", async () => {
-    mockCanEditLanguage.mockResolvedValue(false)
+    mockCanEditScope.mockResolvedValue(false)
 
     await expect(updateEntry(validInput, USER_ID)).rejects.toThrow(UnauthorizedError)
   })
@@ -145,6 +145,8 @@ describe("deleteEntry", () => {
       languageId: LANGUAGE_ID,
       language: { slug: "test-lang" },
     }
+    // deleteEntry first scrubs dangling relatedWords references via findMany.
+    mockPrisma.dictionaryEntry.findMany.mockResolvedValue([])
     mockPrisma.dictionaryEntry.delete.mockResolvedValue(mockEntry)
 
     const result = await deleteEntry(ENTRY_ID, LANGUAGE_ID, USER_ID)
@@ -157,7 +159,7 @@ describe("deleteEntry", () => {
   })
 
   it("throws UnauthorizedError when user cannot edit", async () => {
-    mockCanEditLanguage.mockResolvedValue(false)
+    mockCanEditScope.mockResolvedValue(false)
 
     await expect(deleteEntry(ENTRY_ID, LANGUAGE_ID, USER_ID)).rejects.toThrow(UnauthorizedError)
   })
@@ -186,7 +188,7 @@ describe("bulkUpdateEntries", () => {
   })
 
   it("throws UnauthorizedError when user cannot edit", async () => {
-    mockCanEditLanguage.mockResolvedValue(false)
+    mockCanEditScope.mockResolvedValue(false)
 
     await expect(bulkUpdateEntries(entryIds, updates, LANGUAGE_ID, USER_ID)).rejects.toThrow(
       UnauthorizedError
@@ -237,7 +239,7 @@ describe("deleteAllEntries", () => {
   })
 
   it("throws UnauthorizedError when user cannot edit", async () => {
-    mockCanEditLanguage.mockResolvedValue(false)
+    mockCanEditScope.mockResolvedValue(false)
 
     await expect(deleteAllEntries(LANGUAGE_ID, USER_ID)).rejects.toThrow(UnauthorizedError)
   })

@@ -47,9 +47,6 @@ export function DashboardTour() {
     <Tour
       steps={dashboardTourSteps}
       storageKey="dashboard-tour-completed"
-      onComplete={() => {
-        console.log("Dashboard tour completed")
-      }}
     />
   )
 }

@@ -12,24 +12,9 @@ import {
   deleteAllDictionaryEntries,
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2, ArrowUpDown, MoreHorizontal } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Plus, Trash2 } from "lucide-react"
 import { BulkEdit } from "@/components/dictionary/bulk-edit"
-import { TransliterationToggle } from "@/components/transliteration-toggle"
-import { DictionarySearch } from "./components/dictionary-search"
+import { DictionaryToolbar } from "./components/dictionary-toolbar"
 import { DictionaryTable } from "./components/dictionary-table"
 import { DictionaryTableMobile } from "@/components/dictionary/dictionary-table-mobile"
 import { DictionaryEntryDialog } from "./components/dictionary-entry-dialog"
@@ -45,8 +30,6 @@ import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
 import { BulkActionsBar } from "@/components/bulk-actions-bar"
 import { FeatureHighlight } from "@/components/feature-highlight"
-import { ContextualHelp } from "@/components/contextual-help"
-import { EnhancedLoadingSkeleton } from "@/components/enhanced-loading-skeleton"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 import type { LanguageMetadata } from "@/lib/validations/language"
 
@@ -421,204 +404,26 @@ export function DictionaryManager({
         />
       )}
 
-      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
-        <div className="flex-1 w-full">
-          <DictionarySearch
-            onSearch={handleSearch}
-            defaultValue={initialQuery}
-            defaultField={initialField}
-          />
-        </div>
-
-        <div className="hidden sm:flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <Select defaultValue={initialSort} onValueChange={handleSort}>
-            <SelectTrigger className="h-9 w-[140px] sm:w-[160px] gap-1 text-sm">
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <SelectValue placeholder={t("sortBy")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="lemma">{t("sortLemma")}</SelectItem>
-              <SelectItem value="gloss">{t("sortGloss")}</SelectItem>
-              <SelectItem value="createdAt">{t("sortNewest")}</SelectItem>
-              <SelectItem value="partOfSpeech">{t("sortPos")}</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <TransliterationToggle
-            onToggle={setShowLatin}
-            defaultShowLatin={showLatin}
-          />
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              const url = `/api/export/csv?languageId=${languageId}`
-              window.open(url, "_blank")
-              toast.success(t("exportSuccess"))
-            }}
-            disabled={isPending || totalEntries === 0}
-            title={t("exportCsv")}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsImportOpen(true)}
-            disabled={isPending}
-            title={t("importCsv")}
-          >
-            <Upload className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsGeneratorOpen(true)}
-            disabled={isPending}
-            title={t("generateWords")}
-          >
-            <Sparkles className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsBorrowOpen(true)}
-            disabled={isPending}
-            title={t("borrowWord")}
-          >
-            <Languages className="h-4 w-4" />
-          </Button>
-
-          <ContextualHelp
-            content={t("shortcutHelp")}
-            shortcut="⌘N"
-          />
-
-          {selectedEntries.size > 0 && (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsBulkEditOpen(true)}
-                disabled={isPending}
-                title={t("bulkEdit", { count: selectedEntries.size })}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsBulkDeleteOpen(true)}
-                disabled={isPending}
-                title={t("deleteSelected", { count: selectedEntries.size })}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsBulkAddOpen(true)}
-            className="gap-2 shrink-0"
-            title={t("bulkAddEntries")}
-          >
-            <Table2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("bulkAdd")}</span>
-          </Button>
-
-          <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto sm:ml-0">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("addEntry")}</span>
-          </Button>
-        </div>
-
-        {/* Mobile condensed controls: Sort + primary Add + collapsed "More" menu */}
-        <div className="flex sm:hidden flex-wrap items-center gap-2 w-full">
-          <Select defaultValue={initialSort} onValueChange={handleSort}>
-            <SelectTrigger className="h-9 w-[140px] gap-1 text-sm">
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <SelectValue placeholder={t("sortBy")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="lemma">{t("sortLemma")}</SelectItem>
-              <SelectItem value="gloss">{t("sortGloss")}</SelectItem>
-              <SelectItem value="createdAt">{t("sortNewest")}</SelectItem>
-              <SelectItem value="partOfSpeech">{t("sortPos")}</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <TransliterationToggle
-            onToggle={setShowLatin}
-            defaultShowLatin={showLatin}
-          />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9" title={t("moreActions")}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  const url = `/api/export/csv?languageId=${languageId}`
-                  window.open(url, "_blank")
-                  toast.success(t("exportSuccess"))
-                }}
-                disabled={isPending || totalEntries === 0}
-              >
-                <Download className="h-4 w-4" />
-                {t("exportCsv")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsImportOpen(true)} disabled={isPending}>
-                <Upload className="h-4 w-4" />
-                {t("importCsv")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsGeneratorOpen(true)} disabled={isPending}>
-                <Sparkles className="h-4 w-4" />
-                {t("generateWords")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsBorrowOpen(true)} disabled={isPending}>
-                <Languages className="h-4 w-4" />
-                {t("borrowWord")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsBulkAddOpen(true)}>
-                <Table2 className="h-4 w-4" />
-                {t("bulkAdd")}
-              </DropdownMenuItem>
-              {selectedEntries.size > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setIsBulkEditOpen(true)} disabled={isPending}>
-                    <Edit className="h-4 w-4" />
-                    {t("bulkEdit", { count: selectedEntries.size })}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setIsBulkDeleteOpen(true)}
-                    disabled={isPending}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {t("deleteSelected", { count: selectedEntries.size })}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button type="button" onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0 ml-auto">
-            <Plus className="h-4 w-4" />
-            {t("addEntry")}
-          </Button>
-        </div>
-      </div>
+      <DictionaryToolbar
+        languageId={languageId}
+        initialQuery={initialQuery}
+        initialField={initialField}
+        initialSort={initialSort}
+        showLatin={showLatin}
+        onShowLatinChange={setShowLatin}
+        isPending={isPending}
+        totalEntries={totalEntries}
+        selectedCount={selectedEntries.size}
+        onSearch={handleSearch}
+        onSort={handleSort}
+        onImport={() => setIsImportOpen(true)}
+        onGenerate={() => setIsGeneratorOpen(true)}
+        onBorrow={() => setIsBorrowOpen(true)}
+        onBulkAdd={() => setIsBulkAddOpen(true)}
+        onBulkEdit={() => setIsBulkEditOpen(true)}
+        onBulkDelete={() => setIsBulkDeleteOpen(true)}
+        onAdd={() => setIsAddOpen(true)}
+      />
 
       {initialEntries.length === 0 ? (
         initialQuery ? (

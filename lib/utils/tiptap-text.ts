@@ -25,8 +25,11 @@ export function extractText(node: unknown): string {
             const text = extractText(child)
             if (text) parts.push(text)
         }
-        // Join block-level nodes with spaces, inline with nothing
-        const blockTypes = new Set(["paragraph", "heading", "blockquote", "listItem", "bulletList", "orderedList", "codeBlock"])
+        // Join block-level nodes with spaces, inline with nothing. "doc" is the
+        // ProseMirror root container — its block children (paragraphs, headings,
+        // …) must be space-separated too, or sibling blocks mash together
+        // ("First" + "Second" → "FirstSecond") and break search tokenization.
+        const blockTypes = new Set(["doc", "paragraph", "heading", "blockquote", "listItem", "bulletList", "orderedList", "codeBlock"])
         return n.type && blockTypes.has(n.type)
             ? parts.join(" ")
             : parts.join("")

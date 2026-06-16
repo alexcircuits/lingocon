@@ -91,39 +91,63 @@ export interface SoundChangeResult {
   rulesApplied: string[]
 }
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 /**
- * Convert an environment string to a regex pattern.
- * Handles: V (vowel), C (consonant), # (boundary), literal characters
+ * Build a `(?:…|…)` alternation for a phoneme class, longest-first so multi-char
+ * phonemes (e.g. "aː", "tʃ") match before their single-char prefixes.
+ *
+ * Cached per Set: these alternations are ~50 entries each and were previously
+ * rebuilt on every rule application — a hot path during `batchApply`.
  */
-function envToRegex(env: string, vowels: Set<string>, consonants: Set<string>): string {
-  if (!env || env === "_") return ""
+const classAlternationCache = new WeakMap<Set<string>, string>()
+
+function classAlternation(set: Set<string>): string {
+  const cached = classAlternationCache.get(set)
+  if (cached) return cached
+  const alt = Array.from(set)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegex)
+    .join("|")
+  const pattern = `(?:${alt})`
+  classAlternationCache.set(set, pattern)
+  return pattern
+}
+
+interface EnvPattern {
+  /** Regex source for the environment's characters (no boundary anchor). */
+  pattern: string
+  /** Whether the environment requires a word boundary (#) at the word edge. */
+  boundary: boolean
+}
+
+/**
+ * Convert an environment string to a regex source plus a boundary flag.
+ * Handles: V (vowel), C (consonant), # (boundary), . (any), literal characters.
+ * The boundary position (start vs end) is applied by the caller so the result
+ * can be used as a zero-width lookbehind (left) or lookahead (right).
+ */
+function envToPattern(env: string, vowels: Set<string>, consonants: Set<string>): EnvPattern {
+  if (!env || env === "_") return { pattern: "", boundary: false }
 
   let pattern = ""
-  for (let i = 0; i < env.length; i++) {
-    const ch = env[i]
+  let boundary = false
+  for (const ch of env) {
     if (ch === "#") {
-      // Word boundary
-      pattern += "(?:^|$)"
+      boundary = true
     } else if (ch === "V") {
-      // Any vowel
-      const vowelList = Array.from(vowels).sort((a, b) => b.length - a.length)
-      pattern += `(?:${vowelList.map(escapeRegex).join("|")})`
+      pattern += classAlternation(vowels)
     } else if (ch === "C") {
-      // Any consonant
-      const consList = Array.from(consonants).sort((a, b) => b.length - a.length)
-      pattern += `(?:${consList.map(escapeRegex).join("|")})`
+      pattern += classAlternation(consonants)
     } else if (ch === ".") {
-      // Any single character
       pattern += "."
     } else {
       pattern += escapeRegex(ch)
     }
   }
-  return pattern
-}
-
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return { pattern, boundary }
 }
 
 /**
@@ -190,40 +214,33 @@ export function applyRule(
   vowels: Set<string> = DEFAULT_VOWELS,
   consonants: Set<string> = DEFAULT_CONSONANTS
 ): string {
-  if (!rule.enabled) return word
+  if (!rule.enabled || !rule.target) return word
 
-  const leftPattern = envToRegex(rule.leftEnv, vowels, consonants)
-  const rightPattern = envToRegex(rule.rightEnv, vowels, consonants)
-  const targetPattern = escapeRegex(rule.target)
+  const left = envToPattern(rule.leftEnv, vowels, consonants)
+  const right = envToPattern(rule.rightEnv, vowels, consonants)
+  const target = `(?:${escapeRegex(rule.target)})`
 
-  // Handle word-boundary in environments
-  let left = leftPattern.replace(/\(\?:\^\|\$\)/g, "")
-  let right = rightPattern.replace(/\(\?:\^\|\$\)/g, "")
+  // Environments are expressed as ZERO-WIDTH assertions — a lookbehind for the
+  // left context and a lookahead for the right — so only the target segment is
+  // consumed. This is what makes adjacent/overlapping contexts work: a rule like
+  // `s → ∅ / V_V` over "asasa" must delete BOTH intervocalic consonants, but a
+  // regex that *consumes* the shared vowel can only match every other target.
+  // `#` anchors to the word start (left) or end (right).
+  const lookbehind =
+    left.boundary && !left.pattern ? "^"
+    : left.boundary ? `(?<=^${left.pattern})`
+    : left.pattern ? `(?<=${left.pattern})`
+    : ""
 
-  // Determine if boundaries are specified
-  const leftBoundary = rule.leftEnv.includes("#")
-  const rightBoundary = rule.rightEnv.includes("#")
-
-  // Build full regex
-  let fullPattern: string
-  if (leftBoundary && rightBoundary) {
-    fullPattern = `^(${left})(${targetPattern})(${right})$`
-  } else if (leftBoundary) {
-    fullPattern = `^(${left})(${targetPattern})(${right})`
-  } else if (rightBoundary) {
-    fullPattern = `(${left})(${targetPattern})(${right})$`
-  } else {
-    fullPattern = `(${left})(${targetPattern})(${right})`
-  }
+  const lookahead =
+    right.boundary && !right.pattern ? "$"
+    : right.boundary ? `(?=${right.pattern}$)`
+    : right.pattern ? `(?=${right.pattern})`
+    : ""
 
   try {
-    const regex = new RegExp(fullPattern, "g")
-    return word.replace(regex, (match, ...groups) => {
-      // groups[0] = left env, groups[1] = target, groups[2] = right env
-      const leftMatch = groups[0] || ""
-      const rightMatch = groups[2] || ""
-      return leftMatch + rule.replacement + rightMatch
-    })
+    const regex = new RegExp(`${lookbehind}${target}${lookahead}`, "g")
+    return word.replace(regex, rule.replacement)
   } catch {
     // Invalid regex — return unchanged
     return word

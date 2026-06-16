@@ -56,9 +56,6 @@ export function StudioTour() {
     <Tour
       steps={studioTourSteps}
       storageKey="studio-tour-completed"
-      onComplete={() => {
-        console.log("Studio tour completed")
-      }}
     />
   )
 }

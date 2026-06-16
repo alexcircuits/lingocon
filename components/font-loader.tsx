@@ -24,7 +24,6 @@ export function FontLoader({ fontUrl, fontFamily, fontScale = 1.0 }: FontLoaderP
             // Set CSS variable for usage in components
             document.documentElement.style.setProperty('--language-font', fontName)
             document.documentElement.style.setProperty('--language-font-scale', String(fontScale))
-            console.log(`Loaded custom font: ${fontName} with scale ${fontScale}`)
         }).catch((err) => {
             console.error("Failed to load custom font:", err)
         })

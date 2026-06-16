@@ -126,7 +126,10 @@ export default async function SettingsPage({
   let familyTree = null
   try {
     familyTree = await getLanguageFamilyTree(language.id)
-  } catch {}
+  } catch (error) {
+    // Non-fatal: the page renders without the family tree.
+    console.error("Failed to load language family tree:", error)
+  }
 
   const t = await getTranslations("studio.settings")
 

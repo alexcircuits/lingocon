@@ -43,7 +43,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { parseRules, applyPipeline, type SoundChangeResult } from "@/lib/utils/sound-change"
+import { parseRules, type SoundChangeResult } from "@/lib/utils/sound-change"
+import { useSoundChangeEngine } from "@/lib/linguistics/use-sound-change-engine"
+import { cn } from "@/lib/utils"
 import { updateLanguageMetadata } from "@/app/actions/language"
 import { applySoundChangesToDictionary } from "@/app/actions/apply-sound-changes"
 
@@ -86,8 +88,11 @@ export function SoundChangeEditor({
   const [rulesText, setRulesText] = useState(savedRules || "")
   const [testWords, setTestWords] = useState("")
 
-  // Parse rules from text
+  // Parse rules from text (used for the rule count + empty checks)
   const rules = useMemo(() => parseRules(rulesText), [rulesText])
+
+  // Sound-change engine: Go→WASM core when loaded, pure-TS fallback otherwise.
+  const engine = useSoundChangeEngine()
 
   // Build custom vowel/consonant sets from phonology if available
   const vowels = useMemo(() => {
@@ -111,17 +116,16 @@ export function SoundChangeEditor({
       .split(/[,\n]/)
       .map((w) => w.trim())
       .filter(Boolean)
-    return words.map((word) => applyPipeline(word, rules, vowels, consonants))
-  }, [testWords, rules, vowels, consonants])
+    return engine.batchApply(words, rulesText, vowels, consonants)
+  }, [testWords, rulesText, vowels, consonants, engine])
 
   // Preview on dictionary entries (cap at 200 for performance)
   const PREVIEW_LIMIT = 200
   const dictionaryResults = useMemo<SoundChangeResult[]>(() => {
     if (rules.length === 0) return []
-    return entries.slice(0, PREVIEW_LIMIT).map((entry) =>
-      applyPipeline(entry.lemma, rules, vowels, consonants)
-    )
-  }, [entries, rules, vowels, consonants])
+    const words = entries.slice(0, PREVIEW_LIMIT).map((entry) => entry.lemma)
+    return engine.batchApply(words, rulesText, vowels, consonants)
+  }, [entries, rules.length, rulesText, vowels, consonants, engine])
 
   const changedCount = dictionaryResults.filter(
     (r) => r.changed !== r.original
@@ -285,6 +289,21 @@ export function SoundChangeEditor({
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <Play className="h-4 w-4 text-primary" />
               {t("testWords")}
+              <span
+                className={cn(
+                  "ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  engine.source === "wasm"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-muted text-muted-foreground"
+                )}
+                title={
+                  engine.source === "wasm"
+                    ? "Powered by the Go→WASM linguistics core"
+                    : "Using the JavaScript engine (WASM core not loaded)"
+                }
+              >
+                {engine.source}
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

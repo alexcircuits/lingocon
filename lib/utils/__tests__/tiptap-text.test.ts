@@ -92,7 +92,8 @@ describe("documentToPlainText", () => {
       ],
     }
     const result = documentToPlainText(doc)
-    expect(result).toBe("hello   world")
+    // documentToPlainText collapses every whitespace run to a single space.
+    expect(result).toBe("hello world")
   })
 
   it("trims leading and trailing whitespace", () => {

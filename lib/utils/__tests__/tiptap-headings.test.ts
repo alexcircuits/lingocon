@@ -11,7 +11,9 @@ describe("headingId", () => {
   })
 
   it("removes special characters", () => {
-    expect(headingId("Verbs & Tenses!")).toBe("verbs--tenses")
+    // "&" and "!" are stripped; the surrounding spaces collapse to one hyphen
+    // (consistent with the "collapses multiple spaces" case below).
+    expect(headingId("Verbs & Tenses!")).toBe("verbs-tenses")
   })
 
   it("collapses multiple spaces", () => {

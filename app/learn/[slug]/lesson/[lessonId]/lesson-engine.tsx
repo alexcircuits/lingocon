@@ -14,76 +14,13 @@ import { toast } from "sonner"
 import confetti from "canvas-confetti"
 import type { Exercise, MultipleChoiceExercise, TranslateExercise, MatchPairsExercise, SentenceBuilderExercise, InfoExercise, WordIntroExercise } from "@/types/lesson"
 import { FontLoader } from "@/components/font-loader"
-
-type ScriptSymbol = { symbol: string; latin: string | null }
-
-function romanize(text: string, symbols: ScriptSymbol[]): string {
-  const map = new Map(symbols.filter(s => s.latin).map(s => [s.symbol, s.latin!]))
-  return text.split("").map(c => map.get(c) ?? c).join("")
-}
+import { romanize, isAnswerCorrect, type ScriptSymbol } from "@/lib/utils/lesson-answer"
 
 // ─── XP config ────────────────────────────────────────────────────────────────
 
 const BASE_LESSON_XP = 10
 const XP_PER_HEART   = 5   // bonus per heart remaining at completion
 const MAX_HEARTS     = 3
-
-// ─── Levenshtein fuzzy match ──────────────────────────────────────────────────
-
-function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length
-  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
-    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-  )
-  for (let i = 1; i <= m; i++)
-    for (let j = 1; j <= n; j++)
-      dp[i][j] = a[i - 1] === b[j - 1]
-        ? dp[i - 1][j - 1]
-        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
-  return dp[m][n]
-}
-
-function stripDiacritics(s: string): string {
-  return s.normalize("NFD").replace(/\p{M}+/gu, "")
-}
-
-function normalizeForCompare(s: string): string {
-  return stripDiacritics(s.trim().toLowerCase())
-}
-
-function matchWithTolerance(rawInput: string, target: string): boolean {
-  const a = normalizeForCompare(rawInput)
-  const b = normalizeForCompare(target)
-  if (a === b) return true
-  // Allow 1 typo for words longer than 4 chars, 2 for words longer than 8
-  const tolerance = b.length <= 4 ? 0 : b.length <= 8 ? 1 : 2
-  return levenshtein(a, b) <= tolerance
-}
-
-function isAnswerCorrect(
-  userInput: string,
-  expected: string,
-  options?: { acceptRomanized?: boolean; scriptSymbols?: ScriptSymbol[] },
-): boolean {
-  const raw = userInput.trim().toLowerCase()
-  const target = expected.trim().toLowerCase()
-  if (raw === target) return true
-  // Diacritic-insensitive compare: a missed combining mark shouldn't fail
-  // the learner. Normalize both sides before measuring edit distance.
-  if (matchWithTolerance(raw, target)) return true
-
-  // Optional: accept the Latin transliteration of the expected answer as
-  // correct. Opt-in per language because for many conlangs the romanization
-  // is lossy or ambiguous (Luna's case in #bug-reports).
-  if (options?.acceptRomanized && options.scriptSymbols && options.scriptSymbols.length > 0) {
-    const romanizedTarget = romanize(target, options.scriptSymbols).toLowerCase()
-    if (romanizedTarget && romanizedTarget !== target && matchWithTolerance(raw, romanizedTarget)) {
-      return true
-    }
-  }
-
-  return false
-}
 
 // ─── Props / State types ──────────────────────────────────────────────────────
 

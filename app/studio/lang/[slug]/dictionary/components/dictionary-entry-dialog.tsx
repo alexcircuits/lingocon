@@ -92,7 +92,7 @@ export function DictionaryEntryDialog({
         lemma: initialData.lemma,
         gloss: initialData.gloss,
         ipa: initialData.ipa || "",
-        audioUrl: (initialData as any).audioUrl || null,
+        audioUrl: initialData.audioUrl || null,
         partOfSpeech: initialData.partOfSpeech || "",
         etymology: initialData.etymology || "",
         relatedWords: Array.isArray(initialData.relatedWords)
