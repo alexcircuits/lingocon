@@ -11,12 +11,15 @@ export function transliterateToLatin(
     return text
   }
 
-  // Create a map of native symbols to Latin equivalents
+  // Create a map of native symbols to Latin equivalents. Both the base symbol
+  // and its capital form map to the same Latin value, so a word using the
+  // capital glyph (e.g. "C" for the sh-letter) transliterates instead of
+  // passing through unchanged.
   const symbolMap = new Map<string, string>()
   symbols.forEach((symbol) => {
-    if (symbol.latin && symbol.symbol) {
-      symbolMap.set(symbol.symbol, symbol.latin)
-    }
+    if (!symbol.latin) return
+    if (symbol.symbol) symbolMap.set(symbol.symbol, symbol.latin)
+    if (symbol.capitalSymbol) symbolMap.set(symbol.capitalSymbol, symbol.latin)
   })
 
   // Transliterate character by character

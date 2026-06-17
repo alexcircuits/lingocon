@@ -6,11 +6,22 @@
  * typo tolerance, and opt-in romanized matching — are unit-testable and shared.
  */
 
-export type ScriptSymbol = { symbol: string; latin: string | null }
+export type ScriptSymbol = { symbol: string; capitalSymbol?: string | null; latin: string | null }
 
-/** Transliterate text using a script's symbol→latin map (unmapped chars pass through). */
+/**
+ * Transliterate text using a script's symbol→latin map (unmapped chars pass through).
+ *
+ * Both the base `symbol` and its `capitalSymbol` map to the same `latin` value,
+ * so a word written with the capital glyph (e.g. "C" for the sh-letter) still
+ * romanizes correctly instead of passing through unchanged.
+ */
 export function romanize(text: string, symbols: ScriptSymbol[]): string {
-  const map = new Map(symbols.filter(s => s.latin).map(s => [s.symbol, s.latin!]))
+  const map = new Map<string, string>()
+  for (const s of symbols) {
+    if (!s.latin) continue
+    if (s.symbol) map.set(s.symbol, s.latin)
+    if (s.capitalSymbol) map.set(s.capitalSymbol, s.latin)
+  }
   return text.split("").map(c => map.get(c) ?? c).join("")
 }
 

@@ -25,7 +25,7 @@ async function getLessonData(lessonId: string, userId: string) {
               fontUrl: true, fontFamily: true, fontScale: true,
               acceptRomanizedAnswers: true,
               scriptSymbols: {
-                select: { symbol: true, latin: true },
+                select: { symbol: true, capitalSymbol: true, latin: true },
                 orderBy: { order: "asc" as const },
               },
             },

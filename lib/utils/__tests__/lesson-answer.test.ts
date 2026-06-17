@@ -82,6 +82,11 @@ describe("isAnswerCorrect", () => {
     it("rejects the romanized form when no symbols are provided", () => {
       expect(isAnswerCorrect("kara", target, { acceptRomanized: true, scriptSymbols: [] })).toBe(false)
     })
+
+    it("accepts the romanized form of a capital-glyph target ('C' → 'sh')", () => {
+      const caps: ScriptSymbol[] = [{ symbol: "c", capitalSymbol: "C", latin: "sh" }]
+      expect(isAnswerCorrect("sh", "C", { acceptRomanized: true, scriptSymbols: caps })).toBe(true)
+    })
   })
 })
 
@@ -93,5 +98,14 @@ describe("romanize", () => {
       { symbol: "x", latin: null }, // null latin is ignored
     ]
     expect(romanize("ᚳᚪx", symbols)).toBe("kax")
+  })
+
+  it("maps the capital form to the same latin (the 'C' for 'sh' case)", () => {
+    const symbols: ScriptSymbol[] = [
+      { symbol: "c", capitalSymbol: "C", latin: "sh" },
+      { symbol: "a", latin: "a" },
+    ]
+    expect(romanize("Ca", symbols)).toBe("sha") // capital glyph romanizes
+    expect(romanize("ca", symbols)).toBe("sha") // lowercase glyph too
   })
 })
