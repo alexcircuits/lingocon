@@ -50,17 +50,21 @@ const notoSans = Noto_Sans({
   display: "swap",
 });
 
-// Igra Sans — locally-hosted display face used for the Free Russian locale.
-// A single-weight .otf shipped from app/fonts; we list the regular weight
-// only and let CSS handle headings via weight-fallback. Applied via
-// `html[lang="free-ru"]` selector in globals.css; English keeps Jakarta
-// untouched.
-const igraSans = localFont({
-  src: "./fonts/IgraSans.otf",
-  variable: "--font-igra",
+// Gilroy — locally-hosted display face used for the Russian locale (includes
+// Cyrillic). Applied via the `html[lang="free-ru"]` selector in globals.css;
+// English keeps Jakarta untouched. Ships the weights the UI actually uses
+// (light → extrabold); Noto Sans remains the fallback for any missing glyph.
+const gilroy = localFont({
+  src: [
+    { path: "./fonts/Gilroy-Light.ttf", weight: "300", style: "normal" },
+    { path: "./fonts/Gilroy-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/Gilroy-Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/Gilroy-Semibold.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/Gilroy-Bold.ttf", weight: "700", style: "normal" },
+    { path: "./fonts/Gilroy-Extrabold.ttf", weight: "800", style: "normal" },
+  ],
+  variable: "--font-gilroy",
   display: "swap",
-  weight: "400",
-  style: "normal",
 });
 
 
@@ -159,7 +163,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} ${notoSans.variable} ${igraSans.variable} min-h-screen antialiased`}>
+      <body className={`${instrumentSerif.variable} ${jetBrainsMono.variable} ${plusJakarta.variable} ${notoSans.variable} ${gilroy.variable} min-h-screen antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
