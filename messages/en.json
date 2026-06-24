@@ -353,6 +353,14 @@
     "updatedOn": "Updated {date}",
     "themeLabel": "Theme: {name}"
   },
+  "confirm": {
+    "areYouSure": "Are you sure?",
+    "deleteNamed": "This will permanently delete \"{name}\". This action cannot be undone.",
+    "deleteGeneric": "This action cannot be undone. This will permanently delete this item.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "delete": "Delete"
+  },
   "studio": {
     "common": {
       "cancel": "Cancel",

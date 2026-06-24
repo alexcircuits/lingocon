@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { AlertTriangle } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 interface DeleteConfirmDialogProps {
   open: boolean
@@ -27,13 +28,15 @@ export function DeleteConfirmDialog({
   onOpenChange,
   onConfirm,
   isPending,
-  title = "Are you sure?",
+  title,
   description,
   itemName,
 }: DeleteConfirmDialogProps) {
+  const t = useTranslations("confirm")
+  const resolvedTitle = title ?? t("areYouSure")
   const defaultDescription = itemName
-    ? `This will permanently delete "${itemName}". This action cannot be undone.`
-    : "This action cannot be undone. This will permanently delete this item."
+    ? t("deleteNamed", { name: itemName })
+    : t("deleteGeneric")
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +47,7 @@ export function DeleteConfirmDialog({
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div className="flex-1">
-              <AlertDialogTitle>{title}</AlertDialogTitle>
+              <AlertDialogTitle>{resolvedTitle}</AlertDialogTitle>
               <AlertDialogDescription className="mt-2">
                 {description || defaultDescription}
               </AlertDialogDescription>
@@ -52,7 +55,7 @@ export function DeleteConfirmDialog({
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault()
@@ -64,10 +67,10 @@ export function DeleteConfirmDialog({
             {isPending ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Deleting...
+                {t("deleting")}
               </span>
             ) : (
-              "Delete"
+              t("delete")
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
