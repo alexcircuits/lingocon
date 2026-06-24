@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { Languages, BookOpen, FileText, Newspaper, BookMarked, AudioWaveform, ArrowRight } from "lucide-react"
 
@@ -26,6 +27,7 @@ const iconMap = {
 }
 
 export function NavBento({ sections }: NavBentoProps) {
+    const t = useTranslations("langPublic")
     return (
         <div className="grid auto-rows-[minmax(170px,auto)] grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {sections.map((section, idx) => {
@@ -51,7 +53,7 @@ export function NavBento({ sections }: NavBentoProps) {
                                 </span>
                                 <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2.5 py-1 text-xs backdrop-blur-sm">
                                     <span className="font-semibold tabular-nums">{section.count}</span>
-                                    <span className="text-muted-foreground">items</span>
+                                    <span className="text-muted-foreground">{t("navItems")}</span>
                                 </span>
                             </div>
 
@@ -61,7 +63,7 @@ export function NavBento({ sections }: NavBentoProps) {
                                     <ArrowRight className="h-4 w-4 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                                 </h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    View full {section.title.toLowerCase()} documentation
+                                    {t("viewDocumentation")}
                                 </p>
                             </div>
                         </div>

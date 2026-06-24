@@ -1,4 +1,5 @@
 import { Crown } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface MaintainerUser {
@@ -12,7 +13,8 @@ interface MaintainersSectionProps {
   editors: MaintainerUser[]
 }
 
-export function MaintainersSection({ owner, editors }: MaintainersSectionProps) {
+export async function MaintainersSection({ owner, editors }: MaintainersSectionProps) {
+  const t = await getTranslations("langPublic")
   const maintainers = [
     { user: owner, isOwner: true },
     ...editors.map((u) => ({ user: u, isOwner: false })),
@@ -21,7 +23,7 @@ export function MaintainersSection({ owner, editors }: MaintainersSectionProps) 
   return (
     <section>
       <h2 className="mb-6 flex items-center gap-4 px-2 text-2xl font-bold tracking-tight">
-        Maintainers
+        {t("maintainers")}
         <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
       </h2>
       <div className="aurora-glass rounded-3xl p-6">
@@ -43,10 +45,10 @@ export function MaintainersSection({ owner, editors }: MaintainersSectionProps) 
               </div>
               <div>
                 <p className="text-sm font-medium leading-none">
-                  {user.name ?? "Anonymous"}
+                  {user.name ?? t("anonymous")}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {isOwner ? "Owner" : "Editor"}
+                  {isOwner ? t("owner") : t("editor")}
                 </p>
               </div>
             </div>

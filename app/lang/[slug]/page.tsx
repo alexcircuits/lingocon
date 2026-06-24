@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -141,6 +142,7 @@ export default async function PublicLanguagePage({
     notFound()
   }
 
+  const t = await getTranslations("langPublic")
   const userId = await getUserId()
   const [isFavorite, comments] = await Promise.all([
     userId ? checkIsFavorite(language.id, userId) : false,
@@ -168,42 +170,42 @@ export default async function PublicLanguagePage({
 
   const sections = [
     {
-      title: "Script Symbols",
+      title: t("secSymbols"),
       count: language._count.scriptSymbols,
       href: `/lang/${language.slug}/alphabet`,
       iconName: "Languages" as const,
       color: "text-primary",
     },
     {
-      title: "Phonology",
+      title: t("secPhonology"),
       count: language._count.scriptSymbols, // shows symbol count as proxy for phonemes
       href: `/lang/${language.slug}/phonology`,
       iconName: "AudioWaveform" as const,
       color: "text-primary",
     },
     {
-      title: "Grammar Pages",
+      title: t("secGrammar"),
       count: language._count.grammarPages,
       href: `/lang/${language.slug}/grammar`,
       iconName: "BookOpen" as const,
       color: "text-primary",
     },
     {
-      title: "Dictionary Entries",
+      title: t("secDictionary"),
       count: language._count.dictionaryEntries,
       href: `/lang/${language.slug}/dictionary`,
       iconName: "FileText" as const,
       color: "text-primary",
     },
     {
-      title: "Articles",
+      title: t("secArticles"),
       count: language._count.articles,
       href: `/lang/${language.slug}/articles`,
       iconName: "Newspaper" as const,
       color: "text-primary",
     },
     {
-      title: "Texts & Books",
+      title: t("secTexts"),
       count: language._count.texts,
       href: `/lang/${language.slug}/texts`,
       iconName: "BookMarked" as const,
@@ -256,17 +258,16 @@ export default async function PublicLanguagePage({
                   <GraduationCap className="h-6 w-6" />
                 </span>
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight">Learn {language.name}</h2>
+                  <h2 className="text-xl font-bold tracking-tight">{t("learnHeading", { name: language.name })}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {language._count.courses} course{language._count.courses !== 1 ? "s" : ""} with lessons,
-                    spaced-repetition review, XP, and streaks.
+                    {t("learnDesc", { count: language._count.courses })}
                   </p>
                 </div>
               </div>
               <Button asChild size="lg" className="shrink-0 gap-2">
                 <Link href={`/learn/${language.slug}`}>
                   <Sparkles className="h-4 w-4" />
-                  Start learning
+                  {t("startLearning")}
                 </Link>
               </Button>
             </div>
@@ -278,7 +279,7 @@ export default async function PublicLanguagePage({
       {familyTree && (
         <section>
           <h2 className="mb-6 flex items-center gap-4 px-2 text-2xl font-bold tracking-tight">
-            Language Family
+            {t("languageFamily")}
             <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
           </h2>
           <div className="aurora-glass rounded-3xl p-6 lg:p-10">
@@ -296,7 +297,7 @@ export default async function PublicLanguagePage({
       {/* Navigation Grid */}
       <section>
         <h2 className="mb-6 flex items-center gap-4 px-2 text-2xl font-bold tracking-tight">
-          Explore Corpus
+          {t("exploreCorpus")}
           <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
         </h2>
         <NavBento sections={sections} />
@@ -320,10 +321,10 @@ export default async function PublicLanguagePage({
               <div className="mb-5 flex items-center justify-between px-2">
                 <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight">
                   <Newspaper className="h-5 w-5 text-primary" />
-                  Latest Articles
+                  {t("latestArticles")}
                 </h3>
                 <Link href={`/lang/${language.slug}/articles`} className="text-sm font-medium text-primary hover:underline">
-                  View all
+                  {t("viewAll")}
                 </Link>
               </div>
               <div className="flex flex-col gap-3">
@@ -352,10 +353,10 @@ export default async function PublicLanguagePage({
               <div className="mb-5 flex items-center justify-between px-2">
                 <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight">
                   <BookMarked className="h-5 w-5 text-primary" />
-                  Recent Texts
+                  {t("recentTexts")}
                 </h3>
                 <Link href={`/lang/${language.slug}/texts`} className="text-sm font-medium text-primary hover:underline">
-                  View all
+                  {t("viewAll")}
                 </Link>
               </div>
               <div className="flex flex-col gap-3">
@@ -367,7 +368,7 @@ export default async function PublicLanguagePage({
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-lg font-semibold transition-colors group-hover:text-primary">{text.title}</span>
-                      <span className="mt-1 block text-xs text-muted-foreground">Read text</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{t("readText")}</span>
                     </span>
                     <ArrowRight className="h-4 w-4 shrink-0 -translate-x-1 text-primary opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                   </Link>
@@ -383,11 +384,11 @@ export default async function PublicLanguagePage({
         <div className="flex flex-wrap gap-2.5 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm">
             <Calendar className="h-4 w-4 text-primary" />
-            Created {formatDate(language.createdAt, "MMMM d, yyyy")}
+            {t("createdOn", { date: formatDate(language.createdAt, "MMMM d, yyyy") })}
           </span>
           <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm">
             <Clock className="h-4 w-4 text-primary" />
-            Updated {formatDate(language.updatedAt, "MMMM d, yyyy")}
+            {t("updatedOn", { date: formatDate(language.updatedAt, "MMMM d, yyyy") })}
           </span>
           {activeTheme && (
             <Link
@@ -395,7 +396,7 @@ export default async function PublicLanguagePage({
               className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/60 px-3.5 py-1.5 backdrop-blur-sm transition-colors hover:text-primary"
             >
               <Palette className="h-4 w-4 text-primary" />
-              Theme: {activeTheme.name}
+              {t("themeLabel", { name: activeTheme.name })}
             </Link>
           )}
         </div>
