@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +19,7 @@ const GoogleIcon = () => (
 )
 
 export function LoginForm() {
+    const t = useTranslations("auth")
     const [isLoading, setIsLoading] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -36,18 +38,18 @@ export function LoginForm() {
 
             if (result?.error) {
                 if (result.error.includes("EMAIL_NOT_VERIFIED")) {
-                    toast.error("Please verify your email before signing in. Check your inbox for a verification link.")
+                    toast.error(t("verifyEmailFirst"))
                     router.push("/verify-email")
                 } else {
-                    toast.error("Invalid email or password")
+                    toast.error(t("invalidCredentials"))
                 }
             } else {
-                toast.success("Logged in successfully")
+                toast.success(t("loggedIn"))
                 router.push("/dashboard")
                 router.refresh()
             }
         } catch (error) {
-            toast.error("Something went wrong")
+            toast.error(t("somethingWrong"))
         } finally {
             setIsLoading(false)
         }
@@ -62,11 +64,11 @@ export function LoginForm() {
         <div className="space-y-6">
             <form onSubmit={handleCredentialsLogin} className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("emailLabel")}</Label>
                     <Input
                         id="email"
                         type="email"
-                        placeholder="name@example.com"
+                        placeholder={t("emailPlaceholder")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -75,9 +77,9 @@ export function LoginForm() {
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password">{t("passwordLabel")}</Label>
                         <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                            Forgot password?
+                            {t("forgotPassword")}
                         </Link>
                     </div>
                     <Input
@@ -91,7 +93,7 @@ export function LoginForm() {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                    Sign In with Email
+                    {t("signInWithEmail")}
                 </Button>
             </form>
 
@@ -100,7 +102,7 @@ export function LoginForm() {
                     <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    <span className="bg-background px-2 text-muted-foreground">{t("orContinueWith")}</span>
                 </div>
             </div>
 

@@ -2,10 +2,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Languages, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Navbar } from "@/components/navbar"
 import { RegisterForm } from "./components/register-form"
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+    const t = await getTranslations("auth")
+    const tCommon = await getTranslations("common")
     return (
         <div className="min-h-screen flex flex-col bg-background">
             {/* Background Effects */}
@@ -22,9 +25,9 @@ export default function RegisterPage() {
                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 mb-4">
                             <Languages className="h-6 w-6" />
                         </div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t("registerTitle")}</h1>
                         <p className="text-muted-foreground">
-                            Join LingoCon to start documenting your languages
+                            {t("registerSubtitle")}
                         </p>
                     </div>
 
@@ -33,9 +36,9 @@ export default function RegisterPage() {
                             <RegisterForm />
 
                             <div className="mt-6 text-center text-sm">
-                                <span className="text-muted-foreground">Already have an account? </span>
+                                <span className="text-muted-foreground">{t("hasAccount")} </span>
                                 <Link href="/login" className="text-primary hover:underline font-medium">
-                                    Sign in
+                                    {tCommon("signIn")}
                                 </Link>
                             </div>
                         </CardContent>
@@ -47,7 +50,7 @@ export default function RegisterPage() {
                             className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="mr-1.5 h-4 w-4" />
-                            Back to home
+                            {t("backToHome")}
                         </Link>
                     </div>
                 </div>

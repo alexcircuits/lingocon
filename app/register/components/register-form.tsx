@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { registerUser } from "@/app/actions/user-auth"
 
 export function RegisterForm() {
+    const t = useTranslations("auth")
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
 
@@ -25,11 +27,11 @@ export function RegisterForm() {
             if (result.error) {
                 toast.error(result.error)
             } else {
-                toast.success("Account created! Check your email to verify your account.")
+                toast.success(t("accountCreated"))
                 router.push("/verify-email")
             }
         } catch (error) {
-            toast.error("Something went wrong")
+            toast.error(t("somethingWrong"))
         } finally {
             setIsLoading(false)
         }
@@ -38,35 +40,35 @@ export function RegisterForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t("nameLabel")}</Label>
                 <Input
                     id="name"
                     name="name"
-                    placeholder="John Doe"
+                    placeholder={t("namePlaceholder")}
                     required
                     disabled={isLoading}
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("emailLabel")}</Label>
                 <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder={t("emailPlaceholder")}
                     required
                     disabled={isLoading}
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("passwordLabel")}</Label>
                 <Input
                     id="password"
                     name="password"
                     type="password"
                     required
                     disabled={isLoading}
-                    placeholder="Min 8 characters"
+                    placeholder={t("passwordMinPlaceholder")}
                 />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -75,7 +77,7 @@ export function RegisterForm() {
                 ) : (
                     <UserPlus className="mr-2 h-4 w-4" />
                 )}
-                Create Account
+                {t("createAccountButton")}
             </Button>
         </form>
     )

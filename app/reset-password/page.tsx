@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Languages, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Navbar } from "@/components/navbar"
 import { ResetPasswordForm } from "./reset-password-form"
 
@@ -9,7 +10,8 @@ export const metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage() {
+  const t = await getTranslations("auth")
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <div className="fixed inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -24,9 +26,9 @@ export default function ResetPasswordPage() {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 mb-4">
               <Languages className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">Reset your password</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("resetTitle")}</h1>
             <p className="text-muted-foreground">
-              Enter your new password below
+              {t("resetSubtitle")}
             </p>
           </div>
 
@@ -42,7 +44,7 @@ export default function ResetPasswordPage() {
               className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="mr-1.5 h-4 w-4" />
-              Back to sign in
+              {t("backToSignIn")}
             </Link>
           </div>
         </div>

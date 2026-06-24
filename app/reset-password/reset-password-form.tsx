@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { resetPassword } from "@/app/actions/user-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { KeyRound, Loader2, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
 
 export function ResetPasswordForm() {
+  const t = useTranslations("auth")
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const router = useRouter()
@@ -24,12 +26,12 @@ export function ResetPasswordForm() {
     return (
       <div className="flex flex-col items-center py-6 space-y-4">
         <XCircle className="h-12 w-12 text-destructive" />
-        <p className="text-center font-medium">Invalid reset link</p>
+        <p className="text-center font-medium">{t("invalidResetLink")}</p>
         <p className="text-sm text-muted-foreground text-center">
-          Please request a new password reset link.
+          {t("invalidResetLinkDesc")}
         </p>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/forgot-password">Request New Link</Link>
+          <Link href="/forgot-password">{t("requestNewLink")}</Link>
         </Button>
       </div>
     )
@@ -39,12 +41,12 @@ export function ResetPasswordForm() {
     return (
       <div className="flex flex-col items-center py-6 space-y-4">
         <CheckCircle2 className="h-12 w-12 text-green-500" />
-        <p className="text-center font-medium">Password reset successfully!</p>
+        <p className="text-center font-medium">{t("passwordResetSuccess")}</p>
         <p className="text-sm text-muted-foreground text-center">
-          You can now sign in with your new password.
+          {t("passwordResetSuccessDesc")}
         </p>
         <Button asChild className="w-full">
-          <Link href="/login">Sign In</Link>
+          <Link href="/login">{t("signInButton")}</Link>
         </Button>
       </div>
     )
@@ -55,12 +57,12 @@ export function ResetPasswordForm() {
     setError("")
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.")
+      setError(t("passwordsNoMatch"))
       return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.")
+      setError(t("passwordTooShort"))
       return
     }
 
@@ -78,11 +80,11 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="password">New Password</Label>
+        <Label htmlFor="password">{t("newPasswordLabel")}</Label>
         <Input
           id="password"
           type="password"
-          placeholder="Min 8 characters"
+          placeholder={t("passwordMinPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -90,11 +92,11 @@ export function ResetPasswordForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
+        <Label htmlFor="confirm-password">{t("confirmPasswordLabel")}</Label>
         <Input
           id="confirm-password"
           type="password"
-          placeholder="Confirm your password"
+          placeholder={t("confirmPasswordPlaceholder")}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -108,7 +110,7 @@ export function ResetPasswordForm() {
         ) : (
           <KeyRound className="mr-2 h-4 w-4" />
         )}
-        Reset Password
+        {t("resetPasswordButton")}
       </Button>
     </form>
   )

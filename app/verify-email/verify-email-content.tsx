@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { verifyEmail, resendVerificationEmail } from "@/app/actions/user-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react"
 import Link from "next/link"
 
 export function VerifyEmailContent() {
+  const t = useTranslations("auth")
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
 
@@ -52,7 +54,7 @@ export function VerifyEmailContent() {
     return (
       <div className="flex flex-col items-center py-6 space-y-3">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-muted-foreground">Verifying your email...</p>
+        <p className="text-muted-foreground">{t("verifying")}</p>
       </div>
     )
   }
@@ -61,12 +63,12 @@ export function VerifyEmailContent() {
     return (
       <div className="flex flex-col items-center py-6 space-y-4">
         <CheckCircle2 className="h-12 w-12 text-green-500" />
-        <p className="text-center font-medium">Your email has been verified!</p>
+        <p className="text-center font-medium">{t("emailVerified")}</p>
         <p className="text-sm text-muted-foreground text-center">
-          You can now sign in to your account.
+          {t("emailVerifiedDesc")}
         </p>
         <Button asChild className="w-full mt-2">
-          <Link href="/login">Sign In</Link>
+          <Link href="/login">{t("signInButton")}</Link>
         </Button>
       </div>
     )
@@ -79,20 +81,20 @@ export function VerifyEmailContent() {
         <p className="text-center font-medium">{errorMessage}</p>
         <div className="w-full space-y-4 mt-2">
           <p className="text-sm text-muted-foreground text-center">
-            Enter your email to receive a new verification link.
+            {t("resendPrompt")}
           </p>
           {resendSent ? (
             <p className="text-sm text-green-600 text-center">
-              If an account exists with that email, a new verification link has been sent.
+              {t("resendSent")}
             </p>
           ) : (
             <form onSubmit={handleResend} className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="resend-email">Email</Label>
+                <Label htmlFor="resend-email">{t("emailLabel")}</Label>
                 <Input
                   id="resend-email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder={t("emailPlaceholder")}
                   value={resendEmail}
                   onChange={(e) => setResendEmail(e.target.value)}
                   required
@@ -104,7 +106,7 @@ export function VerifyEmailContent() {
                 ) : (
                   <Mail className="mr-2 h-4 w-4" />
                 )}
-                Resend Verification Email
+                {t("resendVerification")}
               </Button>
             </form>
           )}
@@ -117,7 +119,7 @@ export function VerifyEmailContent() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground text-center">
-        Check your email for a verification link. If you didn&apos;t receive one, enter your email below.
+        {t("verifyNoTokenPrompt")}
       </p>
       {resendSent ? (
         <p className="text-sm text-green-600 text-center py-4">

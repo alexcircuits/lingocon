@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { requestPasswordReset } from "@/app/actions/user-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Mail, Loader2 } from "lucide-react"
 
 export function ForgotPasswordForm() {
+  const t = useTranslations("auth")
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -31,10 +33,12 @@ export function ForgotPasswordForm() {
     return (
       <div className="py-4 space-y-3 text-center">
         <Mail className="h-10 w-10 mx-auto text-muted-foreground" />
-        <p className="font-medium">Check your email</p>
+        <p className="font-medium">{t("forgotCheckEmail")}</p>
         <p className="text-sm text-muted-foreground">
-          If an account exists with <span className="font-medium text-foreground">{email}</span>,
-          we&apos;ve sent a password reset link.
+          {t.rich("forgotSentTo", {
+            email,
+            b: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+          })}
         </p>
       </div>
     )
@@ -43,11 +47,11 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("emailLabel")}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="name@example.com"
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -61,7 +65,7 @@ export function ForgotPasswordForm() {
         ) : (
           <Mail className="mr-2 h-4 w-4" />
         )}
-        Send Reset Link
+        {t("sendResetLink")}
       </Button>
     </form>
   )
