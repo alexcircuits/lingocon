@@ -50,10 +50,11 @@ const notoSans = Noto_Sans({
   display: "swap",
 });
 
-// Gilroy — locally-hosted display face used for the Russian locale (includes
-// Cyrillic). Applied via the `html[lang="free-ru"]` selector in globals.css;
-// English keeps Jakarta untouched. Ships the weights the UI actually uses
-// (light → extrabold); Noto Sans remains the fallback for any missing glyph.
+// Gilroy — locally-hosted display face used for the Cyrillic locales (Russian
+// and Ukrainian; includes Cyrillic). Applied via the `html[lang="free-ru"]` and
+// `html[lang="uk"]` selectors in globals.css; English keeps Jakarta untouched.
+// Ships the weights the UI actually uses (light → extrabold); Noto Sans remains
+// the fallback for any missing glyph.
 const gilroy = localFont({
   src: [
     { path: "./fonts/Gilroy-Light.ttf", weight: "300", style: "normal" },

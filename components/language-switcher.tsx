@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-import { LOCALE_COOKIE } from "@/lib/i18n/config";
+import { LOCALE_COOKIE, naturalLocales } from "@/lib/i18n/config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -62,18 +62,14 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
   const Content = () => (
     <>
       <DropdownMenuGroup>
-        <DropdownMenuItem onClick={() => switchLocale("en")} className="cursor-pointer">
-          <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">{t("english")}</span>
-          <span className="text-xs text-muted-foreground ml-2">100%</span>
-          {currentLocale === "en" && <Check className="ml-2 h-4 w-4" />}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => switchLocale("free-ru")} className="cursor-pointer">
-          <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">{t("freeRussian")}</span>
-          <span className="text-xs text-muted-foreground ml-2">100%</span>
-          {currentLocale === "free-ru" && <Check className="ml-2 h-4 w-4" />}
-        </DropdownMenuItem>
+        {naturalLocales.map((loc) => (
+          <DropdownMenuItem key={loc.code} onClick={() => switchLocale(loc.code)} className="cursor-pointer">
+            <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
+            <span className="flex-1">{t(loc.labelKey)}</span>
+            <span className="text-xs text-muted-foreground ml-2">100%</span>
+            {currentLocale === loc.code && <Check className="ml-2 h-4 w-4" />}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuGroup>
 
       {translations.length > 0 && (
@@ -127,18 +123,14 @@ export function LanguageSwitcher({ variant = "dropdown" }: { variant?: "dropdown
     return (
       <div className="w-full border rounded-md bg-card">
         <div className="p-2 flex flex-col gap-1">
-          <div onClick={() => switchLocale("en")} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
-            <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-            <span className="flex-1">{t("english")}</span>
-            <span className="text-xs text-muted-foreground ml-2">100%</span>
-            {currentLocale === "en" && <Check className="ml-2 h-4 w-4" />}
-          </div>
-          <div onClick={() => switchLocale("free-ru")} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
-            <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-            <span className="flex-1">{t("freeRussian")}</span>
-            <span className="text-xs text-muted-foreground ml-2">100%</span>
-            {currentLocale === "free-ru" && <Check className="ml-2 h-4 w-4" />}
-          </div>
+          {naturalLocales.map((loc) => (
+            <div key={loc.code} onClick={() => switchLocale(loc.code)} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
+              <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
+              <span className="flex-1">{t(loc.labelKey)}</span>
+              <span className="text-xs text-muted-foreground ml-2">100%</span>
+              {currentLocale === loc.code && <Check className="ml-2 h-4 w-4" />}
+            </div>
+          ))}
 
           {translations.length > 0 && (
             <>

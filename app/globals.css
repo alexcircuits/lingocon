@@ -186,18 +186,25 @@
     font-family: var(--font-jetbrains-mono), 'Fira Code', var(--font-noto), monospace;
   }
 
-  /* Russian locale. Plus Jakarta Sans is latin-only, so Cyrillic falls through
-     to Noto Sans and loses the modern editorial feel. Gilroy is a locally-hosted
-     display face (with Cyrillic) that gives a confident, modern silhouette;
-     Noto Sans sits behind it as the safety net for any codepoint Gilroy is
-     missing (rare ext-Cyrillic, IPA, symbols). Mono and the per-language
-     script font are intentionally unaffected. */
+  /* Cyrillic locales (Russian, Ukrainian). Plus Jakarta Sans is latin-only, so
+     Cyrillic falls through to Noto Sans and loses the modern editorial feel.
+     Gilroy is a locally-hosted display face (with Cyrillic) that gives a
+     confident, modern silhouette; Noto Sans sits behind it as the safety net
+     for any codepoint Gilroy is missing (Ukrainian-specific і/ї/є/ґ, rare
+     ext-Cyrillic, IPA, symbols). Mono and the per-language script font are
+     intentionally unaffected. */
   html[lang="free-ru"] body,
   html[lang="free-ru"] h1,
   html[lang="free-ru"] h2,
   html[lang="free-ru"] h3,
   html[lang="free-ru"] h4,
-  html[lang="free-ru"] .font-display {
+  html[lang="free-ru"] .font-display,
+  html[lang="uk"] body,
+  html[lang="uk"] h1,
+  html[lang="uk"] h2,
+  html[lang="uk"] h3,
+  html[lang="uk"] h4,
+  html[lang="uk"] .font-display {
     font-family: var(--font-gilroy), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
   }
 }
