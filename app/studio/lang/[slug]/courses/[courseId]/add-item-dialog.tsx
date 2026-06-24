@@ -16,6 +16,7 @@ import {
   searchDictEntries, searchCourseSentences,
 } from "@/app/actions/learn"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import type {
   DictEntry, GrammarPage, TextItem, SentenceOption, LessonItem, ItemType,
@@ -31,6 +32,7 @@ export function AddItemDialog({
   texts: TextItem[]
   onAdded: (item: LessonItem) => void
 }) {
+  const t = useTranslations("courseEditor")
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<ItemType>("VOCAB")
   const [mode, setMode] = useState<"search" | "write">("search")
@@ -193,12 +195,12 @@ export function AddItemDialog({
         })
         resetAll()
         setOpen(false)
-        toast.success("Item added")
+        toast.success(t("itemAdded"))
       } else if (r.error) {
         toast.error(r.error)
       }
     } catch {
-      toast.error("Failed to add item")
+      toast.error(t("failAddItem"))
     } finally {
       setLoading(false)
     }
@@ -217,12 +219,12 @@ export function AddItemDialog({
         })
         resetAll()
         setOpen(false)
-        toast.success("Sentence created and added")
+        toast.success(t("sentenceCreated"))
       } else if (r.error) {
         toast.error(r.error)
       }
     } catch {
-      toast.error("Failed to create sentence")
+      toast.error(t("failCreateSentence"))
     } finally {
       setLoading(false)
     }
@@ -240,12 +242,12 @@ export function AddItemDialog({
         })
         resetAll()
         setOpen(false)
-        toast.success("Word created and added")
+        toast.success(t("wordCreated"))
       } else if (r.error) {
         toast.error(r.error)
       }
     } catch {
-      toast.error("Failed to create word")
+      toast.error(t("failCreateWord"))
     } finally {
       setLoading(false)
     }
@@ -272,22 +274,22 @@ export function AddItemDialog({
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-2">
           <Plus className="h-3.5 w-3.5" />
-          Add Item
+          {t("addItem")}
         </Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-lg max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Add Item to Lesson</DialogTitle>
+          <DialogTitle>{t("addItemToLesson")}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 min-h-0 flex-1">
           {/* Type selector */}
           <div className="grid grid-cols-4 gap-1.5 shrink-0">
             {([
-              ["VOCAB",    "Vocab",    <Type key="v" className="h-3.5 w-3.5" />],
-              ["GRAMMAR",  "Grammar",  <BookOpen key="g" className="h-3.5 w-3.5" />],
-              ["TEXT",     "Text",     <FileText key="t" className="h-3.5 w-3.5" />],
-              ["SENTENCE", "Sentence", <MessageSquare key="s" className="h-3.5 w-3.5" />],
+              ["VOCAB",    t("typeVocab"),    <Type key="v" className="h-3.5 w-3.5" />],
+              ["GRAMMAR",  t("typeGrammar"),  <BookOpen key="g" className="h-3.5 w-3.5" />],
+              ["TEXT",     t("typeText"),     <FileText key="t" className="h-3.5 w-3.5" />],
+              ["SENTENCE", t("typeSentence"), <MessageSquare key="s" className="h-3.5 w-3.5" />],
             ] as [ItemType, string, React.ReactNode][]).map(([value, label, icon]) => (
               <button
                 key={value}
@@ -313,13 +315,13 @@ export function AddItemDialog({
                 className={cn("flex-1 px-3 py-1.5 transition-colors",
                   mode === "search" ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"
                 )}>
-                Find existing
+                {t("findExisting")}
               </button>
               <button type="button" onClick={() => setMode("write")}
                 className={cn("flex-1 px-3 py-1.5 transition-colors border-l border-border",
                   mode === "write" ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"
                 )}>
-                Write new
+                {t("writeNew")}
               </button>
             </div>
           )}
@@ -335,7 +337,7 @@ export function AddItemDialog({
                     ref={searchRef}
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setSelectedItem(null) }}
-                    placeholder={`Search ${type === "VOCAB" ? "vocabulary" : type === "GRAMMAR" ? "grammar pages" : type === "TEXT" ? "texts" : "sentences"}…`}
+                    placeholder={type === "VOCAB" ? t("searchVocabPh") : type === "GRAMMAR" ? t("searchGrammarPh") : type === "TEXT" ? t("searchTextsPh") : t("searchSentencesPh")}
                     className="pl-8 pr-8"
                   />
                   {searchQuery && (
@@ -357,11 +359,11 @@ export function AddItemDialog({
                   ) : listOptions.length === 0 ? (
                     <div className="py-8 text-center text-sm text-muted-foreground">
                       {searchQuery
-                        ? `No ${type.toLowerCase()} matching "${searchQuery}"`
-                        : `No ${type.toLowerCase()} content yet.`}
+                        ? t("noMatching", { query: searchQuery })
+                        : t("noContentYet")}
                       {canWrite && !searchQuery && (
                         <button onClick={() => setMode("write")} className="mt-1 block w-full text-xs text-primary hover:underline">
-                          Write new instead →
+                          {t("writeNewInstead")}
                         </button>
                       )}
                       {(type === "GRAMMAR" || type === "TEXT") && (
@@ -371,7 +373,7 @@ export function AddItemDialog({
                           className="mt-1 flex items-center justify-center gap-1 text-xs text-primary hover:underline"
                         >
                           <ExternalLink className="h-3 w-3" />
-                          Open editor
+                          {t("openEditor")}
                         </a>
                       )}
                     </div>
@@ -420,7 +422,7 @@ export function AddItemDialog({
                             ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             : <ChevronsDown className="h-3.5 w-3.5" />
                           }
-                          {isLoadingMore ? "Loading…" : "Load more"}
+                          {isLoadingMore ? t("loadingMore") : t("loadMore")}
                         </button>
                       )}
                     </>
@@ -431,11 +433,11 @@ export function AddItemDialog({
               {/* External link hint for grammar/text */}
               {(type === "GRAMMAR" || type === "TEXT") && listOptions.length > 0 && (
                 <p className="text-xs text-muted-foreground shrink-0">
-                  Need a new {type === "GRAMMAR" ? "grammar page" : "text"}?{" "}
+                  {type === "GRAMMAR" ? t("needNewGrammar") : t("needNewText")}{" "}
                   <a href={type === "GRAMMAR" ? `/studio/lang/${slug}/grammar` : `/studio/lang/${slug}/texts`}
                     target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-0.5 text-primary hover:underline">
-                    Open editor <ExternalLink className="h-3 w-3" />
+                    {t("openEditor")} <ExternalLink className="h-3 w-3" />
                   </a>
                 </p>
               )}
@@ -446,20 +448,20 @@ export function AddItemDialog({
               {type === "SENTENCE" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label>Sentence <span className="text-muted-foreground text-xs font-normal">(in the conlang)</span></Label>
-                    <Input value={sentText} onChange={e => setSentText(e.target.value)} placeholder="e.g. Kara nata vel" autoFocus />
+                    <Label>{t("sentence")} <span className="text-muted-foreground text-xs font-normal">{t("inConlang")}</span></Label>
+                    <Input value={sentText} onChange={e => setSentText(e.target.value)} placeholder={t("sentencePh")} autoFocus />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Translation</Label>
-                    <Input value={sentTranslation} onChange={e => setSentTranslation(e.target.value)} placeholder="e.g. The cat runs" />
+                    <Label>{t("translation")}</Label>
+                    <Input value={sentTranslation} onChange={e => setSentTranslation(e.target.value)} placeholder={t("translationPh")} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Gloss <span className="text-muted-foreground text-xs font-normal">(optional)</span></Label>
-                    <Input value={sentGloss} onChange={e => setSentGloss(e.target.value)} placeholder="e.g. cat.NOM run.3SG.PRES" />
+                    <Label>{t("gloss")} <span className="text-muted-foreground text-xs font-normal">{t("optional")}</span></Label>
+                    <Input value={sentGloss} onChange={e => setSentGloss(e.target.value)} placeholder={t("glossPh")} />
                   </div>
                   {/* Inline word picker */}
                   <div className="space-y-1.5">
-                    <Label>Link to word <span className="text-muted-foreground text-xs font-normal">(required)</span></Label>
+                    <Label>{t("linkToWord")} <span className="text-muted-foreground text-xs font-normal">{t("required")}</span></Label>
                     {sentDictEntry ? (
                       <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2 bg-secondary/30">
                         <span className="flex-1 text-sm font-custom-script font-medium">{sentDictEntry.lemma}</span>
@@ -476,14 +478,14 @@ export function AddItemDialog({
                             value={wordPickerQuery}
                             onChange={e => { setWordPickerQuery(e.target.value); setWordPickerOpen(true) }}
                             onFocus={() => { setWordPickerOpen(true); if (!wordPickerResults.length) searchDictEntries(languageId, "").then(setWordPickerResults) }}
-                            placeholder="Search words…"
+                            placeholder={t("searchWordsPh")}
                             className="pl-8"
                           />
                         </div>
                         {wordPickerOpen && (
                           <div className="rounded-md border border-border bg-popover max-h-40 overflow-y-auto shadow-md">
                             {wordPickerResults.length === 0 ? (
-                              <p className="px-3 py-2 text-sm text-muted-foreground">No words found.</p>
+                              <p className="px-3 py-2 text-sm text-muted-foreground">{t("noWordsFound")}</p>
                             ) : wordPickerResults.map(e => (
                               <button
                                 key={e.id}
@@ -506,16 +508,16 @@ export function AddItemDialog({
               {type === "VOCAB" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label>Word <span className="text-muted-foreground text-xs font-normal">(base form)</span></Label>
-                    <Input value={vocabLemma} onChange={e => setVocabLemma(e.target.value)} placeholder="e.g. kara" autoFocus />
+                    <Label>{t("word")} <span className="text-muted-foreground text-xs font-normal">{t("baseForm")}</span></Label>
+                    <Input value={vocabLemma} onChange={e => setVocabLemma(e.target.value)} placeholder={t("wordPh")} autoFocus />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Meaning</Label>
-                    <Input value={vocabGloss} onChange={e => setVocabGloss(e.target.value)} placeholder="e.g. cat" />
+                    <Label>{t("meaning")}</Label>
+                    <Input value={vocabGloss} onChange={e => setVocabGloss(e.target.value)} placeholder={t("meaningPh")} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Part of speech <span className="text-muted-foreground text-xs font-normal">(optional)</span></Label>
-                    <Input value={vocabPos} onChange={e => setVocabPos(e.target.value)} placeholder="e.g. noun, verb, adj" />
+                    <Label>{t("partOfSpeech")} <span className="text-muted-foreground text-xs font-normal">{t("optional")}</span></Label>
+                    <Input value={vocabPos} onChange={e => setVocabPos(e.target.value)} placeholder={t("posPh")} />
                   </div>
                 </>
               )}
@@ -524,10 +526,10 @@ export function AddItemDialog({
         </div>
 
         <DialogFooter className="shrink-0 pt-2">
-          <Button variant="outline" onClick={() => { resetAll(); setOpen(false) }}>Cancel</Button>
+          <Button variant="outline" onClick={() => { resetAll(); setOpen(false) }}>{t("cancel")}</Button>
           <Button onClick={handleSubmit} disabled={submitDisabled} className="gap-2">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {mode === "write" ? "Create & Add" : selectedItem ? "Add" : "Select an item"}
+            {mode === "write" ? t("createAndAdd") : selectedItem ? t("add") : t("selectItem")}
           </Button>
         </DialogFooter>
       </DialogContent>
