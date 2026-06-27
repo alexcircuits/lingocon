@@ -7,6 +7,7 @@ import { scheduleReview, createNewCard, computeLessonXp, LESSON_XP, type CardTyp
 import { nextStreak } from "@/lib/streak"
 import { State } from "ts-fsrs"
 import { revalidatePath } from "next/cache"
+import { checkLearnerBadges } from "@/app/actions/badge"
 
 // ─── Enrollment ───────────────────────────────────────────────────────────────
 
@@ -234,6 +235,9 @@ export async function submitReview(
 
   const [updatedCard] = await prisma.$transaction(ops)
 
+  // Learner badges (streaks, reviews) — fire-and-forget, never block the review.
+  checkLearnerBadges(userId).catch(console.error)
+
   return {
     data: {
       card: updatedCard,
@@ -321,6 +325,9 @@ export async function completeLesson(lessonId: string, heartsLeft: number) {
   }
 
   await prisma.$transaction(ops)
+
+  // Learner badges (streaks, lessons completed) — fire-and-forget.
+  checkLearnerBadges(userId).catch(console.error)
 
   const slug = await getSlugForLanguage(languageId)
   revalidatePath(`/learn/${slug}`)

@@ -306,8 +306,31 @@ export async function checkContentBadges(userId: string) {
 }
 
 /**
- * Get recently earned badges for notification display
+ * Check and update progress for learner / engagement badges (study streaks,
+ * lessons completed, flashcards reviewed). Call after a review or lesson finishes.
  */
+export async function checkLearnerBadges(userId: string) {
+    const [streakAgg, lessonsCompleted, reviewsDone] = await Promise.all([
+        prisma.enrollment.aggregate({ where: { userId }, _max: { streak: true } }),
+        prisma.lessonCompletion.count({ where: { userId } }),
+        prisma.cardReview.count({ where: { card: { enrollment: { userId } } } }),
+    ])
+
+    const streak = streakAgg._max.streak ?? 0
+
+    const results = await Promise.all([
+        updateBadgeProgress(userId, "streak_7", streak),
+        updateBadgeProgress(userId, "streak_30", streak),
+        updateBadgeProgress(userId, "streak_100", streak),
+        updateBadgeProgress(userId, "lessons_10", lessonsCompleted),
+        updateBadgeProgress(userId, "lessons_50", lessonsCompleted),
+        updateBadgeProgress(userId, "reviews_100", reviewsDone),
+        updateBadgeProgress(userId, "reviews_1000", reviewsDone),
+    ])
+
+    return results.filter((r) => r.awarded)
+}
+
 /**
  * Get recently earned badges for notification display
  */
