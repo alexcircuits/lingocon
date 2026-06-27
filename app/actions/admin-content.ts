@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { logAdminAction } from "@/app/actions/admin-audit"
 
 /**
@@ -86,6 +86,33 @@ export async function forceLanguageVisibility(
     revalidatePath(`/admin/languages`)
     revalidatePath(`/admin/languages/${languageId}`)
     revalidatePath(`/browse`)
+
+    return { success: true, data: language }
+}
+
+/**
+ * Editorially feature / unfeature a public language. Featured languages float to
+ * the top of the landing-page rail (see getFeaturedLanguages in app/page.tsx),
+ * which is cached under the "languages" tag.
+ */
+export async function setLanguageFeatured(languageId: string, featured: boolean) {
+    await requireAdmin()
+
+    const language = await prisma.language.update({
+        where: { id: languageId },
+        data: { isFeatured: featured, featuredAt: featured ? new Date() : null },
+    })
+
+    await logAdminAction({
+        action: featured ? "FEATURE_LANGUAGE" : "UNFEATURE_LANGUAGE",
+        resource: "LANGUAGE",
+        resourceId: languageId,
+        details: { name: language.name },
+    })
+
+    revalidatePath(`/admin/languages/${languageId}`)
+    revalidatePath(`/`)
+    revalidateTag("languages")
 
     return { success: true, data: language }
 }

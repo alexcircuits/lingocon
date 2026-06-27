@@ -190,6 +190,8 @@ const getFeaturedLanguages = unstable_cache(async () => {
       },
     },
     orderBy: [
+      // Admin-curated picks first, then the favorites-based algorithm.
+      { isFeatured: "desc" },
       { favorites: { _count: "desc" } },
       { dictionaryEntries: { _count: "desc" } },
       { updatedAt: "desc" },

@@ -22,6 +22,7 @@ import { format } from "date-fns"
 import Link from "next/link"
 import { getLanguageDetails } from "@/app/actions/admin-analytics"
 import { LanguageVisibilityToggle } from "@/components/admin/language-visibility-toggle"
+import { LanguageFeatureToggle } from "@/components/admin/language-feature-toggle"
 
 export const dynamic = "force-dynamic"
 
@@ -69,6 +70,12 @@ export default async function AdminLanguageDetailPage({
                         <h1 className="text-3xl font-serif">{language.name}</h1>
                         <Badge variant="outline">/{language.slug}</Badge>
                         <div className="ml-auto flex items-center gap-2">
+                            {language.visibility === "PUBLIC" && (
+                                <LanguageFeatureToggle
+                                    languageId={language.id}
+                                    initialFeatured={language.isFeatured}
+                                />
+                            )}
                             <LanguageVisibilityToggle
                                 languageId={language.id}
                                 currentVisibility={language.visibility}
