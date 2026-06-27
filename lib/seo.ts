@@ -13,10 +13,44 @@ export const SITE_NAME = "LingoCon"
 export const SITE_TAGLINE = "Conlang Tool & Constructed Language Platform"
 export const DEFAULT_LOCALE = "en_US"
 
-/** Canonical public origin, e.g. `https://lingocon.com` (no trailing slash). */
+/**
+ * Canonical production origin. Acts as the ultimate fallback and as a guard
+ * value so we never ship a localhost canonical to production (see getSiteUrl).
+ */
+export const PRODUCTION_SITE_URL = "https://lingocon.com"
+
+const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?/i
+
+/**
+ * Canonical public origin, e.g. `https://lingocon.com` (no trailing slash).
+ *
+ * Resolution order:
+ *   1. `SITE_URL` — runtime, server-only env (NOT inlined at build), so the VPS
+ *      can set the origin without a rebuild.
+ *   2. `NEXT_PUBLIC_SITE_URL` — inlined at build time; also available to client
+ *      code. Whatever value is present when `next build` runs is frozen in.
+ *   3. `PRODUCTION_SITE_URL` — hardcoded production origin.
+ *
+ * Hard guard: in a production build/runtime we refuse to return a localhost or
+ * loopback origin. `NEXT_PUBLIC_*` vars are baked in at build time, so building
+ * with a dev `.env` (NEXT_PUBLIC_SITE_URL="http://localhost:3000") would emit
+ * `<link rel="canonical" href="http://localhost:3000/…">`, a localhost robots
+ * `Host:`/`Sitemap:`, and localhost JSON-LD. Google then canonicalizes public
+ * pages to an unreachable host and quietly drops them from the index — the
+ * classic "the site keeps vanishing from search" symptom. The guard makes that
+ * impossible regardless of how the deploy env is configured.
+ */
 export function getSiteUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://lingocon.com"
-  return raw.replace(/\/$/, "")
+  const raw =
+    process.env.SITE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    PRODUCTION_SITE_URL
+  const url = raw.replace(/\/$/, "")
+
+  if (process.env.NODE_ENV === "production" && LOCALHOST_ORIGIN.test(url)) {
+    return PRODUCTION_SITE_URL
+  }
+  return url
 }
 
 /**

@@ -39,8 +39,12 @@ next-env.d.ts
 /lib/generated/prisma
 
 
-#Public
-/public
+# Public — ignore only runtime-uploaded user content. The static brand assets
+# (icons/, manifest.json, llms.txt, sw.js, fonts/) MUST stay tracked, otherwise
+# they never reach the server via `git push vps` and 404 in production —
+# breaking the Organization-schema logo, apple-touch-icon, PWA manifest, etc.
+/public/uploads
+/public/uploads_backup*
 
 #scripts (keep setup.sh tracked for npm run setup)
 /scripts/*

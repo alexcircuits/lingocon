@@ -1,0 +1,65 @@
+{
+    "name": "LingoCon",
+    "short_name": "LingoCon",
+    "description": "The platform for conlang creators. Build lexicons, write grammar documentation, and share your constructed languages.",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#267a6e",
+    "orientation": "any",
+    "categories": [
+        "education",
+        "productivity"
+    ],
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/icons/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Home",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Browse Languages",
+            "short_name": "Browse",
+            "url": "/browse",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}
