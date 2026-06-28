@@ -1,10 +1,27 @@
 import { ImageResponse } from "next/og"
 import { prisma } from "@/lib/prisma"
 import { NextRequest } from "next/server"
+import { loadOgFonts } from "@/lib/og-fonts"
 
 export const runtime = "nodejs"
 
-/** Content-rich Open Graph card for a creator profile. */
+// Aurora brand palette (hex equivalents of app/globals.css dark theme — Satori's
+// gradient parser can't handle comma-separated hsl()).
+const BG = "#0a0c19"
+const FG = "#f1f2f9"
+const VIOLET = "#9378fc"
+const PINK = "#ff61a8"
+const BORDER = "#2c2f44"
+const fg = (a: number) => `rgba(241, 242, 249, ${a})`
+
+function nameSize(len: number): number {
+  if (len > 22) return 66
+  if (len > 16) return 86
+  if (len > 10) return 104
+  return 124
+}
+
+/** Bold, brand-themed Open Graph card for a creator profile. */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> },
@@ -24,12 +41,11 @@ export async function GET(
   }
 
   const name = user.name || "Conlang creator"
-  const initial = (name.trim()[0] || "?").toUpperCase()
-  const stats: { value: number; label: string; color: string }[] = [
-    { value: languages, label: "languages", color: "#60a5fa" },
-    { value: words, label: "words", color: "#a78bfa" },
-    { value: followers, label: "followers", color: "#34d399" },
-    { value: badges, label: "badges", color: "#fbbf24" },
+  const stats: { value: number; label: string }[] = [
+    { value: languages, label: "languages" },
+    { value: words, label: "words" },
+    { value: followers, label: "followers" },
+    { value: badges, label: "badges" },
   ]
 
   return new ImageResponse(
@@ -40,11 +56,11 @@ export async function GET(
           height: "630px",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%)",
-          fontFamily: "system-ui, sans-serif",
-          color: "white",
+          justifyContent: "space-between",
+          background: BG,
+          color: FG,
+          fontFamily: "Gilroy, 'Noto Sans'",
+          padding: "62px 70px",
           position: "relative",
           overflow: "hidden",
         }}
@@ -52,73 +68,71 @@ export async function GET(
         <div
           style={{
             position: "absolute",
-            top: "-100px",
-            right: "-100px",
-            width: "400px",
-            height: "400px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "12px",
+            background: `linear-gradient(90deg, ${VIOLET}, ${PINK})`,
             display: "flex",
           }}
         />
 
-        {/* Avatar initial */}
-        <div
-          style={{
-            width: "128px",
-            height: "128px",
-            borderRadius: "9999px",
-            background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "64px",
-            fontWeight: 800,
-            marginBottom: "24px",
-          }}
-        >
-          {initial}
+        {/* header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: "23px", fontWeight: 600, letterSpacing: "5px", color: fg(0.7), display: "flex" }}>
+            LINGOCON
+          </div>
+          <div
+            style={{
+              fontSize: "17px",
+              fontWeight: 700,
+              letterSpacing: "3px",
+              color: BG,
+              background: VIOLET,
+              borderRadius: "5px",
+              padding: "9px 16px",
+              display: "flex",
+            }}
+          >
+            PROFILE
+          </div>
         </div>
 
-        <div
-          style={{
-            fontSize: "60px",
-            fontWeight: 700,
-            letterSpacing: "-2px",
-            background: "linear-gradient(135deg, #ffffff 0%, #c4b5fd 100%)",
-            backgroundClip: "text",
-            color: "transparent",
-            display: "flex",
-          }}
-        >
-          {name}
-        </div>
-        <div style={{ fontSize: "22px", color: "rgba(148, 163, 184, 0.8)", marginBottom: "36px", marginTop: "6px", display: "flex" }}>
-          Conlang creator on LingoCon
+        {/* headword */}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", marginBottom: "auto" }}>
+          <div style={{ fontSize: `${nameSize(name.length)}px`, fontWeight: 800, letterSpacing: "-3px", lineHeight: 1, display: "flex" }}>
+            {name}
+          </div>
+          <div
+            style={{
+              fontFamily: "'Noto Sans'",
+              fontStyle: "italic",
+              fontSize: "30px",
+              color: fg(0.55),
+              marginTop: "20px",
+              display: "flex",
+            }}
+          >
+            a creator of constructed languages
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: "20px" }}>
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "4px",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: "16px",
-                padding: "18px 32px",
-              }}
-            >
-              <span style={{ fontSize: "38px", fontWeight: 700, color: s.color }}>{s.value}</span>
-              <span style={{ fontSize: "15px", color: "rgba(148, 163, 184, 0.8)" }}>{s.label}</span>
-            </div>
-          ))}
+        {/* stat baseline */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ height: "1px", background: BORDER, marginBottom: "22px", display: "flex" }} />
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "44px" }}>
+            {stats.map((s) => (
+              <div key={s.label} style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
+                <span style={{ fontSize: "50px", fontWeight: 800, color: PINK }}>{s.value.toLocaleString()}</span>
+                <span style={{ fontSize: "15px", fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", color: fg(0.45) }}>
+                  {s.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     ),
-    { width: 1200, height: 630 },
+    { width: 1200, height: 630, fonts: loadOgFonts() },
   )
 }
