@@ -29,6 +29,7 @@ import {
   Shield,
   GitBranch,
   GraduationCap,
+  Newspaper,
 } from "lucide-react"
 import { SearchBar } from "@/components/search/search-bar"
 import { cn } from "@/lib/utils"
@@ -68,9 +69,21 @@ const mainNavItems: NavItem[] = [
   { key: "browse", href: "/browse", icon: Globe },
   { key: "learn", href: "/learn", icon: GraduationCap },
   { key: "families", href: "/families", icon: GitBranch },
+  { key: "feed", href: "/dashboard/feed", icon: Newspaper, requiresAuth: true },
   { key: "favorites", href: "/favorites", icon: Heart, requiresAuth: true },
   { key: "dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
 ]
+
+/**
+ * The single active nav href for the current path: the most specific match, so
+ * e.g. /dashboard/feed highlights "Feed" only, not also "Dashboard".
+ */
+function activeNavHref(pathname: string): string | null {
+  const matches = mainNavItems.filter(
+    (i) => pathname === i.href || (i.href !== "/" && pathname.startsWith(i.href)),
+  )
+  return matches.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null
+}
 
 export function Navbar({ user, isDevMode = false }: NavbarProps) {
   const pathname = usePathname()
@@ -78,6 +91,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
   const tCommon = useTranslations("common")
   const [mobileOpen, setMobileOpen] = useState(false)
   const isAuthenticated = !!user || isDevMode
+  const activeHref = activeNavHref(pathname)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
@@ -95,8 +109,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
           {mainNavItems.map((item) => {
             if (item.requiresAuth && !isAuthenticated) return null
             const Icon = item.icon
-            const isActive = pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href))
+            const isActive = item.href === activeHref
 
             return (
               <Link key={item.href} href={item.href}>
@@ -265,8 +278,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                 {mainNavItems.map((item) => {
                   if (item.requiresAuth && !isAuthenticated) return null
                   const Icon = item.icon
-                  const isActive = pathname === item.href ||
-                    (item.href !== "/" && pathname.startsWith(item.href))
+                  const isActive = item.href === activeHref
 
                   return (
                     <Link
