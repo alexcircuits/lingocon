@@ -12,9 +12,16 @@
 package soundchange
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
+
+// arrowRe matches the rule arrow: →, a single >, or one-or-more dashes/equals
+// before `>` (so `->`, `-->`, `==>` work) plus the en/em-dash variants (–> —>)
+// macOS "smart dashes" can produce. The dash run is matched as a unit so `-->`
+// does not leave a stray `-` glued to the target. Mirrors the TS engine regex.
+var arrowRe = regexp.MustCompile(`→|[=–—-]+>|>`)
 
 // Rule is a single phonological rewrite rule.
 type Rule struct {
@@ -131,12 +138,11 @@ func ParseRule(text string) (Rule, bool) {
 }
 
 func splitArrow(s string) (left, right string, ok bool) {
-	for _, arrow := range []string{"→", "->", ">"} {
-		if idx := strings.Index(s, arrow); idx >= 0 {
-			return s[:idx], s[idx+len(arrow):], true
-		}
+	loc := arrowRe.FindStringIndex(s)
+	if loc == nil {
+		return "", "", false
 	}
-	return "", "", false
+	return s[:loc[0]], s[loc[1]:], true
 }
 
 // ParseRules parses a newline-separated block, skipping comments/blanks.

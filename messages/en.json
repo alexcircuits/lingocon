@@ -951,7 +951,7 @@
       "save": "Save",
       "rulesPlaceholder": "Enter rules, one per line:\na → e / _#\nk → tʃ / _i\ns → ∅ / V_V\n\n// Lines starting with // are comments",
       "rulesParsed": "{count} {count, plural, =1 {rule} other {rules}} parsed",
-      "legend": "V = vowel, C = consonant, # = boundary, ∅ = delete",
+      "legend": "Format: a → e / C_V · V = vowel, C = consonant, # = word edge, _ = target, ∅ = delete. Arrows →, ->, --> all work.",
       "applying": "Applying…",
       "applyToDict": "Apply to Dictionary ({count} changes)",
       "applyTitle": "Apply Sound Changes",

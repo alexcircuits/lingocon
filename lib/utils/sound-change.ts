@@ -165,8 +165,11 @@ export function parseRule(text: string, id?: string): SoundChangeRule | null {
     return null // Comment or empty line
   }
 
-  // Split on arrow: →, >, ->
-  const arrowMatch = trimmed.match(/^(.+?)(?:→|->|>)(.+)$/)
+  // Split on arrow. Accepts →, a single >, or one-or-more dashes/equals before
+  // `>` so the natural ASCII forms `->`, `-->`, `==>` all work — plus the
+  // en/em-dash variants (–> —>) macOS "smart dashes" can produce. The dash run
+  // is matched as a unit so `-->` doesn't leave a stray `-` glued to the target.
+  const arrowMatch = trimmed.match(/^(.+?)(?:→|[=–—-]+>|>)(.+)$/)
   if (!arrowMatch) return null
 
   const target = arrowMatch[1].trim()

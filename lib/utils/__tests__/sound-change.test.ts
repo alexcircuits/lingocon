@@ -30,6 +30,26 @@ describe("parseRule", () => {
     expect(parseRule("a → e")!.replacement).toBe("e")
   })
 
+  it("accepts multi-dash and unicode-dash arrows without corrupting the target", () => {
+    // The double-hyphen `-->` is the most natural way users type an arrow.
+    // Regression: it used to split on the *second* hyphen, gluing a stray `-`
+    // onto the target ("a -") so the rule silently matched nothing.
+    for (const arrow of ["-->", "--->", "==>", "—>", "–>"]) {
+      const r = parseRule(`a ${arrow} e / C_V`)
+      expect(r, arrow).not.toBeNull()
+      expect(r!.target, arrow).toBe("a")
+      expect(r!.replacement, arrow).toBe("e")
+      expect(r!.leftEnv, arrow).toBe("C")
+      expect(r!.rightEnv, arrow).toBe("V")
+    }
+  })
+
+  it("applies `a --> e / C_V` correctly end-to-end", () => {
+    const r = parseRule("a --> e / C_V")!
+    // first `a` is C_V (f_a); second `a` is not (a_n) -> only the first changes
+    expect(applyRule("faang", r)).toBe("feang")
+  })
+
   it("skips comments and blank lines", () => {
     expect(parseRule("// comment")).toBeNull()
     expect(parseRule("# comment")).toBeNull()

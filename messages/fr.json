@@ -951,7 +951,7 @@
       "save": "Enregistrer",
       "rulesPlaceholder": "Saisissez les règles, une par ligne :\na → e / _#\nk → tʃ / _i\ns → ∅ / V_V\n\n// Les lignes commençant par // sont des commentaires",
       "rulesParsed": "{count} {count, plural, =1 {règle analysée} other {règles analysées}}",
-      "legend": "V = voyelle, C = consonne, # = frontière, ∅ = suppression",
+      "legend": "Format : a → e / C_V · V = voyelle, C = consonne, # = frontière de mot, _ = cible, ∅ = suppression. Flèches →, ->, --> acceptées.",
       "applying": "Application…",
       "applyToDict": "Appliquer au dictionnaire ({count} changements)",
       "applyTitle": "Appliquer les changements phonétiques",

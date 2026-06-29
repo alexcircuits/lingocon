@@ -38,6 +38,22 @@ func TestParseRule(t *testing.T) {
 		}
 	}
 
+	// Multi-dash and unicode-dash arrows must not corrupt the target. Regression:
+	// `a --> e` split on the second hyphen, leaving target="a -" (matches nothing).
+	for _, arrow := range []string{"-->", "--->", "==>", "—>", "–>"} {
+		r, ok := ParseRule("a " + arrow + " e / C_V")
+		if !ok {
+			t.Fatalf("%q: expected parse to succeed", arrow)
+		}
+		if r.Target != "a" || r.Replacement != "e" || r.LeftEnv != "C" || r.RightEnv != "V" {
+			t.Fatalf("%q: got target=%q repl=%q L=%q R=%q", arrow, r.Target, r.Replacement, r.LeftEnv, r.RightEnv)
+		}
+	}
+
+	if got := run(t, "a --> e / C_V", "faang"); got != "feang" {
+		t.Fatalf("a --> e / C_V on faang: want feang, got %q", got)
+	}
+
 	for _, skip := range []string{"// comment", "# comment", "   "} {
 		if _, ok := ParseRule(skip); ok {
 			t.Fatalf("expected %q to be skipped", skip)
