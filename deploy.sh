@@ -42,10 +42,12 @@ echo "📁 Setting up uploads directory..."
 mkdir -p public/uploads
 chmod -R 755 public/uploads
 
-# Reload the application with PM2 (zero downtime). The `|| pm2 start` handles the
-# first-run case where no process exists yet.
+# Reload the application with PM2 (zero downtime). `startOrReload` reloads
+# already-running apps with zero downtime AND starts apps newly added to the
+# config — plain `reload` would silently skip a new app (e.g. lingocon-worker)
+# on its first deploy.
 echo "🔄 Reloading application..."
-pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
+pm2 startOrReload ecosystem.config.js
 
 # Save PM2 state.
 pm2 save
