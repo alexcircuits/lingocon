@@ -100,6 +100,33 @@ func TestParseClassLine(t *testing.T) {
 	}
 }
 
+// TestReservedClassNames asserts that V and C — the built-in vowel/consonant
+// classes — cannot be shadowed by a user definition. `class V = ...` and
+// `class C = ...` are rejected by parseClassLine and dropped by Parse, exactly
+// as the canonical TS engine does, so identical input yields identical
+// behavior across both engines.
+func TestReservedClassNames(t *testing.T) {
+	for _, line := range []string{
+		"class V = a i u",
+		"class C = p t k",
+	} {
+		if _, _, ok := parseClassLine(line); ok {
+			t.Errorf("parseClassLine(%q) accepted a reserved class name, want rejected", line)
+		}
+	}
+
+	// Parse must drop reserved-name definitions entirely: they land in
+	// neither Classes (reserved) nor Rules (they are not rules).
+	prog := Parse("class V = a i u\nclass C = p t k\na → e / _#")
+	if len(prog.Classes) != 0 {
+		t.Errorf("Parse Classes = %v, want empty (V/C reserved)", prog.Classes)
+	}
+	wantRules := ParseRules("a → e / _#")
+	if !reflect.DeepEqual(prog.Rules, wantRules) {
+		t.Errorf("Parse Rules = %+v, want %+v", prog.Rules, wantRules)
+	}
+}
+
 func TestParse(t *testing.T) {
 	text := `
 class K = p t k
@@ -264,17 +291,20 @@ func TestLiteralTargetStillWorksWithClassesRegistered(t *testing.T) {
 }
 
 func TestClassTargetComposedWithClassEnvironment(t *testing.T) {
+	// Two distinct user classes: K is the rule target, N is used in the
+	// environment. N is a non-reserved name (V and C are reserved for the
+	// built-in vowel/consonant classes and cannot be user-defined).
 	classes := map[string][]string{
 		"K": {"p", "t", "k"},
-		"V": {"a", "i"}, // shadow name distinct from built-in vowel token semantics
+		"N": {"a", "i"},
 	}
-	// Any K member between two V-class vowels becomes h.
-	if got := runWithClasses(t, classes, "K → h / V_V", "apa"); got != "aha" {
-		t.Errorf("K -> h / V_V on apa = %q, want %q", got, "aha")
+	// Any K member between two N-class members becomes h.
+	if got := runWithClasses(t, classes, "K → h / N_N", "apa"); got != "aha" {
+		t.Errorf("K -> h / N_N on apa = %q, want %q", got, "aha")
 	}
-	// K member at word edge (no left V) is not replaced.
-	if got := runWithClasses(t, classes, "K → h / V_V", "pa"); got != "pa" {
-		t.Errorf("K -> h / V_V on pa = %q, want %q (p has no left V)", got, "pa")
+	// K member at word edge (no left N) is not replaced.
+	if got := runWithClasses(t, classes, "K → h / N_N", "pa"); got != "pa" {
+		t.Errorf("K -> h / N_N on pa = %q, want %q (p has no left N)", got, "pa")
 	}
 }
 

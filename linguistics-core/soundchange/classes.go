@@ -53,6 +53,14 @@ func parseClassLine(line string) (name string, members []string, ok bool) {
 		return "", nil, false
 	}
 
+	// V and C are the built-in vowel/consonant classes and cannot be
+	// shadowed by a user definition. Reject `class V = ...` / `class C = ...`
+	// so it is ignored — parity with the canonical TS engine, which reserves
+	// the same names, so identical input produces identical behavior.
+	if rawName == "V" || rawName == "C" {
+		return "", nil, false
+	}
+
 	members = strings.Fields(rest[eq+1:])
 	if len(members) == 0 {
 		return "", nil, false
