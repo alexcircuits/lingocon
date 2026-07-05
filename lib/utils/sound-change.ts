@@ -124,17 +124,58 @@ interface EnvPattern {
 }
 
 /**
- * Convert an environment string to a regex source plus a boundary flag.
- * Handles: V (vowel), C (consonant), # (boundary), . (any), literal characters.
- * The boundary position (start vs end) is applied by the caller so the result
- * can be used as a zero-width lookbehind (left) or lookahead (right).
+ * Cache of user-class-name lists sorted longest-first, keyed by the Map
+ * instance. Mirrors `classAlternationCache`: names are recomputed once per
+ * distinct classes Map rather than on every `envToPattern` call.
  */
-function envToPattern(env: string, vowels: Set<string>, consonants: Set<string>): EnvPattern {
+const sortedClassNamesCache = new WeakMap<Map<string, Set<string>>, string[]>()
+
+function sortedClassNames(classes: Map<string, Set<string>>): string[] {
+  const cached = sortedClassNamesCache.get(classes)
+  if (cached) return cached
+  const names = Array.from(classes.keys()).sort((a, b) => b.length - a.length)
+  sortedClassNamesCache.set(classes, names)
+  return names
+}
+
+/**
+ * Convert an environment string to a regex source plus a boundary flag.
+ * Handles: V (vowel), C (consonant), # (boundary), . (any), user-defined
+ * named classes, literal characters.
+ *
+ * User class names are multi-char, so this can't be a naive per-char loop
+ * for them: we walk the env string with a cursor and, at each position, try
+ * every registered class name (longest first) as a literal prefix match
+ * before falling back to the single-char built-in handling. This guarantees
+ * a class named "KW" is consumed as one token rather than "K" + literal "W"
+ * when both "K" and "KW" are defined.
+ *
+ * The boundary position (start vs end) is applied by the caller so the
+ * result can be used as a zero-width lookbehind (left) or lookahead (right).
+ */
+function envToPattern(
+  env: string,
+  vowels: Set<string>,
+  consonants: Set<string>,
+  classes?: Map<string, Set<string>>
+): EnvPattern {
   if (!env || env === "_") return { pattern: "", boundary: false }
+
+  const names = classes && classes.size > 0 ? sortedClassNames(classes) : []
 
   let pattern = ""
   let boundary = false
-  for (const ch of env) {
+  let i = 0
+  outer: while (i < env.length) {
+    for (const name of names) {
+      if (env.startsWith(name, i)) {
+        pattern += classAlternation(classes!.get(name)!)
+        i += name.length
+        continue outer
+      }
+    }
+
+    const ch = env[i]
     if (ch === "#") {
       boundary = true
     } else if (ch === "V") {
@@ -146,6 +187,7 @@ function envToPattern(env: string, vowels: Set<string>, consonants: Set<string>)
     } else {
       pattern += escapeRegex(ch)
     }
+    i += 1
   }
   return { pattern, boundary }
 }
@@ -215,13 +257,15 @@ export function applyRule(
   word: string,
   rule: SoundChangeRule,
   vowels: Set<string> = DEFAULT_VOWELS,
-  consonants: Set<string> = DEFAULT_CONSONANTS
+  consonants: Set<string> = DEFAULT_CONSONANTS,
+  classes?: Map<string, Set<string>>
 ): string {
   if (!rule.enabled || !rule.target) return word
 
-  const left = envToPattern(rule.leftEnv, vowels, consonants)
-  const right = envToPattern(rule.rightEnv, vowels, consonants)
-  const target = `(?:${escapeRegex(rule.target)})`
+  const left = envToPattern(rule.leftEnv, vowels, consonants, classes)
+  const right = envToPattern(rule.rightEnv, vowels, consonants, classes)
+  const targetClass = classes?.get(rule.target)
+  const target = targetClass ? classAlternation(targetClass) : `(?:${escapeRegex(rule.target)})`
 
   // Environments are expressed as ZERO-WIDTH assertions — a lookbehind for the
   // left context and a lookahead for the right — so only the target segment is
@@ -258,14 +302,15 @@ export function applyPipeline(
   word: string,
   rules: SoundChangeRule[],
   vowels?: Set<string>,
-  consonants?: Set<string>
+  consonants?: Set<string>,
+  classes?: Map<string, Set<string>>
 ): SoundChangeResult {
   let current = word
   const rulesApplied: string[] = []
 
   for (const rule of rules) {
     if (!rule.enabled) continue
-    const result = applyRule(current, rule, vowels, consonants)
+    const result = applyRule(current, rule, vowels, consonants, classes)
     if (result !== current) {
       rulesApplied.push(rule.raw)
       current = result
@@ -297,7 +342,77 @@ export function batchApply(
   words: string[],
   rules: SoundChangeRule[],
   vowels?: Set<string>,
-  consonants?: Set<string>
+  consonants?: Set<string>,
+  classes?: Map<string, Set<string>>
 ): SoundChangeResult[] {
-  return words.map(word => applyPipeline(word, rules, vowels, consonants))
+  return words.map(word => applyPipeline(word, rules, vowels, consonants, classes))
+}
+
+/**
+ * A parsed rule-set source: user-defined named sound classes plus the
+ * ordered rules that reference them (or don't).
+ */
+export interface SoundChangeProgram {
+  classes: Map<string, Set<string>>
+  rules: SoundChangeRule[]
+}
+
+/** Identifier for a class name: a non-empty run of letters only. */
+const CLASS_NAME_RE = /^[A-Za-z]+$/
+
+/** Class names "V" and "C" are reserved — built-in vowel/consonant tokens take precedence. */
+const RESERVED_CLASS_NAMES = new Set(["V", "C"])
+
+/**
+ * Parse a single `class NAME = m1 m2 m3` definition line.
+ * Returns null for anything else, including malformed class lines, so
+ * callers can fall through to `parseRule`.
+ */
+function parseClassLine(line: string): { name: string; members: Set<string> } | null {
+  const trimmed = line.trim()
+  if (!trimmed) return null
+
+  const prefix = "class "
+  if (!trimmed.startsWith(prefix)) return null
+  const rest = trimmed.slice(prefix.length)
+
+  const eq = rest.indexOf("=")
+  if (eq < 0) return null
+
+  const name = rest.slice(0, eq).trim()
+  if (!name || !CLASS_NAME_RE.test(name) || RESERVED_CLASS_NAMES.has(name)) return null
+
+  const members = rest
+    .slice(eq + 1)
+    .split(/\s+/)
+    .map(m => m.trim())
+    .filter(m => m.length > 0)
+  if (members.length === 0) return null
+
+  return { name, members: new Set(members) }
+}
+
+/**
+ * Parse a rule-set source into user-defined named sound classes plus the
+ * ordered rules that reference them (or don't). Lines of the form
+ * `class NAME = m1 m2 m3` are collected into `classes` (last definition wins
+ * on duplicate names); every other line is parsed with the existing
+ * `parseRule`, exactly as `parseRules` already does, so class-free text
+ * produces `rules` identical to `parseRules`.
+ */
+export function parseProgram(text: string): SoundChangeProgram {
+  const classes = new Map<string, Set<string>>()
+  const rules: SoundChangeRule[] = []
+
+  text.split("\n").forEach((line, i) => {
+    const classDef = parseClassLine(line)
+    if (classDef) {
+      classes.set(classDef.name, classDef.members)
+      return
+    }
+    const rule = parseRule(line, `rule-${i}`)
+    if (rule) rules.push(rule)
+  })
+
+  return { classes, rules }
 }
