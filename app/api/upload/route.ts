@@ -4,16 +4,7 @@ import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
 import sharp from "sharp"
-
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
-const ALLOWED_AUDIO_TYPES = ["audio/webm", "audio/mp3", "audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4"]
-const ALLOWED_FONT_TYPES = [
-  "font/ttf", "font/otf", "font/woff", "font/woff2",
-  "application/x-font-ttf", "application/x-font-opentype", "application/font-woff", "application/font-woff2",
-  "font/sfnt", "application/font-sfnt", "application/vnd.ms-opentype", "application/x-font-truetype"
-]
-const ALLOWED_FILE_TYPES = [...ALLOWED_IMAGE_TYPES, "application/pdf", "text/plain", "application/epub+zip", ...ALLOWED_FONT_TYPES, ...ALLOWED_AUDIO_TYPES]
-const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
+import { validateUpload, RASTER_IMAGE_MIME, type UploadType } from "@/lib/uploads"
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,42 +27,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Upload type not specified" }, { status: 400 })
     }
 
-    // Validate upload type to prevent path traversal
-    const ALLOWED_UPLOAD_TYPES = ["flag", "cover", "image", "file", "font", "audio"]
-    if (!ALLOWED_UPLOAD_TYPES.includes(type)) {
-      return NextResponse.json({ error: "Invalid upload type" }, { status: 400 })
+    const validation = validateUpload({
+      name: file.name,
+      mimeType: file.type,
+      size: file.size,
+      type: type as UploadType,
+    })
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large (max 15MB)" }, { status: 400 })
-    }
-
-    // Validate file type based on upload type
-    let allowedTypes = ALLOWED_IMAGE_TYPES
-    if (type === "file") allowedTypes = ALLOWED_FILE_TYPES
-    if (type === "font") allowedTypes = ALLOWED_FONT_TYPES
-    if (type === "audio") allowedTypes = ALLOWED_AUDIO_TYPES
-
-    // Use "cover" directory for "image" type as well
-    const uploadType = type === "image" ? "cover" : type
-
-    const mimeType = file.type.split(';')[0].trim()
-    let isValidType = allowedTypes.includes(mimeType)
-
-    // Fallback for fonts that might have missing or generic MIME types on some OS
-    if (!isValidType && type === "font") {
-      const ext = file.name.split(".").pop()?.toLowerCase()
-      if (ext && ["ttf", "otf", "woff", "woff2"].includes(ext)) {
-        isValidType = true
-      }
-    }
-
-    if (!isValidType) {
-      return NextResponse.json({
-        error: "Invalid font or file type. Please upload a valid TTF/OTF/WOFF file."
-      }, { status: 400 })
-    }
+    const uploadType = validation.dir
+    let ext = validation.ext
 
     // Create upload directory if it doesn't exist
     const uploadDir = join(process.cwd(), "public", "uploads", uploadType)
@@ -82,7 +48,6 @@ export async function POST(req: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now()
     const randomStr = Math.random().toString(36).substring(2, 8)
-    let ext = file.name.split(".").pop()?.toLowerCase() || "bin"
     let filename = `${timestamp}-${randomStr}.${ext}`
     let filepath = join(uploadDir, filename)
     let finalUrl = `/uploads/${uploadType}/${filename}`
@@ -94,7 +59,7 @@ export async function POST(req: NextRequest) {
     let buffer = Buffer.from(bytes)
 
     // Convert non-svg images to webp
-    if (ALLOWED_IMAGE_TYPES.includes(file.type) && file.type !== "image/svg+xml") {
+    if (RASTER_IMAGE_MIME.includes(file.type)) {
       buffer = Buffer.from(await sharp(buffer).webp({ quality: 80 }).toBuffer())
       ext = "webp"
       filename = `${timestamp}-${randomStr}.${ext}`
