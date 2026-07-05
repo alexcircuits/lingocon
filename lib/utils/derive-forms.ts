@@ -10,7 +10,7 @@
  * Pure and side-effect free — safe to unit test and to call inside a Prisma
  * transaction.
  */
-import { parseRules, applyPipeline, type SoundChangeRule } from "@/lib/utils/sound-change"
+import { parseProgram, applyPipeline, type SoundChangeRule } from "@/lib/utils/sound-change"
 
 export interface SoundChangeConfig {
   rules: SoundChangeRule[]
@@ -18,6 +18,8 @@ export interface SoundChangeConfig {
   vowels?: Set<string>
   /** Optional explicit consonant inventory for the `C` class. */
   consonants?: Set<string>
+  /** Optional user-defined named sound classes (`class K = p t k`). */
+  classes?: Map<string, Set<string>>
 }
 
 /**
@@ -32,7 +34,7 @@ export function extractSoundChangeConfig(metadata: unknown): SoundChangeConfig |
   const rulesText = typeof meta.soundChangeRules === "string" ? meta.soundChangeRules : ""
   if (!rulesText.trim()) return null
 
-  const rules = parseRules(rulesText)
+  const { classes, rules } = parseProgram(rulesText)
   if (rules.length === 0) return null
 
   const override = meta.phonologyOverride as
@@ -44,12 +46,12 @@ export function extractSoundChangeConfig(metadata: unknown): SoundChangeConfig |
   const consonants =
     override?.enabled && override.consonants?.length ? new Set(override.consonants) : undefined
 
-  return { rules, vowels, consonants }
+  return { rules, vowels, consonants, classes }
 }
 
 /** Apply a sound-change config to a single non-empty form (lemma or IPA). */
 export function deriveForm(form: string, config: SoundChangeConfig): string {
-  return applyPipeline(form, config.rules, config.vowels, config.consonants).changed
+  return applyPipeline(form, config.rules, config.vowels, config.consonants, config.classes).changed
 }
 
 /** Apply to a nullable form (e.g. optional IPA); empty/null/undefined → `null`. */

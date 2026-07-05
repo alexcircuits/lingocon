@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { ActionResult } from "@/lib/types/action-result"
-import { parseRules, applyPipeline } from "@/lib/utils/sound-change"
+import { parseProgram, applyPipeline } from "@/lib/utils/sound-change"
 import { createActivity } from "@/lib/utils/activity"
 import { isAdmin } from "@/lib/admin"
 import { logAdminAction } from "@/app/actions/admin-audit"
@@ -381,7 +381,7 @@ export async function reportModule(input: ReportModuleInput): Promise<ActionResu
  */
 type LoadedRules =
   | { ok: false; error: string }
-  | { ok: true; rules: ReturnType<typeof parseRules> }
+  | { ok: true; rules: ReturnType<typeof parseProgram>["rules"]; classes: ReturnType<typeof parseProgram>["classes"] }
 
 async function loadTransformerRules(
   userId: string,
@@ -400,9 +400,9 @@ async function loadTransformerRules(
   if (!install) return { ok: false, error: "This module is not added to this language" }
   const rulesText = rulesTextFromData(install.version.data)
   if (!rulesText.trim()) return { ok: false, error: "This module has no rules to apply" }
-  const rules = parseRules(rulesText)
+  const { classes, rules } = parseProgram(rulesText)
   if (rules.length === 0) return { ok: false, error: "No valid rules could be parsed" }
-  return { ok: true, rules }
+  return { ok: true, rules, classes }
 }
 
 export type TransformPreview = ActionResult<{
@@ -429,7 +429,7 @@ export async function previewModuleTransform(
 
   const changed: { id: string; before: string; after: string }[] = []
   for (const e of entries) {
-    const result = applyPipeline(e.lemma, loaded.rules)
+    const result = applyPipeline(e.lemma, loaded.rules, undefined, undefined, loaded.classes)
     if (result.changed !== result.original) {
       changed.push({ id: e.id, before: result.original, after: result.changed })
     }
@@ -467,7 +467,7 @@ export async function applyModuleTransform(
 
   const updates: { id: string; lemma: string }[] = []
   for (const e of entries) {
-    const result = applyPipeline(e.lemma, loaded.rules)
+    const result = applyPipeline(e.lemma, loaded.rules, undefined, undefined, loaded.classes)
     if (result.changed !== result.original) updates.push({ id: e.id, lemma: result.changed })
   }
 

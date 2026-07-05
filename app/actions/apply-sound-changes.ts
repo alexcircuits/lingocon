@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
-import { parseRules, applyPipeline } from "@/lib/utils/sound-change"
+import { parseProgram, applyPipeline } from "@/lib/utils/sound-change"
 import { createActivity } from "@/lib/utils/activity"
 
 import { ActionResult } from "@/lib/types/action-result"
@@ -52,7 +52,7 @@ export async function applySoundChangesToDictionary(
   const rulesText: string = metadata.soundChangeRules ?? ""
   if (!rulesText.trim()) return { error: "No saved sound change rules found. Save your rules first." }
 
-  const rules = parseRules(rulesText)
+  const { classes, rules } = parseProgram(rulesText)
   if (rules.length === 0) return { error: "No valid rules could be parsed from the saved rules." }
 
   // Extract phonology overrides if set
@@ -80,8 +80,8 @@ export async function applySoundChangesToDictionary(
   const updates: { id: string; lemma: string; ipa: string | null }[] = []
 
   for (const entry of entries) {
-    const lemmaResult = applyPipeline(entry.lemma, rules, vowels, consonants)
-    const ipaResult = entry.ipa ? applyPipeline(entry.ipa, rules, vowels, consonants) : null
+    const lemmaResult = applyPipeline(entry.lemma, rules, vowels, consonants, classes)
+    const ipaResult = entry.ipa ? applyPipeline(entry.ipa, rules, vowels, consonants, classes) : null
 
     const lemmaChanged = lemmaResult.changed !== lemmaResult.original
     const ipaChanged = ipaResult ? ipaResult.changed !== ipaResult.original : false

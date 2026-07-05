@@ -39,6 +39,20 @@ describe("extractSoundChangeConfig", () => {
     expect(disabled!.vowels).toBeUndefined()
     expect(disabled!.consonants).toBeUndefined()
   })
+
+  it("parses named sound classes alongside rules", () => {
+    const config = extractSoundChangeConfig({
+      soundChangeRules: "class K = p t k\nK → ∅ / _#",
+    })
+    expect(config).not.toBeNull()
+    expect(config!.classes).toEqual(new Map([["K", new Set(["p", "t", "k"])]]))
+    expect(config!.rules).toHaveLength(1)
+  })
+
+  it("returns an empty classes map for class-free rule text (back-compat)", () => {
+    const config = extractSoundChangeConfig({ soundChangeRules: "a > e" })!
+    expect(config.classes).toEqual(new Map())
+  })
 })
 
 describe("deriveForm", () => {
@@ -56,6 +70,20 @@ describe("deriveForm", () => {
     // "kaki" → (k→tʃ/_i) "katʃi" → (a→e) "ketʃi"
     const config = extractSoundChangeConfig({ soundChangeRules: "k → tʃ / _i\na > e" })!
     expect(deriveForm("kaki", config)).toBe("ketʃi")
+  })
+
+  it("honors named sound classes: deletes any class member word-finally", () => {
+    const config = extractSoundChangeConfig({
+      soundChangeRules: "class K = p t k\nK → ∅ / _#",
+    })!
+    expect(deriveForm("kat", config)).toBe("ka")
+    expect(deriveForm("tap", config)).toBe("ta")
+    expect(deriveForm("sak", config)).toBe("sa")
+  })
+
+  it("still behaves as before for a class-free ruleset (back-compat)", () => {
+    const config = extractSoundChangeConfig({ soundChangeRules: "a > e" })!
+    expect(deriveForm("banana", config)).toBe("benene")
   })
 })
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-  parseRules,
+  parseProgram,
   applyPipeline as jsApplyPipeline,
   type SoundChangeResult,
 } from "@/lib/utils/sound-change"
@@ -61,8 +61,8 @@ export function useSoundChangeEngine(): SoundChangeEngine {
         return JSON.parse(core.batchApply(words, rulesText, v, c)) as SoundChangeResult[]
       }
       // Pure-TS fallback: parse once, then map.
-      const rules = parseRules(rulesText)
-      return words.map((word) => jsApplyPipeline(word, rules, vowels, consonants))
+      const { classes, rules } = parseProgram(rulesText)
+      return words.map((word) => jsApplyPipeline(word, rules, vowels, consonants, classes))
     },
     [],
   )
