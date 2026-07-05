@@ -68,6 +68,10 @@ export function LessonEngine({
   const [reviewMode, setReviewMode] = useState(false)
   const [showRoman, setShowRoman] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Per-entry graded outcomes for this lesson, fed to FSRS on completion.
+  // Worst outcome wins per entry: once an entry is answered incorrectly, it
+  // stays incorrect even if a later retry gets it right.
+  const resultsRef = useRef<Map<string, boolean>>(new Map())
 
   const baseExerciseId = (id: string) => id.replace(/-(retry|review).*$/, "")
   const recordMistake = useCallback((ex: Exercise) => {
@@ -117,6 +121,11 @@ export function LessonEngine({
         scriptSymbols,
       })
       correctText = current.sentence
+    }
+
+    if ("entryId" in current && current.entryId) {
+      const prev = resultsRef.current.get(current.entryId)
+      resultsRef.current.set(current.entryId, (prev ?? true) && correct)
     }
 
     if (correct) {
@@ -170,7 +179,8 @@ export function LessonEngine({
       // All done — save completion. XP is computed and returned by the server.
       setSaving(true)
       try {
-        const result = await completeLesson(lessonId, hearts)
+        const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+        const result = await completeLesson(lessonId, hearts, results)
         if (result?.error) {
           toast.error(result.error)
         } else {
@@ -349,7 +359,8 @@ export function LessonEngine({
               const nextIdx = idx + 1
               if (nextIdx >= queue.length) {
                 setSaving(true)
-                completeLesson(lessonId, hearts)
+                const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+                completeLesson(lessonId, hearts, results)
                   .then((result) => {
                     if (result?.error) {
                       toast.error(result.error)
