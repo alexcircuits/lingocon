@@ -87,7 +87,16 @@ func NewEngine(vowels, consonants []string) *Engine {
 // NewEngine, since tokenize/ApplyRule only special-case names present in
 // userClasses.
 func NewEngineWithClasses(vowels, consonants []string, classes map[string][]string) *Engine {
-	e := NewEngine(vowels, consonants)
+	return NewEngine(vowels, consonants).withClasses(classes)
+}
+
+// withClasses registers user classes on an already-built engine and returns
+// it. Members are stored longest-first, and the sorted class-name list is
+// precomputed once (invariant for the engine's lifetime, so tokenize never
+// re-sorts on the hot path). A nil/empty map is a no-op, leaving the engine
+// class-free. Shared by NewEngineWithClasses and
+// NewEngineOrDefaultWithClasses so the precompute logic lives in one place.
+func (e *Engine) withClasses(classes map[string][]string) *Engine {
 	if len(classes) == 0 {
 		return e
 	}
@@ -95,9 +104,6 @@ func NewEngineWithClasses(vowels, consonants []string, classes map[string][]stri
 	for name, members := range classes {
 		e.userClasses[name] = toSortedRunes(members)
 	}
-	// Precompute the longest-first-sorted class names once; this list is
-	// invariant for the engine's lifetime, so tokenize reuses it instead of
-	// re-sorting on every call.
 	e.userClassNames = sortedClassNames(e.userClasses)
 	return e
 }
@@ -111,13 +117,30 @@ func DefaultEngine() *Engine {
 // any class left empty. This mirrors the TS engine, where an omitted
 // vowels/consonants argument independently defaults that one class.
 func NewEngineOrDefault(vowels, consonants []string) *Engine {
-	if len(vowels) == 0 {
-		vowels = defaultVowels
+	v, c := defaultedInventories(vowels, consonants)
+	return NewEngine(v, c)
+}
+
+// NewEngineOrDefaultWithClasses defaults empty vowel/consonant inventories to
+// the built-in IPA sets (exactly like NewEngineOrDefault) AND registers the
+// given user-defined classes. It shares the class-registration path with
+// NewEngineWithClasses, so userClassNames is still precomputed once.
+func NewEngineOrDefaultWithClasses(vowels, consonants []string, classes map[string][]string) *Engine {
+	v, c := defaultedInventories(vowels, consonants)
+	return NewEngine(v, c).withClasses(classes)
+}
+
+// defaultedInventories returns vowels/consonants with each empty class
+// independently replaced by its built-in default set.
+func defaultedInventories(vowels, consonants []string) (v, c []string) {
+	v, c = vowels, consonants
+	if len(v) == 0 {
+		v = defaultVowels
 	}
-	if len(consonants) == 0 {
-		consonants = defaultConsonants
+	if len(c) == 0 {
+		c = defaultConsonants
 	}
-	return NewEngine(vowels, consonants)
+	return v, c
 }
 
 func toSortedRunes(set []string) [][]rune {

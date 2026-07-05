@@ -36,8 +36,8 @@ func apply(_ js.Value, args []js.Value) any {
 	if len(args) < 2 {
 		return ""
 	}
-	rules := soundchange.ParseRules(args[1].String())
-	return engineFromArgs(args, 2, 3).ApplyPipeline(args[0].String(), rules).Changed
+	engine, prog := engineFromArgs(args, 2, 3)
+	return engine.ApplyPipeline(args[0].String(), prog.Rules).Changed
 }
 
 // applyPipeline(word, rulesText, vowels?, consonants?) -> JSON string of
@@ -46,8 +46,8 @@ func applyPipeline(_ js.Value, args []js.Value) any {
 	if len(args) < 2 {
 		return "{}"
 	}
-	rules := soundchange.ParseRules(args[1].String())
-	res := engineFromArgs(args, 2, 3).ApplyPipeline(args[0].String(), rules)
+	engine, prog := engineFromArgs(args, 2, 3)
+	res := engine.ApplyPipeline(args[0].String(), prog.Rules)
 	b, _ := json.Marshal(res)
 	return string(b)
 }
@@ -57,15 +57,20 @@ func batchApply(_ js.Value, args []js.Value) any {
 	if len(args) < 2 {
 		return "[]"
 	}
-	rules := soundchange.ParseRules(args[1].String())
-	res := engineFromArgs(args, 2, 3).BatchApply(readStringArray(args[0]), rules)
+	engine, prog := engineFromArgs(args, 2, 3)
+	res := engine.BatchApply(readStringArray(args[0]), prog.Rules)
 	b, _ := json.Marshal(res)
 	return string(b)
 }
 
-// engineFromArgs builds an engine from optional vowels/consonants array args,
-// each falling back to the default inventory when absent or empty.
-func engineFromArgs(args []js.Value, vIdx, cIdx int) *soundchange.Engine {
+// engineFromArgs parses the full program from the rulesText arg (splitting
+// `class NAME = ...` definitions from rules) and builds an engine that honors
+// both the optional vowels/consonants array args (each falling back to the
+// default inventory when absent or empty) and the user-defined classes parsed
+// from the rulesText. The JS call signature is unchanged: classes ride in via
+// the rulesText, so callers need no new argument.
+func engineFromArgs(args []js.Value, vIdx, cIdx int) (*soundchange.Engine, soundchange.Program) {
+	prog := soundchange.Parse(args[1].String())
 	var v, c []string
 	if vIdx < len(args) {
 		v = readStringArray(args[vIdx])
@@ -73,7 +78,7 @@ func engineFromArgs(args []js.Value, vIdx, cIdx int) *soundchange.Engine {
 	if cIdx < len(args) {
 		c = readStringArray(args[cIdx])
 	}
-	return soundchange.NewEngineOrDefault(v, c)
+	return soundchange.NewEngineOrDefaultWithClasses(v, c, prog.Classes), prog
 }
 
 // readStringArray converts a JS array value to []string (nil if not an array).
