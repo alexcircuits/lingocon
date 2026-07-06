@@ -78,6 +78,20 @@ export function ExportDataCard({ languageId, isPending }: ExportDataCardProps) {
             <span>{t("exportJson")}</span>
             <span className="text-xs text-muted-foreground font-normal">{t("exportJsonDesc")}</span>
           </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              window.open(`/api/export/deck/${languageId}`, "_blank")
+            }}
+            disabled={isPending}
+            className="h-auto py-4 flex flex-col gap-2 items-center text-center"
+          >
+            <FileDown className="h-6 w-6" />
+            <span>{t("exportAnki")}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t("exportAnkiDesc")}</span>
+          </Button>
         </div>
       </div>
     </Card>

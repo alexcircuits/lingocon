@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -100,6 +101,7 @@ export function WordGeneratorDialog({
     const [count, setCount] = useState(20)
     const [minSyllables, setMinSyllables] = useState(1)
     const [maxSyllables, setMaxSyllables] = useState(3)
+    const [rejectPatternsInput, setRejectPatternsInput] = useState("")
     const [generatedWords, setGeneratedWords] = useState<string[]>([])
     const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
 
@@ -152,6 +154,11 @@ export function WordGeneratorDialog({
             return
         }
 
+        const rejectPatterns = rejectPatternsInput
+            .split(/[\n,]/)
+            .map(p => p.trim())
+            .filter(Boolean)
+
         const words = generateWords({
             syllableStructure,
             consonants,
@@ -161,6 +168,7 @@ export function WordGeneratorDialog({
             count,
             existingWords: new Set(existingLemmas),
             phonemeWeights: existingLemmas.length >= 10 ? phonemeWeights : undefined,
+            rejectPatterns,
         })
 
         setGeneratedWords(words)
@@ -256,6 +264,18 @@ export function WordGeneratorDialog({
                                 onChange={(e) => setCount(Math.max(1, Math.min(200, parseInt(e.target.value) || 20)))}
                             />
                         </div>
+                    </div>
+
+                    {/* Forbidden sequences */}
+                    <div className="space-y-1.5">
+                        <Label className="text-xs">{t("rejectPatterns")}</Label>
+                        <Textarea
+                            className="min-h-[60px] text-sm"
+                            placeholder={t("rejectPatternsPlaceholder")}
+                            value={rejectPatternsInput}
+                            onChange={(e) => setRejectPatternsInput(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">{t("rejectPatternsHelp")}</p>
                     </div>
 
                     {/* Generate button */}

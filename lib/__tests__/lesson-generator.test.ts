@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   generateExercises,
   generateLessonExercises,
+  buildCloze,
   type VocabItem,
 } from "../lesson-generator"
 
@@ -12,6 +13,14 @@ const vocab = (n: number): VocabItem[] =>
     gloss: `meaning${i}`,
     ipa: null,
     partOfSpeech: i % 2 === 0 ? "noun" : "verb",
+  }))
+
+const vocabWithSentence = (n: number): VocabItem[] =>
+  vocab(n).map(v => ({
+    ...v,
+    exampleSentences: [
+      { id: `${v.id}-ex1`, sentence: `I like the ${v.lemma} today.`, translation: `Native for ${v.lemma}`, gloss: null },
+    ],
   }))
 
 describe("generateExercises — new Duolingo-style ordering", () => {
@@ -87,6 +96,86 @@ describe("generateExercises — new Duolingo-style ordering", () => {
     // For 1 item: only TRANSLATE is generated (reverse MC needs ≥4 in pool,
     // sentence builder needs example sentences). So we expect exactly 1.
     expect(production.length).toBe(1)
+  })
+})
+
+describe("generateExercises — entryId threading", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it("sets entryId on MULTIPLE_CHOICE exercises to the source vocab item id", () => {
+    // to_native MC comes from the intro pass, which is never trimmed, so this
+    // is deterministic regardless of the production-round shuffle.
+    const items = vocab(5)
+    const exercises = generateExercises(items)
+    const mcExercises = exercises.filter(e => e.type === "MULTIPLE_CHOICE")
+    expect(mcExercises.length).toBeGreaterThan(0)
+    for (const ex of mcExercises) {
+      expect(ex.entryId).toBeDefined()
+      expect(items.some(i => i.id === ex.entryId)).toBe(true)
+    }
+  })
+
+  it("sets entryId on TRANSLATE exercises to the source vocab item id", () => {
+    // TRANSLATE only appears in the trimmed production round; pin Math.random so
+    // the shuffle/trim is deterministic and at least one TRANSLATE survives.
+    vi.spyOn(Math, "random").mockReturnValue(0)
+    const items = vocab(5)
+    const exercises = generateExercises(items)
+    const trExercises = exercises.filter(e => e.type === "TRANSLATE")
+    expect(trExercises.length).toBeGreaterThan(0)
+    for (const ex of trExercises) {
+      expect(ex.entryId).toBeDefined()
+      expect(items.some(i => i.id === ex.entryId)).toBe(true)
+    }
+  })
+})
+
+describe("buildCloze — deterministic unit tests", () => {
+  const item = (): VocabItem => vocabWithSentence(1)[0]
+  const pool = (): VocabItem[] => vocabWithSentence(4)
+
+  it("blanks the lemma out of the sentence and keeps the answer as the lemma", () => {
+    const it0 = item()
+    const cloze = buildCloze(it0, pool())
+    expect(cloze).not.toBeNull()
+    expect(cloze!.sentence).toContain("____")
+    expect(cloze!.answer).toBe(it0.lemma)
+    // The lemma must not remain as a standalone word in the blanked sentence.
+    const re = new RegExp(`(^|\\s)${it0.lemma}(?=\\s|$|[.,!?;:])`, "i")
+    expect(re.test(cloze!.sentence)).toBe(false)
+  })
+
+  it("produces exactly one correct option whose text equals the lemma (any shuffle)", () => {
+    const it0 = item()
+    const cloze = buildCloze(it0, pool())
+    expect(cloze).not.toBeNull()
+    const correctOptions = cloze!.options.filter(o => o.correct)
+    expect(correctOptions.length).toBe(1)
+    expect(correctOptions[0].text).toBe(it0.lemma)
+  })
+
+  it("sets entryId equal to the source vocab item id", () => {
+    const it0 = item()
+    const cloze = buildCloze(it0, pool())
+    expect(cloze).not.toBeNull()
+    expect(cloze!.entryId).toBe(it0.id)
+  })
+
+  it("returns null when the item has no example sentences", () => {
+    const it0 = vocab(1)[0] // no exampleSentences at all
+    expect(buildCloze(it0, pool())).toBeNull()
+  })
+
+  it("returns null when no example sentence contains the lemma", () => {
+    const it0: VocabItem = {
+      ...vocab(1)[0],
+      exampleSentences: [
+        { id: "v0-ex1", sentence: "This sentence does not mention the target at all.", translation: "translation", gloss: null },
+      ],
+    }
+    expect(buildCloze(it0, pool())).toBeNull()
   })
 })
 

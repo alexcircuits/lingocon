@@ -12,7 +12,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import confetti from "canvas-confetti"
-import type { Exercise, MultipleChoiceExercise, TranslateExercise, MatchPairsExercise, SentenceBuilderExercise, InfoExercise, WordIntroExercise } from "@/types/lesson"
+import type { Exercise, MultipleChoiceExercise, TranslateExercise, ClozeExercise, MatchPairsExercise, SentenceBuilderExercise, InfoExercise, WordIntroExercise } from "@/types/lesson"
 import { FontLoader } from "@/components/font-loader"
 import { romanize, isAnswerCorrect, type ScriptSymbol } from "@/lib/utils/lesson-answer"
 
@@ -68,6 +68,10 @@ export function LessonEngine({
   const [reviewMode, setReviewMode] = useState(false)
   const [showRoman, setShowRoman] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Per-entry graded outcomes for this lesson, fed to FSRS on completion.
+  // Worst outcome wins per entry: once an entry is answered incorrectly, it
+  // stays incorrect even if a later retry gets it right.
+  const resultsRef = useRef<Map<string, boolean>>(new Map())
 
   const baseExerciseId = (id: string) => id.replace(/-(retry|review).*$/, "")
   const recordMistake = useCallback((ex: Exercise) => {
@@ -99,7 +103,7 @@ export function LessonEngine({
     let correctText = ""
     let hint: string | undefined
 
-    if (current.type === "MULTIPLE_CHOICE") {
+    if (current.type === "MULTIPLE_CHOICE" || current.type === "CLOZE") {
       const option = current.options.find(o => o.id === selected)
       correct = option?.correct ?? false
       correctText = current.options.find(o => o.correct)?.text ?? ""
@@ -117,6 +121,11 @@ export function LessonEngine({
         scriptSymbols,
       })
       correctText = current.sentence
+    }
+
+    if ("entryId" in current && current.entryId) {
+      const prev = resultsRef.current.get(current.entryId)
+      resultsRef.current.set(current.entryId, (prev ?? true) && correct)
     }
 
     if (correct) {
@@ -170,7 +179,8 @@ export function LessonEngine({
       // All done — save completion. XP is computed and returned by the server.
       setSaving(true)
       try {
-        const result = await completeLesson(lessonId, hearts)
+        const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+        const result = await completeLesson(lessonId, hearts, results)
         if (result?.error) {
           toast.error(result.error)
         } else {
@@ -213,7 +223,7 @@ export function LessonEngine({
     function onKey(e: KeyboardEvent) {
       if (screen !== "lesson") return
       if (feedback.status === "answering") {
-        if (current?.type === "MULTIPLE_CHOICE") {
+        if (current?.type === "MULTIPLE_CHOICE" || current?.type === "CLOZE") {
           const keyMap: Record<string, number> = { "1": 0, "2": 1, "3": 2, "4": 3 }
           if (e.key in keyMap) {
             const opt = current.options[keyMap[e.key]]
@@ -285,6 +295,7 @@ export function LessonEngine({
 
   const canCheck =
     (current.type === "MULTIPLE_CHOICE" && selected !== null) ||
+    (current.type === "CLOZE" && selected !== null) ||
     (current.type === "TRANSLATE" && typedAnswer.trim().length > 0) ||
     (current.type === "SENTENCE_BUILDER" && selectedBuilderWords.length > 0)
 
@@ -348,7 +359,8 @@ export function LessonEngine({
               const nextIdx = idx + 1
               if (nextIdx >= queue.length) {
                 setSaving(true)
-                completeLesson(lessonId, hearts)
+                const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+                completeLesson(lessonId, hearts, results)
                   .then((result) => {
                     if (result?.error) {
                       toast.error(result.error)
@@ -379,6 +391,16 @@ export function LessonEngine({
             )}
             {current.type === "MULTIPLE_CHOICE" && (
               <MultipleChoiceCard
+                exercise={current}
+                selected={selected}
+                feedback={feedback}
+                onSelect={setSelected}
+                scriptSymbols={scriptSymbols}
+                showRoman={showRoman}
+              />
+            )}
+            {current.type === "CLOZE" && (
+              <ClozeCard
                 exercise={current}
                 selected={selected}
                 feedback={feedback}
@@ -594,41 +616,90 @@ function MultipleChoiceCard({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {exercise.options.map((option, i) => {
-          const isSelected = selected === option.id
-          const isRevealed = feedback.status !== "answering"
-          const isCorrect  = option.correct
-          const isWrong    = isSelected && !isCorrect && isRevealed
+      <OptionButtons options={exercise.options} selected={selected} feedback={feedback} onSelect={onSelect} />
+    </div>
+  )
+}
 
-          return (
-            <button
-              key={option.id}
-              onClick={() => feedback.status === "answering" && onSelect(option.id)}
-              disabled={isRevealed}
-              className={cn(
-                "relative text-left rounded-2xl border-2 border-b-4 px-5 py-4 text-base font-medium transition-all duration-150",
-                "disabled:cursor-default active:border-b-2 active:translate-y-[2px]",
-                // Default state
-                !isSelected && !isRevealed && "border-border bg-card hover:border-primary/40 hover:bg-primary/5",
-                // Selected but not yet checked
-                isSelected && !isRevealed && "border-primary bg-primary/10 text-primary border-primary/50",
-                // Revealed correct
-                isCorrect && isRevealed && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400",
-                // Revealed wrong selection
-                isWrong && "border-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 animate-shake",
-                // Unselected after reveal
-                !isSelected && !isCorrect && isRevealed && "border-border bg-card opacity-50",
-              )}
-            >
-              <span className="absolute top-3 right-3 text-xs text-muted-foreground/60 font-mono">
-                {i + 1}
-              </span>
-              {option.text}
-            </button>
-          )
-        })}
+// ─── Shared option-button grid (Multiple Choice + Cloze) ─────────────────────
+
+function OptionButtons({
+  options, selected, feedback, onSelect,
+}: {
+  options: { id: string; text: string; correct: boolean }[]
+  selected: string | null
+  feedback: FeedbackState
+  onSelect: (id: string) => void
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {options.map((option, i) => {
+        const isSelected = selected === option.id
+        const isRevealed = feedback.status !== "answering"
+        const isCorrect  = option.correct
+        const isWrong    = isSelected && !isCorrect && isRevealed
+
+        return (
+          <button
+            key={option.id}
+            onClick={() => feedback.status === "answering" && onSelect(option.id)}
+            disabled={isRevealed}
+            className={cn(
+              "relative text-left rounded-2xl border-2 border-b-4 px-5 py-4 text-base font-medium transition-all duration-150",
+              "disabled:cursor-default active:border-b-2 active:translate-y-[2px]",
+              // Default state
+              !isSelected && !isRevealed && "border-border bg-card hover:border-primary/40 hover:bg-primary/5",
+              // Selected but not yet checked
+              isSelected && !isRevealed && "border-primary bg-primary/10 text-primary border-primary/50",
+              // Revealed correct
+              isCorrect && isRevealed && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400",
+              // Revealed wrong selection
+              isWrong && "border-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 animate-shake",
+              // Unselected after reveal
+              !isSelected && !isCorrect && isRevealed && "border-border bg-card opacity-50",
+            )}
+          >
+            <span className="absolute top-3 right-3 text-xs text-muted-foreground/60 font-mono">
+              {i + 1}
+            </span>
+            {option.text}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Cloze Card ───────────────────────────────────────────────────────────────
+
+function ClozeCard({
+  exercise, selected, feedback, onSelect, scriptSymbols, showRoman,
+}: {
+  exercise: ClozeExercise
+  selected: string | null
+  feedback: FeedbackState
+  onSelect: (id: string) => void
+  scriptSymbols: ScriptSymbol[]
+  showRoman: boolean
+}) {
+  const t = useTranslations("learn.engine")
+  const useScriptFont = !showRoman
+  const roman = showRoman ? romanize(exercise.sentence, scriptSymbols) : null
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+          {exercise.translation ?? t("translateSentence")}
+        </p>
+        <p className={cn("text-3xl font-bold tracking-tight leading-snug", useScriptFont && "font-custom-script")}>
+          {exercise.sentence}
+        </p>
+        {roman && roman !== exercise.sentence && (
+          <p className="text-lg text-muted-foreground mt-2">{roman}</p>
+        )}
       </div>
+
+      <OptionButtons options={exercise.options} selected={selected} feedback={feedback} onSelect={onSelect} />
     </div>
   )
 }

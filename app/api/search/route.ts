@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { search, SearchScope } from "@/lib/services/search"
+import { searchFts } from "@/lib/services/search-fts"
+import { SearchScope } from "@/lib/services/search"
 
 export const dynamic = "force-dynamic"
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q")?.trim() || ""
     const scope = (searchParams.get("scope") as SearchScope) || "all"
 
-    const results = await search(query, scope)
+    const results = await searchFts(query, scope)
 
     return NextResponse.json(results)
   } catch (error) {

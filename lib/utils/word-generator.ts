@@ -32,6 +32,8 @@ export interface WordGeneratorOptions {
      * Derived from the existing lexicon so generated words feel natural.
      */
     phonemeWeights?: Map<string, number>
+    /** Regex source strings; candidates matching any are rejected. */
+    rejectPatterns?: string[]
 }
 
 interface TemplateSlot {
@@ -163,6 +165,7 @@ export function generateWords(options: WordGeneratorOptions): string[] {
         count,
         existingWords,
         phonemeWeights,
+        rejectPatterns,
     } = options
 
     if (consonants.length === 0 && vowels.length === 0) return []
@@ -172,6 +175,16 @@ export function generateWords(options: WordGeneratorOptions): string[] {
     const slots = parseSyllableStructure(template)
 
     if (slots.length === 0) return []
+
+    // Compile forbidden-sequence patterns, silently skipping invalid regex sources.
+    const rejects: RegExp[] = []
+    for (const pattern of rejectPatterns ?? []) {
+        try {
+            rejects.push(new RegExp(pattern))
+        } catch {
+            // Ignore invalid regex sources; generation proceeds without them.
+        }
+    }
 
     const results = new Set<string>()
     const existing = existingWords || new Set<string>()
@@ -189,8 +202,13 @@ export function generateWords(options: WordGeneratorOptions): string[] {
             word += generateSyllable(slots, consonants, vowels, phonemeWeights)
         }
 
-        // Skip empty, too-short, or duplicate words
-        if (word.length >= 2 && !results.has(word) && !existing.has(word)) {
+        // Skip empty, too-short, duplicate, or forbidden-pattern words
+        if (
+            word.length >= 2 &&
+            !results.has(word) &&
+            !existing.has(word) &&
+            !rejects.some(re => re.test(word))
+        ) {
             results.add(word)
         }
     }

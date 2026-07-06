@@ -2,11 +2,13 @@ import type {
   Exercise,
   MultipleChoiceExercise,
   TranslateExercise,
+  ClozeExercise,
   MatchPairsExercise,
   SentenceBuilderExercise,
   InfoExercise,
   WordIntroExercise,
 } from "@/types/lesson"
+import { blankWholeWord } from "@/lib/cloze"
 
 // Target one production drill per vocab item, with a floor so tiny lessons
 // still feel substantive. Production = typed TRANSLATE / reverse MC /
@@ -87,6 +89,7 @@ function buildMultipleChoice(
   return {
     type: "MULTIPLE_CHOICE",
     id: `mc-${direction}-${item.id}`,
+    entryId: item.id,
     direction,
     prompt: isToNative ? "What does this mean?" : "How do you say this?",
     word,
@@ -102,6 +105,7 @@ function buildTranslate(
   return {
     type: "TRANSLATE",
     id: `tr-${direction}-${item.id}`,
+    entryId: item.id,
     direction,
     prompt: isToNative ? "Translate this word" : "How do you write this?",
     word: isToNative ? item.lemma : item.gloss,
@@ -157,6 +161,41 @@ function buildSentenceBuilder(
     prompt: sentenceObj.translation,
     sentence: cleanSentence,
     words: allWords.map((text, idx) => ({ id: `word-${idx}`, text }))
+  }
+}
+
+type ExampleSentence = NonNullable<VocabItem["exampleSentences"]>[number]
+
+export function buildCloze(item: VocabItem, pool: VocabItem[]): ClozeExercise | null {
+  if (!item.exampleSentences || item.exampleSentences.length === 0) return null
+  // Pick the first example whose sentence contains the lemma as a whole word.
+  // blankWholeWord returns null when the lemma is absent, so this both filters
+  // and produces the blanked sentence (all occurrences masked).
+  let ex: ExampleSentence | undefined
+  let blanked: string | null = null
+  for (const candidate of item.exampleSentences) {
+    const masked = blankWholeWord(candidate.sentence, item.lemma)
+    if (masked !== null) {
+      ex = candidate
+      blanked = masked
+      break
+    }
+  }
+  if (!ex || blanked === null) return null
+
+  const distractors = pickDistractors(item, pool, 3, "lemma")
+  const options = shuffle([
+    { id: `${item.id}-c`, text: item.lemma, correct: true },
+    ...distractors.map((t, i) => ({ id: `${item.id}-w${i}`, text: t, correct: false })),
+  ])
+  return {
+    type: "CLOZE",
+    id: `cloze-${item.id}-${ex.id}`,
+    entryId: item.id,
+    sentence: blanked,
+    answer: item.lemma,
+    options,
+    translation: ex.translation,
   }
 }
 
@@ -260,6 +299,8 @@ export function generateExercises(items: VocabItem[]): Exercise[] {
     }
     const sb = buildSentenceBuilder(item, items)
     if (sb) production.push(sb)
+    const cloze = buildCloze(item, items)
+    if (cloze) production.push(cloze)
   }
   const productionShuffled = shuffle(production)
 

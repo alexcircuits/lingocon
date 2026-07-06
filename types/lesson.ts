@@ -9,6 +9,8 @@ export interface MultipleChoiceExercise {
   /** The word/phrase being tested (shown prominently) */
   word: string
   options: { id: string; text: string; correct: boolean }[]
+  /** Stable dictionary-entry id this exercise was generated from. */
+  entryId?: string
 }
 
 export interface TranslateExercise {
@@ -21,6 +23,22 @@ export interface TranslateExercise {
   answer: string
   /** Optional IPA or part-of-speech shown after correct reveal */
   hint?: string
+  /** Stable dictionary-entry id this exercise was generated from. */
+  entryId?: string
+}
+
+/** Fill-in-the-blank: a sentence with one word removed, chosen from options. */
+export interface ClozeExercise {
+  type: "CLOZE"
+  id: string
+  entryId: string
+  /** Sentence with the target word replaced by "____". */
+  sentence: string
+  /** The removed word (its lemma). */
+  answer: string
+  options: { id: string; text: string; correct: boolean }[]
+  /** Native translation shown as the prompt/hint. */
+  translation?: string
 }
 
 export interface MatchPairsExercise {
@@ -72,6 +90,7 @@ export interface WordIntroExercise {
 export type Exercise =
   | MultipleChoiceExercise
   | TranslateExercise
+  | ClozeExercise
   | MatchPairsExercise
   | SentenceBuilderExercise
   | InfoExercise

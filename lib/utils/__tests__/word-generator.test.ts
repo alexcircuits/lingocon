@@ -135,3 +135,39 @@ describe("generateWords", () => {
     }
   })
 })
+
+describe("generateWords constraints", () => {
+  const baseOpts = {
+    syllableStructure: "CVC",
+    consonants: ["n", "t", "k"],
+    vowels: ["a", "e", "i"],
+    minSyllables: 2,
+    maxSyllables: 3,
+    count: 20,
+  }
+
+  it("rejects words matching a forbidden pattern", () => {
+    const words = generateWords({ ...baseOpts, rejectPatterns: ["nn"] })
+    for (const word of words) {
+      expect(word).not.toMatch(/nn/)
+    }
+  })
+
+  it("never returns a word present in existingWords", () => {
+    const existing = new Set(["nan", "tat", "kik", "nen", "tik", "kan"])
+    const words = generateWords({ ...baseOpts, existingWords: existing, count: 20 })
+    for (const word of words) {
+      expect(existing.has(word)).toBe(false)
+    }
+  })
+
+  it("terminates and returns an empty (or short) array when over-constrained", () => {
+    const words = generateWords({ ...baseOpts, rejectPatterns: ["."], count: 10 })
+    expect(words.length).toBe(0)
+  })
+
+  it("ignores invalid regex patterns and still generates words", () => {
+    const words = generateWords({ ...baseOpts, rejectPatterns: ["["], count: 10 })
+    expect(words.length).toBeGreaterThan(0)
+  })
+})
