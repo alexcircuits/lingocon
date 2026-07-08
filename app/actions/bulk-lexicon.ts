@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { computeFindReplace, LEX_FIELDS, type LexField } from "@/lib/bulk-lexicon"
 import { enqueueJob } from "@/lib/jobs/queue"
+import { rateLimit } from "@/lib/rate-limit"
 
 export interface BulkFindReplaceInput {
   languageId: string
@@ -30,6 +31,9 @@ async function loadEntries(languageId: string, entryIds?: string[]) {
 export async function previewBulkFindReplace(input: BulkFindReplaceInput) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (!rateLimit(`bulk-fr-preview:${userId}`, 30, 60_000).ok) {
+    return { error: "Too many requests — please wait a moment." }
+  }
   if (!LEX_FIELDS.includes(input.field)) return { error: "Invalid field" }
   if (!(await canEditScope(input.languageId, userId, "write:dictionary"))) {
     return { error: "Unauthorized" }
@@ -48,6 +52,9 @@ export async function previewBulkFindReplace(input: BulkFindReplaceInput) {
 export async function applyBulkFindReplace(input: BulkFindReplaceInput) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (!rateLimit(`bulk-fr-apply:${userId}`, 10, 60_000).ok) {
+    return { error: "Too many requests — please wait a moment." }
+  }
   if (!LEX_FIELDS.includes(input.field)) return { error: "Invalid field" }
 
   const lang = await prisma.language.findUnique({

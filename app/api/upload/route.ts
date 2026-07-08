@@ -13,6 +13,7 @@ import {
   signatureMatches,
   type UploadType,
 } from "@/lib/uploads"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,11 @@ export async function POST(req: NextRequest) {
     // Allow in dev mode or with valid session
     if (!session?.user?.id && process.env.DEV_MODE !== "true") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Throttle uploads per user (storage-abuse / repeated-large-body guard).
+    if (!rateLimit(`upload:${session?.user?.id ?? "dev"}`, 30, 60_000).ok) {
+      return NextResponse.json({ error: "Too many uploads — please slow down." }, { status: 429 })
     }
 
     // Reject oversized bodies from the Content-Length header BEFORE buffering
