@@ -135,6 +135,9 @@ export default async function StudyPage({
         </p>
         <div className="flex flex-col gap-3">
           <Button asChild>
+            <Link href={`/learn/${slug}/practice`}>Practice weak words</Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href={`/learn/${slug}`}>Back to {language.name}</Link>
           </Button>
           <Button asChild variant="outline">
