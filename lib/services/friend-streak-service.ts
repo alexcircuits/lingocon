@@ -52,11 +52,24 @@ export async function recordStudyForFriendStreaks(userId: string, now: Date = ne
       continue
     }
 
-    await prisma.friendStreak.upsert({
-      where: { userAId_userBId: { userAId, userBId } },
-      update: { current: next.current, longest: next.longest, lastBothDay: next.lastBothDay },
-      create: { userAId, userBId, current: next.current, longest: next.longest, lastBothDay: next.lastBothDay },
-    })
+    if (existing) {
+      // Optimistic guard on lastBothDay: if a concurrent study already advanced
+      // this pair since we read it (e.g. two friends studying across the UTC-day
+      // boundary), our stale write matches 0 rows and is skipped — never regress.
+      await prisma.friendStreak.updateMany({
+        where: { userAId, userBId, lastBothDay: existing.lastBothDay },
+        data: { current: next.current, longest: next.longest, lastBothDay: next.lastBothDay },
+      })
+    } else {
+      // create; a concurrent create loses the (userAId,userBId) unique — ignore.
+      try {
+        await prisma.friendStreak.create({
+          data: { userAId, userBId, current: next.current, longest: next.longest, lastBothDay: next.lastBothDay },
+        })
+      } catch {
+        /* another study created it first */
+      }
+    }
   }
 }
 
