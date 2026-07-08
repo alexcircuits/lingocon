@@ -41,6 +41,22 @@ interface TemplateSlot {
     optional: boolean
 }
 
+/** Reject-pattern sources longer than this are ignored as likely unsafe. */
+const MAX_REJECT_PATTERN_LENGTH = 100
+
+/**
+ * A group that both contains a quantifier and is itself quantified — e.g.
+ * `(a+)+`, `(.*)*`, `(a+)*b` — the classic catastrophic-backtracking shape that
+ * can freeze the (single-threaded) browser tab this generator runs in. We can't
+ * interrupt a synchronous regex, so we refuse to compile obviously dangerous
+ * ones up front instead.
+ */
+const NESTED_QUANTIFIER = /\([^)]*[*+][^)]*\)\s*[*+{]/
+
+export function isLikelyCatastrophicRegex(pattern: string): boolean {
+    return pattern.length > MAX_REJECT_PATTERN_LENGTH || NESTED_QUANTIFIER.test(pattern)
+}
+
 /**
  * Parse a syllable structure string into template slots.
  * E.g. "(C)CV(C)" → [{ type: C, optional: true }, { type: C, optional: false }, { type: V, optional: false }, { type: C, optional: true }]
@@ -176,9 +192,12 @@ export function generateWords(options: WordGeneratorOptions): string[] {
 
     if (slots.length === 0) return []
 
-    // Compile forbidden-sequence patterns, silently skipping invalid regex sources.
+    // Compile forbidden-sequence patterns, silently skipping invalid regex
+    // sources and ones prone to catastrophic backtracking (which would hang the
+    // browser tab this runs in).
     const rejects: RegExp[] = []
     for (const pattern of rejectPatterns ?? []) {
+        if (isLikelyCatastrophicRegex(pattern)) continue
         try {
             rejects.push(new RegExp(pattern))
         } catch {

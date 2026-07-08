@@ -9,6 +9,7 @@ import {
   type UpdateDictionaryEntryInput,
 } from "@/lib/validations/dictionary-entry"
 import { validatePhonotactics } from "@/lib/utils/alphabet-validation"
+import { regenerateEntryForms } from "@/lib/services/inflection-service"
 
 export async function createEntry(input: CreateDictionaryEntryInput, userId: string) {
   const sterilized = JSON.parse(JSON.stringify(input))
@@ -34,7 +35,7 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
     }
   }
 
-  return prisma.dictionaryEntry.create({
+  const entry = await prisma.dictionaryEntry.create({
     data: {
       lemma: validated.lemma,
       gloss: validated.gloss,
@@ -45,6 +46,7 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
       relatedWords: validated.relatedWords ? (validated.relatedWords as any) : null,
       notes: validated.notes || null,
       tags: validated.tags ? (validated.tags as any) : null,
+      paradigmId: validated.paradigmId || null,
       languageId: validated.languageId,
     },
     include: {
@@ -53,6 +55,11 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
       },
     },
   })
+
+  // Materialize this entry's inflected forms from its paradigm's rules (best
+  // effort — never let it fail the entry create).
+  if (entry.paradigmId) regenerateEntryForms(entry.id).catch(() => {})
+  return entry
 }
 
 export async function updateEntry(input: UpdateDictionaryEntryInput, userId: string) {
@@ -90,8 +97,9 @@ export async function updateEntry(input: UpdateDictionaryEntryInput, userId: str
     updateData.relatedWords = validated.relatedWords ? (validated.relatedWords as any) : null
   if (validated.notes !== undefined) updateData.notes = validated.notes || null
   if (validated.tags !== undefined) updateData.tags = validated.tags ? (validated.tags as any) : null
+  if (validated.paradigmId !== undefined) updateData.paradigmId = validated.paradigmId || null
 
-  return prisma.dictionaryEntry.update({
+  const entry = await prisma.dictionaryEntry.update({
     where: { id: validated.id },
     data: updateData,
     include: {
@@ -100,6 +108,14 @@ export async function updateEntry(input: UpdateDictionaryEntryInput, userId: str
       },
     },
   })
+
+  // The lemma or the linked paradigm may have changed — rematerialize this
+  // entry's inflected forms (best effort). regenerateEntryForms also clears
+  // stale forms when the paradigm is removed.
+  if (validated.paradigmId !== undefined || validated.lemma !== undefined) {
+    regenerateEntryForms(entry.id).catch(() => {})
+  }
+  return entry
 }
 
 export async function bulkUpdateEntries(

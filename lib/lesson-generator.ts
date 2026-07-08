@@ -7,6 +7,7 @@ import type {
   SentenceBuilderExercise,
   InfoExercise,
   WordIntroExercise,
+  InflectionExercise,
 } from "@/types/lesson"
 import { blankWholeWord } from "@/lib/cloze"
 
@@ -28,6 +29,8 @@ export interface VocabItem {
     translation: string
     gloss: string | null
   }[]
+  /** Auto-generated inflected forms with human-readable cell labels. */
+  inflectedForms?: { label: string; form: string }[]
 }
 
 export interface SentenceItem {
@@ -199,6 +202,44 @@ export function buildCloze(item: VocabItem, pool: VocabItem[]): ClozeExercise | 
   }
 }
 
+/**
+ * "What is the {cell} of {lemma}?" — a multiple-choice inflection drill whose
+ * distractors are the entry's OTHER auto-generated forms (very natural: for the
+ * plural of "run", the wrong answers are "runs"/"running"/"ran"). Returns null
+ * unless the entry has at least two DISTINCT forms (one correct + one distractor).
+ */
+export function buildInflection(item: VocabItem): InflectionExercise | null {
+  const forms = item.inflectedForms ?? []
+  if (forms.length < 2) return null
+
+  // The base word is shown as the prompt, so a cell whose form equals the lemma
+  // (the citation/unmarked cell) can't be the answer — the learner could match
+  // it without any grammatical knowledge. Such cells are still fine distractors.
+  const targetPool = forms.filter((f) => f.form !== item.lemma)
+  if (targetPool.length === 0) return null
+
+  const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+  const distractors = [...new Set(forms.map((f) => f.form))]
+    .filter((form) => form !== target.form)
+    .slice(0, 3)
+  if (distractors.length === 0) return null // all forms identical (full syncretism)
+
+  const options = shuffle([
+    { id: `${item.id}-inf-c`, text: target.form, correct: true },
+    ...distractors.map((t, i) => ({ id: `${item.id}-inf-w${i}`, text: t, correct: false })),
+  ])
+
+  return {
+    type: "INFLECTION",
+    id: `inf-${item.id}-${target.label.replace(/\s+/g, "_")}`,
+    entryId: item.id,
+    word: item.lemma,
+    cellLabel: target.label,
+    gloss: item.gloss,
+    options,
+  }
+}
+
 /** Sentence-builder from an explicit sentence item (not tied to a vocab word). */
 function buildSentenceBuilderFromSentence(
   sentence: SentenceItem,
@@ -301,6 +342,8 @@ export function generateExercises(items: VocabItem[]): Exercise[] {
     if (sb) production.push(sb)
     const cloze = buildCloze(item, items)
     if (cloze) production.push(cloze)
+    const inflection = buildInflection(item)
+    if (inflection) production.push(inflection)
   }
   const productionShuffled = shuffle(production)
 

@@ -86,7 +86,8 @@ async function searchLanguages(query: string, limit: number): Promise<SearchResu
   }))
 }
 
-async function searchEntries(query: string, limit: number): Promise<SearchResult["entries"]> {
+// Match entries by their headword/gloss/ipa (FTS, with a trigram fuzzy fallback).
+async function entryTextRows(query: string, limit: number): Promise<EntryRow[]> {
   const ftsRows = await prisma.$queryRaw<EntryRow[]>`
     SELECT e."id", e."lemma", e."gloss", e."ipa",
            l."id" AS "languageId", l."name" AS "languageName", l."slug" AS "languageSlug",
@@ -98,14 +99,12 @@ async function searchEntries(query: string, limit: number): Promise<SearchResult
     ORDER BY ts_rank(e."searchVector", websearch_to_tsquery('simple', ${query})) DESC
     LIMIT ${limit}
   `
-  if (ftsRows.length > 0) return ftsRows.map(shapeEntry)
+  if (ftsRows.length > 0) return ftsRows
 
   // Typo-tolerant fallback: trigram similarity on lemma/ipa only (the columns
   // with gin_trgm_ops indexes). Deliberately excludes gloss — fuzzy matching
-  // targets unfamiliar conlang spellings, not native-language glosses. The 0.3
-  // threshold is strict for very short lemmas (e.g. similarity('vand','vnd')≈0.29
-  // misses); Wave 1 may adopt a length-adjusted threshold.
-  const fuzzyRows = await prisma.$queryRaw<EntryRow[]>`
+  // targets unfamiliar conlang spellings, not native-language glosses.
+  return prisma.$queryRaw<EntryRow[]>`
     SELECT e."id", e."lemma", e."gloss", e."ipa",
            l."id" AS "languageId", l."name" AS "languageName", l."slug" AS "languageSlug",
            l."fontFamily" AS "languageFontFamily"
@@ -116,7 +115,53 @@ async function searchEntries(query: string, limit: number): Promise<SearchResult
     ORDER BY greatest(similarity(e."lemma", ${query}), similarity(coalesce(e."ipa", ''), ${query})) DESC
     LIMIT ${limit}
   `
-  return fuzzyRows.map(shapeEntry)
+}
+
+// Match entries by one of their auto-generated INFLECTED forms — so searching
+// "ran" (a materialized form) surfaces the base entry "run". Exact match wins;
+// trigram similarity catches typos. DISTINCT ON collapses multiple matching
+// cells of the same entry to one row.
+async function inflectedFormRows(query: string, limit: number): Promise<EntryRow[]> {
+  // DISTINCT ON must ORDER BY its key first, so the best-similarity row wins
+  // *within* each entry; then the outer query re-orders by that score so LIMIT
+  // keeps the best matches overall (not an arbitrary id-ordered slice).
+  return prisma.$queryRaw<EntryRow[]>`
+    SELECT "id", "lemma", "gloss", "ipa",
+           "languageId", "languageName", "languageSlug", "languageFontFamily"
+    FROM (
+      SELECT DISTINCT ON (e."id")
+             e."id", e."lemma", e."gloss", e."ipa",
+             l."id" AS "languageId", l."name" AS "languageName", l."slug" AS "languageSlug",
+             l."fontFamily" AS "languageFontFamily",
+             similarity(f."form", ${query}) AS "score"
+      FROM "inflected_forms" f
+      JOIN "dictionary_entries" e ON e."id" = f."entryId"
+      JOIN "languages" l ON l."id" = e."languageId"
+      WHERE l."visibility" = 'PUBLIC'
+        AND (lower(f."form") = lower(${query}) OR similarity(f."form", ${query}) > ${SIMILARITY_THRESHOLD})
+      ORDER BY e."id", similarity(f."form", ${query}) DESC
+    ) sub
+    ORDER BY "score" DESC
+    LIMIT ${limit}
+  `
+}
+
+async function searchEntries(query: string, limit: number): Promise<SearchResult["entries"]> {
+  const [textRows, inflected] = await Promise.all([
+    entryTextRows(query, limit),
+    inflectedFormRows(query, limit),
+  ])
+  // Text matches rank first; append inflected-form matches for entries not
+  // already surfaced, then cap at the limit.
+  const seen = new Set(textRows.map((r) => r.id))
+  const merged = [...textRows]
+  for (const row of inflected) {
+    if (!seen.has(row.id)) {
+      seen.add(row.id)
+      merged.push(row)
+    }
+  }
+  return merged.slice(0, limit).map(shapeEntry)
 }
 
 async function searchGrammarPages(query: string, limit: number): Promise<SearchResult["grammarPages"]> {

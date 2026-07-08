@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { parseSyllableStructure, buildPhonemeWeights, generateWords } from "../word-generator"
+import {
+  parseSyllableStructure,
+  buildPhonemeWeights,
+  generateWords,
+  isLikelyCatastrophicRegex,
+} from "../word-generator"
 
 describe("parseSyllableStructure", () => {
   it("parses simple CV template", () => {
@@ -170,4 +175,32 @@ describe("generateWords constraints", () => {
     const words = generateWords({ ...baseOpts, rejectPatterns: ["["], count: 10 })
     expect(words.length).toBeGreaterThan(0)
   })
+
+  it("skips catastrophic-backtracking patterns without hanging", () => {
+    const start = Date.now()
+    const words = generateWords({
+      ...baseOpts,
+      rejectPatterns: ["(a+)+$", "(.*)*b"],
+      count: 10,
+    })
+    // The dangerous patterns are dropped, so generation still succeeds fast.
+    expect(words.length).toBeGreaterThan(0)
+    expect(Date.now() - start).toBeLessThan(1000)
+  })
+})
+
+describe("isLikelyCatastrophicRegex", () => {
+  it.each(["(a+)+", "(.*)*", "(a+)*b", "(\\w*)*"])(
+    "flags nested-quantifier pattern %j",
+    (p) => expect(isLikelyCatastrophicRegex(p)).toBe(true),
+  )
+
+  it("flags patterns over the length cap", () => {
+    expect(isLikelyCatastrophicRegex("a".repeat(101))).toBe(true)
+  })
+
+  it.each(["ab", "(ab)+", "a+", "[aeiou]", "^kp", "."])(
+    "allows safe pattern %j",
+    (p) => expect(isLikelyCatastrophicRegex(p)).toBe(false),
+  )
 })

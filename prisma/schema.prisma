@@ -60,6 +60,9 @@ model User {
   xpEvents          XPEvent[]
   courses           Course[]
   lessonCompletions LessonCompletion[]
+  leagueMemberships LeagueMember[]
+  friendStreaksA    FriendStreak[] @relation("FriendStreakA")
+  friendStreaksB    FriendStreak[] @relation("FriendStreakB")
   notifications     Notification[]
 
   @@map("users")
@@ -208,6 +211,9 @@ model Language {
   @@index([parentLanguageId])
   @@index([familyId])
   @@index([category])
+  // Every public search filters `visibility = 'PUBLIC'`; index it so that
+  // predicate can be applied cheaply instead of re-checked per candidate row.
+  @@index([visibility])
   @@index([searchVector], type: Gin)
   @@map("languages")
 }
@@ -383,6 +389,7 @@ model DictionaryEntry {
   paradigm Paradigm? @relation(fields: [paradigmId], references: [id], onDelete: SetNull)
   exampleSentences ExampleSentence[]
   lessonItems      LessonItem[]
+  inflectedForms   InflectedForm[]
 
   @@index([languageId])
   @@index([languageId, lemma])
@@ -426,9 +433,104 @@ model Paradigm {
   grammarPages GrammarPage[]
   articles Article[]
   texts Text[]
+  rules ParadigmRule[]
 
   @@index([languageId])
   @@map("paradigms")
+}
+
+// Per-cell transform that auto-generates an inflected form from an entry's
+// stem: prefix + stem + suffix, then an optional sound-change program (reusing
+// the sound-change engine) for stem mutations / sandhi. cellKey matches the
+// paradigm's slots.cells key ("rowIdx-colIdx").
+model ParadigmRule {
+  id          String   @id @default(cuid())
+  paradigmId  String
+  cellKey     String
+  prefix      String   @default("")
+  suffix      String   @default("")
+  soundChange String   @default("") @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  paradigm Paradigm @relation(fields: [paradigmId], references: [id], onDelete: Cascade)
+
+  @@unique([paradigmId, cellKey])
+  @@index([paradigmId])
+  @@map("paradigm_rules")
+}
+
+// A materialized inflected form for one entry + one paradigm cell. Regenerated
+// when the entry's lemma or the paradigm's rules change (inflection_regen job).
+// Searchable (trigram) so learners can look up "ran" and find "run".
+model InflectedForm {
+  id        String   @id @default(cuid())
+  entryId   String
+  cellKey   String
+  form      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, cellKey])
+  @@index([entryId])
+  @@index([form])
+  @@index([form(ops: raw("gin_trgm_ops"))], type: Gin, map: "inflected_forms_form_trgm_idx")
+  @@map("inflected_forms")
+}
+
+// A weekly league bracket: one cohort of learners at a given tier for one week.
+// Members are ranked by XP earned during the week (summed live from XPEvent).
+model League {
+  id          String   @id @default(cuid())
+  tier        String   // LeagueTier: Bronze | Silver | Gold | Sapphire | Ruby | Diamond
+  weekStart   DateTime // Monday 00:00 UTC of this league's week
+  processedAt DateTime? // set by the rollover job once promotions/demotions are applied
+  createdAt   DateTime @default(now())
+
+  members LeagueMember[]
+
+  @@index([weekStart])
+  @@index([tier, weekStart])
+  @@map("leagues")
+}
+
+model LeagueMember {
+  id        String   @id @default(cuid())
+  leagueId  String
+  userId    String
+  weekStart DateTime // denormalized from the league to enforce one league per user per week
+  createdAt DateTime @default(now())
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([leagueId])
+  @@index([weekStart])
+  @@map("league_members")
+}
+
+// A shared streak between two mutual follows. The pair is stored canonically
+// (userAId < userBId) so it's unique regardless of who triggered it. It advances
+// on each UTC day both study; see lib/friend-streak.ts for the transition rules.
+model FriendStreak {
+  id          String    @id @default(cuid())
+  userAId     String
+  userBId     String
+  current     Int       @default(0)
+  longest     Int       @default(0)
+  lastBothDay DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userA User @relation("FriendStreakA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendStreakB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+  @@map("friend_streaks")
 }
 
 model LanguageCollaborator {
@@ -1218,6 +1320,10 @@ model Job {
   payload    Json      @default("{}")
   runAfter   DateTime  @default(now())
   startedAt  DateTime?
+  // Fencing token set on each claim. completeJob/failJob only act while they
+  // still hold this lease, so a slow worker whose claim was reclaimed can't
+  // finalize the job the new worker now owns.
+  leaseId    String?
   finishedAt DateTime?
   error      String?   @db.Text
   attempts   Int       @default(0)

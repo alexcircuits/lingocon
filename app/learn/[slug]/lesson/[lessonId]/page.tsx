@@ -7,6 +7,7 @@ import { LessonEngine } from "./lesson-engine"
 import type { VocabItem, SentenceItem, ConceptItem } from "@/lib/lesson-generator"
 import { buildLessonStatuses } from "@/lib/learn-path"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
+import { parseParadigmSlots } from "@/lib/validations/paradigm"
 
 export const dynamic = "force-dynamic"
 
@@ -36,15 +37,17 @@ async function getLessonData(lessonId: string, userId: string) {
         orderBy: { order: "asc" },
         include: {
           dictEntry: {
-            select: { 
-              id: true, 
-              lemma: true, 
-              gloss: true, 
-              ipa: true, 
+            select: {
+              id: true,
+              lemma: true,
+              gloss: true,
+              ipa: true,
               partOfSpeech: true,
               exampleSentences: {
                 select: { id: true, sentence: true, translation: true, gloss: true }
-              }
+              },
+              paradigm: { select: { slots: true } },
+              inflectedForms: { select: { cellKey: true, form: true } },
             },
           },
           grammarPage: { select: { id: true, title: true, slug: true, content: true } },
@@ -135,7 +138,28 @@ export default async function LessonPage({
   // grammar/text concept cards.
   const vocab: VocabItem[] = lesson.items
     .filter(item => item.type === "VOCAB" && item.dictEntry)
-    .map(item => item.dictEntry!)
+    .map(item => {
+      const entry = item.dictEntry!
+      // Resolve each inflected form's "rowIdx-colIdx" cellKey to a human label
+      // from the paradigm's row/column headers (e.g. "plural · nominative").
+      const slots = parseParadigmSlots(entry.paradigm?.slots)
+      const labelFor = (cellKey: string) => {
+        const [r, c] = cellKey.split("-").map(Number)
+        return [slots.rows[r], slots.columns[c]].filter(Boolean).join(" · ") || cellKey
+      }
+      return {
+        id: entry.id,
+        lemma: entry.lemma,
+        gloss: entry.gloss,
+        ipa: entry.ipa,
+        partOfSpeech: entry.partOfSpeech,
+        exampleSentences: entry.exampleSentences,
+        inflectedForms: (entry.inflectedForms ?? []).map(f => ({
+          label: labelFor(f.cellKey),
+          form: f.form,
+        })),
+      }
+    })
 
   const sentences: SentenceItem[] = lesson.items
     .filter(item => item.type === "SENTENCE" && item.sentence)

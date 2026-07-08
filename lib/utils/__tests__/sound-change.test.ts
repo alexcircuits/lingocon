@@ -252,4 +252,19 @@ describe("applyRule / applyPipeline — user-defined classes", () => {
     const res = applyPipeline("tapak", rules, undefined, undefined, classes)
     expect(res.changed).toBe("hahah")
   })
+
+  it("treats an all-empty class target as literal, not an everywhere-match (Go parity)", () => {
+    const classes = new Map([["K", new Set([""])]])
+    const rule = parseRule("K → h")!
+    // "K" falls through to a literal target; "abc" has no K -> unchanged.
+    // (Regression guard: previously produced "hahbhch".)
+    expect(applyRule("abc", rule, undefined, undefined, classes)).toBe("abc")
+  })
+
+  it("filters an empty member out of a mixed class (Go parity)", () => {
+    const classes = new Map([["K", new Set(["a", ""])]])
+    const rule = parseRule("K → h")!
+    // Only the real member "a" is replaced; the empty member is ignored.
+    expect(applyRule("abc", rule, undefined, undefined, classes)).toBe("hbc")
+  })
 })

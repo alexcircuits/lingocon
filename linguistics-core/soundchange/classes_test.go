@@ -3,7 +3,50 @@ package soundchange
 import (
 	"reflect"
 	"testing"
+	"time"
 )
+
+// applyWithTimeout runs ApplyRule but fails fast if it hangs, so a regression of
+// the zero-length-class-member infinite loop can't stall the whole suite.
+func applyWithTimeout(t *testing.T, e *Engine, word string, r Rule) string {
+	t.Helper()
+	done := make(chan string, 1)
+	go func() { done <- e.ApplyRule(word, r) }()
+	select {
+	case got := <-done:
+		return got
+	case <-time.After(2 * time.Second):
+		t.Fatal("ApplyRule hung — a class member with no length must not be a class target")
+		return ""
+	}
+}
+
+func TestEmptyClassMemberDoesNotHang(t *testing.T) {
+	// An all-empty class can only ever produce a zero-length match; if it were
+	// registered as a class target, ApplyRule's index would never advance.
+	e := NewEngineWithClasses(nil, nil, map[string][]string{"K": {""}})
+	r, ok := ParseRule("K -> h")
+	if !ok {
+		t.Fatal("failed to parse rule")
+	}
+	// "K" falls through to a literal target; "abc" has no K, so it's unchanged.
+	if got := applyWithTimeout(t, e, "abc", r); got != "abc" {
+		t.Fatalf("expected literal-K rule to leave abc unchanged, got %q", got)
+	}
+}
+
+func TestMixedEmptyClassMemberIsFiltered(t *testing.T) {
+	// A class with one real member and one empty member matches only the real
+	// member — the empty one must not turn into an everywhere-match.
+	e := NewEngineWithClasses(nil, nil, map[string][]string{"K": {"a", ""}})
+	r, ok := ParseRule("K -> h")
+	if !ok {
+		t.Fatal("failed to parse rule")
+	}
+	if got := applyWithTimeout(t, e, "abc", r); got != "hbc" {
+		t.Fatalf("expected only a→h, got %q", got)
+	}
+}
 
 func TestParseClassLine(t *testing.T) {
 	cases := []struct {

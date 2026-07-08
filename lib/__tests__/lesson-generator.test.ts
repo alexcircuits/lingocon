@@ -3,6 +3,7 @@ import {
   generateExercises,
   generateLessonExercises,
   buildCloze,
+  buildInflection,
   type VocabItem,
 } from "../lesson-generator"
 
@@ -221,5 +222,73 @@ describe("generateLessonExercises — concepts and sentences", () => {
       concepts: [],
     })
     expect(exercises.some(e => e.type === "SENTENCE_BUILDER")).toBe(true)
+  })
+})
+
+describe("buildInflection", () => {
+  const withForms = (forms: { label: string; form: string }[]): VocabItem => ({
+    id: "e1", lemma: "run", gloss: "to run", inflectedForms: forms,
+  })
+
+  it("returns null with fewer than two forms", () => {
+    expect(buildInflection(withForms([]))).toBeNull()
+    expect(buildInflection(withForms([{ label: "past", form: "ran" }]))).toBeNull()
+  })
+
+  it("returns null when all forms are identical (full syncretism)", () => {
+    expect(
+      buildInflection(withForms([
+        { label: "sg", form: "run" },
+        { label: "pl", form: "run" },
+      ])),
+    ).toBeNull()
+  })
+
+  it("builds a multiple-choice question whose distractors are the other forms", () => {
+    const ex = buildInflection(withForms([
+      { label: "past", form: "ran" },
+      { label: "3sg", form: "runs" },
+      { label: "gerund", form: "running" },
+    ]))!
+    expect(ex.type).toBe("INFLECTION")
+    expect(ex.entryId).toBe("e1")
+    expect(ex.word).toBe("run")
+    const correct = ex.options.filter(o => o.correct)
+    expect(correct).toHaveLength(1)
+    // Every option text is one of the entry's forms.
+    const forms = new Set(["ran", "runs", "running"])
+    expect(ex.options.every(o => forms.has(o.text))).toBe(true)
+    // The prompted cell label matches the correct option.
+    const labelByForm: Record<string, string> = { ran: "past", runs: "3sg", running: "gerund" }
+    expect(ex.cellLabel).toBe(labelByForm[correct[0].text])
+  })
+
+  it("never uses the base form (== lemma) as the answer, only as a distractor", () => {
+    // target is random, so run enough times to catch a regression.
+    for (let i = 0; i < 40; i++) {
+      const ex = buildInflection(withForms([
+        { label: "infinitive", form: "run" }, // == lemma, shown as the prompt word
+        { label: "past", form: "ran" },
+        { label: "3sg", form: "runs" },
+      ]))!
+      const correct = ex.options.find((o) => o.correct)!
+      expect(correct.text).not.toBe("run")
+    }
+  })
+
+  it("returns null when the only non-lemma form collapses to the lemma", () => {
+    // Both forms equal the lemma → no valid answer cell.
+    expect(buildInflection(withForms([
+      { label: "a", form: "run" },
+      { label: "b", form: "run" },
+    ]))).toBeNull()
+  })
+
+  it("caps distractors at three (4 options total)", () => {
+    const ex = buildInflection(withForms([
+      { label: "a", form: "f1" }, { label: "b", form: "f2" }, { label: "c", form: "f3" },
+      { label: "d", form: "f4" }, { label: "e", form: "f5" },
+    ]))!
+    expect(ex.options.length).toBeLessThanOrEqual(4)
   })
 })

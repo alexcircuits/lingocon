@@ -12,7 +12,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import confetti from "canvas-confetti"
-import type { Exercise, MultipleChoiceExercise, TranslateExercise, ClozeExercise, MatchPairsExercise, SentenceBuilderExercise, InfoExercise, WordIntroExercise } from "@/types/lesson"
+import type { Exercise, MultipleChoiceExercise, TranslateExercise, ClozeExercise, MatchPairsExercise, SentenceBuilderExercise, InfoExercise, WordIntroExercise, InflectionExercise } from "@/types/lesson"
 import { FontLoader } from "@/components/font-loader"
 import { romanize, isAnswerCorrect, type ScriptSymbol } from "@/lib/utils/lesson-answer"
 
@@ -69,9 +69,10 @@ export function LessonEngine({
   const [showRoman, setShowRoman] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   // Per-entry graded outcomes for this lesson, fed to FSRS on completion.
-  // Worst outcome wins per entry: once an entry is answered incorrectly, it
-  // stays incorrect even if a later retry gets it right.
-  const resultsRef = useRef<Map<string, boolean>>(new Map())
+  // `correct` tracks the LATEST attempt (retries flip it back to true once the
+  // learner gets it), while `retried` stays true once any attempt was wrong —
+  // so a correct-but-struggled entry maps to FSRS "HARD" rather than a clean pass.
+  const resultsRef = useRef<Map<string, { correct: boolean; retried: boolean }>>(new Map())
 
   const baseExerciseId = (id: string) => id.replace(/-(retry|review).*$/, "")
   const recordMistake = useCallback((ex: Exercise) => {
@@ -103,7 +104,7 @@ export function LessonEngine({
     let correctText = ""
     let hint: string | undefined
 
-    if (current.type === "MULTIPLE_CHOICE" || current.type === "CLOZE") {
+    if (current.type === "MULTIPLE_CHOICE" || current.type === "CLOZE" || current.type === "INFLECTION") {
       const option = current.options.find(o => o.id === selected)
       correct = option?.correct ?? false
       correctText = current.options.find(o => o.correct)?.text ?? ""
@@ -125,7 +126,10 @@ export function LessonEngine({
 
     if ("entryId" in current && current.entryId) {
       const prev = resultsRef.current.get(current.entryId)
-      resultsRef.current.set(current.entryId, (prev ?? true) && correct)
+      resultsRef.current.set(current.entryId, {
+        correct,                                    // latest attempt outcome
+        retried: (prev?.retried ?? false) || !correct, // any wrong attempt so far
+      })
     }
 
     if (correct) {
@@ -179,7 +183,7 @@ export function LessonEngine({
       // All done — save completion. XP is computed and returned by the server.
       setSaving(true)
       try {
-        const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+        const results = Array.from(resultsRef.current, ([entryId, r]) => ({ entryId, correct: r.correct, retried: r.retried }))
         const result = await completeLesson(lessonId, hearts, results)
         if (result?.error) {
           toast.error(result.error)
@@ -223,7 +227,7 @@ export function LessonEngine({
     function onKey(e: KeyboardEvent) {
       if (screen !== "lesson") return
       if (feedback.status === "answering") {
-        if (current?.type === "MULTIPLE_CHOICE" || current?.type === "CLOZE") {
+        if (current?.type === "MULTIPLE_CHOICE" || current?.type === "CLOZE" || current?.type === "INFLECTION") {
           const keyMap: Record<string, number> = { "1": 0, "2": 1, "3": 2, "4": 3 }
           if (e.key in keyMap) {
             const opt = current.options[keyMap[e.key]]
@@ -296,6 +300,7 @@ export function LessonEngine({
   const canCheck =
     (current.type === "MULTIPLE_CHOICE" && selected !== null) ||
     (current.type === "CLOZE" && selected !== null) ||
+    (current.type === "INFLECTION" && selected !== null) ||
     (current.type === "TRANSLATE" && typedAnswer.trim().length > 0) ||
     (current.type === "SENTENCE_BUILDER" && selectedBuilderWords.length > 0)
 
@@ -359,7 +364,7 @@ export function LessonEngine({
               const nextIdx = idx + 1
               if (nextIdx >= queue.length) {
                 setSaving(true)
-                const results = Array.from(resultsRef.current, ([entryId, correct]) => ({ entryId, correct }))
+                const results = Array.from(resultsRef.current, ([entryId, r]) => ({ entryId, correct: r.correct, retried: r.retried }))
                 completeLesson(lessonId, hearts, results)
                   .then((result) => {
                     if (result?.error) {
@@ -406,6 +411,15 @@ export function LessonEngine({
                 feedback={feedback}
                 onSelect={setSelected}
                 scriptSymbols={scriptSymbols}
+                showRoman={showRoman}
+              />
+            )}
+            {current.type === "INFLECTION" && (
+              <InflectionCard
+                exercise={current}
+                selected={selected}
+                feedback={feedback}
+                onSelect={setSelected}
                 showRoman={showRoman}
               />
             )}
@@ -697,6 +711,35 @@ function ClozeCard({
         {roman && roman !== exercise.sentence && (
           <p className="text-lg text-muted-foreground mt-2">{roman}</p>
         )}
+      </div>
+
+      <OptionButtons options={exercise.options} selected={selected} feedback={feedback} onSelect={onSelect} />
+    </div>
+  )
+}
+
+// ─── Inflection Card ──────────────────────────────────────────────────────────
+
+function InflectionCard({
+  exercise, selected, feedback, onSelect, showRoman,
+}: {
+  exercise: InflectionExercise
+  selected: string | null
+  feedback: FeedbackState
+  onSelect: (id: string) => void
+  showRoman: boolean
+}) {
+  const useScriptFont = !showRoman
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+          {exercise.cellLabel}
+        </p>
+        <p className={cn("text-3xl font-bold tracking-tight leading-snug", useScriptFont && "font-custom-script")}>
+          {exercise.word}
+        </p>
+        <p className="text-lg text-muted-foreground mt-1">{exercise.gloss}</p>
       </div>
 
       <OptionButtons options={exercise.options} selected={selected} feedback={feedback} onSelect={onSelect} />
