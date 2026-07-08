@@ -54,8 +54,9 @@ export async function upsertParadigmRule(input: ParadigmRuleInput) {
       },
     })
 
-    // Materialize forms for this paradigm's entries off the request path.
-    await enqueueJob("inflection_regen", { paradigmId: v.paradigmId })
+    // NOTE: regeneration is NOT enqueued here — the editor saves many cells at
+    // once and calls regenerateParadigm() a single time after the batch, so we
+    // don't fan out one full-paradigm regen job per cell.
     revalidatePath(`/studio/lang/${ctx.language.slug}/paradigms`)
     return { success: true as const, data: rule }
   } catch (error) {
@@ -76,8 +77,21 @@ export async function deleteParadigmRule(paradigmId: string, cellKey: string) {
   }
 
   await prisma.paradigmRule.deleteMany({ where: { paradigmId, cellKey } })
-  await enqueueJob("inflection_regen", { paradigmId })
   revalidatePath(`/studio/lang/${ctx.language.slug}/paradigms`)
+  return { success: true as const }
+}
+
+/** Enqueue ONE background job to rematerialize inflected forms for every entry
+ *  using this paradigm. Called once after a batch of rule edits. */
+export async function regenerateParadigm(paradigmId: string) {
+  const userId = await getUserId()
+  if (!userId) return { error: "Unauthorized" }
+  const ctx = await paradigmContext(paradigmId)
+  if (!ctx) return { error: "Paradigm not found" }
+  if (!(await canEditScope(ctx.languageId, userId, "write:paradigms"))) {
+    return { error: "Unauthorized" }
+  }
+  await enqueueJob("inflection_regen", { paradigmId })
   return { success: true as const }
 }
 

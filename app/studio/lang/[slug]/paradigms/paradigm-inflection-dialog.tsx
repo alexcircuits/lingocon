@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { applyInflection } from "@/lib/inflection"
 import { parseParadigmSlots } from "@/lib/validations/paradigm"
-import { getParadigmRules, upsertParadigmRule, deleteParadigmRule } from "@/app/actions/inflection"
+import { getParadigmRules, upsertParadigmRule, deleteParadigmRule, regenerateParadigm } from "@/app/actions/inflection"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -80,20 +80,26 @@ export function ParadigmInflectionDialog({ paradigm, open, onOpenChange }: Props
   function handleSave() {
     if (!paradigm) return
     startSave(async () => {
-      try {
-        await Promise.all(
-          cells.map((cell) => {
-            const r = ruleFor(cell.key)
-            return hasRule(r)
-              ? upsertParadigmRule({ paradigmId: paradigm.id, cellKey: cell.key, ...r })
-              : deleteParadigmRule(paradigm.id, cell.key)
-          }),
-        )
-        toast.success("Inflection rules saved — forms are regenerating in the background.")
-        onOpenChange(false)
-      } catch {
-        toast.error("Failed to save inflection rules.")
+      const outcomes = await Promise.allSettled(
+        cells.map((cell) => {
+          const r = ruleFor(cell.key)
+          return hasRule(r)
+            ? upsertParadigmRule({ paradigmId: paradigm.id, cellKey: cell.key, ...r })
+            : deleteParadigmRule(paradigm.id, cell.key)
+        }),
+      )
+      const failed = outcomes.filter(
+        (o) => o.status === "rejected" || (o.status === "fulfilled" && o.value && "error" in o.value),
+      ).length
+
+      if (failed > 0) {
+        toast.error(`${failed} of ${cells.length} cells failed to save.`)
+        return
       }
+      // Regenerate the whole paradigm's forms ONCE, not per cell.
+      await regenerateParadigm(paradigm.id)
+      toast.success("Inflection rules saved — forms are regenerating in the background.")
+      onOpenChange(false)
     })
   }
 
