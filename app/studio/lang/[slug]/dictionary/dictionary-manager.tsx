@@ -192,6 +192,7 @@ export function DictionaryManager({
       ipa: data.ipa || null,
       audioUrl: data.audioUrl || null,
       partOfSpeech: data.partOfSpeech || null,
+      paradigmId: data.paradigmId || null,
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
@@ -232,6 +233,7 @@ export function DictionaryManager({
       ipa: data.ipa || null,
       audioUrl: data.audioUrl || null,
       partOfSpeech: data.partOfSpeech || null,
+      paradigmId: data.paradigmId || null,
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
@@ -262,6 +264,7 @@ export function DictionaryManager({
       ipa: data.ipa || null,
       audioUrl: data.audioUrl || null,
       partOfSpeech: data.partOfSpeech || null,
+      paradigmId: data.paradigmId || null,
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
@@ -584,6 +587,7 @@ export function DictionaryManager({
         symbols={symbols}
         allowsDiacritics={allowsDiacritics}
         metadata={metadata}
+        languageId={languageId}
         initialData={prefillData ? prefillData as any : undefined}
       />
 
@@ -597,6 +601,7 @@ export function DictionaryManager({
         symbols={symbols}
         allowsDiacritics={allowsDiacritics}
         metadata={metadata}
+        languageId={languageId}
       />
 
       <DeleteConfirmDialog

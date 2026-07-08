@@ -23,6 +23,7 @@ import { useAutoSave } from "@/lib/hooks/use-auto-save"
 import { validateStringAgainstAlphabet, validatePhonotactics } from "@/lib/utils/alphabet-validation"
 import { suggestIpaFromLemma } from "@/lib/utils/ipa-from-lemma"
 import { AudioRecorder } from "@/components/audio-recorder"
+import { getParadigmsForLanguage } from "@/app/actions/paradigm"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
@@ -35,6 +36,7 @@ interface DictionaryEntryDialogProps {
   symbols: ScriptSymbol[]
   allowsDiacritics?: boolean
   metadata?: any
+  languageId?: string
 }
 
 export function DictionaryEntryDialog({
@@ -47,6 +49,7 @@ export function DictionaryEntryDialog({
   symbols,
   allowsDiacritics = false,
   metadata,
+  languageId,
 }: DictionaryEntryDialogProps) {
   const [formData, setFormData] = useState({
     lemma: "",
@@ -58,7 +61,17 @@ export function DictionaryEntryDialog({
     relatedWords: [] as string[],
     notes: "",
     tags: [] as string[],
+    paradigmId: "" as string,
   })
+
+  // Paradigms this entry can be attached to (drives auto-inflection).
+  const [paradigms, setParadigms] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    if (!open || !languageId) return
+    getParadigmsForLanguage(languageId).then((res) => {
+      if ("data" in res && res.data) setParadigms(res.data)
+    })
+  }, [open, languageId])
 
   // Calculate alphabet warnings (non-blocking validation)
   const alphabetWarnings =
@@ -102,6 +115,7 @@ export function DictionaryEntryDialog({
         tags: Array.isArray(initialData.tags)
           ? (initialData.tags as string[])
           : [],
+        paradigmId: (initialData as { paradigmId?: string | null }).paradigmId || "",
       })
     } else {
       setFormData({
@@ -114,6 +128,7 @@ export function DictionaryEntryDialog({
         relatedWords: [],
         notes: "",
         tags: [],
+        paradigmId: "",
       })
     }
   }, [initialData, open])
@@ -354,6 +369,29 @@ export function DictionaryEntryDialog({
                 />
               </div>
             </div>
+
+            {paradigms.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="paradigm">Inflection paradigm</Label>
+                <select
+                  id="paradigm"
+                  value={formData.paradigmId}
+                  onChange={(e) => setFormData({ ...formData, paradigmId: e.target.value })}
+                  disabled={isPending}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">— None —</option>
+                  {paradigms.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Attach a paradigm to auto-generate this word&apos;s inflected forms from its rules.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="etymology">Etymology</Label>
