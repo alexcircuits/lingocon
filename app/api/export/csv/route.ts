@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUserId } from "@/lib/auth-helpers"
 import { fetchLanguageForExport } from "@/lib/services/export-service"
+import { sanitizeCsvCell } from "@/lib/export/csv-safe"
 import { stringify } from "csv-stringify/sync"
 
 export const dynamic = "force-dynamic"
@@ -21,16 +22,20 @@ export async function GET(request: NextRequest) {
 
     const language = await fetchLanguageForExport(languageId, userId)
 
-    // Prepare data for CSV - We focus on Dictionary Entries
+    // Prepare data for CSV - We focus on Dictionary Entries.
+    // Every user-authored field is run through sanitizeCsvCell to neutralize
+    // spreadsheet formula injection (=, +, -, @ leading characters).
     const csvData = language.dictionaryEntries.map((entry: any) => ({
-      Lemma: entry.lemma,
-      Gloss: entry.gloss,
-      IPA: entry.ipa || "",
-      "Part of Speech": entry.partOfSpeech || "",
-      Etymology: entry.etymology || "",
-      Notes: entry.notes || "",
-      Tags: Array.isArray(entry.tags) ? (entry.tags as string[]).join("; ") : "",
-      "Related Words": Array.isArray(entry.relatedWords) ? (entry.relatedWords as string[]).join("; ") : "",
+      Lemma: sanitizeCsvCell(entry.lemma ?? ""),
+      Gloss: sanitizeCsvCell(entry.gloss ?? ""),
+      IPA: sanitizeCsvCell(entry.ipa || ""),
+      "Part of Speech": sanitizeCsvCell(entry.partOfSpeech || ""),
+      Etymology: sanitizeCsvCell(entry.etymology || ""),
+      Notes: sanitizeCsvCell(entry.notes || ""),
+      Tags: sanitizeCsvCell(Array.isArray(entry.tags) ? (entry.tags as string[]).join("; ") : ""),
+      "Related Words": sanitizeCsvCell(
+        Array.isArray(entry.relatedWords) ? (entry.relatedWords as string[]).join("; ") : "",
+      ),
     }))
 
     const csvString = stringify(csvData, {

@@ -102,7 +102,15 @@ func (e *Engine) withClasses(classes map[string][]string) *Engine {
 	}
 	e.userClasses = make(map[string][][]rune, len(classes))
 	for name, members := range classes {
-		e.userClasses[name] = toSortedRunes(members)
+		runes := toSortedRunes(members)
+		// Skip a class with no non-empty members: registering it would set
+		// isClassTarget for a class that can only ever produce a zero-length
+		// match, hanging ApplyRule. Left unregistered, the name falls through to
+		// literal matching (same as an undefined-class reference).
+		if len(runes) == 0 {
+			continue
+		}
+		e.userClasses[name] = runes
 	}
 	e.userClassNames = sortedClassNames(e.userClasses)
 	return e
@@ -146,7 +154,16 @@ func defaultedInventories(vowels, consonants []string) (v, c []string) {
 func toSortedRunes(set []string) [][]rune {
 	out := make([][]rune, 0, len(set))
 	for _, s := range set {
-		out = append(out, []rune(s))
+		r := []rune(s)
+		// Skip empty members. A zero-length class member makes matchPrefixClass
+		// return 0 at every position, so ApplyRule's class-target loop would
+		// never advance i and would spin forever. The text parser already drops
+		// empties, but NewEngineWithClasses takes a raw map, so enforce the
+		// invariant here where every construction path funnels through.
+		if len(r) == 0 {
+			continue
+		}
+		out = append(out, r)
 	}
 	sort.SliceStable(out, func(i, j int) bool { return len(out[i]) > len(out[j]) })
 	return out

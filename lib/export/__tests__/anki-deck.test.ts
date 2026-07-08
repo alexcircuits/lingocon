@@ -53,4 +53,12 @@ describe("toAnkiCards", () => {
   it("returns an empty array for empty input", () => {
     expect(toAnkiCards([])).toEqual([])
   })
+
+  it("neutralizes formula injection in a malicious lemma or gloss", () => {
+    const cards = toAnkiCards([
+      { lemma: "=cmd|'/c calc'!A1", gloss: "@SUM(A1:A9)" },
+    ])
+    expect(cards[0].front).toBe("'=cmd|'/c calc'!A1")
+    expect(cards[0].back.startsWith("'@")).toBe(true)
+  })
 })

@@ -7,6 +7,7 @@ import { scheduleReview, createNewCard, computeLessonXp, LESSON_XP, type CardTyp
 import { resultToRating } from "@/lib/lesson-to-review"
 import { blankWholeWord } from "@/lib/cloze"
 import { nextStreak } from "@/lib/streak"
+import { recordStudyForFriendStreaks } from "@/lib/services/friend-streak-service"
 import { State } from "ts-fsrs"
 import { revalidatePath } from "next/cache"
 import { checkLearnerBadges } from "@/app/actions/badge"
@@ -167,18 +168,27 @@ interface ReschedulableCard {
   cardType: string
 }
 
+interface RescheduleComputed {
+  cardId: string
+  /** The card's lastReview at read time — used as the optimistic-lock token. */
+  guardLastReview: Date | null
+  updateData: Prisma.StudyCardUpdateManyMutationInput
+  review: { cardId: string; rating: RatingKey; timeTaken: number; xpEarned: number }
+  xp: number
+}
+
 /**
- * Build the two prisma ops (studyCard.update + cardReview.create) that
- * reschedule ONE already-loaded StudyCard through FSRS. Shared by the
- * single-card review flow (submitReview) and lesson completion, so both
- * ride in the same transaction as their own bookkeeping ops.
+ * Pure: run ONE already-loaded StudyCard through FSRS and produce the next
+ * scheduling state + the review row to write. No DB access, so the caller
+ * decides how to persist it (see applyReschedule). Shared by the single-card
+ * review flow (submitReview) and lesson completion.
  */
-function rescheduleCardOps(
+function computeReschedule(
   card: ReschedulableCard,
   rating: RatingKey,
   timeTaken: number,
   now: Date,
-): { ops: Prisma.PrismaPromise<unknown>[]; xp: number } {
+): RescheduleComputed {
   const { card: next, xp } = scheduleReview(
     {
       due:            card.due,
@@ -198,28 +208,54 @@ function rescheduleCardOps(
   )
 
   return {
+    cardId: card.id,
+    guardLastReview: card.lastReview ?? null,
     xp,
-    ops: [
-      prisma.studyCard.update({
-        where: { id: card.id },
-        data: {
-          due:          next.due,
-          stability:    next.stability,
-          difficulty:   next.difficulty,
-          elapsedDays:  next.elapsed_days,
-          scheduledDays: next.scheduled_days,
-          reps:         next.reps,
-          lapses:       next.lapses,
-          state:        fsrsStateToDb(next.state),
-          lastReview:   now,
-          updatedAt:    now,
-        },
-      }),
-      prisma.cardReview.create({
-        data: { cardId: card.id, rating, timeTaken, xpEarned: xp },
-      }),
-    ],
+    review: { cardId: card.id, rating, timeTaken, xpEarned: xp },
+    updateData: {
+      due:           next.due,
+      stability:     next.stability,
+      difficulty:    next.difficulty,
+      elapsedDays:   next.elapsed_days,
+      scheduledDays: next.scheduled_days,
+      reps:          next.reps,
+      lapses:        next.lapses,
+      state:         fsrsStateToDb(next.state),
+      lastReview:    now,
+    },
   }
+}
+
+/**
+ * Persist a computed reschedule inside a transaction with OPTIMISTIC
+ * CONCURRENCY: the update only lands if the card's lastReview is unchanged
+ * since it was read (the lock token). If a concurrent review already advanced
+ * the card, this one is a no-op and returns false — the newer FSRS state wins
+ * and no duplicate CardReview row is written. Prevents the lost-update race
+ * when the same card is reviewed from two places at once.
+ */
+async function applyReschedule(
+  tx: Prisma.TransactionClient,
+  c: RescheduleComputed,
+): Promise<boolean> {
+  const res = await tx.studyCard.updateMany({
+    where: { id: c.cardId, lastReview: c.guardLastReview },
+    data: c.updateData,
+  })
+  if (res.count !== 1) return false
+  await tx.cardReview.create({ data: c.review })
+  return true
+}
+
+/**
+ * Take a row lock on the enrollment for the rest of the transaction so that
+ * concurrent reviews/lesson-completions for the same user serialize on the
+ * streak-bonus / same-day-completion decisions (which are computed from a read,
+ * not an atomic increment, and would otherwise double-count under a double
+ * submit). Prisma has no first-class `FOR UPDATE`, so use raw SQL on the tx.
+ */
+async function lockEnrollment(tx: Prisma.TransactionClient, enrollmentId: string): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM "enrollments" WHERE id = ${enrollmentId} FOR UPDATE`
 }
 
 export async function submitReview(
@@ -243,47 +279,56 @@ export async function submitReview(
   const now = new Date()
   const languageId = card.enrollment.languageId
 
-  const { ops: cardOps, xp } = rescheduleCardOps(card, rating, timeTaken, now)
+  // Interactive transaction. Two guards make it race-safe:
+  //   1. lock the enrollment row (FOR UPDATE) so the streak-bonus / lastStudied
+  //      decision is computed from committed state — concurrent reviews/lessons
+  //      for this user can't both award the same milestone bonus;
+  //   2. the per-card optimistic lock in applyReschedule (on lastReview) so two
+  //      reviews of the SAME card can't both land.
+  const result = await prisma.$transaction(async (tx) => {
+    await lockEnrollment(tx, card.enrollmentId)
+    const enr = await tx.enrollment.findUnique({
+      where: { id: card.enrollmentId },
+      select: { lastStudied: true, streak: true },
+    })
+    const streak = nextStreak(enr?.lastStudied ?? null, enr?.streak ?? 0, now)
 
-  // Advance the daily streak using the *previous* lastStudied value, before we
-  // overwrite it below. Idempotent within the same day.
-  const streak = nextStreak(card.enrollment.lastStudied, card.enrollment.streak, now)
-  const totalXp = xp + streak.bonusXp
+    const fresh = await tx.studyCard.findFirst({ where: { id: cardId, enrollment: { userId } } })
+    if (!fresh) return null
+    const computed = computeReschedule(fresh, rating, timeTaken, now)
+    if (!(await applyReschedule(tx, computed))) return null
 
-  const ops: Prisma.PrismaPromise<unknown>[] = [
-    ...cardOps,
-    prisma.enrollment.update({
+    await tx.enrollment.update({
       where: { id: card.enrollmentId },
       data: {
-        xp:          { increment: totalXp },
+        xp:          { increment: computed.xp + streak.bonusXp },
         streak:      streak.streak,
         lastStudied: now,
       },
-    }),
-    prisma.xPEvent.create({
-      data: { userId, languageId, amount: xp, reason: "review" },
-    }),
-  ]
-
-  if (streak.bonusXp > 0) {
-    ops.push(
-      prisma.xPEvent.create({
+    })
+    await tx.xPEvent.create({
+      data: { userId, languageId, amount: computed.xp, reason: "review" },
+    })
+    if (streak.bonusXp > 0) {
+      await tx.xPEvent.create({
         data: { userId, languageId, amount: streak.bonusXp, reason: "streak_bonus" },
       })
-    )
-  }
+    }
+    return { xp: computed.xp, streak: streak.streak, streakBonusXp: streak.bonusXp, isNewDay: streak.isNewDay }
+  })
 
-  const [updatedCard] = await prisma.$transaction(ops)
+  if (result === null) return { error: "Too soon" }
 
   // Learner badges (streaks, reviews) — fire-and-forget, never block the review.
   checkLearnerBadges(userId).catch(console.error)
+  // On the first study of the day, advance shared streaks with active friends.
+  if (result.isNewDay) recordStudyForFriendStreaks(userId).catch(console.error)
 
   return {
     data: {
-      card: updatedCard,
-      xpEarned: xp,
-      streak: streak.streak,
-      streakBonusXp: streak.bonusXp,
+      xpEarned: result.xp,
+      streak: result.streak,
+      streakBonusXp: result.streakBonusXp,
     },
   }
 }
@@ -293,7 +338,7 @@ export async function submitReview(
 export async function completeLesson(
   lessonId: string,
   heartsLeft: number,
-  results?: { entryId: string; correct: boolean }[],
+  results?: { entryId: string; correct: boolean; retried?: boolean }[],
 ) {
   const userId = await requireAuth()
 
@@ -318,99 +363,106 @@ export async function completeLesson(
   if (!enrollment) return { error: "Not enrolled" }
 
   const now = new Date()
-
-  // XP is computed server-side. First completion earns the full reward; replays
-  // earn a small bounded "practice" XP, at most once per day, to prevent farming.
-  const existing = await prisma.lessonCompletion.findUnique({
-    where: { userId_lessonId: { userId, lessonId } },
-    select: { completedAt: true },
-  })
-
-  const fullXp = computeLessonXp(heartsLeft)
-  let xpEarned: number
-  if (!existing) {
-    xpEarned = fullXp
-  } else {
-    const { isSameUtcDay } = await import("@/lib/streak")
-    xpEarned = isSameUtcDay(existing.completedAt, now) ? 0 : LESSON_XP.replay
-  }
-
   const hearts = Math.max(0, Math.min(LESSON_XP.maxHearts, Math.floor(heartsLeft)))
+  const { isSameUtcDay } = await import("@/lib/streak")
 
-  // Advance streak from the previous study timestamp before overwriting it.
-  const streak = nextStreak(enrollment.lastStudied, enrollment.streak, now)
-  const enrollmentXp = xpEarned + streak.bonusXp
+  // Everything that depends on "is this the first completion today" and the
+  // streak-bonus decision runs INSIDE a transaction that first row-locks the
+  // enrollment, so a concurrent double-submit serializes and the second call
+  // sees the first's committed completion (no double XP, no double streak bonus,
+  // no re-run FSRS reschedule).
+  const outcome = await prisma.$transaction(async (tx) => {
+    await lockEnrollment(tx, enrollment.id)
 
-  const ops: Prisma.PrismaPromise<unknown>[] = [
-    prisma.lessonCompletion.upsert({
+    const existing = await tx.lessonCompletion.findUnique({
+      where: { userId_lessonId: { userId, lessonId } },
+      select: { completedAt: true },
+    })
+    const enr = await tx.enrollment.findUnique({
+      where: { id: enrollment.id },
+      select: { lastStudied: true, streak: true },
+    })
+
+    // First completion earns the full reward; replays earn a small bounded
+    // "practice" XP, at most once per day, to prevent farming.
+    const alreadyCompletedToday = existing ? isSameUtcDay(existing.completedAt, now) : false
+    const xpEarned = !existing ? computeLessonXp(heartsLeft) : alreadyCompletedToday ? 0 : LESSON_XP.replay
+    const streak = nextStreak(enr?.lastStudied ?? null, enr?.streak ?? 0, now)
+    const enrollmentXp = xpEarned + streak.bonusXp
+
+    await tx.lessonCompletion.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       update: { heartsLeft: hearts, completedAt: now, ...(xpEarned > 0 ? { xpEarned } : {}) },
       create: { userId, lessonId, xpEarned, heartsLeft: hearts },
-    }),
-    prisma.enrollment.update({
+    })
+    await tx.enrollment.update({
       where: { id: enrollment.id },
       data: { xp: { increment: enrollmentXp }, streak: streak.streak, lastStudied: now },
-    }),
-  ]
-
-  if (xpEarned > 0) {
-    ops.push(
-      prisma.xPEvent.create({
+    })
+    if (xpEarned > 0) {
+      await tx.xPEvent.create({
         data: { userId, languageId, amount: xpEarned, reason: "lesson_complete" },
       })
-    )
-  }
-  if (streak.bonusXp > 0) {
-    ops.push(
-      prisma.xPEvent.create({
+    }
+    if (streak.bonusXp > 0) {
+      await tx.xPEvent.create({
         data: { userId, languageId, amount: streak.bonusXp, reason: "streak_bonus" },
       })
-    )
-  }
-
-  // Feed lesson performance back into FSRS: reschedule any StudyCard whose
-  // dictionary entry was tested in this lesson. Dedupe by entryId keeping the
-  // worst outcome (any incorrect attempt ⇒ that entry counts as incorrect).
-  // "Perfect" means every distinct entry was answered correctly — a flawless
-  // lesson stretches the interval a bit further (EASY) than a merely
-  // correct one (GOOD). timeTaken is 0 because lessons don't time individual
-  // answers, so the per-card-type time-limit downgrade never applies here.
-  // Note: cardReview.xpEarned is recorded on the review row for analytics,
-  // but is NOT added to enrollment.xp — lesson XP is already computed above
-  // from heartsLeft, and double-counting would inflate rewards.
-  if (results && results.length > 0) {
-    const worstByEntry = new Map<string, boolean>()
-    for (const r of results) {
-      const prev = worstByEntry.get(r.entryId)
-      worstByEntry.set(r.entryId, prev === undefined ? r.correct : prev && r.correct)
     }
-    const perfect = results.every(r => r.correct)
-    const entryIds = [...worstByEntry.keys()]
 
-    const cards = await prisma.studyCard.findMany({
-      where: { enrollmentId: enrollment.id, dictEntryId: { in: entryIds } },
-    })
+    // Feed lesson performance back into FSRS: reschedule any StudyCard whose
+    // dictionary entry was tested in this lesson. Dedupe by entryId keeping the
+    // worst outcome (any incorrect attempt ⇒ that entry counts as incorrect) and
+    // OR-ing the "needed a retry" flag. A flawless lesson (every entry right on
+    // the first try) stretches the interval furthest (EASY); a clean-but-not-
+    // flawless recall is GOOD; a correct-but-retried recall is HARD. timeTaken
+    // is 0 because lessons don't time individual answers.
+    // Note: cardReview.xpEarned is recorded for analytics but is NOT added to
+    // enrollment.xp — lesson XP is already computed above from heartsLeft.
+    // Bound the client-supplied results so a pathological array can't hold the
+    // transaction open with an unbounded reschedule loop. Real lessons are tiny.
+    const boundedResults = results?.slice(0, 200)
+    if (boundedResults && boundedResults.length > 0 && !alreadyCompletedToday) {
+      const byEntry = new Map<string, { correct: boolean; retried: boolean }>()
+      for (const r of boundedResults) {
+        const prev = byEntry.get(r.entryId)
+        byEntry.set(r.entryId, {
+          correct: prev ? prev.correct && r.correct : r.correct,
+          retried: (prev?.retried ?? false) || (r.retried ?? false),
+        })
+      }
+      const perfect = [...byEntry.values()].every(e => e.correct && !e.retried)
+      const entryIds = [...byEntry.keys()]
 
-    for (const card of cards) {
-      const correct = worstByEntry.get(card.dictEntryId ?? "") ?? true
-      const { ops: cardOps } = rescheduleCardOps(
-        card,
-        resultToRating(correct, perfect),
-        0,
-        now,
-      )
-      ops.push(...cardOps)
+      const cards = await tx.studyCard.findMany({
+        where: { enrollmentId: enrollment.id, dictEntryId: { in: entryIds } },
+      })
+
+      for (const card of cards) {
+        const entryOutcome = byEntry.get(card.dictEntryId ?? "") ?? { correct: true, retried: false }
+        const computed = computeReschedule(
+          card,
+          resultToRating(entryOutcome.correct, perfect, entryOutcome.retried),
+          0,
+          now,
+        )
+        // Optimistic apply: if a concurrent review already advanced this card,
+        // skip it rather than clobbering the newer FSRS state.
+        await applyReschedule(tx, computed)
+      }
     }
-  }
 
-  await prisma.$transaction(ops)
+    return { xpEarned, streak: streak.streak, streakBonusXp: streak.bonusXp, isNewDay: streak.isNewDay }
+  })
 
   // Learner badges (streaks, lessons completed) — fire-and-forget.
   checkLearnerBadges(userId).catch(console.error)
+  // On the first study of the day, advance shared streaks with active friends.
+  if (outcome.isNewDay) recordStudyForFriendStreaks(userId).catch(console.error)
 
   const slug = await getSlugForLanguage(languageId)
   revalidatePath(`/learn/${slug}`)
-  return { data: { xpEarned, streak: streak.streak, streakBonusXp: streak.bonusXp } }
+  return { data: { xpEarned: outcome.xpEarned, streak: outcome.streak, streakBonusXp: outcome.streakBonusXp } }
 }
 
 // ─── Perfect Session Bonus ────────────────────────────────────────────────────

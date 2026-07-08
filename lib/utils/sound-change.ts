@@ -107,13 +107,23 @@ const classAlternationCache = new WeakMap<Set<string>, string>()
 function classAlternation(set: Set<string>): string {
   const cached = classAlternationCache.get(set)
   if (cached) return cached
+  // Drop empty members: an empty alternation branch matches the empty string,
+  // which would insert the replacement between every character. The Go engine
+  // filters these at construction; mirror it here so both engines agree.
   const alt = Array.from(set)
+    .filter(m => m.length > 0)
     .sort((a, b) => b.length - a.length)
     .map(escapeRegex)
     .join("|")
   const pattern = `(?:${alt})`
   classAlternationCache.set(set, pattern)
   return pattern
+}
+
+/** True if the class has at least one non-empty member (i.e. it can match). */
+function hasNonEmptyMember(set: Set<string>): boolean {
+  for (const m of set) if (m.length > 0) return true
+  return false
 }
 
 interface EnvPattern {
@@ -161,7 +171,13 @@ function envToPattern(
 ): EnvPattern {
   if (!env || env === "_") return { pattern: "", boundary: false }
 
-  const names = classes && classes.size > 0 ? sortedClassNames(classes) : []
+  // Only treat a name as a class if it has ≥1 non-empty member; an all-empty
+  // class falls through to literal matching, matching the Go engine (which
+  // never registers such a class).
+  const names =
+    classes && classes.size > 0
+      ? sortedClassNames(classes).filter(n => hasNonEmptyMember(classes.get(n)!))
+      : []
 
   let pattern = ""
   let boundary = false
@@ -265,7 +281,13 @@ export function applyRule(
   const left = envToPattern(rule.leftEnv, vowels, consonants, classes)
   const right = envToPattern(rule.rightEnv, vowels, consonants, classes)
   const targetClass = classes?.get(rule.target)
-  const target = targetClass ? classAlternation(targetClass) : `(?:${escapeRegex(rule.target)})`
+  // An all-empty class can't match; treat the target literally instead (parity
+  // with the Go engine, and avoids a zero-width match inserting the replacement
+  // between every character).
+  const target =
+    targetClass && hasNonEmptyMember(targetClass)
+      ? classAlternation(targetClass)
+      : `(?:${escapeRegex(rule.target)})`
 
   // Environments are expressed as ZERO-WIDTH assertions — a lookbehind for the
   // left context and a lookahead for the right — so only the target segment is

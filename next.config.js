@@ -10,6 +10,19 @@ const nextConfig = {
           { key: "Access-Control-Allow-Methods", value: "GET, POST, DELETE, OPTIONS" },
         ],
       },
+      {
+        // User-uploaded files (flags, covers, fonts, audio, SVGs…). Neutralize
+        // stored-content attacks: `nosniff` stops a disguised .txt being read as
+        // HTML, and a strict CSP sandbox stops any script/`javascript:` in an
+        // uploaded SVG from executing on a direct top-level navigation. Images
+        // still load fine via <img> (CSP applies to the document, not subresource
+        // loads), so display is unaffected.
+        source: "/uploads/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Content-Security-Policy", value: "default-src 'none'; sandbox; style-src 'unsafe-inline'" },
+        ],
+      },
     ]
   },
   experimental: {

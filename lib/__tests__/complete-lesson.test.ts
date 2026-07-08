@@ -18,7 +18,7 @@ const { mockPrisma } = vi.hoisted(() => ({
     },
     studyCard: {
       findMany: vi.fn(),
-      update: vi.fn(),
+      updateMany: vi.fn(),
     },
     cardReview: {
       create: vi.fn(),
@@ -26,7 +26,15 @@ const { mockPrisma } = vi.hoisted(() => ({
     language: {
       findUnique: vi.fn(),
     },
-    $transaction: vi.fn(async (ops: unknown[]) => ops),
+    // lockEnrollment issues `SELECT … FOR UPDATE` via $queryRaw inside the tx.
+    $queryRaw: vi.fn(async () => []),
+    // Support both the interactive callback form (tx => ...) and the legacy
+    // array form. Interactive txs run against the same mock client.
+    $transaction: vi.fn(async (arg: unknown) =>
+      typeof arg === "function"
+        ? (arg as (tx: unknown) => unknown)(mockPrisma)
+        : Promise.all(arg as unknown[]),
+    ),
   },
 }))
 
@@ -69,7 +77,12 @@ function baseCard(overrides: Partial<Record<string, unknown>> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockPrisma.$transaction.mockImplementation(async (ops: unknown[]) => ops)
+  mockPrisma.$transaction.mockImplementation(async (arg: unknown) =>
+    typeof arg === "function"
+      ? (arg as (tx: unknown) => unknown)(mockPrisma)
+      : Promise.all(arg as unknown[]),
+  )
+  mockPrisma.studyCard.updateMany.mockResolvedValue({ count: 1 })
   mockPrisma.courseLesson.findUnique.mockResolvedValue({
     course: { languageId: LANGUAGE_ID, visibility: "PUBLISHED" },
   })
@@ -89,14 +102,14 @@ describe("completeLesson — back-compat (no results)", () => {
   it("does not query or write any StudyCard when results is omitted", async () => {
     await completeLesson(LESSON_ID, 3)
     expect(mockPrisma.studyCard.findMany).not.toHaveBeenCalled()
-    expect(mockPrisma.studyCard.update).not.toHaveBeenCalled()
+    expect(mockPrisma.studyCard.updateMany).not.toHaveBeenCalled()
     expect(mockPrisma.cardReview.create).not.toHaveBeenCalled()
   })
 
   it("does not query or write any StudyCard when results is an empty array", async () => {
     await completeLesson(LESSON_ID, 3, [])
     expect(mockPrisma.studyCard.findMany).not.toHaveBeenCalled()
-    expect(mockPrisma.studyCard.update).not.toHaveBeenCalled()
+    expect(mockPrisma.studyCard.updateMany).not.toHaveBeenCalled()
     expect(mockPrisma.cardReview.create).not.toHaveBeenCalled()
   })
 })
@@ -121,8 +134,10 @@ describe("completeLesson — FSRS rescheduling from results", () => {
 
     await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true }])
 
-    expect(mockPrisma.studyCard.update).toHaveBeenCalledTimes(1)
-    expect(mockPrisma.studyCard.update.mock.calls[0][0].where).toEqual({ id: "card-1" })
+    expect(mockPrisma.studyCard.updateMany).toHaveBeenCalledTimes(1)
+    // Optimistic-lock guard: update is keyed by id AND the lastReview it read.
+    expect(mockPrisma.studyCard.updateMany.mock.calls[0][0].where.id).toBe("card-1")
+    expect(mockPrisma.studyCard.updateMany.mock.calls[0][0].where).toHaveProperty("lastReview")
     expect(mockPrisma.cardReview.create).toHaveBeenCalledTimes(1)
     expect(mockPrisma.cardReview.create.mock.calls[0][0].data.cardId).toBe("card-1")
   })
@@ -161,7 +176,7 @@ describe("completeLesson — FSRS rescheduling from results", () => {
       { entryId: "entry-1", correct: false },
     ])
 
-    expect(mockPrisma.studyCard.update).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.studyCard.updateMany).toHaveBeenCalledTimes(1)
     expect(mockPrisma.cardReview.create).toHaveBeenCalledTimes(1)
     expect(mockPrisma.cardReview.create.mock.calls[0][0].data.rating).toBe("AGAIN")
   })
@@ -183,6 +198,51 @@ describe("completeLesson — FSRS rescheduling from results", () => {
     expect(enrollmentUpdateArg.data.xp.increment).not.toBe(cardReviewXp)
   })
 
+  it("rates a correct-but-retried entry as HARD", async () => {
+    mockPrisma.studyCard.findMany.mockResolvedValueOnce([baseCard({ id: "card-1", dictEntryId: "entry-1" })])
+
+    await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true, retried: true }])
+
+    expect(mockPrisma.cardReview.create.mock.calls[0][0].data.rating).toBe("HARD")
+  })
+
+  it("skips the cardReview when the optimistic guard loses the race (updateMany count 0)", async () => {
+    mockPrisma.studyCard.findMany.mockResolvedValueOnce([baseCard({ id: "card-1", dictEntryId: "entry-1" })])
+    mockPrisma.studyCard.updateMany.mockResolvedValueOnce({ count: 0 })
+
+    await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true }])
+
+    expect(mockPrisma.studyCard.updateMany).toHaveBeenCalledTimes(1)
+    // A concurrent review already advanced the card, so no duplicate review row.
+    expect(mockPrisma.cardReview.create).not.toHaveBeenCalled()
+  })
+
+  it("is idempotent: a same-day replay does NOT re-run FSRS rescheduling", async () => {
+    // Simulate a duplicate/retried submission of a lesson already completed today.
+    // (No studyCard.findMany mock queued on purpose: the fix must not call it,
+    // so queuing a one-time value here would leak into the next test.)
+    mockPrisma.lessonCompletion.findUnique.mockResolvedValueOnce({ completedAt: new Date() })
+
+    await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true }])
+
+    // No FSRS side effects on a same-day replay — otherwise the card is double-scheduled.
+    expect(mockPrisma.studyCard.findMany).not.toHaveBeenCalled()
+    expect(mockPrisma.studyCard.updateMany).not.toHaveBeenCalled()
+    expect(mockPrisma.cardReview.create).not.toHaveBeenCalled()
+  })
+
+  it("still reschedules on a next-day replay (a genuine new practice session)", async () => {
+    // Existing completion was yesterday, so this counts as a fresh session.
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    mockPrisma.lessonCompletion.findUnique.mockResolvedValueOnce({ completedAt: yesterday })
+    mockPrisma.studyCard.findMany.mockResolvedValueOnce([baseCard({ id: "card-1", dictEntryId: "entry-1" })])
+
+    await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true }])
+
+    expect(mockPrisma.studyCard.updateMany).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.cardReview.create).toHaveBeenCalledTimes(1)
+  })
+
   it("handles multiple cards per entry (VOCAB_RECOGNITION + VOCAB_PRODUCTION + CLOZE)", async () => {
     mockPrisma.studyCard.findMany.mockResolvedValueOnce([
       baseCard({ id: "card-1", dictEntryId: "entry-1", cardType: "VOCAB_RECOGNITION" }),
@@ -192,7 +252,7 @@ describe("completeLesson — FSRS rescheduling from results", () => {
 
     await completeLesson(LESSON_ID, 3, [{ entryId: "entry-1", correct: true }])
 
-    expect(mockPrisma.studyCard.update).toHaveBeenCalledTimes(3)
+    expect(mockPrisma.studyCard.updateMany).toHaveBeenCalledTimes(3)
     expect(mockPrisma.cardReview.create).toHaveBeenCalledTimes(3)
   })
 })

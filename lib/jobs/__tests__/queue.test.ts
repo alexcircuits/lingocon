@@ -52,13 +52,16 @@ describe("claimNextJob", () => {
     mockPrisma.job.findFirst.mockResolvedValueOnce(job)
     mockPrisma.job.updateMany.mockResolvedValueOnce({ count: 1 })
     const claimed = await claimNextJob(now)
-    expect(claimed).toEqual(job)
-    const where = mockPrisma.job.updateMany.mock.calls[0][0].where
-    expect(where).toEqual({
+    expect(claimed).toMatchObject(job)
+    // The claim stamps a fresh lease, returned so the worker can finalize it.
+    expect(claimed?.leaseId).toEqual(expect.any(String))
+    const call = mockPrisma.job.updateMany.mock.calls[0][0]
+    expect(call.where).toEqual({
       id: "j1",
       finishedAt: null,
       OR: [{ startedAt: null }, { startedAt: { lt: new Date(now.getTime() - STALE_CLAIM_MS) } }],
     })
+    expect(call.data.leaseId).toBe(claimed?.leaseId)
   })
 
   it("reclaims a stale claim from a dead worker", async () => {
@@ -74,7 +77,7 @@ describe("claimNextJob", () => {
     mockPrisma.job.findFirst.mockResolvedValueOnce(job)
     mockPrisma.job.updateMany.mockResolvedValueOnce({ count: 1 })
     const claimed = await claimNextJob(now)
-    expect(claimed).toEqual(job)
+    expect(claimed).toMatchObject(job)
     const findWhere = mockPrisma.job.findFirst.mock.calls[0][0].where
     expect(findWhere.finishedAt).toBeNull()
     expect(findWhere.OR).toEqual([{ startedAt: null }, { startedAt: { lt: staleThreshold } }])
@@ -117,41 +120,51 @@ describe("claimNextJob", () => {
 })
 
 describe("completeJob", () => {
-  it("stamps finishedAt and clears any previous error", async () => {
-    await completeJob("j1")
-    const arg = mockPrisma.job.update.mock.calls[0][0]
-    expect(arg.where).toEqual({ id: "j1" })
+  it("stamps finishedAt and clears the error ONLY while holding the lease", async () => {
+    await completeJob("j1", "lease-1")
+    const arg = mockPrisma.job.updateMany.mock.calls[0][0]
+    // Fenced by leaseId: a reclaimer's new lease would make this match nothing.
+    expect(arg.where).toEqual({ id: "j1", leaseId: "lease-1" })
     expect(arg.data.finishedAt).toBeInstanceOf(Date)
     expect(arg.data.error).toBeNull()
   })
 })
 
 describe("failJob", () => {
-  it("records the error, releases the claim, and backs off by attempts", async () => {
+  it("records the error, releases the claim + lease, and backs off by attempts", async () => {
     const now = new Date("2026-07-03T12:00:00Z")
-    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 2 })
-    await failJob("j1", new Error("boom"), now)
-    const arg = mockPrisma.job.update.mock.calls[0][0]
+    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 2, leaseId: "lease-1" })
+    await failJob("j1", "lease-1", new Error("boom"), now)
+    const arg = mockPrisma.job.updateMany.mock.calls[0][0]
+    expect(arg.where).toEqual({ id: "j1", leaseId: "lease-1" })
     expect(arg.data.error).toBe("boom")
     expect(arg.data.startedAt).toBeNull()
+    expect(arg.data.leaseId).toBeNull()
     expect(arg.data.runAfter).toEqual(new Date(now.getTime() + RETRY_BACKOFF_MS * 2))
   })
 
   it("stringifies non-Error throwables", async () => {
-    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 1 })
-    await failJob("j1", "string failure")
-    expect(mockPrisma.job.update.mock.calls[0][0].data.error).toBe("string failure")
+    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 1, leaseId: "L" })
+    await failJob("j1", "L", "string failure")
+    expect(mockPrisma.job.updateMany.mock.calls[0][0].data.error).toBe("string failure")
   })
 
   it("truncates error messages to 2000 chars", async () => {
-    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 1 })
-    await failJob("j1", new Error("x".repeat(3000)))
-    expect(mockPrisma.job.update.mock.calls[0][0].data.error).toHaveLength(2000)
+    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 1, leaseId: "L" })
+    await failJob("j1", "L", new Error("x".repeat(3000)))
+    expect(mockPrisma.job.updateMany.mock.calls[0][0].data.error).toHaveLength(2000)
   })
 
   it("is a no-op when the job vanished", async () => {
     mockPrisma.job.findUnique.mockResolvedValueOnce(null)
-    await failJob("gone", new Error("x"))
-    expect(mockPrisma.job.update).not.toHaveBeenCalled()
+    await failJob("gone", "L", new Error("x"))
+    expect(mockPrisma.job.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("is a no-op when the lease was stolen by a reclaimer (fencing)", async () => {
+    // The job now carries a different lease — a later worker reclaimed it.
+    mockPrisma.job.findUnique.mockResolvedValueOnce({ id: "j1", attempts: 1, leaseId: "new-lease" })
+    await failJob("j1", "old-lease", new Error("late"))
+    expect(mockPrisma.job.updateMany).not.toHaveBeenCalled()
   })
 })
