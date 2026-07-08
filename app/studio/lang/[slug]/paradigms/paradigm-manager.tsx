@@ -35,7 +35,8 @@ import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { DeleteConfirmDialog } from "../dictionary/components/delete-confirm-dialog"
 import { ParadigmContentEditor } from "./paradigm-content-editor"
-import { Grid3X3 } from "lucide-react"
+import { ParadigmInflectionDialog } from "./paradigm-inflection-dialog"
+import { Grid3X3, Wand2 } from "lucide-react"
 
 // Define types locally to avoid stale definition issues in IDE
 type Paradigm = {
@@ -63,6 +64,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isContentEditOpen, setIsContentEditOpen] = useState(false)
+  const [isInflectOpen, setIsInflectOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
@@ -366,6 +368,19 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          setEditingParadigm(paradigm)
+                          setIsInflectOpen(true)
+                        }}
+                        disabled={isPending}
+                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                        title="Auto-inflection rules"
+                      >
+                        <Wand2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEdit(paradigm)}
                         disabled={isPending}
                         className="h-9 w-9 sm:h-8 sm:w-8 p-0"
@@ -557,6 +572,12 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
         paradigm={editingParadigm}
         onSave={handleUpdateContent}
         isPending={isPending}
+      />
+
+      <ParadigmInflectionDialog
+        open={isInflectOpen}
+        onOpenChange={setIsInflectOpen}
+        paradigm={editingParadigm}
       />
     </div>
   )

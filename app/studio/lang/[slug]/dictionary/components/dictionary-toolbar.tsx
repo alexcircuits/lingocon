@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
-  Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2, ArrowUpDown, MoreHorizontal,
+  Download, Upload, Edit, Plus, Trash2, Sparkles, Languages, Table2, ArrowUpDown, MoreHorizontal, Replace,
 } from "lucide-react"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -34,6 +34,7 @@ interface DictionaryToolbarProps {
   onBulkAdd: () => void
   onBulkEdit: () => void
   onBulkDelete: () => void
+  onFindReplace: () => void
   onAdd: () => void
 }
 
@@ -54,6 +55,7 @@ export function DictionaryToolbar({
   onGenerate,
   onBorrow,
   onBulkAdd,
+  onFindReplace,
   onBulkEdit,
   onBulkDelete,
   onAdd,
@@ -227,6 +229,10 @@ export function DictionaryToolbar({
             <DropdownMenuItem onClick={onBulkAdd}>
               <Table2 className="h-4 w-4" />
               {t("bulkAdd")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onFindReplace} disabled={isPending || totalEntries === 0}>
+              <Replace className="h-4 w-4" />
+              Find &amp; replace
             </DropdownMenuItem>
             {selectedCount > 0 && (
               <>

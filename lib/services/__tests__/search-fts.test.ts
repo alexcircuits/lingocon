@@ -64,9 +64,12 @@ describe("searchFts", () => {
   })
 
   it("falls back to trigram similarity for entries when FTS finds nothing", async () => {
+    // Entry search now runs 3 queries: FTS, inflected-form match, then the
+    // trigram fuzzy fallback (FTS + inflected both empty → fuzzy supplies it).
     mockPrisma.$queryRaw
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
+      .mockResolvedValueOnce([]) // FTS
+      .mockResolvedValueOnce([]) // inflected forms
+      .mockResolvedValueOnce([   // fuzzy fallback
         {
           id: "e1", lemma: "aqua", gloss: "water", ipa: null,
           languageId: "l1", languageName: "Novian", languageSlug: "novian", languageFontFamily: null,
@@ -74,6 +77,21 @@ describe("searchFts", () => {
       ])
     const result = await searchFts("aqva", "dictionary")
     expect(result.entries).toHaveLength(1)
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2)
+    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(3)
+  })
+
+  it("surfaces the base entry when the query matches an INFLECTED form", async () => {
+    // FTS empty, but an inflected form (e.g. "ran") maps back to entry "run".
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // FTS
+      .mockResolvedValueOnce([   // inflected-form match
+        {
+          id: "e-run", lemma: "run", gloss: "to run", ipa: null,
+          languageId: "l1", languageName: "Novian", languageSlug: "novian", languageFontFamily: null,
+        },
+      ])
+    const result = await searchFts("ran", "dictionary")
+    expect(result.entries).toHaveLength(1)
+    expect(result.entries[0].lemma).toBe("run")
   })
 })

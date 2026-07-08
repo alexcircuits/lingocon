@@ -26,6 +26,7 @@ import { DerivationWizard } from "./components/derivation-wizard"
 import { WordGeneratorDialog } from "./components/word-generator-dialog"
 import { BorrowWordDialog } from "./components/borrow-word-dialog"
 import { BulkAddDialog } from "./components/bulk-add-dialog"
+import { FindReplaceDialog } from "./components/find-replace-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
@@ -91,6 +92,7 @@ export function DictionaryManager({
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
   const [isBorrowOpen, setIsBorrowOpen] = useState(false)
   const [isBulkAddOpen, setIsBulkAddOpen] = useState(false)
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false)
   const [prefillData, setPrefillData] = useState<{ lemma?: string; gloss?: string } | null>(null)
 
   // Selection State
@@ -440,6 +442,7 @@ export function DictionaryManager({
         onBulkAdd={() => setIsBulkAddOpen(true)}
         onBulkEdit={() => setIsBulkEditOpen(true)}
         onBulkDelete={() => setIsBulkDeleteOpen(true)}
+        onFindReplace={() => setIsFindReplaceOpen(true)}
         onAdd={() => setIsAddOpen(true)}
       />
 
@@ -665,6 +668,13 @@ export function DictionaryManager({
         onSubmit={handleCreate}
         isPending={isPending}
         symbols={symbols}
+      />
+
+      <FindReplaceDialog
+        languageId={languageId}
+        open={isFindReplaceOpen}
+        onOpenChange={setIsFindReplaceOpen}
+        onApplied={() => startTransition(() => router.refresh())}
       />
 
       {isBulkEditOpen && (

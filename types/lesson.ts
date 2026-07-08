@@ -87,6 +87,22 @@ export interface WordIntroExercise {
   example?: { sentence: string; translation: string }
 }
 
+/** Pick the inflected form for a grammatical cell — auto-generated from a
+ *  paradigm's rules. Multiple-choice; distractors are the entry's OTHER forms. */
+export interface InflectionExercise {
+  type: "INFLECTION"
+  id: string
+  /** The base word (lemma / citation form). */
+  word: string
+  /** The grammatical cell asked for, e.g. "plural" or "past · 1sg". */
+  cellLabel: string
+  /** Native gloss, shown for context. */
+  gloss: string
+  options: { id: string; text: string; correct: boolean }[]
+  /** Stable dictionary-entry id this exercise was generated from. */
+  entryId: string
+}
+
 export type Exercise =
   | MultipleChoiceExercise
   | TranslateExercise
@@ -95,6 +111,7 @@ export type Exercise =
   | SentenceBuilderExercise
   | InfoExercise
   | WordIntroExercise
+  | InflectionExercise
 
 // ─── Lesson Result ────────────────────────────────────────────────────────────
 
