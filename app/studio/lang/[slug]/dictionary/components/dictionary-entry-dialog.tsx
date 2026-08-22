@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
-import { AArrowDown, AlertCircle, Sparkles, X } from "lucide-react"
+import { AArrowDown, AlertCircle, PencilLine, Sparkles, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
@@ -344,11 +344,11 @@ export function DictionaryEntryDialog({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-5 text-xs gap-1 text-muted-foreground hover:text-primary"
+                    className="h-6 text-xs gap-1 text-muted-foreground hover:text-primary"
                     onClick={convertXsampa}
                     disabled={!formData.ipa}
                   >
-                    <AArrowDown className={"h-3 w-3"} /> Convert to IPA
+                    <PencilLine className={"h-3 w-3"} /> X-SAMPA
                   </Button>
                   <Button
                     type="button"
