@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canEditScope } from "@/lib/auth-helpers"
-import { computeFindReplace, LEX_FIELDS, type LexField } from "@/lib/bulk-lexicon"
+import { computeFindReplaceWith, LEX_FIELDS, type LexField } from "@/lib/bulk-lexicon"
+import { replaceInWorker } from "@/lib/regex-sandbox"
 import { enqueueJob } from "@/lib/jobs/queue"
 import { rateLimit } from "@/lib/rate-limit"
 
@@ -40,7 +41,8 @@ export async function previewBulkFindReplace(input: BulkFindReplaceInput) {
   }
 
   const entries = await loadEntries(input.languageId, input.entryIds)
-  const res = computeFindReplace(entries, input.field, input.pattern, input.replacement, {
+  // The user's regex runs in a timed worker thread — never on the shared server event loop.
+  const res = await computeFindReplaceWith(replaceInWorker, entries, input.field, input.pattern, input.replacement, {
     caseInsensitive: input.caseInsensitive,
   })
   if (res.error) return { error: res.error }
@@ -67,7 +69,8 @@ export async function applyBulkFindReplace(input: BulkFindReplaceInput) {
   }
 
   const entries = await loadEntries(input.languageId, input.entryIds)
-  const res = computeFindReplace(entries, input.field, input.pattern, input.replacement, {
+  // The user's regex runs in a timed worker thread — never on the shared server event loop.
+  const res = await computeFindReplaceWith(replaceInWorker, entries, input.field, input.pattern, input.replacement, {
     caseInsensitive: input.caseInsensitive,
   })
   if (res.error) return { error: res.error }

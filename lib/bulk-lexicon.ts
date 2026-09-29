@@ -45,6 +45,40 @@ export interface FindReplaceResult {
  * replacement supports `$1` backreferences (standard String.replace semantics).
  * Returns only the entries whose value actually changes.
  */
+export const MAX_PATTERN_LENGTH = 200
+
+/** Cheap up-front checks shared by the sync and sandboxed paths. Returns an error message or null. */
+export function validateFindPattern(pattern: string, flags: string): string | null {
+  if (!pattern) return "Pattern is required"
+  if (pattern.length > MAX_PATTERN_LENGTH) return `Pattern is too long (max ${MAX_PATTERN_LENGTH} characters)`
+  if (isReDoSProne(pattern)) {
+    return "Pattern is too complex — remove quantified groups (e.g. (…)+ , (…)*)."
+  }
+  try {
+    new RegExp(pattern, flags)
+  } catch {
+    return "Invalid regular expression"
+  }
+  return null
+}
+
+function fieldValue(e: LexEntry, field: LexField): string {
+  return field === "ipa" ? e.ipa ?? "" : e[field]
+}
+
+function diff(entries: LexEntry[], field: LexField, afters: string[]): FindReplaceChange[] {
+  const changes: FindReplaceChange[] = []
+  entries.forEach((e, i) => {
+    const before = fieldValue(e, field)
+    if (afters[i] !== before) changes.push({ id: e.id, before, after: afters[i] })
+  })
+  return changes
+}
+
+/**
+ * Synchronous version — only for trusted/bounded callers and tests. Server actions must use
+ * `computeFindReplaceSandboxed`, because a validated pattern can still backtrack for seconds.
+ */
 export function computeFindReplace(
   entries: LexEntry[],
   field: LexField,
@@ -52,23 +86,29 @@ export function computeFindReplace(
   replacement: string,
   opts: { caseInsensitive?: boolean } = {},
 ): FindReplaceResult {
-  if (!pattern) return { changes: [], error: "Pattern is required" }
-  if (isReDoSProne(pattern)) {
-    return { changes: [], error: "Pattern is too complex — remove quantified groups (e.g. (…)+ , (…)*)." }
-  }
+  const flags = opts.caseInsensitive ? "gi" : "g"
+  const error = validateFindPattern(pattern, flags)
+  if (error) return { changes: [], error }
+  const re = new RegExp(pattern, flags)
+  return { changes: diff(entries, field, entries.map((e) => fieldValue(e, field).replace(re, replacement))) }
+}
 
-  let re: RegExp
+/** Same result as `computeFindReplace`, with the regex executed by `run` (e.g. a timed worker). */
+export async function computeFindReplaceWith(
+  run: (values: string[], pattern: string, flags: string, replacement: string) => Promise<string[]>,
+  entries: LexEntry[],
+  field: LexField,
+  pattern: string,
+  replacement: string,
+  opts: { caseInsensitive?: boolean } = {},
+): Promise<FindReplaceResult> {
+  const flags = opts.caseInsensitive ? "gi" : "g"
+  const error = validateFindPattern(pattern, flags)
+  if (error) return { changes: [], error }
   try {
-    re = new RegExp(pattern, opts.caseInsensitive ? "gi" : "g")
-  } catch {
-    return { changes: [], error: "Invalid regular expression" }
+    const afters = await run(entries.map((e) => fieldValue(e, field)), pattern, flags, replacement)
+    return { changes: diff(entries, field, afters) }
+  } catch (err) {
+    return { changes: [], error: err instanceof Error ? err.message : "Pattern failed to run" }
   }
-
-  const changes: FindReplaceChange[] = []
-  for (const e of entries) {
-    const before = field === "ipa" ? e.ipa ?? "" : e[field]
-    const after = before.replace(re, replacement)
-    if (after !== before) changes.push({ id: e.id, before, after })
-  }
-  return { changes }
 }
