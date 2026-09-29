@@ -123,7 +123,6 @@ See `.env.example` for the full list.
 |---------|----------------|
 | `npm run db:seed` | User `test@example.com`, language **Test Language** at `/lang/test-language` |
 | `npm run db:seed-modules` | Official modules in `/modules` (conjugator, themes, exporters, …) |
-| `npm run db:seed-orin` | Large demo language “Orin” (maintainer script; slow) |
 
 With `DEV_MODE`, your session user is `dev@localhost` — create languages from the dashboard or run seeds to populate content owned by other fixture users.
 

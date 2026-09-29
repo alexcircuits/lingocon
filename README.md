@@ -8,12 +8,14 @@ A platform for creating and documenting constructed languages. Live at [lingocon
 
 ## Features
 
-- **Language Management** - Create and manage multiple constructed languages
-- **Alphabet/Script** - Document script symbols with IPA notation
-- **Grammar Documentation** - Rich text grammar pages with TipTap editor
-- **Dictionary/Lexicon** - Searchable dictionary with lemma, gloss, IPA, and part of speech
-- **Visibility Control** - Private, unlisted, or public language documentation
-- **Authentication** - Secure GitHub OAuth authentication
+- **Language Management** - Create, fork/evolve and share constructed languages, with families and ancestry trees
+- **Alphabet/Script** - Script symbols with IPA, custom fonts, transliteration
+- **Phonology & Sound Changes** - Inventories, sound-change rules (Go→WASM engine) applied to the lexicon
+- **Grammar Documentation** - Rich-text grammar pages, interlinear glosses, paradigm tables with auto-inflection
+- **Dictionary/Lexicon** - Server-paginated dictionary with search, tags, related words, etymology trees, CSV/JSON/Anki import and export
+- **Learning** - Courses, lessons and spaced-repetition review for any published language
+- **Visibility Control** - Private, unlisted, or public languages; collaborators with per-area permissions
+- **Authentication** - GitHub and Google OAuth, email/password with verification
 
 ## Tech Stack
 
