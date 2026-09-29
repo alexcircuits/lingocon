@@ -20,6 +20,7 @@ import {
     Table2,
     Type,
     Plus,
+    PencilLine,
     Trash2,
     LayoutPanelLeft,
     LayoutPanelTop,
@@ -28,6 +29,7 @@ import {
     MoreVertical
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
 // Import extensions dynamically or safely
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
@@ -175,6 +177,27 @@ export function RichTextEditor({
                 >
                     <Heading2 className="h-4 w-4" />
                 </Button>
+                <div className="w-px h-6 bg-border mx-1" />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                        editor.chain().focus().command(({ tr, state, dispatch }) => {
+                            const { from, to } = state.selection
+                            const selectedText = state.doc.textBetween(from, to, ' ')
+                            const replacement = xSampa2IPA(selectedText)
+                            tr.insertText(replacement, from, to)
+                            if (dispatch) dispatch(tr)
+                            return true
+                        }).run()
+                    }}
+                    title={t("convertXsampaToIpa")}
+                    disabled={disabled}
+                    >
+                    <PencilLine className="h-4 w-4" />
+                </Button>
+
                 <div className="w-px h-6 bg-border mx-1" />
                 <Button
                     type="button"

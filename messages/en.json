@@ -1159,7 +1159,8 @@
     "insertIgt": "Insert IGT Block",
     "insertParadigm": "Insert Paradigm Table (Structured)",
     "insertWikiLink": "Insert wiki-link — or type [[slug]] inline",
-    "generateIpaChart": "Generate IPA Chart"
+    "generateIpaChart": "Generate IPA Chart",
+    "convertXsampaToIpa": "Convert to IPA"
   },
   "userSearch": {
     "unnamed": "Unnamed user",

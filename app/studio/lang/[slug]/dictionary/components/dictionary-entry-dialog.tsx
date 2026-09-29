@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
-import { AlertCircle, Sparkles } from "lucide-react"
+import { AlertCircle, PencilLine, Sparkles} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
@@ -24,6 +24,7 @@ import { validateStringAgainstAlphabet, validatePhonotactics } from "@/lib/utils
 import { suggestIpaFromLemma } from "@/lib/utils/ipa-from-lemma"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { getParadigmsForLanguage } from "@/app/actions/paradigm"
+import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
@@ -156,6 +157,18 @@ export function DictionaryEntryDialog({
 
     handleFieldChange("ipa", suggested)
     toast.success("IPA suggested based on alphabet")
+  }
+
+  const convertXsampa = () => {
+    const initial = formData.ipa
+    const converted = xSampa2IPA(formData.ipa)
+    if (initial === converted) {
+      toast.info("No X-SAMPA detected")
+    }
+    else {
+      toast.success("Successfully converted to IPA")
+    }
+    handleFieldChange("ipa", converted);
   }
 
   const [relatedInput, setRelatedInput] = useState("")
@@ -320,6 +333,16 @@ export function DictionaryEntryDialog({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="ipa">IPA</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs gap-1 text-muted-foreground hover:text-primary"
+                    onClick={convertXsampa}
+                    disabled={!formData.ipa}
+                  >
+                    <PencilLine className={"h-3 w-3"} /> X-SAMPA
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"

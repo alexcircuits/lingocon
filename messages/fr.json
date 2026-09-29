@@ -1159,7 +1159,8 @@
     "insertIgt": "Insérer un bloc IGT",
     "insertParadigm": "Insérer un tableau de paradigme (structuré)",
     "insertWikiLink": "Insérer un lien wiki — ou tapez [[slug]] en ligne",
-    "generateIpaChart": "Générer un tableau API"
+    "generateIpaChart": "Générer un tableau API",
+    "convertXsampaToIpa": "Convertir en API"
   },
   "userSearch": {
     "unnamed": "Utilisateur sans nom",

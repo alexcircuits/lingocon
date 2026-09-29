@@ -1159,7 +1159,8 @@
     "insertIgt": "Вставити блок IGT",
     "insertParadigm": "Вставити таблицю парадигми (структурну)",
     "insertWikiLink": "Вставити вікі-посилання — або введіть [[slug]] прямо в тексті",
-    "generateIpaChart": "Згенерувати таблицю МФА"
+    "generateIpaChart": "Згенерувати таблицю МФА",
+    "convertXsampaToIpa": "Конвертувати в МФА"
   },
   "userSearch": {
     "unnamed": "Безіменний користувач",
