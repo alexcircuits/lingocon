@@ -323,7 +323,6 @@ export function DictionaryTable({
                       <div>
                         <EtymologyTree
                           entry={entry}
-                          allEntries={allEntries.length > 0 ? allEntries : entries}
                           onSelectEntry={(e) => {
                             setExpandedId(e.id)
                           }}

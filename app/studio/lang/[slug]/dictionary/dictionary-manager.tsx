@@ -21,7 +21,7 @@ import { DictionaryTableMobile } from "@/components/dictionary/dictionary-table-
 import { DictionaryEntryDialog } from "./components/dictionary-entry-dialog"
 import { DeleteConfirmDialog } from "./components/delete-confirm-dialog"
 import { ImportDialog } from "./components/import-dialog"
-import { DictionaryPagination } from "./components/dictionary-pagination"
+import { DictionaryPagination } from "@/components/dictionary/dictionary-pagination"
 import { DerivationWizard } from "./components/derivation-wizard"
 import { WordGeneratorDialog } from "./components/word-generator-dialog"
 import { BorrowWordDialog } from "./components/borrow-word-dialog"

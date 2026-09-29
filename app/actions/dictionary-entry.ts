@@ -2,7 +2,8 @@
 
 import { ZodError } from "zod"
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
+import { getUserId, canReadLanguage } from "@/lib/auth-helpers"
+import { getEtymologyNeighborhood, type EtymologyNode } from "@/lib/services/etymology"
 import { AppError } from "@/lib/errors"
 import { createActivity } from "@/lib/utils/activity"
 import { revalidateDictionary } from "@/lib/utils/revalidation"
@@ -191,8 +192,31 @@ export async function getPublicDictionaryEntry(entryId: string) {
       return { error: "Not found" }
     }
 
-    return { success: true as const, data: entry }
+    // relatedWords holds lemma strings; resolve them to entries so the reader can open them even
+    // when they aren't on the current (paginated) page.
+    const relatedLemmas = Array.isArray(entry.relatedWords)
+      ? entry.relatedWords.filter((w): w is string => typeof w === "string")
+      : []
+    const relatedEntries = relatedLemmas.length
+      ? await prisma.dictionaryEntry.findMany({
+          where: { languageId: entry.languageId, lemma: { in: relatedLemmas } },
+          select: { id: true, lemma: true },
+          take: 200,
+        })
+      : []
+
+    return { success: true as const, data: { ...entry, relatedEntries } }
   } catch (error) {
     return handleError(error, "Failed to fetch entry details")
   }
+}
+
+/** Entries needed to draw one entry's derivation tree (see lib/services/etymology.ts). */
+export async function getEntryEtymology(entryId: string): Promise<EtymologyNode[]> {
+  const entry = await prisma.dictionaryEntry.findUnique({
+    where: { id: entryId },
+    select: { languageId: true },
+  })
+  if (!entry || !(await canReadLanguage(entry.languageId, await getUserId()))) return []
+  return getEtymologyNeighborhood(entryId)
 }

@@ -82,8 +82,8 @@ export function DictionaryPagination({
                 {showEllipsis && (
                   <Dialog open={jumpDialogOpen} onOpenChange={setJumpDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button aria-label={t("jumpToPage")} type="button" variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -116,6 +116,7 @@ export function DictionaryPagination({
                 <Button
                   type="button"
                   variant={currentPage === page ? "default" : "outline"}
+                  aria-current={currentPage === page ? "page" : undefined}
                   size="sm"
                   onClick={() => onPageChange(page)}
                   className={cn(

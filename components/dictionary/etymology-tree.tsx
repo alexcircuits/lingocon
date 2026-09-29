@@ -1,14 +1,16 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { GitFork, ArrowRight } from "lucide-react"
-import type { DictionaryEntry } from "@prisma/client"
+import { getEntryEtymology } from "@/app/actions/dictionary-entry"
+import type { EtymologyNode } from "@/lib/services/etymology"
+
+type DictionaryEntry = EtymologyNode
 
 interface EtymologyTreeProps {
-  entry: DictionaryEntry
-  allEntries: DictionaryEntry[]
-  onSelectEntry?: (entry: DictionaryEntry) => void
+  entry: Pick<EtymologyNode, "id">
+  onSelectEntry?: (entry: EtymologyNode) => void
   useCustomFont?: boolean
 }
 
@@ -166,13 +168,37 @@ function TreeNodeView({
 // Public component
 // ---------------------------------------------------------------------------
 
+/**
+ * Derivation tree for one entry. The server computes the relevant neighbourhood of the lexicon
+ * (lib/services/etymology.ts), so this works regardless of how much of the dictionary the page has
+ * loaded — the public dictionary is paginated and the studio shows 20 rows at a time.
+ */
 export function EtymologyTree({
   entry,
-  allEntries,
   onSelectEntry,
   useCustomFont = true,
 }: EtymologyTreeProps) {
+  const [allEntries, setAllEntries] = useState<EtymologyNode[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setAllEntries(null)
+    getEntryEtymology(entry.id)
+      .then((nodes) => {
+        if (!cancelled) setAllEntries(nodes)
+      })
+      .catch(() => {
+        if (!cancelled) setAllEntries([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [entry.id])
+
   const tree = useMemo(() => {
+    if (!allEntries) return null
+    const current = allEntries.find((e) => e.id === entry.id)
+    if (!current) return null
     const entryMap = new Map(allEntries.map(e => [e.id, e]))
 
     // --- Primary: structured cognate chain via sourceEntryId ---
@@ -189,9 +215,9 @@ export function EtymologyTree({
         }
       }
 
-      const root = findStructuredRoot(entry, entryMap)
+      const root = findStructuredRoot(current, entryMap)
       const result = buildStructuredTree(root.id, entryMap, childrenMap)
-      if (result && (result.children.length > 0 || result.entry.id !== entry.id)) {
+      if (result && (result.children.length > 0 || result.entry.id !== current.id)) {
         return result
       }
     }
@@ -202,11 +228,11 @@ export function EtymologyTree({
     )
     if (!hasTextLinks) return null
 
-    const root = findTextRoot(entry, allEntries)
+    const root = findTextRoot(current, allEntries)
     const result = buildTextTree(root, allEntries)
-    if (result.children.length === 0 && result.entry.id === entry.id) return null
+    if (result.children.length === 0 && result.entry.id === current.id) return null
     return result
-  }, [entry, allEntries])
+  }, [entry.id, allEntries])
 
   if (!tree) return null
 
