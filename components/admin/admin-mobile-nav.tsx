@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { AdminSidebarContent } from "./admin-sidebar"
 
 export function AdminMobileNav() {
@@ -17,7 +17,8 @@ export function AdminMobileNav() {
                     <span className="sr-only">Toggle Admin Menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72">
+            <SheetContent aria-describedby={undefined} side="left" className="p-0 w-72">
+              <SheetTitle className="sr-only">Admin navigation</SheetTitle>
                 <AdminSidebarContent onNavigate={() => setOpen(false)} />
             </SheetContent>
         </Sheet>

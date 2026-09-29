@@ -87,6 +87,7 @@ export function FeatureHighlight({
               size="icon"
               onClick={handleDismiss}
               className="h-6 w-6 shrink-0"
+              aria-label="Dismiss"
             >
               <X className="h-3.5 w-3.5" />
             </Button>

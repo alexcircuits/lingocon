@@ -97,7 +97,7 @@ export function InstallPWA() {
                             Tap <Share className="h-3 w-3 inline" /> then &quot;Add to Home Screen&quot;
                         </p>
                     </div>
-                    <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleDismiss}>
+                    <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleDismiss} aria-label="Dismiss">
                         <X className="h-4 w-4" />
                     </Button>
                 </div>

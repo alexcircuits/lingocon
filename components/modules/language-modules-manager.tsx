@@ -117,7 +117,7 @@ export function LanguageModulesManager({
                   </Button>
                 </Link>
                 <Link href={`/lang/${languageSlug}`} target="_blank">
-                  <Button variant="ghost" size="sm" title="View public page">
+                  <Button variant="ghost" size="sm" title="View public page" aria-label="View public page">
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </Link>

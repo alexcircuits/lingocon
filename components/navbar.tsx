@@ -112,21 +112,25 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
             const isActive = item.href === activeHref
 
             return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "gap-2 font-medium",
-                    isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/15"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
+              // Button asChild renders the link itself: a <button> inside an <a> is invalid and
+              // produced two tab stops per item.
+              <Button
+                key={item.href}
+                asChild
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "gap-2 font-medium",
+                  isActive
+                    ? "bg-primary/10 text-primary hover:bg-primary/15"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                   {tNav(item.key)}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )
           })}
         </nav>
@@ -140,12 +144,12 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
         <div className="flex items-center gap-2">
           {/* Create button - desktop */}
           {isAuthenticated && (
-            <Link href="/dashboard/new-language" className="hidden sm:block">
-              <Button size="sm" className="gap-1.5">
-                <Plus className="h-4 w-4" />
+            <Button asChild size="sm" className="hidden gap-1.5 sm:inline-flex">
+              <Link href="/dashboard/new-language" aria-label={tNav("create")}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden lg:inline">{tNav("create")}</span>
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
 
           {/* Install PWA */}
@@ -248,9 +252,9 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/login">
-              <Button size="sm">{tCommon("signIn")}</Button>
-            </Link>
+            <Button asChild size="sm">
+              <Link href="/login">{tCommon("signIn")}</Link>
+            </Button>
           )}
 
           {/* Mobile menu */}

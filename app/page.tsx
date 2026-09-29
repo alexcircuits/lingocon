@@ -291,7 +291,7 @@ export default async function Home() {
   } : null
 
   return (
-    <main className="landing-aurora font-display min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
+    <main id="main-content" tabIndex={-1} className="landing-aurora font-display min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
       <HomeStructuredData faqItems={faqItems} />
       <Navbar user={user} isDevMode={isDevMode} />
 

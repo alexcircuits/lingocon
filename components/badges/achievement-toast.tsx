@@ -46,6 +46,7 @@ export function AchievementToast({ badge, onDismiss, duration = 5000 }: Achievem
                         {/* Dismiss Button */}
                         <button
                             onClick={onDismiss}
+            aria-label="Dismiss"
                             className="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 transition-colors"
                         >
                             <X className="h-4 w-4 text-muted-foreground" />

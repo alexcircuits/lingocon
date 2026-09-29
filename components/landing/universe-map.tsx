@@ -474,6 +474,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
           size="icon"
           onClick={handleFitView}
           className="h-9 w-9 rounded-full bg-card/70 backdrop-blur-md border-border/60 hover:border-primary/40"
+          aria-label="Fit map to view"
         >
           <Maximize className="h-4 w-4" />
         </Button>

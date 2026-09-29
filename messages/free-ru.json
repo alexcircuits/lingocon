@@ -13,7 +13,8 @@
     "search": "Поиск",
     "goHome": "На главную",
     "browse": "Обзор",
-    "tryAgain": "Повторить попытку"
+    "tryAgain": "Повторить попытку",
+    "skipToContent": "Перейти к основному содержимому"
   },
   "nav": {
     "home": "Главная",
@@ -935,7 +936,9 @@
       "removeRelated": "Убрать {word}",
       "xsampaConverted": "X-SAMPA преобразован в МФА",
       "xsampaNothing": "В этом поле нет X-SAMPA",
-      "xsampaTitle": "Преобразовать X-SAMPA в этом поле в МФА"
+      "xsampaTitle": "Преобразовать X-SAMPA в этом поле в МФА",
+      "editEntryLabel": "Редактировать {lemma}",
+      "deleteEntryLabel": "Удалить {lemma}"
     },
     "paradigms": {
       "pageTitle": "Таблицы парадигм",
@@ -1211,7 +1214,8 @@
     "recordAgain": "Записать снова",
     "saving": "Сохранение...",
     "checkPermissions": "Проверьте разрешения в браузере.",
-    "recordPronunciation": "Записать произношение"
+    "recordPronunciation": "Записать произношение",
+    "stopRecording": "Остановить запись"
   },
   "notifications": {
     "title": "Уведомления",

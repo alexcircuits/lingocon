@@ -68,7 +68,7 @@ export default async function ModuleDetailPage({
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14" />
 
-      <main className="container mx-auto max-w-5xl px-4 py-10">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-5xl px-4 py-10">
         <Link
           href="/modules"
           className="mb-6 inline-block text-sm text-muted-foreground hover:text-foreground"

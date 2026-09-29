@@ -234,7 +234,8 @@ export function PublicDictionary({
                           aria-label={t("showDetails", { word: entry.lemma })}
                           className="rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                          <span className={!showLatin ? "font-custom-script text-lg" : ""} translate="no">
+                          {/* nowrap: affixes like "-ena" otherwise break after their hyphen */}
+                          <span className={!showLatin ? "font-custom-script text-lg whitespace-nowrap" : "whitespace-nowrap"} translate="no">
                             {shown}
                           </span>
                         </button>

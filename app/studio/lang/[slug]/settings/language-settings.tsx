@@ -485,7 +485,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   />
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title={t("openIpaKeyboard")}>
+                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title={t("openIpaKeyboard")} aria-label={t("openIpaKeyboard")}>
                         <Keyboard className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>

@@ -6,10 +6,13 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto -mx-4 px-4 md:mx-0 md:px-0">
+  // Scrolls horizontally when the content genuinely needs the width. No forced min-width: tables
+  // that hide columns on phones (e.g. the public dictionary) used to overflow sideways at 375px,
+  // and the negative margins bled outside bordered containers. Pass a min-w-* className to opt in.
+  <div className="relative w-full overflow-auto">
     <table
       ref={ref}
-      className={cn("w-full caption-bottom text-sm min-w-[640px] md:min-w-0", className)}
+      className={cn("w-full caption-bottom text-sm", className)}
       {...props}
     />
   </div>

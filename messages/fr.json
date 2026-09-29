@@ -13,7 +13,8 @@
     "search": "Rechercher",
     "goHome": "Accueil",
     "browse": "Explorer",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "skipToContent": "Aller au contenu principal"
   },
   "nav": {
     "home": "Accueil",
@@ -935,7 +936,9 @@
       "removeRelated": "Retirer {word}",
       "xsampaConverted": "X-SAMPA converti en API",
       "xsampaNothing": "Aucun X-SAMPA trouvé dans ce champ",
-      "xsampaTitle": "Convertir le X-SAMPA de ce champ en API"
+      "xsampaTitle": "Convertir le X-SAMPA de ce champ en API",
+      "editEntryLabel": "Modifier {lemma}",
+      "deleteEntryLabel": "Supprimer {lemma}"
     },
     "paradigms": {
       "pageTitle": "Tableaux de paradigmes",
@@ -1211,7 +1214,8 @@
     "recordAgain": "Réenregistrer",
     "saving": "Sauvegarde…",
     "checkPermissions": "Veuillez vérifier les autorisations de votre navigateur.",
-    "recordPronunciation": "Enregistrer la prononciation"
+    "recordPronunciation": "Enregistrer la prononciation",
+    "stopRecording": "Arrêter l'enregistrement"
   },
   "notifications": {
     "title": "Notifications",

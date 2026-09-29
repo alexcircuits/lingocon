@@ -13,7 +13,8 @@
     "search": "Пошук",
     "goHome": "На головну",
     "browse": "Огляд",
-    "tryAgain": "Повторити спробу"
+    "tryAgain": "Повторити спробу",
+    "skipToContent": "Перейти до основного вмісту"
   },
   "nav": {
     "home": "Головна",
@@ -935,7 +936,9 @@
       "removeRelated": "Прибрати {word}",
       "xsampaConverted": "X-SAMPA перетворено на МФА",
       "xsampaNothing": "У цьому полі немає X-SAMPA",
-      "xsampaTitle": "Перетворити X-SAMPA в цьому полі на МФА"
+      "xsampaTitle": "Перетворити X-SAMPA в цьому полі на МФА",
+      "editEntryLabel": "Редагувати {lemma}",
+      "deleteEntryLabel": "Видалити {lemma}"
     },
     "paradigms": {
       "pageTitle": "Таблиці парадигм",
@@ -1211,7 +1214,8 @@
     "recordAgain": "Записати знову",
     "saving": "Збереження...",
     "checkPermissions": "Перевірте дозволи у браузері.",
-    "recordPronunciation": "Записати вимову"
+    "recordPronunciation": "Записати вимову",
+    "stopRecording": "Зупинити запис"
   },
   "notifications": {
     "title": "Сповіщення",

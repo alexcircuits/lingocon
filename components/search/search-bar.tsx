@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { useEffect } from "react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 export function SearchBar() {
   const router = useRouter()
+  const t = useTranslations("common")
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -22,17 +24,19 @@ export function SearchBar() {
   }, [router])
 
   return (
-    <Link href="/search" className="w-full">
-      <Button
-        variant="outline"
-        className="relative h-9 w-9 p-0 xl:h-9 xl:w-56 xl:justify-start xl:gap-2 xl:px-3 bg-muted/40 hover:bg-muted/70 border-border/50 shadow-sm transition-all duration-200"
-      >
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <span className="hidden xl:inline text-sm text-muted-foreground/80">Search...</span>
+    <Button
+      asChild
+      variant="outline"
+      className="relative h-9 w-9 p-0 xl:h-9 xl:w-56 xl:justify-start xl:gap-2 xl:px-3 bg-muted/40 hover:bg-muted/70 border-border/50 shadow-sm transition-all duration-200"
+    >
+      {/* The link is the control (no <button> nested in <a>); labelled for the icon-only widths. */}
+      <Link href="/search" aria-label={t("search")}>
+        <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <span className="hidden xl:inline text-sm text-muted-foreground/80">{t("search")}…</span>
         <kbd className="pointer-events-none hidden xl:inline-flex ml-auto h-5 select-none items-center gap-0.5 rounded border border-border/60 bg-background/60 px-1.5 font-mono text-[10px] text-muted-foreground/70">
           ⌘K
         </kbd>
-      </Button>
-    </Link>
+      </Link>
+    </Button>
   )
 }

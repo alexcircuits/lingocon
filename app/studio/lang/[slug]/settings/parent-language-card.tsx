@@ -320,7 +320,7 @@ export function ParentLanguageCard({
                 </PopoverContent>
               </Popover>
               {familyId && (
-                <Button variant="outline" size="icon" onClick={handleClearFamily} disabled={isPending} title="Remove from family">
+                <Button variant="outline" size="icon" onClick={handleClearFamily} disabled={isPending} title="Remove from family" aria-label="Remove from family">
                   <X className="h-4 w-4" />
                 </Button>
               )}
@@ -465,7 +465,7 @@ export function ParentLanguageCard({
                 </PopoverContent>
               </Popover>
               {parentId && (
-                <Button variant="outline" size="icon" onClick={handleClearParent} disabled={isPending} title="Remove parent">
+                <Button variant="outline" size="icon" onClick={handleClearParent} disabled={isPending} title="Remove parent" aria-label="Remove parent">
                   <X className="h-4 w-4" />
                 </Button>
               )}

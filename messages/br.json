@@ -13,7 +13,8 @@
     "search": "Klask",
     "goHome": "Distreiñ d'ar penn-kentañ",
     "browse": "Furchal",
-    "tryAgain": "Klask en-dro"
+    "tryAgain": "Klask en-dro",
+    "skipToContent": "Mont d'an danvez pennañ"
   },
   "nav": {
     "home": "Degemer",
@@ -935,7 +936,9 @@
       "removeRelated": "Lemel {word}",
       "xsampaConverted": "X-SAMPA amdroet e LRE",
       "xsampaNothing": "X-SAMPA ebet er vaezienn-mañ",
-      "xsampaTitle": "Amdreiñ an X-SAMPA er vaezienn-mañ e LRE"
+      "xsampaTitle": "Amdreiñ an X-SAMPA er vaezienn-mañ e LRE",
+      "editEntryLabel": "Kemmañ {lemma}",
+      "deleteEntryLabel": "Dilemel {lemma}"
     },
     "paradigms": {
       "pageTitle": "Taolennoù Paradigmoù",
@@ -1211,7 +1214,8 @@
     "recordAgain": "Enrollañ en-dro",
     "saving": "Oc'h enrollañ...",
     "checkPermissions": "Gwiriit aotreoù ho merdeer mar plij.",
-    "recordPronunciation": "Enrollañ an distagadur"
+    "recordPronunciation": "Enrollañ an distagadur",
+    "stopRecording": "Paouez da enrollañ"
   },
   "notifications": {
     "title": "Kemennoù",

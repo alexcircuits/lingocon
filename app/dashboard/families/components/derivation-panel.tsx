@@ -101,7 +101,7 @@ export function DerivationPanel({
       <div className="p-4 border-b border-border/50 space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="font-serif font-medium text-sm">Derive Words</h3>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7" aria-label="Close">
             <X className="h-4 w-4" />
           </Button>
         </div>

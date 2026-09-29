@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { BookMarked, Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
 
 interface TextSidebarProps {
@@ -55,7 +55,8 @@ export function TextSidebar({ languageSlug, texts, currentSlug }: TextSidebarPro
                         Text Menu
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
+                <SheetContent aria-describedby={undefined} side="left" className="w-80 p-0">
+                  <SheetTitle className="sr-only">Texts</SheetTitle>
                     <div className="p-4 border-b">
                         <h2 className="font-semibold flex items-center gap-2">
                             <BookMarked className="h-4 w-4" />

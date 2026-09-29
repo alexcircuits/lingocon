@@ -177,6 +177,7 @@ export function Tour({ steps, onComplete, onSkip, storageKey = "tour-completed" 
                 size="icon"
                 onClick={handlePrevious}
                 disabled={currentStep === 0}
+                aria-label="Previous step"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>

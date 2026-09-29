@@ -1094,6 +1094,7 @@ function CompleteScreen({
     
     const frame = () => {
       confetti({
+        disableForReducedMotion: true,
         particleCount: 4,
         angle: 60,
         spread: 55,
@@ -1101,6 +1102,7 @@ function CompleteScreen({
         colors: ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"]
       })
       confetti({
+        disableForReducedMotion: true,
         particleCount: 4,
         angle: 120,
         spread: 55,

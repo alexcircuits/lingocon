@@ -87,6 +87,8 @@ export function Globe({
 
         // cobe needs WebGL; bail out gracefully if it's unavailable so a missing
         // GL context can never crash the whole page.
+        const prefersReducedMotion =
+            typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
         let globe: ReturnType<typeof createGlobe> | null = null
         try {
             globe = createGlobe(canvasRef.current!, {
@@ -96,7 +98,8 @@ export function Globe({
                 width: widthRef.current * renderScale,
                 height: widthRef.current * renderScale,
                 onRender: (state) => {
-                    if (!pointerInteracting.current) phiRef.current += 0.005
+                    // No auto-rotation for users who asked the OS to reduce motion.
+                    if (!pointerInteracting.current && !prefersReducedMotion) phiRef.current += 0.005
                     state.phi = phiRef.current + rs.get()
                     state.width = widthRef.current * renderScale
                     state.height = widthRef.current * renderScale

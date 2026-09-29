@@ -63,7 +63,7 @@ export default async function NewLanguagePage({
       <Navbar user={navUser} isDevMode={isDevMode} />
       <div className="h-14" />
 
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+      <main id="main-content" tabIndex={-1} className="flex-1 container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("createTitle")}</h1>
           <p className="mt-2 text-muted-foreground">

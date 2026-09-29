@@ -117,7 +117,7 @@ export default async function DashboardPage() {
 
       <div className="h-14" />
 
-      <main className="container mx-auto px-4 py-6 sm:py-8 md:py-10 max-w-6xl">
+      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 py-6 sm:py-8 md:py-10 max-w-6xl">
         {/* Hero Greeting */}
         <section className="relative mb-8 overflow-hidden rounded-3xl border border-border/50 bg-card/50 p-6 sm:mb-10 sm:p-8 md:p-10">
           <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />

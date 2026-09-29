@@ -103,7 +103,7 @@ export function DictionaryToolbar({
           onClick={handleExport}
           disabled={isPending || totalEntries === 0}
           title={t("exportCsv")}
-        >
+         aria-label={t("exportCsv")}>
           <Download className="h-4 w-4" />
         </Button>
 
@@ -113,7 +113,7 @@ export function DictionaryToolbar({
           onClick={onImport}
           disabled={isPending}
           title={t("importCsv")}
-        >
+         aria-label={t("importCsv")}>
           <Upload className="h-4 w-4" />
         </Button>
 
@@ -123,7 +123,7 @@ export function DictionaryToolbar({
           onClick={onGenerate}
           disabled={isPending}
           title={t("generateWords")}
-        >
+         aria-label={t("generateWords")}>
           <Sparkles className="h-4 w-4" />
         </Button>
 
@@ -133,7 +133,7 @@ export function DictionaryToolbar({
           onClick={onBorrow}
           disabled={isPending}
           title={t("borrowWord")}
-        >
+         aria-label={t("borrowWord")}>
           <Languages className="h-4 w-4" />
         </Button>
 
@@ -150,7 +150,7 @@ export function DictionaryToolbar({
               onClick={onBulkEdit}
               disabled={isPending}
               title={t("bulkEdit", { count: selectedCount })}
-            >
+             aria-label={t("bulkEdit", { count: selectedCount })}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button
@@ -160,7 +160,7 @@ export function DictionaryToolbar({
               disabled={isPending}
               title={t("deleteSelected", { count: selectedCount })}
               className="text-destructive hover:text-destructive"
-            >
+             aria-label={t("deleteSelected", { count: selectedCount })}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </>
@@ -205,7 +205,7 @@ export function DictionaryToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9" title={t("moreActions")}>
+            <Button variant="outline" size="icon" className="h-9 w-9" title={t("moreActions")} aria-label={t("moreActions")}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

@@ -256,6 +256,7 @@ export function RichTextEditor({
                             className={cn(editor.isActive("table") && "bg-secondary")}
                             disabled={disabled}
                             title={t("tableOperations")}
+                            aria-label={t("tableOperations")}
                         >
                             <Table2 className="h-4 w-4" />
                         </Button>

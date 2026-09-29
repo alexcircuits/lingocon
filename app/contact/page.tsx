@@ -29,7 +29,7 @@ export default async function ContactPage() {
     } : null
 
     return (
-        <main className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20 flex flex-col">
+        <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20 flex flex-col">
             <Navbar user={user} isDevMode={isDevMode} />
 
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-4 overflow-hidden flex-1 flex flex-col justify-center">

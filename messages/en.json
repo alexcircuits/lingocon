@@ -13,7 +13,8 @@
     "search": "Search",
     "goHome": "Go Home",
     "browse": "Browse",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "skipToContent": "Skip to main content"
   },
   "nav": {
     "home": "Home",
@@ -935,7 +936,9 @@
       "removeRelated": "Remove {word}",
       "xsampaConverted": "Converted X-SAMPA to IPA",
       "xsampaNothing": "No X-SAMPA found in this field",
-      "xsampaTitle": "Convert X-SAMPA in this field to IPA"
+      "xsampaTitle": "Convert X-SAMPA in this field to IPA",
+      "editEntryLabel": "Edit {lemma}",
+      "deleteEntryLabel": "Delete {lemma}"
     },
     "paradigms": {
       "pageTitle": "Paradigm Tables",
@@ -1211,7 +1214,8 @@
     "recordAgain": "Record again",
     "saving": "Saving...",
     "checkPermissions": "Please check your browser permissions.",
-    "recordPronunciation": "Record Pronunciation"
+    "recordPronunciation": "Record Pronunciation",
+    "stopRecording": "Stop recording"
   },
   "notifications": {
     "title": "Notifications",

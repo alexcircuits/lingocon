@@ -123,6 +123,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={handleRemove}
+            aria-label="Remove file"
                 className="absolute top-2 right-2 p-1.5 rounded-lg bg-background/80 border border-border/40 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
               >
                 <X className="h-4 w-4" />
@@ -138,6 +139,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={handleRemove}
+            aria-label="Remove file"
                 className="p-1.5 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors"
               >
                 <X className="h-4 w-4" />

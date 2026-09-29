@@ -70,7 +70,7 @@ export default async function ModulesPage({
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14" />
 
-      <main className="container mx-auto max-w-6xl px-4 py-10">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-6xl px-4 py-10">
         <div className="mb-8 flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="mb-2 font-serif text-4xl tracking-tight md:text-5xl">Modules</h1>

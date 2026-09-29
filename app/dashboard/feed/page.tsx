@@ -36,7 +36,7 @@ export default async function FeedPage() {
 
       <div className="h-14" />
 
-      <main className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
         <div className="mb-8 border-b border-border/40 pb-6">
           <h1 className="text-3xl font-serif tracking-tight flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">

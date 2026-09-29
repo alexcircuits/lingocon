@@ -219,6 +219,7 @@ export default function ExtensionSettingsPage() {
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                       disabled={revoking === token.id}
+                      aria-label="Revoke token"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

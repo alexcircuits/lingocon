@@ -5,7 +5,8 @@ import { Languages } from "lucide-react"
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
+    <div className="fixed inset-0 flex items-center justify-center bg-background" role="status" aria-live="polite">
+      <span className="sr-only">Loading…</span>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
