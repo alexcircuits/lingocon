@@ -27,10 +27,15 @@ server {
         proxy_send_timeout 120s;
     }
 
+    # Served directly by nginx, so the headers next.config.js sets for
+    # /uploads/* never apply here — repeat them. Without CSP sandbox + nosniff,
+    # an uploaded SVG opened directly runs script on the lingocon.com origin.
     location /uploads/ {
         alias /var/www/lingocon/public/uploads/;
         expires 30d;
         access_log off;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Security-Policy "default-src 'none'; sandbox; style-src 'unsafe-inline'" always;
     }
 }
 
