@@ -34,8 +34,13 @@ export const LOCALE_COOKIE = 'NEXT_LOCALE'
 // and formatted per language — e.g. Russian and Ukrainian group thousands with
 // a space (1 234), English with a comma (1,234). Conlangs and unknown values
 // fall back to English.
+//
+// This is also the locale handed to next-intl: `free-ru` and `conlang:<id>` are not valid BCP-47
+// tags, and ICU formatting throws on them — which made every translated string with an argument
+// ({count}, <accent>…) render as its raw key path for Russian and conlang UIs (GitHub #51).
+// Idempotent, so passing an already-mapped tag ("ru") is safe.
 export function getIntlLocale(locale: string): string {
-  if (locale === 'free-ru') return 'ru'
+  if (locale === 'free-ru' || locale === 'ru') return 'ru'
   if (locale === 'uk') return 'uk'
   if (locale === 'fr') return 'fr'
   if (locale === 'br') return 'br'

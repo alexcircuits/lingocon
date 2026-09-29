@@ -97,3 +97,16 @@ describe("interface locales", () => {
     })
   })
 })
+
+describe("next-intl locale tags (GitHub #51)", () => {
+  it("maps every shipped locale and conlang cookies to a valid BCP-47 tag", async () => {
+    const { getIntlLocale } = await import("@/lib/i18n/config")
+    for (const code of [...locales, "conlang:abc123", "garbage"]) {
+      const tag = getIntlLocale(code)
+      expect(() => Intl.getCanonicalLocales(tag)).not.toThrow()
+      expect(() => new Intl.PluralRules(tag)).not.toThrow()
+    }
+    expect(getIntlLocale("free-ru")).toBe("ru")
+    expect(getIntlLocale(getIntlLocale("free-ru"))).toBe("ru")
+  })
+})

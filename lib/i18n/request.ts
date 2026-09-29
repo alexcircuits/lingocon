@@ -1,6 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
-import { defaultLocale, LOCALE_COOKIE } from './config';
+import { defaultLocale, getIntlLocale, LOCALE_COOKIE, locales } from './config';
 import { getConlangMessages, mergeMessages } from './conlang-messages';
 
 export default getRequestConfig(async () => {
@@ -24,14 +24,16 @@ export default getRequestConfig(async () => {
       const conlangMessages = await getConlangMessages(languageId);
       messages = mergeMessages(messages, conlangMessages);
     }
+    // Conlang strings merged over English; formatting (plurals, numbers) follows English.
     return {
-      locale: localeCookie,
+      locale: getIntlLocale(localeCookie),
       messages
     };
   }
-  
-  // Try to load natural language translations if it's not 'en'
-  if (localeCookie !== 'en') {
+
+  // Try to load natural language translations if it's not 'en' (only for shipped locales —
+  // the cookie is user-controlled).
+  if (localeCookie !== 'en' && (locales as readonly string[]).includes(localeCookie)) {
       try {
         const natMessages = (await import(`../../messages/${localeCookie}.json`)).default;
         messages = mergeMessages(messages, natMessages);
@@ -40,8 +42,9 @@ export default getRequestConfig(async () => {
       }
   }
 
+  // A valid BCP-47 tag for ICU/Intl ("free-ru" → "ru"); the switcher reads the raw cookie itself.
   return {
-    locale: localeCookie,
+    locale: getIntlLocale(localeCookie),
     messages
   };
 });
