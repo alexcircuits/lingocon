@@ -26,7 +26,7 @@ import { validateStringAgainstAlphabet, validatePhonotactics } from "@/lib/utils
 import { suggestIpaFromLemma } from "@/lib/utils/ipa-from-lemma"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { getParadigmsForLanguage } from "@/app/actions/paradigm"
-import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
+import { xsampaToIpa } from "@/lib/utils/ipa-from-xsampa"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
@@ -165,20 +165,19 @@ export function DictionaryEntryDialog({
     toast.success("IPA suggested based on alphabet")
   }
 
+  const t = useTranslations("studio.dictionary")
+
   const convertXsampa = () => {
-    const initial = formData.ipa
-    const converted = xSampa2IPA(formData.ipa)
-    if (initial === converted) {
-      toast.info("No X-SAMPA detected")
+    const converted = xsampaToIpa(formData.ipa)
+    if (converted === formData.ipa) {
+      toast.info(t("xsampaNothing"))
+      return
     }
-    else {
-      toast.success("Successfully converted to IPA")
-    }
-    handleFieldChange("ipa", converted);
+    handleFieldChange("ipa", converted)
+    toast.success(t("xsampaConverted"))
   }
 
   const [relatedInput, setRelatedInput] = useState("")
-  const t = useTranslations("studio.dictionary")
 
   const handleAddRelated = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === ",") {
@@ -347,8 +346,9 @@ export function DictionaryEntryDialog({
                     className="h-6 text-xs gap-1 text-muted-foreground hover:text-primary"
                     onClick={convertXsampa}
                     disabled={!formData.ipa}
+                    title={t("xsampaTitle")}
                   >
-                    <PencilLine className={"h-3 w-3"} /> X-SAMPA
+                    <PencilLine className="h-3 w-3" aria-hidden="true" /> X-SAMPA
                   </Button>
                   <Button
                     type="button"

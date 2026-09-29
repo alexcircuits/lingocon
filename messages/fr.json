@@ -932,7 +932,10 @@
       "importingBtn": "Importation…",
       "importEntriesBtn": "Importer les entrées",
       "linkBackLabel": "Ajouter aussi ce mot à leurs mots apparentés",
-      "removeRelated": "Retirer {word}"
+      "removeRelated": "Retirer {word}",
+      "xsampaConverted": "X-SAMPA converti en API",
+      "xsampaNothing": "Aucun X-SAMPA trouvé dans ce champ",
+      "xsampaTitle": "Convertir le X-SAMPA de ce champ en API"
     },
     "paradigms": {
       "pageTitle": "Tableaux de paradigmes",

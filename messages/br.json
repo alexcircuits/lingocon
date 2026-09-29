@@ -932,7 +932,10 @@
       "importingBtn": "Oc'h enporzhiañ...",
       "importEntriesBtn": "Enporzhiañ Penngerioù",
       "linkBackLabel": "Ouzhpennañ ar ger-mañ d'o gerioù kar ivez",
-      "removeRelated": "Lemel {word}"
+      "removeRelated": "Lemel {word}",
+      "xsampaConverted": "X-SAMPA amdroet e LRE",
+      "xsampaNothing": "X-SAMPA ebet er vaezienn-mañ",
+      "xsampaTitle": "Amdreiñ an X-SAMPA er vaezienn-mañ e LRE"
     },
     "paradigms": {
       "pageTitle": "Taolennoù Paradigmoù",
@@ -1190,7 +1193,8 @@
     "insertIgt": "Ensoc'hañ ur bloc'h IGT",
     "insertParadigm": "Ensoc'hañ un daolenn paradigm (frammet)",
     "insertWikiLink": "Ensoc'hañ ul liamm wiki — pe skrivañ [[slog]] e-barzh",
-    "generateIpaChart": "Genel un daolenn LRE"
+    "generateIpaChart": "Genel un daolenn LRE",
+    "convertXsampaToIpa": "Amdreiñ e LRE"
   },
   "userSearch": {
     "unnamed": "Implijer hep anv",

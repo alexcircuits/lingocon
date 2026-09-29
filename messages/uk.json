@@ -932,7 +932,10 @@
       "importingBtn": "Імпорт...",
       "importEntriesBtn": "Імпортувати статті",
       "linkBackLabel": "Також додати це слово до їхніх споріднених слів",
-      "removeRelated": "Прибрати {word}"
+      "removeRelated": "Прибрати {word}",
+      "xsampaConverted": "X-SAMPA перетворено на МФА",
+      "xsampaNothing": "У цьому полі немає X-SAMPA",
+      "xsampaTitle": "Перетворити X-SAMPA в цьому полі на МФА"
     },
     "paradigms": {
       "pageTitle": "Таблиці парадигм",

@@ -932,7 +932,10 @@
       "importingBtn": "Importing...",
       "importEntriesBtn": "Import Entries",
       "linkBackLabel": "Also add this word to their related words",
-      "removeRelated": "Remove {word}"
+      "removeRelated": "Remove {word}",
+      "xsampaConverted": "Converted X-SAMPA to IPA",
+      "xsampaNothing": "No X-SAMPA found in this field",
+      "xsampaTitle": "Convert X-SAMPA in this field to IPA"
     },
     "paradigms": {
       "pageTitle": "Paradigm Tables",

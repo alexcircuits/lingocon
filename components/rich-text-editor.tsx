@@ -29,7 +29,7 @@ import {
     MoreVertical
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
+import { xsampaToIpa } from "@/lib/utils/ipa-from-xsampa"
 // Import extensions dynamically or safely
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
@@ -183,16 +183,30 @@ export function RichTextEditor({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                        editor.chain().focus().command(({ tr, state, dispatch }) => {
+                        // Convert text node by text node, keeping each node's marks. Replacing the
+                        // selection as one string flattened paragraphs, dropped marks (bold,
+                        // custom script) and deleted IGT/paradigm/wiki-link atoms in the range.
+                        editor.chain().focus().command(({ tr, state }) => {
                             const { from, to } = state.selection
-                            const selectedText = state.doc.textBetween(from, to, ' ')
-                            const replacement = xSampa2IPA(selectedText)
-                            tr.insertText(replacement, from, to)
-                            if (dispatch) dispatch(tr)
-                            return true
+                            if (from === to) return false
+                            const edits: { from: number; to: number; node: ReturnType<typeof state.schema.text> }[] = []
+                            state.doc.nodesBetween(from, to, (node, pos) => {
+                                if (!node.isText || !node.text) return
+                                const start = Math.max(from, pos)
+                                const end = Math.min(to, pos + node.text.length)
+                                const original = node.text.slice(start - pos, end - pos)
+                                const converted = xsampaToIpa(original)
+                                if (converted !== original) {
+                                    edits.push({ from: start, to: end, node: state.schema.text(converted, node.marks) })
+                                }
+                            })
+                            // Apply from the end so earlier positions stay valid.
+                            for (const change of edits.reverse()) tr.replaceWith(change.from, change.to, change.node)
+                            return edits.length > 0
                         }).run()
                     }}
                     title={t("convertXsampaToIpa")}
+                    aria-label={t("convertXsampaToIpa")}
                     disabled={disabled}
                     >
                     <PencilLine className="h-4 w-4" />
