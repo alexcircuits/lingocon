@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage, canEditLanguage } from "@/lib/auth-helpers"
+import { resolveGrantedPermissions } from "@/lib/modules/utils"
 import { isRuntimeMethod, permissionForMethod } from "@/lib/modules/runtime-protocol"
 import { loadModuleData } from "@/lib/modules/data"
 
@@ -66,9 +67,7 @@ export async function POST(req: Request) {
       },
     })
 
-    const declared = (install?.version.permissions as string[] | null) ?? []
-    const consented = (install?.grantedPermissions as string[] | null) ?? []
-    const granted = consented.length > 0 ? consented : declared
+    const granted = resolveGrantedPermissions(install?.grantedPermissions, install?.version.permissions)
     if (!install || !granted.includes(required)) {
       return NextResponse.json(
         { error: `Permission "${required}" not granted for this module` },

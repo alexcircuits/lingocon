@@ -77,8 +77,15 @@ export async function setExternalAncestry(
 
 // ─── Family Tree ────────────────────────────────────────────────────────────
 
-export async function buildFamilyTree(languageId: string) {
+/**
+ * The evolution tree around a language. Languages the viewer may not see (anything not PUBLIC,
+ * unless they own it) are kept as anonymous "Private language" placeholders so the shape of the
+ * tree survives without leaking names, slugs, owners or ids — the tree renders on public pages,
+ * and anyone can make their private language a child of someone's public one.
+ */
+export async function buildFamilyTree(languageId: string, viewerId: string | null = null) {
   const rootId = await findRootId(languageId)
+  let redactedCount = 0
 
   const childSelect = {
     id: true,
@@ -101,15 +108,23 @@ export async function buildFamilyTree(languageId: string) {
     
     const nodeMap = new Map<string, any>()
     allNodes.forEach(node => {
-      nodeMap.set(node.id, { ...node, childLanguages: [] })
+      const visible = node.visibility === "PUBLIC" || (viewerId !== null && node.owner.id === viewerId)
+      nodeMap.set(
+        node.id,
+        visible
+          ? { ...node, childLanguages: [] }
+          : { id: `private-${++redactedCount}`, name: "Private language", slug: "", isVirtual: true, childLanguages: [] }
+      )
     })
 
+    // Link by the real ids (placeholders only swap what is rendered).
     let rTree: any = null
-    nodeMap.forEach(node => {
+    allNodes.forEach(node => {
+      const treeNode = nodeMap.get(node.id)
       if (node.id === rId) {
-        rTree = node
+        rTree = treeNode
       } else if (node.parentLanguageId && nodeMap.has(node.parentLanguageId)) {
-        nodeMap.get(node.parentLanguageId).childLanguages.push(node)
+        nodeMap.get(node.parentLanguageId).childLanguages.push(treeNode)
       }
     })
     return rTree
@@ -121,6 +136,8 @@ export async function buildFamilyTree(languageId: string) {
   if (rootTree.externalAncestry) {
     const siblingRoots = await prisma.language.findMany({
       where: {
+        // Private siblings would only render as placeholders; don't enumerate them at all.
+        visibility: "PUBLIC",
         externalAncestry: rootTree.externalAncestry,
         parentLanguageId: null,
         id: { not: rootId },

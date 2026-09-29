@@ -49,12 +49,14 @@ export async function getLanguageFamilyTree(languageId: string) {
   })
   if (!initialLang) return null
 
-  if (initialLang.visibility === "PRIVATE") {
-    const userId = await getUserId()
-    if (!userId || userId !== initialLang.ownerId) return null
+  const userId = await getUserId()
+  if (initialLang.visibility === "PRIVATE" && (!userId || userId !== initialLang.ownerId)) {
+    return null
   }
 
-  return getCachedFamilyTree(languageId)
+  // Anonymous viewers share the cached public tree; signed-in viewers get their own languages
+  // un-redacted (a couple of cheap queries).
+  return userId ? familyService.buildFamilyTree(languageId, userId) : getCachedFamilyTree(languageId)
 }
 
 const getCachedFamilyTree = unstable_cache(
