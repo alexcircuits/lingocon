@@ -61,6 +61,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const siteUrl = getSiteUrl()
 
+// Titles like "Everything you need to {accent}" highlight one translated word. next-intl can't
+// interpolate a React element into a plain argument, so render the template around a marker.
+const ACCENT_MARK = "\u2063"
+function withAccent(template: string, accent: React.ReactNode) {
+  const [before, after = ""] = template.split(ACCENT_MARK)
+  return (
+    <>
+      {before}
+      {accent}
+      {after}
+    </>
+  )
+}
+
 function HomeStructuredData({ faqItems }: { faqItems: FaqItem[] }) {
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -367,11 +381,10 @@ export default async function Home() {
               The toolkit
             </Badge>
             <h2 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
-              Everything you need to <span className="aurora-gradient-text">create</span>
+              {withAccent(t("toolkitTitle", { accent: ACCENT_MARK }), <span className="aurora-gradient-text">{t("toolkitAccent")}</span>)}
             </h2>
             <p className="mx-auto mt-5 text-lg text-muted-foreground md:text-xl">
-              From phonology to syntax — structured, connected tools that adapt to whatever
-              your language wants to become.
+              {t("toolkitSubtitle")}
             </p>
           </div>
 
@@ -386,10 +399,10 @@ export default async function Home() {
         <div className="container mx-auto max-w-6xl">
           <div className="mx-auto mb-14 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-              Built for whatever you&apos;re <span className="aurora-gradient-text">creating</span>
+              {withAccent(t("useCasesTitle", { accent: ACCENT_MARK }), <span className="aurora-gradient-text">{t("useCasesAccent")}</span>)}
             </h2>
             <p className="mx-auto mt-4 text-lg text-muted-foreground">
-              From sprawling fantasy worlds to serious linguistic study.
+              {t("useCasesSubtitle")}
             </p>
           </div>
           <UseCases />
@@ -414,13 +427,13 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
-              How it works
+              {t("howItWorksBadge")}
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif mb-4">
-              From idea to living language
+              {t("howItWorksTitle")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Three steps from a blank page to a documented, shareable conlang.
+              {t("howItWorksSubtitle")}
             </p>
           </div>
           <HowItWorks steps={howItWorksSteps} />
@@ -436,13 +449,13 @@ export default async function Home() {
           <div className="container mx-auto px-4 relative">
             <div className="text-center mb-12">
               <Badge variant="outline" className="text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary mb-4">
-                Interactive Map
+                {t("mapBadge")}
               </Badge>
               <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-                Explore the <span className="aurora-gradient-text">LingoCon Universe</span>
+                {withAccent(t("mapTitle", { accent: ACCENT_MARK }), <span className="aurora-gradient-text">{t("mapAccent")}</span>)}
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Every node is a language. Every connection is a family tree. Discover the constellation of constructed languages being built right now.
+                {t("mapSubtitle")}
               </p>
             </div>
             <div className="max-w-6xl mx-auto">
@@ -456,7 +469,7 @@ export default async function Home() {
                   className="rounded-full border-2 border-border bg-card/50 backdrop-blur-md hover:border-primary/40 gap-2"
                 >
                   <Map className="w-4 h-4" />
-                  Browse All Languages
+                  {t("browseAllLanguages")}
                 </Button>
               </Link>
             </div>
@@ -472,18 +485,16 @@ export default async function Home() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-5xl mx-auto">
             <div className="text-center lg:text-left">
               <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
-                Living lexicons
+                {t("wotdBadge")}
               </Badge>
               <h2 className="text-3xl md:text-4xl font-serif mb-4">
-                Word of the Day
+                {t("wotdTitle")}
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                Every word here was invented and defined by a member of the community —
-                complete with IPA, part of speech, and its own writing system. A small window
-                into the worlds being built on LingoCon.
+                {t("wotdDescription")}
               </p>
               <Link href="/browse" className="inline-flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all">
-                Discover more languages
+                {t("discoverMore")}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -503,10 +514,10 @@ export default async function Home() {
             <div className="container mx-auto px-4">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-serif mb-4">
-                  Made with LingoCon
+                  {t("featuredTitle")}
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  Explore languages created by our community
+                  {t("featuredSubtitle")}
                 </p>
               </div>
               <FeaturedLanguages languages={featuredLanguages} />
@@ -545,29 +556,29 @@ export default async function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
               </span>
-              Looking for contributors
+              {t("contributorTitle")}
             </h3>
             <p className="text-muted-foreground font-light text-lg">
-              Help us build the future of conlanging. Join our open source community.
+              {t("contributorSubtitle")}
             </p>
           </div>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <Link href="https://github.com/alexcircuits/lingocon" target="_blank">
               <Button variant="outline" size="lg" className="gap-2 h-12 px-6 rounded-full border-primary/20 bg-background/50 hover:bg-secondary/50">
                 <Github className="w-4 h-4" />
-                Star on GitHub
+                {t("starGithub")}
               </Button>
             </Link>
             <Link href="/contributions">
               <Button size="lg" variant="secondary" className="gap-2 h-12 px-6 rounded-full shadow-sm hover:bg-secondary/80">
                 <Construction className="w-5 h-5" />
-                How to Contribute
+                {t("howToContribute")}
               </Button>
             </Link>
             <Link href="https://discord.gg/EaVRggatDQ" target="_blank">
               <Button size="lg" className="gap-2 h-12 px-6 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white border-0 shadow-lg shadow-[#5865F2]/20">
                 <DiscordIcon className="w-5 h-5" />
-                Join Discord
+                {t("joinDiscord")}
               </Button>
             </Link>
           </div>
@@ -581,13 +592,13 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4 text-xs uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
-              FAQ
+              {t("faqBadge")}
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif mb-4">
-              Questions, answered
+              {t("faqTitle")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Everything you need to know about building languages with LingoCon.
+              {t("faqSubtitle")}
             </p>
           </div>
           <FaqSection items={faqItems} />
@@ -604,13 +615,13 @@ export default async function Home() {
               <Heart className="h-5 w-5 fill-rose-500/20" />
             </span>
             <p className="text-muted-foreground font-light max-w-md">
-              LingoCon is free and community-funded. Help keep the servers running for every conlanger on earth.
+              {t("supportMessage")}
             </p>
           </div>
           <Link href="/donate" className="shrink-0">
             <Button className="rounded-full h-11 px-6 bg-rose-500 hover:bg-rose-600 text-white gap-2 shadow-lg shadow-rose-500/20 transition-all hover:scale-105">
               <Heart className="w-4 h-4 fill-current" />
-              Support on OpenCollective
+              {t("supportCta")}
             </Button>
           </Link>
         </div>
@@ -624,16 +635,16 @@ export default async function Home() {
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,black,transparent)] bg-[linear-gradient(to_right,hsl(var(--background)/0.06)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--background)/0.06)_1px,transparent_1px)] bg-[size:44px_44px]" />
         <div className="container mx-auto px-4 relative z-10 text-center max-w-3xl">
           <h2 className="text-4xl md:text-6xl font-serif mb-6 tracking-tight leading-[1.05]">
-            Your world is waiting <br />
-            <span className="italic text-background/60">for its first word.</span>
+            {t("finalCtaTitle")} <br />
+            <span className="italic text-background/60">{t("finalCtaAccent")}</span>
           </h2>
           <p className="text-lg md:text-xl text-background/70 mb-10 font-light max-w-2xl mx-auto leading-relaxed">
-            Join {stats.userCount > 1 ? `${stats.userCount} ` : ""}conlangers building structured, living languages. Free forever — no credit card, no catch.
+            {t("finalCtaSubtitle", { count: stats.userCount })}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href={isAuthenticated ? "/dashboard" : "/login"} className="w-full sm:w-auto">
               <MagneticButton className="h-14 px-8 text-base font-medium rounded-full bg-background text-foreground hover:bg-background/90 w-full hover:scale-105 transition-all shadow-xl">
-                {isAuthenticated ? "Go to Dashboard" : "Begin Your First Language"}
+                {isAuthenticated ? t("ctaDashboard") : t("finalCtaPrimary")}
                 <ArrowRight className="ml-2 w-5 h-5 pointer-events-none" />
               </MagneticButton>
             </Link>
@@ -643,7 +654,7 @@ export default async function Home() {
                 className="h-14 px-8 text-base font-medium rounded-full border-2 border-background/20 text-background hover:bg-background/10 bg-transparent w-full transition-all"
               >
                 <Globe className="mr-2 w-5 h-5 pointer-events-none" />
-                Explore the Universe
+                {t("ctaExplore")}
               </MagneticButton>
             </Link>
           </div>
