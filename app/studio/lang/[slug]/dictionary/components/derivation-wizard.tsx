@@ -97,7 +97,7 @@ export function DerivationWizard({
             setSecondEntry(null)
             setSearchQuery("")
         }
-    }, [open, sourceEntry])
+    }, [open, sourceEntry, t])
 
     // Update gloss when compound second word changes
     useEffect(() => {
@@ -106,7 +106,7 @@ export function DerivationWizard({
         } else if (sourceEntry) {
             setNewGloss(t("glossDerivedFrom", { lemma: sourceEntry.lemma }))
         }
-    }, [type, sourceEntry, secondEntry])
+    }, [type, sourceEntry, secondEntry, t])
 
     const deriveWord = (root: string, affixVal: string, method: DerivationType) => {
         if (!root) return ""

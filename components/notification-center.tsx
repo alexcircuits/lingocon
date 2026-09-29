@@ -165,6 +165,8 @@ export function NotificationCenter() {
 
     useEffect(() => {
         fetchData()
+        // Load once on mount; later refreshes are explicit (opening the popover).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (

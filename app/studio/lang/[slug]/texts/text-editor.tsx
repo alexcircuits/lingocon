@@ -109,7 +109,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
     } catch (err) {
       toast.error(t("readFailed"))
     }
-  }, [])
+  }, [t])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

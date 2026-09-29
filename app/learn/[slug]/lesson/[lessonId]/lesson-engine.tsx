@@ -201,7 +201,7 @@ export function LessonEngine({
 
     setIdx(nextIdx)
     setFeedback({ status: "answering" })
-  }, [feedback.status, hearts, idx, lessonId, queue, reviewMode])
+  }, [feedback.status, hearts, idx, lessonId, queue, reviewMode, t])
 
   // ── Review just the mistakes from this session ─────────────────────────────
 
