@@ -6,6 +6,8 @@ const { mockPrisma } = vi.hoisted(() => ({
       findFirst: vi.fn(),
       updateMany: vi.fn(),
     },
+    // Friend-streak bookkeeping runs after a review (no mutual friends here).
+    follow: { findMany: vi.fn(async () => []) },
     cardReview: { create: vi.fn() },
     enrollment: { findUnique: vi.fn(), update: vi.fn() },
     xPEvent: { create: vi.fn() },
