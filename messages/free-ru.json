@@ -13,7 +13,8 @@
     "search": "Поиск",
     "goHome": "На главную",
     "browse": "Обзор",
-    "tryAgain": "Повторить попытку"
+    "tryAgain": "Повторить попытку",
+    "skipToContent": "Перейти к основному содержимому"
   },
   "nav": {
     "home": "Главная",
@@ -352,7 +353,36 @@
     "readText": "Читать текст",
     "createdOn": "Создан {date}",
     "updatedOn": "Обновлён {date}",
-    "themeLabel": "Тема: {name}"
+    "themeLabel": "Тема: {name}",
+    "dictionary": {
+      "title": "Словарь",
+      "subtitle": "Лексикон и определения слов",
+      "searchPlaceholder": "Поиск слов, значений, МФА…",
+      "searchPlaceholderReverse": "Поиск по значению…",
+      "searchLabel": "Поиск по словарю",
+      "directionForward": "Слово → Значение",
+      "directionReverse": "Значение → Слово",
+      "filteringByTag": "Фильтр по тегу:",
+      "clearTagFilter": "Сбросить фильтр тега",
+      "empty": "В словарь ещё не добавлено ни одной статьи.",
+      "noMatches": "Ни одна статья не соответствует поиску.",
+      "colWord": "Слово",
+      "colMeaning": "Значение",
+      "colIpa": "МФА",
+      "colPos": "Часть речи",
+      "showing": "Показаны {from, number}–{to, number} из {total, number} статей",
+      "showDetails": "Показать подробности для {word}",
+      "hasDetails": "Есть дополнительные сведения",
+      "translation": "Перевод",
+      "etymology": "Этимология",
+      "related": "Связанные слова",
+      "notes": "Заметки",
+      "tags": "Теги",
+      "loadingDetails": "Загрузка подробностей…",
+      "detailsFailed": "Не удалось загрузить подробности. Попробуйте ещё раз.",
+      "previous": "Назад",
+      "next": "Далее"
+    }
   },
   "confirm": {
     "areYouSure": "Вы уверены?",
@@ -542,7 +572,12 @@
     "noWordsFound": "Слова не найдены.",
     "baseForm": "(начальная форма)",
     "createAndAdd": "Создать и добавить",
-    "selectItem": "Выберите элемент"
+    "selectItem": "Выберите элемент",
+    "confirmDeleteUnitTitle": "Удалить раздел «{title}»?",
+    "confirmDeleteUnitDesc": "Раздел будет удалён; его уроки останутся в курсе без раздела.",
+    "confirmDeleteLessonTitle": "Удалить урок «{title}»?",
+    "confirmDeleteLessonDesc": "Будут удалены урок, его элементы и прогресс учеников. Это действие нельзя отменить.",
+    "confirmDelete": "Удалить"
   },
   "studio": {
     "common": {
@@ -704,7 +739,9 @@
       "ipaOptional": "МФА (необязательно)",
       "latinOptional": "Латиница (необязательно)",
       "nameOptional": "Название (необязательно)",
-      "letterPlaceholder": "Буква А"
+      "letterPlaceholder": "Буква А",
+      "confirmDeleteTitle": "Удалить «{symbol}»?",
+      "confirmDeleteDesc": "Слова с этим символом сохранят написание, но символ исчезнет из алфавита и порядка сортировки."
     },
     "phonology": {
       "pageTitle": "Фонология",
@@ -901,7 +938,14 @@
       "impColEtymology": "Этимология",
       "impColRelated": "Связанные",
       "importingBtn": "Импорт...",
-      "importEntriesBtn": "Импортировать статьи"
+      "importEntriesBtn": "Импортировать статьи",
+      "linkBackLabel": "Также добавить это слово в их связанные слова",
+      "removeRelated": "Убрать {word}",
+      "xsampaConverted": "X-SAMPA преобразован в МФА",
+      "xsampaNothing": "В этом поле нет X-SAMPA",
+      "xsampaTitle": "Преобразовать X-SAMPA в этом поле в МФА",
+      "editEntryLabel": "Редактировать {lemma}",
+      "deleteEntryLabel": "Удалить {lemma}"
     },
     "paradigms": {
       "pageTitle": "Таблицы парадигм",
@@ -1160,7 +1204,14 @@
     "insertParadigm": "Вставить таблицу парадигмы (структурную)",
     "insertWikiLink": "Вставить вики-ссылку — или введите [[slug]] прямо в тексте",
     "generateIpaChart": "Сгенерировать таблицу МФА",
-    "convertXsampaToIpa": "Конвертировать в МФА"
+    "convertXsampaToIpa": "Конвертировать в МФА",
+    "bold": "Жирный",
+    "italic": "Курсив",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "bulletList": "Маркированный список",
+    "orderedList": "Нумерованный список",
+    "quote": "Цитата"
   },
   "userSearch": {
     "unnamed": "Безымянный пользователь",
@@ -1177,7 +1228,8 @@
     "recordAgain": "Записать снова",
     "saving": "Сохранение...",
     "checkPermissions": "Проверьте разрешения в браузере.",
-    "recordPronunciation": "Записать произношение"
+    "recordPronunciation": "Записать произношение",
+    "stopRecording": "Остановить запись"
   },
   "notifications": {
     "title": "Уведомления",
@@ -1299,7 +1351,9 @@
     "creating": "Создание...",
     "createLanguage": "Создать язык",
     "errorNameSlugRequired": "Название и идентификатор обязательны",
-    "createdToast": "Язык успешно создан"
+    "createdToast": "Язык успешно создан",
+    "scaffoldAlphabetFailed": "Язык создан, но не удалось добавить начальный алфавит.",
+    "scaffoldGrammarFailed": "Язык создан, но не удалось добавить начальные страницы грамматики."
   },
   "createForm": {
     "evolveLabel": "Развить из родительского языка (необязательно)",
@@ -1396,6 +1450,7 @@
     "freeRussian": "Русский",
     "ukrainian": "Украинский",
     "french": "Французский",
+    "breton": "Бретонский",
     "conlangTranslations": "Переводы конлангов",
     "translated": "{percent}% переведено",
     "addConlang": "Добавить свой конланг",

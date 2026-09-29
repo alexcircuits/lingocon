@@ -1,11 +1,25 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
 import { revalidatePath } from "next/cache"
-import { logAdminAction } from "@/app/actions/admin-audit"
+import { logAdminAction } from "@/lib/admin-audit"
 import { ActionResult } from "@/lib/types/action-result"
-import { User } from "@prisma/client"
+
+
+// Never return the whole row: it includes the password hash.
+const ADMIN_USER_SUMMARY = {
+    id: true,
+    name: true,
+    email: true,
+    isAdmin: true,
+    isSuspended: true,
+    suspendedAt: true,
+    suspendReason: true,
+    adminNotes: true,
+} as const
+type AdminUserSummary = Prisma.UserGetPayload<{ select: typeof ADMIN_USER_SUMMARY }>
 
 /**
  * Suspend or unsuspend a user
@@ -14,11 +28,12 @@ export async function toggleUserSuspension(
     userId: string,
     suspend: boolean,
     reason?: string
-): Promise<ActionResult<User>> {
+): Promise<ActionResult<AdminUserSummary>> {
     await requireAdmin()
 
     const user = await prisma.user.update({
         where: { id: userId },
+        select: ADMIN_USER_SUMMARY,
         data: {
             isSuspended: suspend,
             suspendedAt: suspend ? new Date() : null,
@@ -42,12 +57,13 @@ export async function toggleUserSuspension(
 /**
  * Update admin notes for a user
  */
-export async function updateAdminNotes(userId: string, notes: string): Promise<ActionResult<User>> {
+export async function updateAdminNotes(userId: string, notes: string): Promise<ActionResult<AdminUserSummary>> {
     await requireAdmin()
 
     const user = await prisma.user.update({
         where: { id: userId },
-        data: { adminNotes: notes || null }
+        data: { adminNotes: notes || null },
+        select: ADMIN_USER_SUMMARY,
     })
 
     await logAdminAction({
@@ -65,12 +81,13 @@ export async function updateAdminNotes(userId: string, notes: string): Promise<A
 /**
  * Toggle user's admin status
  */
-export async function toggleUserAdmin(userId: string, isAdmin: boolean): Promise<ActionResult<User>> {
+export async function toggleUserAdmin(userId: string, isAdmin: boolean): Promise<ActionResult<AdminUserSummary>> {
     await requireAdmin()
 
     const user = await prisma.user.update({
         where: { id: userId },
-        data: { isAdmin }
+        data: { isAdmin },
+        select: ADMIN_USER_SUMMARY,
     })
 
     revalidatePath(`/admin/users`)

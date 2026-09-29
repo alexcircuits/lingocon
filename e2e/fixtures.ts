@@ -22,6 +22,8 @@ const IGNORED = [
   /ResizeObserver loop/i,
   /Failed to load resource/i, // asset 404s (fonts/images) — not app errors
   /Download the React DevTools/i,
+  // Background polls (session, notifications, achievements) aborted by page.goto mid-flight.
+  /Failed to fetch/i,
 ]
 
 export function expectNoPageErrors(errors: string[]) {

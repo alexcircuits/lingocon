@@ -340,7 +340,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                                 {ipa}
                                                                             </span>
                                                                             {isEditing && (
-                                                                                <button
+                                                                                <button aria-label={t("remove")}
                                                                                     onClick={() => handleRemovePhoneme(ipa)}
                                                                                     className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
                                                                                     title={t("remove")}
@@ -456,7 +456,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                                                                                     {v.ipa}
                                                                                 </span>
                                                                                 {isEditing && (
-                                                                                    <button
+                                                                                    <button aria-label={t("remove")}
                                                                                         onClick={() => handleRemovePhoneme(v.ipa)}
                                                                                         className="hover-reveal flex h-7 w-7 items-center justify-center text-destructive hover:text-destructive/80"
                                                                                         title={t("remove")}

@@ -4,15 +4,12 @@ import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { revalidateFamilies } from "@/lib/utils/revalidation"
 import * as familyService from "@/lib/services/language-family"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof AppError) return { error: error.message }
-  if (error instanceof Error) return { error: error.message }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function setParentLanguage(languageId: string, parentLanguageId: string | null) {
   const userId = await getUserId()
@@ -49,12 +46,14 @@ export async function getLanguageFamilyTree(languageId: string) {
   })
   if (!initialLang) return null
 
-  if (initialLang.visibility === "PRIVATE") {
-    const userId = await getUserId()
-    if (!userId || userId !== initialLang.ownerId) return null
+  const userId = await getUserId()
+  if (initialLang.visibility === "PRIVATE" && (!userId || userId !== initialLang.ownerId)) {
+    return null
   }
 
-  return getCachedFamilyTree(languageId)
+  // Anonymous viewers share the cached public tree; signed-in viewers get their own languages
+  // un-redacted (a couple of cheap queries).
+  return userId ? familyService.buildFamilyTree(languageId, userId) : getCachedFamilyTree(languageId)
 }
 
 const getCachedFamilyTree = unstable_cache(
@@ -190,11 +189,11 @@ export async function getLanguageDictionary(
 }
 
 export async function getFamilyAncestryPath(familyId: string) {
-  return familyService.getFamilyAncestryPath(familyId)
+  return familyService.getFamilyAncestryPath(familyId, await getUserId())
 }
 
 export async function getFamilyChildren(familyId: string) {
-  return familyService.getFamilyChildren(familyId)
+  return familyService.getFamilyChildren(familyId, await getUserId())
 }
 
 export async function setFamilyParent(familyId: string, parentFamilyId: string | null) {
@@ -245,7 +244,7 @@ export async function getProtoVocabulary(
   page: number = 1,
   pageSize: number = 50
 ) {
-  return familyService.getProtoVocabulary(familyId, query, page, pageSize)
+  return familyService.getProtoVocabulary(familyId, query, page, pageSize, await getUserId())
 }
 
 export async function deriveFromProto(protoWordIds: string[], targetLanguageId: string) {

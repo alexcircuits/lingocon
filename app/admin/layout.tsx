@@ -29,7 +29,7 @@ export default async function AdminLayout({
                 <span className="ml-2 text-lg font-semibold">Admin Panel</span>
             </div>
 
-            <main className="pt-16 md:pt-0 md:pl-64">
+            <main id="main-content" tabIndex={-1} className="pt-16 md:pt-0 md:pl-64">
                 <div className="min-h-screen">{children}</div>
             </main>
         </div>

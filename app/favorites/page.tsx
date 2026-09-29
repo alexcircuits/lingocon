@@ -67,7 +67,7 @@ export default async function FavoritesPage() {
 
       <div className="h-14" />
 
-      <main className="container mx-auto py-10 px-4 max-w-6xl">
+      <main id="main-content" tabIndex={-1} className="container mx-auto py-10 px-4 max-w-6xl">
         {/* Page header */}
         <div className="mb-10 pb-6 border-b border-border/40">
           <h1 className="text-4xl md:text-5xl font-serif tracking-tight mb-2">{t("pageTitle")}</h1>

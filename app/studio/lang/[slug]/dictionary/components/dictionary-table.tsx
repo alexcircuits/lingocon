@@ -243,6 +243,7 @@ export function DictionaryTable({
                       onClick={() => onEdit(entry)}
                       disabled={isPending}
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      aria-label={t("editEntryLabel", { lemma: entry.lemma })}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -253,6 +254,7 @@ export function DictionaryTable({
                       disabled={isPending}
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
                       title={t("deriveWord")}
+                      aria-label={t("deriveWord")}
                     >
                       <GitFork className="h-4 w-4" />
                     </Button>
@@ -263,6 +265,7 @@ export function DictionaryTable({
                       onClick={() => onDelete(entry.id)}
                       disabled={isPending}
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      aria-label={t("deleteEntryLabel", { lemma: entry.lemma })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -323,7 +326,6 @@ export function DictionaryTable({
                       <div>
                         <EtymologyTree
                           entry={entry}
-                          allEntries={allEntries.length > 0 ? allEntries : entries}
                           onSelectEntry={(e) => {
                             setExpandedId(e.id)
                           }}

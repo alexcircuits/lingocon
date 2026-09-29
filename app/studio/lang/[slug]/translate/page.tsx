@@ -77,7 +77,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
         toast.error(t("loadFailed"));
         setLoading(false);
       });
-  }, [params.slug]);
+  }, [params.slug, t]);
 
   const handleSave = async () => {
     if (!languageId) return;

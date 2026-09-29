@@ -201,7 +201,7 @@ export function LessonEngine({
 
     setIdx(nextIdx)
     setFeedback({ status: "answering" })
-  }, [feedback.status, hearts, idx, lessonId, queue, reviewMode])
+  }, [feedback.status, hearts, idx, lessonId, queue, reviewMode, t])
 
   // ── Review just the mistakes from this session ─────────────────────────────
 
@@ -325,7 +325,7 @@ export function LessonEngine({
 
           {/* Romanization toggle — shown when there's a custom font or latin mappings */}
           {(fontFamily || scriptSymbols.some(s => s.latin)) && (
-            <button
+            <button aria-label={showRoman ? t("toggleRomanHide") : t("toggleRomanShow")}
               onClick={() => setShowRoman(p => !p)}
               className={cn(
                 "flex items-center rounded-lg p-1.5 transition-colors",
@@ -1094,6 +1094,7 @@ function CompleteScreen({
     
     const frame = () => {
       confetti({
+        disableForReducedMotion: true,
         particleCount: 4,
         angle: 60,
         spread: 55,
@@ -1101,6 +1102,7 @@ function CompleteScreen({
         colors: ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"]
       })
       confetti({
+        disableForReducedMotion: true,
         particleCount: 4,
         angle: 120,
         spread: 55,

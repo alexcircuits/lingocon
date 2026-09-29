@@ -20,6 +20,7 @@ interface DictionaryTableMobileProps {
   showLatin: boolean
   enableAudio: boolean
   onTagClick?: (tag: string) => void
+  ttsSettings?: { voiceId?: string; speed?: string }
 }
 
 export function DictionaryTableMobile({
@@ -32,6 +33,7 @@ export function DictionaryTableMobile({
   onDerive,
   showLatin,
   enableAudio,
+  ttsSettings,
 }: DictionaryTableMobileProps) {
   const handleSelectOne = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedEntries)
@@ -84,14 +86,14 @@ export function DictionaryTableMobile({
                           /{entry.ipa}/
                         </span>
                         {enableAudio && (
-                          <IPASpeaker ipa={entry.ipa} size="sm" />
+                          <IPASpeaker ipa={entry.ipa} size="sm" voiceId={ttsSettings?.voiceId} speed={ttsSettings?.speed} />
                         )}
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="flex justify-end gap-1 self-start">
-                  <Button
+                  <Button aria-label="Edit"
                     variant="ghost"
                     size="icon"
                     onClick={() => onEdit(entry)}
@@ -99,7 +101,7 @@ export function DictionaryTableMobile({
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
+                  <Button aria-label="Derive Word"
                     variant="ghost"
                     size="icon"
                     onClick={() => onDerive(entry)}
@@ -108,7 +110,7 @@ export function DictionaryTableMobile({
                   >
                     <GitFork className="h-4 w-4" />
                   </Button>
-                  <Button
+                  <Button aria-label="Delete"
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete(entry)}

@@ -1,12 +1,14 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { requestCache } from "@/lib/request-cache"
 
 /**
  * Check if the current user is an admin
- * Returns true if the user has isAdmin: true in the database
+ * Returns true if the user has isAdmin: true in the database. Memoized per request — every
+ * canEditScope/canViewLanguage call asks.
  */
-export async function isAdmin(): Promise<boolean> {
+export const isAdmin = requestCache(async function isAdmin(): Promise<boolean> {
     const session = await auth()
 
     if (!session?.user?.id) {
@@ -15,11 +17,12 @@ export async function isAdmin(): Promise<boolean> {
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { isAdmin: true }
+        select: { isAdmin: true, isSuspended: true }
     })
 
-    return user?.isAdmin ?? false
-}
+    // A suspended admin keeps their session (JWT) but must lose admin rights immediately.
+    return !!user?.isAdmin && !user.isSuspended
+})
 
 /**
  * Require admin access - redirects to dashboard if not admin

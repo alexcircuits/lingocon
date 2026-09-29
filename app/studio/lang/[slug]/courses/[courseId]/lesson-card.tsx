@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,6 +49,7 @@ export function LessonCard({
 }: LessonCardProps) {
   const t = useTranslations("courseEditor")
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingTitle, setEditingTitle] = useState(false)
   const [editTitle, setEditTitle] = useState(lesson.title)
   const [editDesc, setEditDesc] = useState(lesson.description ?? "")
@@ -196,11 +198,7 @@ export function LessonCard({
                 size="sm"
                 className="gap-1 text-destructive hover:text-destructive ml-auto"
                 disabled={deleting}
-                onClick={async () => {
-                  setDeleting(true)
-                  await onDelete()
-                  setDeleting(false)
-                }}
+                onClick={() => setConfirmDelete(true)}
               >
                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                 {t("deleteLesson")}
@@ -209,6 +207,23 @@ export function LessonCard({
           </CardContent>
         )}
       </Card>
+      {/* Deleting a lesson removes its items and learners' progress on it — always confirm. */}
+      <ConfirmationDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        onConfirm={async () => {
+          setConfirmDelete(false)
+          setDeleting(true)
+          await onDelete()
+          setDeleting(false)
+        }}
+        title={t("confirmDeleteLessonTitle", { title: lesson.title })}
+        description={t("confirmDeleteLessonDesc")}
+        confirmText={t("confirmDelete")}
+        cancelText={t("cancel")}
+        variant="destructive"
+        isLoading={deleting}
+      />
     </div>
   )
 }

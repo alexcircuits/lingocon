@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { canEditScope } from "@/lib/auth-helpers"
-import { UnauthorizedError, NotFoundError, ConflictError } from "@/lib/errors"
+import { UnauthorizedError, NotFoundError, ConflictError, ValidationError } from "@/lib/errors"
 import {
   createLanguageSchema,
   updateLanguageSchema,
+  languageMetadataSchema,
   type CreateLanguageInput,
   type UpdateLanguageInput,
 } from "@/lib/validations/language"
@@ -141,25 +142,43 @@ export async function deleteLanguage(languageId: string, userId: string) {
   })
 }
 
+// Keys the phonology editors own; everything else in metadata is a language setting.
+const PHONOLOGY_METADATA_KEYS = new Set(["soundChangeRules", "phonologyOverride", "allophonyRules"])
+const MAX_METADATA_BYTES = 200_000
+
 export async function updateLanguageMetadata(
   languageId: string,
-  updates: Record<string, any>,
+  updates: Record<string, unknown>,
   userId: string
 ) {
-  const language = await prisma.language.findUnique({
-    where: { id: languageId },
-    select: { ownerId: true, metadata: true },
-  })
-
-  if (!language || language.ownerId !== userId) {
+  // Sound-change rules belong to the "Phonology & Sound Changes" scope, not just the owner:
+  // collaborators with that permission could open the editor but every save was refused.
+  const keys = Object.keys(updates)
+  const scope = keys.length > 0 && keys.every((k) => PHONOLOGY_METADATA_KEYS.has(k))
+    ? "write:phonology"
+    : "write:settings"
+  if (!(await canEditScope(languageId, userId, scope))) {
     throw new UnauthorizedError()
   }
 
-  const existing = (language.metadata as Record<string, any>) || {}
-  const merged = { ...existing, ...updates }
+  const language = await prisma.language.findUnique({
+    where: { id: languageId },
+    select: { metadata: true },
+  })
+  if (!language) throw new NotFoundError("Language", languageId)
+
+  const existing = (language.metadata as Record<string, unknown>) || {}
+  // Pages parse metadata with languageMetadataSchema; storing something it rejects would 500 them.
+  const merged = languageMetadataSchema.safeParse({ ...existing, ...updates })
+  if (!merged.success) {
+    throw new ValidationError(merged.error.issues[0]?.message ?? "Invalid language metadata")
+  }
+  if (JSON.stringify(merged.data).length > MAX_METADATA_BYTES) {
+    throw new ValidationError("Language metadata is too large")
+  }
 
   await prisma.language.update({
     where: { id: languageId },
-    data: { metadata: merged },
+    data: { metadata: merged.data },
   })
 }

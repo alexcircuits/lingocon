@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserActivities } from "@/app/actions/activity"
-import { getFeedActivitiesForUser, getActivitiesForUser } from "@/lib/utils/activity"
+import { getMyFeedActivities, getProfileActivities } from "@/app/actions/activity"
 import { formatDistanceToNow } from "date-fns"
 import {
   Activity,
@@ -66,11 +65,11 @@ export function ActivityFeed({ userId, activities: initialActivities, showLangua
       setLoading(true)
       try {
         if (mode === "feed") {
-           const result = await getFeedActivitiesForUser(userId!, 50)
+           const result = await getMyFeedActivities()
            setActivities(result as any)
            setHasMore(result.length >= 50)
         } else {
-           const result = await getActivitiesForUser(userId!, 20)
+           const result = await getProfileActivities(userId!)
            setActivities(result as any)
            setHasMore(result.length >= 20)
         }
@@ -93,7 +92,7 @@ export function ActivityFeed({ userId, activities: initialActivities, showLangua
     
     try {
       if (mode === "feed") {
-        const result = await getFeedActivitiesForUser(userId, 50, cursor)
+        const result = await getMyFeedActivities(cursor)
         if (result.length > 0) {
           setActivities(prev => [...prev, ...result as any])
           setHasMore(result.length >= 50)
@@ -101,7 +100,7 @@ export function ActivityFeed({ userId, activities: initialActivities, showLangua
           setHasMore(false)
         }
       } else {
-        const result = await getActivitiesForUser(userId, 20, cursor)
+        const result = await getProfileActivities(userId, cursor)
         if (result.length > 0) {
           setActivities(prev => [...prev, ...result as any])
           setHasMore(result.length >= 20)

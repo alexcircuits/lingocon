@@ -63,6 +63,21 @@ Never commit `.env` files or production secrets.
 | `npm run db:seed`     | Runs `prisma/seed.ts` via `tsx`.                                         |
 
 
+## Tests
+
+| Command | What runs |
+| --- | --- |
+| `npm test` | Vitest unit/component suite (no database; Prisma is mocked). |
+| `npx tsc --noEmit` | Type check (CI runs it; `next build` also type-checks). |
+| `npm run lint` | ESLint — CI expects zero warnings. |
+| `npm run test:e2e` | Playwright journeys against a dev server (`DEV_MODE="true"`, `npm run db:seed`). Set `E2E_BASE_URL` to reuse a running server. |
+| `RUN_FTS_INTEGRATION=1 DATABASE_URL=… npx vitest run lib/services/__tests__/search-fts.integration.test.ts` | Real-Postgres search checks — point it at a throwaway database. |
+
+## Background worker
+
+`npx tsx scripts/worker.ts` runs the job queue locally (inflection regeneration, leagues). In
+production it is the `lingocon-worker` PM2 app from `ecosystem.config.js`.
+
 ## Optional features
 
 ### IPA audio (AWS Polly)
@@ -85,4 +100,4 @@ In **development**, the root layout unregisters service workers to avoid stale c
 
 ## Editor and formatting
 
-The repository follows default Next.js ESLint rules. Run `npm run lint` before pushing; CI should enforce the same bar.
+The repository follows default Next.js ESLint rules. Run `npm run lint`, `npx tsc --noEmit` and `npm test` before pushing; CI runs the same checks on every pull request.

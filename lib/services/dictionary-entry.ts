@@ -10,6 +10,26 @@ import {
 } from "@/lib/validations/dictionary-entry"
 import { validatePhonotactics } from "@/lib/utils/alphabet-validation"
 import { regenerateEntryForms } from "@/lib/services/inflection-service"
+import { assertParadigmInLanguage } from "@/lib/services/language-scope"
+import {
+  asLemmaList,
+  removeRelatedReferences,
+  renameRelatedReferences,
+  syncReciprocalLinks,
+} from "@/lib/services/related-words"
+
+/**
+ * Callers pass the languageId they are authorized for; the entry must actually live there, or a
+ * user could edit/delete any entry by pairing its id with a language they own.
+ */
+async function getEntryInLanguage(entryId: string, languageId: string) {
+  const entry = await prisma.dictionaryEntry.findUnique({
+    where: { id: entryId },
+    select: { languageId: true, lemma: true, relatedWords: true },
+  })
+  if (!entry || entry.languageId !== languageId) throw new NotFoundError("Dictionary entry", entryId)
+  return entry
+}
 
 export async function createEntry(input: CreateDictionaryEntryInput, userId: string) {
   const sterilized = JSON.parse(JSON.stringify(input))
@@ -19,6 +39,7 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
+  await assertParadigmInLanguage(validated.paradigmId, validated.languageId)
 
   const language = await prisma.language.findUnique({
     where: { id: validated.languageId },
@@ -35,7 +56,8 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
     }
   }
 
-  const entry = await prisma.dictionaryEntry.create({
+  const entry = await prisma.$transaction(async (tx) => {
+    const created = await tx.dictionaryEntry.create({
     data: {
       lemma: validated.lemma,
       gloss: validated.gloss,
@@ -54,6 +76,17 @@ export async function createEntry(input: CreateDictionaryEntryInput, userId: str
         select: { slug: true },
       },
     },
+    })
+    if (validated.linkBack && validated.relatedWords?.length) {
+      await syncReciprocalLinks(tx, {
+        languageId: validated.languageId,
+        entryId: created.id,
+        lemma: created.lemma,
+        before: [],
+        after: validated.relatedWords,
+      })
+    }
+    return created
   })
 
   // Materialize this entry's inflected forms from its paradigm's rules (best
@@ -70,6 +103,8 @@ export async function updateEntry(input: UpdateDictionaryEntryInput, userId: str
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
+  const existing = await getEntryInLanguage(validated.id, validated.languageId)
+  await assertParadigmInLanguage(validated.paradigmId, validated.languageId)
 
   const language = await prisma.language.findUnique({
     where: { id: validated.languageId },
@@ -99,14 +134,28 @@ export async function updateEntry(input: UpdateDictionaryEntryInput, userId: str
   if (validated.tags !== undefined) updateData.tags = validated.tags ? (validated.tags as any) : null
   if (validated.paradigmId !== undefined) updateData.paradigmId = validated.paradigmId || null
 
-  const entry = await prisma.dictionaryEntry.update({
-    where: { id: validated.id },
-    data: updateData,
-    include: {
-      language: {
-        select: { slug: true },
+  const entry = await prisma.$transaction(async (tx) => {
+    const updated = await tx.dictionaryEntry.update({
+      where: { id: validated.id },
+      data: updateData,
+      include: {
+        language: {
+          select: { slug: true },
+        },
       },
-    },
+    })
+    // Keep other entries' related-word references pointing at this entry's current spelling.
+    await renameRelatedReferences(tx, validated.languageId, existing.lemma, updated.lemma)
+    if (validated.linkBack && validated.relatedWords !== undefined) {
+      await syncReciprocalLinks(tx, {
+        languageId: validated.languageId,
+        entryId: updated.id,
+        lemma: updated.lemma,
+        before: asLemmaList(existing.relatedWords),
+        after: validated.relatedWords ?? [],
+      })
+    }
+    return updated
   })
 
   // The lemma or the linked paradigm may have changed — rematerialize this
@@ -174,36 +223,19 @@ export async function deleteEntry(entryId: string, languageId: string, userId: s
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
 
-  // Scrub dangling relatedWords references
-  const entriesWithRelated = await prisma.dictionaryEntry.findMany({
-    where: { languageId },
-    select: { id: true, relatedWords: true },
-  })
+  const existing = await getEntryInLanguage(entryId, languageId)
 
-  const updates = []
-  for (const e of entriesWithRelated) {
-    if (e.id === entryId) continue
-    const related = e.relatedWords as string[]
-    if (Array.isArray(related) && related.includes(entryId)) {
-      updates.push(
-        prisma.dictionaryEntry.update({
-          where: { id: e.id },
-          data: { relatedWords: related.filter(id => id !== entryId) },
-        })
-      )
-    }
-  }
-  if (updates.length > 0) {
-    await Promise.all(updates)
-  }
-
-  return prisma.dictionaryEntry.delete({
-    where: { id: entryId },
-    include: {
-      language: {
-        select: { slug: true },
+  return prisma.$transaction(async (tx) => {
+    const deleted = await tx.dictionaryEntry.delete({
+      where: { id: entryId },
+      include: {
+        language: {
+          select: { slug: true },
+        },
       },
-    },
+    })
+    await removeRelatedReferences(tx, languageId, [existing.lemma])
+    return deleted
   })
 }
 
@@ -222,43 +254,22 @@ export async function bulkDeleteEntries(entryIds: string[], languageId: string, 
       id: { in: entryIds },
       languageId,
     },
-    select: { id: true },
+    select: { id: true, lemma: true },
   })
 
-  if (entries.length !== entryIds.length) {
+  if (entries.length !== new Set(entryIds).size) {
     throw new NotFoundError("Some entries not found or don't belong to this language")
   }
 
-  // Scrub dangling relatedWords references
-  const entriesWithRelated = await prisma.dictionaryEntry.findMany({
-    where: { languageId },
-    select: { id: true, relatedWords: true },
-  })
-
-  const entryIdsSet = new Set(entryIds)
-  const updates = []
-  for (const e of entriesWithRelated) {
-    if (entryIdsSet.has(e.id)) continue
-    
-    const related = e.relatedWords as string[]
-    if (Array.isArray(related) && related.some(id => entryIdsSet.has(id))) {
-      updates.push(
-        prisma.dictionaryEntry.update({
-          where: { id: e.id },
-          data: { relatedWords: related.filter(id => !entryIdsSet.has(id)) },
-        })
-      )
-    }
-  }
-  if (updates.length > 0) {
-    await Promise.all(updates)
-  }
-
-  const result = await prisma.dictionaryEntry.deleteMany({
-    where: {
-      id: { in: entryIds },
-      languageId,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const deleted = await tx.dictionaryEntry.deleteMany({
+      where: {
+        id: { in: entryIds },
+        languageId,
+      },
+    })
+    await removeRelatedReferences(tx, languageId, entries.map((e) => e.lemma))
+    return deleted
   })
 
   const language = await prisma.language.findUnique({

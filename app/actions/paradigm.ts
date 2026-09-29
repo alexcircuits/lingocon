@@ -1,9 +1,9 @@
 "use server"
 
-import { ZodError } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
-import { getUserId, canEditScope } from "@/lib/auth-helpers"
+import { toActionError } from "@/lib/errors"
+import { getUserId, canEditScope, canReadLanguage } from "@/lib/auth-helpers"
 import {
   createParadigmSchema,
   updateParadigmSchema,
@@ -53,19 +53,7 @@ export async function createParadigm(input: CreateParadigmInput) {
       data: paradigm,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create paradigm",
-    }
+    return { ...toActionError(error, "Failed to create paradigm") }
   }
 }
 
@@ -118,19 +106,7 @@ export async function updateParadigm(input: UpdateParadigmInput) {
       data: updated,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update paradigm",
-    }
+    return { ...toActionError(error, "Failed to update paradigm") }
   }
 }
 
@@ -152,6 +128,12 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
       }
     }
 
+    // Authorize against the paradigm's own language, not just the one the caller named.
+    const existing = await prisma.paradigm.findUnique({ where: { id: paradigmId }, select: { languageId: true } })
+    if (!existing || existing.languageId !== languageId) {
+      return { error: "Paradigm not found" }
+    }
+
     const paradigm = await prisma.paradigm.delete({
       where: { id: paradigmId },
       include: { language: { select: { slug: true } } },
@@ -164,14 +146,7 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
       success: true,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete paradigm",
-    }
+    return { ...toActionError(error, "Failed to delete paradigm") }
   }
 }
 
@@ -189,10 +164,11 @@ export async function cloneParadigm(paradigmId: string, languageId: string) {
   try {
     const source = await prisma.paradigm.findUnique({
       where: { id: paradigmId },
-      select: { name: true, slots: true, notes: true, language: { select: { slug: true } } },
+      select: { name: true, slots: true, notes: true, languageId: true, language: { select: { slug: true } } },
     })
 
-    if (!source) return { error: "Paradigm not found" }
+    // "Duplicate within the same language" — never copy another language's (possibly private) table.
+    if (!source || source.languageId !== languageId) return { error: "Paradigm not found" }
 
     const clone = await prisma.paradigm.create({
       data: {
@@ -207,13 +183,16 @@ export async function cloneParadigm(paradigmId: string, languageId: string) {
 
     return { success: true, data: clone }
   } catch (error) {
-    if (error instanceof Error) return { error: error.message }
-    return { error: "Failed to clone paradigm" }
+    return { ...toActionError(error, "Failed to clone paradigm") }
   }
 }
 
 export async function getParadigmsForLanguage(languageId: string) {
   try {
+    if (!(await canReadLanguage(languageId, await getUserId()))) {
+      return { error: "Paradigms not found" }
+    }
+
     const paradigms = await prisma.paradigm.findMany({
       where: { languageId },
       select: {
@@ -231,14 +210,7 @@ export async function getParadigmsForLanguage(languageId: string) {
       data: paradigms,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch paradigms",
-    }
+    return { ...toActionError(error, "Failed to fetch paradigms") }
   }
 }
 
@@ -251,6 +223,7 @@ export async function getParadigmById(paradigmId: string) {
         name: true,
         slots: true,
         notes: true,
+        languageId: true,
         language: {
           select: {
             metadata: true,
@@ -259,7 +232,7 @@ export async function getParadigmById(paradigmId: string) {
       },
     })
 
-    if (!paradigm) {
+    if (!paradigm || !(await canReadLanguage(paradigm.languageId, await getUserId()))) {
       return {
         error: "Paradigm not found",
       }
@@ -270,14 +243,7 @@ export async function getParadigmById(paradigmId: string) {
       data: paradigm,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch paradigm",
-    }
+    return { ...toActionError(error, "Failed to fetch paradigm") }
   }
 }
 

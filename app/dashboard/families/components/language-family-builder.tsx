@@ -614,6 +614,7 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
                 size="sm"
                 onClick={handleRedo}
                 disabled={!canRedo || isSaving}
+                aria-label="Redo"
                 className="flex-[0.5] gap-1.5 text-xs px-2"
               >
                 <Redo2 className="h-3.5 w-3.5" />

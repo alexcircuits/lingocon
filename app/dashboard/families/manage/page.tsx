@@ -85,7 +85,7 @@ export default async function ManageFamiliesPage() {
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14 shrink-0" />
 
-      <main className="flex-1 container max-w-5xl mx-auto py-8 px-4 font-display">
+      <main id="main-content" tabIndex={-1} className="flex-1 container max-w-5xl mx-auto py-8 px-4 font-display">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight">

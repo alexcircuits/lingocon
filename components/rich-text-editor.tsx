@@ -29,7 +29,7 @@ import {
     MoreVertical
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
+import { xsampaToIpa } from "@/lib/utils/ipa-from-xsampa"
 // Import extensions dynamically or safely
 import { IGT } from "@/lib/tiptap/igt-extension"
 import { Paradigm } from "@/lib/tiptap/paradigm-extension"
@@ -123,7 +123,7 @@ export function RichTextEditor({
         <div className="flex flex-col border rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm">
             {/* Toolbar */}
             <div className="flex items-center gap-1 p-2 border-b bg-secondary/30 flex-wrap">
-                <Button
+                <Button aria-label={t("bold")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -133,7 +133,7 @@ export function RichTextEditor({
                 >
                     <Bold className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("italic")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -144,7 +144,7 @@ export function RichTextEditor({
                     <Italic className="h-4 w-4" />
                 </Button>
 
-                <Button
+                <Button aria-label={t("toggleCustomFont")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -157,7 +157,7 @@ export function RichTextEditor({
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
-                <Button
+                <Button aria-label={t("heading1")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -167,7 +167,7 @@ export function RichTextEditor({
                 >
                     <Heading1 className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("heading2")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -183,23 +183,37 @@ export function RichTextEditor({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                        editor.chain().focus().command(({ tr, state, dispatch }) => {
+                        // Convert text node by text node, keeping each node's marks. Replacing the
+                        // selection as one string flattened paragraphs, dropped marks (bold,
+                        // custom script) and deleted IGT/paradigm/wiki-link atoms in the range.
+                        editor.chain().focus().command(({ tr, state }) => {
                             const { from, to } = state.selection
-                            const selectedText = state.doc.textBetween(from, to, ' ')
-                            const replacement = xSampa2IPA(selectedText)
-                            tr.insertText(replacement, from, to)
-                            if (dispatch) dispatch(tr)
-                            return true
+                            if (from === to) return false
+                            const edits: { from: number; to: number; node: ReturnType<typeof state.schema.text> }[] = []
+                            state.doc.nodesBetween(from, to, (node, pos) => {
+                                if (!node.isText || !node.text) return
+                                const start = Math.max(from, pos)
+                                const end = Math.min(to, pos + node.text.length)
+                                const original = node.text.slice(start - pos, end - pos)
+                                const converted = xsampaToIpa(original)
+                                if (converted !== original) {
+                                    edits.push({ from: start, to: end, node: state.schema.text(converted, node.marks) })
+                                }
+                            })
+                            // Apply from the end so earlier positions stay valid.
+                            for (const change of edits.reverse()) tr.replaceWith(change.from, change.to, change.node)
+                            return edits.length > 0
                         }).run()
                     }}
                     title={t("convertXsampaToIpa")}
+                    aria-label={t("convertXsampaToIpa")}
                     disabled={disabled}
                     >
                     <PencilLine className="h-4 w-4" />
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
-                <Button
+                <Button aria-label={t("bulletList")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -209,7 +223,7 @@ export function RichTextEditor({
                 >
                     <List className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("orderedList")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -219,7 +233,7 @@ export function RichTextEditor({
                 >
                     <ListOrdered className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("quote")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -242,6 +256,7 @@ export function RichTextEditor({
                             className={cn(editor.isActive("table") && "bg-secondary")}
                             disabled={disabled}
                             title={t("tableOperations")}
+                            aria-label={t("tableOperations")}
                         >
                             <Table2 className="h-4 w-4" />
                         </Button>
@@ -380,7 +395,7 @@ export function RichTextEditor({
                 )}
 
                 {withParadigm && (
-                    <Button
+                    <Button aria-label={t("insertParadigm")}
                         type="button"
                         variant="ghost"
                         size="sm"

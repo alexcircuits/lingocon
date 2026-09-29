@@ -170,6 +170,7 @@ export function ProtoVocabularyPanel({
             size="icon"
             onClick={onClose}
             className="h-7 w-7"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -290,7 +291,7 @@ export function ProtoVocabularyPanel({
                     </span>
                   )}
                   {isEditable && (
-                    <Button
+                    <Button aria-label="Delete"
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
@@ -316,7 +317,7 @@ export function ProtoVocabularyPanel({
             Page {page} of {totalPages}
           </span>
           <div className="flex gap-1">
-            <Button
+            <Button aria-label="Previous page"
               variant="ghost"
               size="icon"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -325,7 +326,7 @@ export function ProtoVocabularyPanel({
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <Button aria-label="Next page"
               variant="ghost"
               size="icon"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

@@ -21,7 +21,7 @@ import { DictionaryTableMobile } from "@/components/dictionary/dictionary-table-
 import { DictionaryEntryDialog } from "./components/dictionary-entry-dialog"
 import { DeleteConfirmDialog } from "./components/delete-confirm-dialog"
 import { ImportDialog } from "./components/import-dialog"
-import { DictionaryPagination } from "./components/dictionary-pagination"
+import { DictionaryPagination } from "@/components/dictionary/dictionary-pagination"
 import { DerivationWizard } from "./components/derivation-wizard"
 import { WordGeneratorDialog } from "./components/word-generator-dialog"
 import { BorrowWordDialog } from "./components/borrow-word-dialog"
@@ -163,8 +163,9 @@ export function DictionaryManager({
 
     params.delete("page") // Reset to page 1 on search
 
+    // replace, not push: typing a query should not add a history entry per debounce tick
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`)
+      router.replace(`${pathname}?${params.toString()}`)
     })
   }, [pathname, router, searchParams])
 
@@ -196,7 +197,8 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
-      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
+      tags: data.tags && data.tags.length > 0 ? data.tags : null,
+      linkBack: data.linkBack !== false,
     }))
 
     const result = await createDictionaryEntry(sterilizedData)
@@ -268,7 +270,10 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
-      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
+      // null, not undefined: JSON drops undefined keys, so removing the last tag used to be
+      // silently ignored by the server (it only updates tags when the key is present).
+      tags: data.tags && data.tags.length > 0 ? data.tags : null,
+      linkBack: data.linkBack !== false,
     }))
 
     const result = await updateDictionaryEntry(sterilizedData)
@@ -545,6 +550,7 @@ export function DictionaryManager({
               showLatin={showLatin}
               symbols={symbols}
               enableAudio={enableAudio}
+              ttsSettings={ttsSettings}
               onDerive={(entry) => {
                 setDerivationSourceEntry(entry)
                 setIsDeriveOpen(true)
@@ -642,7 +648,7 @@ export function DictionaryManager({
         open={isDeriveOpen}
         onOpenChange={setIsDeriveOpen}
         sourceEntry={derivationSourceEntry}
-        allEntries={initialEntries}
+        languageId={languageId}
         onSubmit={handleDeriveSubmit}
         isPending={isPending}
       />
@@ -652,7 +658,7 @@ export function DictionaryManager({
         onOpenChange={setIsGeneratorOpen}
         symbols={symbols}
         metadata={metadata}
-        existingLemmas={initialEntries.map(e => e.lemma)}
+        languageId={languageId}
         onAddWord={(word) => {
           setPrefillData({ lemma: word })
           setIsAddOpen(true)

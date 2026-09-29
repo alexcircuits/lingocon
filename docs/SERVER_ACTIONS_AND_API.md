@@ -19,23 +19,40 @@ LingoCon uses two complementary server entry points:
 ```typescript
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
+import { getUserId, canEditScope } from "@/lib/auth-helpers"
+import { toActionError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
 
-export async function updateThing(languageId: string, input: { title: string }) {
+const thingUpdate = z.object({ title: z.string().trim().min(1).max(200) })
+
+export async function updateThing(thingId: string, languageId: string, input: unknown) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
-  const allowed = await canEditLanguage(languageId, userId)
-  if (!allowed) return { error: "Forbidden" }
+  // 1. Scope-based permission on the language the caller names…
+  if (!(await canEditScope(languageId, userId, "write:dictionary"))) return { error: "Forbidden" }
 
-  await prisma.thing.update({ /* ... */ })
+  try {
+    // 2. …and the row must really live in that language.
+    const existing = await prisma.thing.findUnique({ where: { id: thingId }, select: { languageId: true } })
+    if (existing?.languageId !== languageId) return { error: "Not found" }
+
+    // 3. Explicit, validated fields — never spread the raw input.
+    const data = thingUpdate.parse(input)
+    await prisma.thing.update({ where: { id: thingId }, data })
+  } catch (error) {
+    return { ...toActionError(error, "Failed to update thing") }
+  }
 
   revalidatePath(`/studio/lang/${slug}/things`)
   return { success: true }
 }
 ```
+
+Every **exported** function in a `"use server"` file is callable from the browser, even if no
+component imports it — keep helpers that trust their arguments out of these files.
 
 ### When **not** to use Server Actions
 

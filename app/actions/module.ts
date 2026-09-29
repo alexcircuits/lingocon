@@ -7,11 +7,13 @@ import { ActionResult } from "@/lib/types/action-result"
 import { parseProgram, applyPipeline } from "@/lib/utils/sound-change"
 import { createActivity } from "@/lib/utils/activity"
 import { isAdmin } from "@/lib/admin"
-import { logAdminAction } from "@/app/actions/admin-audit"
+import { logAdminAction } from "@/lib/admin-audit"
 import { scanBundle } from "@/lib/modules/scan"
+import { MODULE_RATE_LIMIT_MESSAGE, moduleRateLimitRetryAfterMs } from "@/lib/modules/rate-limits"
 import { z } from "zod"
 import { rulesTextFromData } from "@/lib/modules/utils"
 import type { ModuleTier } from "@prisma/client"
+import { applyLemmaRewrites } from "@/lib/services/lemma-rewrite"
 import {
   createModuleSchema,
   updateModuleSchema,
@@ -183,6 +185,7 @@ export async function publishVersion(
 export async function addModule(input: AddModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("add", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = addModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -309,6 +312,7 @@ export async function removeModule(installId: string): Promise<ActionResult> {
 export async function reviewModule(input: ReviewModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("review", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = reviewModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -354,6 +358,7 @@ export async function reviewModule(input: ReviewModuleInput): Promise<ActionResu
 export async function reportModule(input: ReportModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("report", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = reportModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -449,7 +454,13 @@ export async function applyModuleTransform(
 ): Promise<TransformApply> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
-  if (!(await canEditScope(languageId, userId, "manage:modules"))) return { error: "Forbidden" }
+  // Rewrites every lemma: needs the dictionary scope as well as module management.
+  if (
+    !(await canEditScope(languageId, userId, "manage:modules")) ||
+    !(await canEditScope(languageId, userId, "write:dictionary"))
+  ) {
+    return { error: "Forbidden" }
+  }
 
   const loaded = await loadTransformerRules(userId, moduleId, languageId)
   if (!loaded.ok) return { error: loaded.error }
@@ -475,11 +486,7 @@ export async function applyModuleTransform(
     return { success: true, data: { applied: 0, unchanged: entries.length } }
   }
 
-  await prisma.$transaction(
-    updates.map((u) =>
-      prisma.dictionaryEntry.update({ where: { id: u.id }, data: { lemma: u.lemma } })
-    )
-  )
+  await applyLemmaRewrites(languageId, updates)
 
   await createActivity({
     type: "UPDATED",

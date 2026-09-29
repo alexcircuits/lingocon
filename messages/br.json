@@ -13,7 +13,8 @@
     "search": "Klask",
     "goHome": "Distreiñ d'ar penn-kentañ",
     "browse": "Furchal",
-    "tryAgain": "Klask en-dro"
+    "tryAgain": "Klask en-dro",
+    "skipToContent": "Mont d'an danvez pennañ"
   },
   "nav": {
     "home": "Degemer",
@@ -352,7 +353,36 @@
     "readText": "Lenn an destenn",
     "createdOn": "Krouet an {date}",
     "updatedOn": "Hizivaet an {date}",
-    "themeLabel": "Dodenn : {name}"
+    "themeLabel": "Dodenn : {name}",
+    "dictionary": {
+      "title": "Geriadur",
+      "subtitle": "Geriaoueg ha termenadurioù",
+      "searchPlaceholder": "Klask gerioù, sterioù, LRE…",
+      "searchPlaceholderReverse": "Klask dre ster…",
+      "searchLabel": "Klask er geriadur",
+      "directionForward": "Ger → Ster",
+      "directionReverse": "Ster → Ger",
+      "filteringByTag": "Silañ dre valizenn :",
+      "clearTagFilter": "Lemel ar sil balizenn",
+      "empty": "N'eus bet ouzhpennet enmont ebet er geriadur c'hoazh.",
+      "noMatches": "Enmont ebet ne glot gant ho klask.",
+      "colWord": "Ger",
+      "colMeaning": "Ster",
+      "colIpa": "LRE",
+      "colPos": "Rummad-yezhadurel",
+      "showing": "{from, number}–{to, number} diwar {total, number} enmont",
+      "showDetails": "Diskouez munudoù {word}",
+      "hasDetails": "Munudoù ouzhpenn",
+      "translation": "Troidigezh",
+      "etymology": "Gerdarzh",
+      "related": "Gerioù kar",
+      "notes": "Notennoù",
+      "tags": "Balizennoù",
+      "loadingDetails": "O kargañ ar munudoù…",
+      "detailsFailed": "N'haller ket kargañ ar munudoù. Klaskit en-dro.",
+      "previous": "A-raok",
+      "next": "War-lerc'h"
+    }
   },
   "confirm": {
     "areYouSure": "Ha sur oc'h ?",
@@ -412,6 +442,9 @@
     "minSyllables": "Nebeutañ a silabennoù",
     "maxSyllables": "Muiañ a silabennoù",
     "count": "Niver",
+    "rejectPatterns": "Heuliadoù difennet",
+    "rejectPatternsHelp": "Patromoù regex (dispartiet gant skejoù pe linennoù nevez). Lamet e vo ar gerioù a glot gant unan eus ar patromoù.",
+    "rejectPatternsPlaceholder": "sk. nn, tk, ^r",
     "regenerate": "Adkrouiñ",
     "generateN": "Krouiñ {count} Ger",
     "copy": "Eilañ",
@@ -539,7 +572,12 @@
     "noWordsFound": "N'eus bet kavet ger ebet.",
     "baseForm": "(stumm-diazez)",
     "createAndAdd": "Krouiñ hag Ouzhpennañ",
-    "selectItem": "Dibabit un elfenn"
+    "selectItem": "Dibabit un elfenn",
+    "confirmDeleteUnitTitle": "Dilemel an unanenn « {title} » ?",
+    "confirmDeleteUnitDesc": "Dilamet e vo an unanenn ; ar c'hentelioù a chomo er genteliadurezh hep unanenn.",
+    "confirmDeleteLessonTitle": "Dilemel ar gentel « {title} » ?",
+    "confirmDeleteLessonDesc": "Dilamet e vo ar gentel, hec'h elfennoù hag araokadenn an deskidi. N'haller ket dizober.",
+    "confirmDelete": "Dilemel"
   },
   "studio": {
     "common": {
@@ -618,6 +656,8 @@
       "exportXlsxDesc": "Karned meur a follenn",
       "exportCsv": "CSV (Geriadur)",
       "exportCsvDesc": "Keuriek gant an taolennoù",
+      "exportAnki": "Tokad Anki (CSV)",
+      "exportAnkiDesc": "Kartennoù-deskiñ da enporzhiañ",
       "exportJson": "Roadennoù JSON",
       "exportJsonDesc": "Ezporzhiañ an diaz-titouroù kriz",
       "generalHeading": "Arventennoù Hollek",
@@ -699,7 +739,9 @@
       "ipaOptional": "LRE (diret)",
       "latinOptional": "Latin (diret)",
       "nameOptional": "Anv (diret)",
-      "letterPlaceholder": "Lizherenn A"
+      "letterPlaceholder": "Lizherenn A",
+      "confirmDeleteTitle": "Dilemel « {symbol} » ?",
+      "confirmDeleteDesc": "Ar gerioù a implij anezhañ a vir o skritur, met ne vo ket ken el lizherenneg nag en urzh-rummañ."
     },
     "phonology": {
       "pageTitle": "Fonologiezh",
@@ -896,7 +938,14 @@
       "impColEtymology": "Gedarzh",
       "impColRelated": "Gerioù Kar",
       "importingBtn": "Oc'h enporzhiañ...",
-      "importEntriesBtn": "Enporzhiañ Penngerioù"
+      "importEntriesBtn": "Enporzhiañ Penngerioù",
+      "linkBackLabel": "Ouzhpennañ ar ger-mañ d'o gerioù kar ivez",
+      "removeRelated": "Lemel {word}",
+      "xsampaConverted": "X-SAMPA amdroet e LRE",
+      "xsampaNothing": "X-SAMPA ebet er vaezienn-mañ",
+      "xsampaTitle": "Amdreiñ an X-SAMPA er vaezienn-mañ e LRE",
+      "editEntryLabel": "Kemmañ {lemma}",
+      "deleteEntryLabel": "Dilemel {lemma}"
     },
     "paradigms": {
       "pageTitle": "Taolennoù Paradigmoù",
@@ -1154,7 +1203,15 @@
     "insertIgt": "Ensoc'hañ ur bloc'h IGT",
     "insertParadigm": "Ensoc'hañ un daolenn paradigm (frammet)",
     "insertWikiLink": "Ensoc'hañ ul liamm wiki — pe skrivañ [[slog]] e-barzh",
-    "generateIpaChart": "Genel un daolenn LRE"
+    "generateIpaChart": "Genel un daolenn LRE",
+    "convertXsampaToIpa": "Amdreiñ e LRE",
+    "bold": "Tev",
+    "italic": "Stouet",
+    "heading1": "Titl 1",
+    "heading2": "Titl 2",
+    "bulletList": "Roll gant pikoù",
+    "orderedList": "Roll niverennet",
+    "quote": "Arroudenn"
   },
   "userSearch": {
     "unnamed": "Implijer hep anv",
@@ -1171,7 +1228,8 @@
     "recordAgain": "Enrollañ en-dro",
     "saving": "Oc'h enrollañ...",
     "checkPermissions": "Gwiriit aotreoù ho merdeer mar plij.",
-    "recordPronunciation": "Enrollañ an distagadur"
+    "recordPronunciation": "Enrollañ an distagadur",
+    "stopRecording": "Paouez da enrollañ"
   },
   "notifications": {
     "title": "Kemennoù",
@@ -1293,7 +1351,9 @@
     "creating": "O krouiñ...",
     "createLanguage": "Krouiñ ur yezh",
     "errorNameSlugRequired": "Ret eo an anv hag ar slog",
-    "createdToast": "Krouet eo bet ar yezh mat"
+    "createdToast": "Krouet eo bet ar yezh mat",
+    "scaffoldAlphabetFailed": "Krouet eo bet ar yezh, met n'eus ket bet gallet ouzhpennañ al lizherenneg deraouiñ.",
+    "scaffoldGrammarFailed": "Krouet eo bet ar yezh, met n'eus ket bet gallet ouzhpennañ ar pajennoù yezhadur deraouiñ."
   },
   "createForm": {
     "evolveLabel": "Emdreiñ eus ur yezh-vamm (Diret)",

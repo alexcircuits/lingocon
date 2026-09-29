@@ -77,7 +77,7 @@ export default async function StudioCoursesPage({
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14" />
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
@@ -166,7 +166,7 @@ export default async function StudioCoursesPage({
             ))}
           </div>
         )}
-      </main>
+      </div>
       <Footer />
     </div>
   )

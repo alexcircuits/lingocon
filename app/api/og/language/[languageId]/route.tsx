@@ -33,12 +33,14 @@ export async function GET(
     select: {
       name: true,
       slug: true,
+      visibility: true,
       owner: { select: { name: true } },
       _count: { select: { dictionaryEntries: true, grammarPages: true, scriptSymbols: true } },
     },
   })
 
-  if (!language) {
+  // Share cards are public; never render one for a private language.
+  if (!language || language.visibility === "PRIVATE") {
     return new Response("Language not found", { status: 404 })
   }
 

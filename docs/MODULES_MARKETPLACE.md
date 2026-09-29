@@ -320,6 +320,17 @@ already added a `NumberTicker` component for animated stats).
   server build ties artifact to source.
 - **Runtime safety:** per-module execution timeouts, memory/output caps, error isolation (a failing
   module never breaks the studio or reader).
+- **Rate limits** (implemented, `lib/modules/rate-limits.ts`): API routes answer `429` with a
+  `Retry-After` header and `{ error }`; server actions return `{ error }`. Hits are logged at warn
+  level. Limits are in-process, so with N PM2 instances the effective limit is up to N×.
+
+  | Surface | Limit | Keyed by |
+  | --- | --- | --- |
+  | `POST /api/modules/data` | 60/min per language per module, and 300/min overall | user id, else client IP |
+  | `POST /api/modules/playground` | 120/min | user id |
+  | `addModule` | 20/hour | user id |
+  | `reviewModule` | 10/hour | user id |
+  | `reportModule` | 5/hour | user id |
 - **Abuse handling:** report flow, moderation queue in `/admin`, **version yank / kill-switch** to
   instantly disable a malicious version platform-wide; author suspension via existing
   user-moderation fields.

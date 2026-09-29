@@ -10,7 +10,13 @@ import { ResultCard } from "@/components/search/result-card"
 import { SearchEmpty } from "@/components/search/search-empty"
 import { Loader2 } from "lucide-react"
 
-export function SearchResults() {
+/** Strings for the error state, passed from the server page so this page doesn't ship next-intl's client runtime. */
+export interface SearchResultsLabels {
+    failed: string
+    retry: string
+}
+
+export function SearchResults({ labels }: { labels: SearchResultsLabels }) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -20,7 +26,9 @@ export function SearchResults() {
     const [results, setResults] = useState<SearchResult | null>(null)
     const [loading, setLoading] = useState(false)
     const [searchTime, setSearchTime] = useState<number | null>(null)
+    const [failed, setFailed] = useState(false)
     const hasSearched = useRef(false)
+    const inFlight = useRef<AbortController | null>(null)
 
     const debouncedQuery = useDebounce(query, 350)
 
@@ -41,20 +49,34 @@ export function SearchResults() {
             return
         }
 
+        // Only the latest query may update the page: abort the previous request so a slow response
+        // for "ka" can't overwrite the results for "kareth".
+        inFlight.current?.abort()
+        const controller = new AbortController()
+        inFlight.current = controller
+
         setLoading(true)
+        setFailed(false)
         const startTime = performance.now()
-        
+
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&scope=${scope}`)
-            const data = await res.json()
+            const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&scope=${scope}`, {
+                signal: controller.signal,
+            })
+            // A 4xx/5xx body is { error }, not a SearchResult — rendering it crashed the page.
+            if (!res.ok) throw new Error(`Search failed with ${res.status}`)
+            const data = (await res.json()) as SearchResult
             const elapsed = ((performance.now() - startTime) / 1000).toFixed(2)
             setResults(data)
             setSearchTime(Number(elapsed))
             hasSearched.current = true
         } catch (err) {
+            if ((err as Error).name === "AbortError") return
             console.error(err)
+            setResults(null)
+            setFailed(true)
         } finally {
-            setLoading(false)
+            if (inFlight.current === controller) setLoading(false)
         }
     }, [])
 
@@ -105,6 +127,17 @@ export function SearchResults() {
                     {loading ? (
                         <div className="flex justify-center py-24">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/40" />
+                        </div>
+                    ) : failed ? (
+                        <div className="flex flex-col items-center gap-3 py-24 text-center" role="alert">
+                            <p className="text-sm text-muted-foreground">{labels.failed}</p>
+                            <button
+                                type="button"
+                                onClick={() => fetchResults(debouncedQuery || query, activeTab)}
+                                className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                {labels.retry}
+                            </button>
                         </div>
                     ) : !results || counts.all === 0 ? (
                         <SearchEmpty />

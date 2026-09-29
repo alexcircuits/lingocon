@@ -48,12 +48,19 @@ export async function validateExtensionToken(raw: string): Promise<string | null
 
   const token = await prisma.extensionToken.findUnique({
     where: { tokenHash: hash },
-    select: { id: true, userId: true, revokedAt: true, expiresAt: true },
+    select: {
+      id: true,
+      userId: true,
+      revokedAt: true,
+      expiresAt: true,
+      user: { select: { isSuspended: true } },
+    },
   })
 
   if (!token) return null
   if (token.revokedAt !== null) return null
   if (token.expiresAt < now) return null
+  if (token.user.isSuspended) return null
 
   // Update lastUsedAt without awaiting — fire and forget
   prisma.extensionToken

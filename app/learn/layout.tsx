@@ -31,7 +31,7 @@ export default async function LearnLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14" />
-      <main className="flex-1">{children}</main>
+      <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
       <Footer />
     </div>
   )

@@ -3,13 +3,14 @@
  * achievement listener, and service worker registration (production only — dev unregisters SWs
  * to protect Fast Refresh).
  */
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/seo";
 import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MotionConfigProvider } from "@/components/motion-config-provider";
 import { Instrument_Serif, JetBrains_Mono, Noto_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
@@ -145,6 +146,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// viewportFit "cover" makes env(safe-area-inset-*) non-zero on notched phones, so the studio
+// bottom nav and lesson footer can pad around the home indicator.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -152,6 +161,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const skipLabel = (await getTranslations("common"))("skipToContent");
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -173,6 +183,13 @@ export default async function RootLayout({
         >
           <SessionProvider>
             <NextIntlClientProvider messages={messages}>
+              <MotionConfigProvider>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+              >
+                {skipLabel}
+              </a>
               {children}
               <AchievementListener />
               <Toaster
@@ -181,6 +198,7 @@ export default async function RootLayout({
                   className: "border-border/50 bg-card shadow-soft",
                 }}
               />
+              </MotionConfigProvider>
             </NextIntlClientProvider>
           </SessionProvider>
         </ThemeProvider>

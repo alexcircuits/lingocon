@@ -7,12 +7,9 @@ import { prisma } from "@/lib/prisma"
  * own private/unlisted languages (excluding the current one).
  */
 export async function searchLanguages(query: string, excludeLanguageId: string) {
-  // Attempt to resolve the current user so we can include their own languages.
-  // borrow.ts intentionally keeps this import-free from auth-helpers to avoid
-  // a circular dep — use the session directly.
-  const { auth } = await import("@/auth")
-  const session = await auth()
-  const userId = session?.user?.id ?? null
+  // Resolve the current user (suspension-aware) so we can include their own languages.
+  const { getUserId } = await import("@/lib/auth-helpers")
+  const userId = await getUserId()
 
   const ownClause = userId ? [{ ownerId: userId }] : []
 

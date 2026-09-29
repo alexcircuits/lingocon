@@ -13,7 +13,8 @@
     "search": "Rechercher",
     "goHome": "Accueil",
     "browse": "Explorer",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "skipToContent": "Aller au contenu principal"
   },
   "nav": {
     "home": "Accueil",
@@ -352,7 +353,36 @@
     "readText": "Lire le texte",
     "createdOn": "Créé le {date}",
     "updatedOn": "Mis à jour le {date}",
-    "themeLabel": "Thème : {name}"
+    "themeLabel": "Thème : {name}",
+    "dictionary": {
+      "title": "Dictionnaire",
+      "subtitle": "Lexique et définitions",
+      "searchPlaceholder": "Rechercher des mots, des sens, l'API…",
+      "searchPlaceholderReverse": "Rechercher par sens…",
+      "searchLabel": "Rechercher dans le dictionnaire",
+      "directionForward": "Mot → Sens",
+      "directionReverse": "Sens → Mot",
+      "filteringByTag": "Filtré par étiquette :",
+      "clearTagFilter": "Retirer le filtre d'étiquette",
+      "empty": "Aucune entrée n'a encore été ajoutée au dictionnaire.",
+      "noMatches": "Aucune entrée ne correspond à votre recherche.",
+      "colWord": "Mot",
+      "colMeaning": "Sens",
+      "colIpa": "API",
+      "colPos": "Catégorie grammaticale",
+      "showing": "Entrées {from, number} à {to, number} sur {total, number}",
+      "showDetails": "Afficher les détails de {word}",
+      "hasDetails": "Contient plus de détails",
+      "translation": "Traduction",
+      "etymology": "Étymologie",
+      "related": "Mots apparentés",
+      "notes": "Notes",
+      "tags": "Étiquettes",
+      "loadingDetails": "Chargement des détails…",
+      "detailsFailed": "Impossible de charger les détails. Veuillez réessayer.",
+      "previous": "Précédent",
+      "next": "Suivant"
+    }
   },
   "confirm": {
     "areYouSure": "Êtes-vous sûr ?",
@@ -542,7 +572,12 @@
     "noWordsFound": "Aucun mot trouvé.",
     "baseForm": "(forme de base)",
     "createAndAdd": "Créer & ajouter",
-    "selectItem": "Sélectionner un élément"
+    "selectItem": "Sélectionner un élément",
+    "confirmDeleteUnitTitle": "Supprimer l'unité « {title} » ?",
+    "confirmDeleteUnitDesc": "L'unité est supprimée ; ses leçons restent dans le cours, sans unité.",
+    "confirmDeleteLessonTitle": "Supprimer la leçon « {title} » ?",
+    "confirmDeleteLessonDesc": "Cela supprime la leçon, ses éléments et la progression des apprenants. Action irréversible.",
+    "confirmDelete": "Supprimer"
   },
   "studio": {
     "common": {
@@ -704,7 +739,9 @@
       "ipaOptional": "API (facultatif)",
       "latinOptional": "Latin (facultatif)",
       "nameOptional": "Nom (facultatif)",
-      "letterPlaceholder": "Lettre A"
+      "letterPlaceholder": "Lettre A",
+      "confirmDeleteTitle": "Supprimer « {symbol} » ?",
+      "confirmDeleteDesc": "Les mots qui l'utilisent gardent leur graphie, mais il quitte l'alphabet et son ordre de tri."
     },
     "phonology": {
       "pageTitle": "Phonologie",
@@ -901,7 +938,14 @@
       "impColEtymology": "Étymologie",
       "impColRelated": "Liés",
       "importingBtn": "Importation…",
-      "importEntriesBtn": "Importer les entrées"
+      "importEntriesBtn": "Importer les entrées",
+      "linkBackLabel": "Ajouter aussi ce mot à leurs mots apparentés",
+      "removeRelated": "Retirer {word}",
+      "xsampaConverted": "X-SAMPA converti en API",
+      "xsampaNothing": "Aucun X-SAMPA trouvé dans ce champ",
+      "xsampaTitle": "Convertir le X-SAMPA de ce champ en API",
+      "editEntryLabel": "Modifier {lemma}",
+      "deleteEntryLabel": "Supprimer {lemma}"
     },
     "paradigms": {
       "pageTitle": "Tableaux de paradigmes",
@@ -1160,7 +1204,14 @@
     "insertParadigm": "Insérer un tableau de paradigme (structuré)",
     "insertWikiLink": "Insérer un lien wiki — ou tapez [[slug]] en ligne",
     "generateIpaChart": "Générer un tableau API",
-    "convertXsampaToIpa": "Convertir en API"
+    "convertXsampaToIpa": "Convertir en API",
+    "bold": "Gras",
+    "italic": "Italique",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "bulletList": "Liste à puces",
+    "orderedList": "Liste numérotée",
+    "quote": "Citation"
   },
   "userSearch": {
     "unnamed": "Utilisateur sans nom",
@@ -1177,7 +1228,8 @@
     "recordAgain": "Réenregistrer",
     "saving": "Sauvegarde…",
     "checkPermissions": "Veuillez vérifier les autorisations de votre navigateur.",
-    "recordPronunciation": "Enregistrer la prononciation"
+    "recordPronunciation": "Enregistrer la prononciation",
+    "stopRecording": "Arrêter l'enregistrement"
   },
   "notifications": {
     "title": "Notifications",
@@ -1299,7 +1351,9 @@
     "creating": "Création…",
     "createLanguage": "Créer la langue",
     "errorNameSlugRequired": "Le nom et le slug sont obligatoires",
-    "createdToast": "Langue créée avec succès"
+    "createdToast": "Langue créée avec succès",
+    "scaffoldAlphabetFailed": "La langue a été créée, mais l'alphabet de départ n'a pas pu être ajouté.",
+    "scaffoldGrammarFailed": "La langue a été créée, mais les pages de grammaire de départ n'ont pas pu être ajoutées."
   },
   "createForm": {
     "evolveLabel": "Faire évoluer à partir d'une langue parente (facultatif)",
@@ -1396,6 +1450,7 @@
     "freeRussian": "Russe",
     "ukrainian": "Ukrainien",
     "french": "Français",
+    "breton": "Breton",
     "conlangTranslations": "Traductions en conlang",
     "translated": "{percent} % traduit",
     "addConlang": "Ajoutez votre conlang",

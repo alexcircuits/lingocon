@@ -49,7 +49,7 @@ export default async function SurveyPage({ params }: { params: { slug: string } 
     }
 
     return (
-        <main className="min-h-screen bg-background text-foreground">
+        <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground">
             <Navbar user={user} isDevMode={isDevMode} />
 
             <div className="container mx-auto max-w-2xl px-4 pt-32 pb-24">

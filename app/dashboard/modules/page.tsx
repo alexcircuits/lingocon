@@ -49,7 +49,7 @@ export default async function DashboardModulesPage() {
       <Navbar user={navUser} isDevMode={process.env.DEV_MODE === "true"} />
       <div className="h-14" />
 
-      <main className="container mx-auto max-w-4xl flex-1 px-4 py-10">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-4xl flex-1 px-4 py-10">
         <div className="mb-8 flex items-end justify-between border-b border-border/40 pb-6">
           <div>
             <h1 className="flex items-center gap-2 font-serif text-3xl tracking-tight">

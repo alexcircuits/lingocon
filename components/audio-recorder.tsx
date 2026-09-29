@@ -205,6 +205,7 @@ export function AudioRecorder({
               className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
               onClick={handleDelete}
               title={t("recordAgain")}
+              aria-label={t("recordAgain")}
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
@@ -224,6 +225,7 @@ export function AudioRecorder({
             size="sm"
             className="h-7 w-7 p-0 rounded-full"
             onClick={stopRecording}
+            aria-label={t("stopRecording")}
           >
             <Square className="h-3 w-3 fill-current" />
           </Button>

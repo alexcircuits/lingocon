@@ -13,7 +13,8 @@
     "search": "Search",
     "goHome": "Go Home",
     "browse": "Browse",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "skipToContent": "Skip to main content"
   },
   "nav": {
     "home": "Home",
@@ -352,7 +353,36 @@
     "readText": "Read text",
     "createdOn": "Created {date}",
     "updatedOn": "Updated {date}",
-    "themeLabel": "Theme: {name}"
+    "themeLabel": "Theme: {name}",
+    "dictionary": {
+      "title": "Dictionary",
+      "subtitle": "Lexicon and word definitions",
+      "searchPlaceholder": "Search words, meanings, IPA…",
+      "searchPlaceholderReverse": "Search by meaning…",
+      "searchLabel": "Search the dictionary",
+      "directionForward": "Word → Meaning",
+      "directionReverse": "Meaning → Word",
+      "filteringByTag": "Filtering by tag:",
+      "clearTagFilter": "Clear tag filter",
+      "empty": "No dictionary entries have been added yet.",
+      "noMatches": "No entries match your search.",
+      "colWord": "Word",
+      "colMeaning": "Meaning",
+      "colIpa": "IPA",
+      "colPos": "Part of speech",
+      "showing": "Showing {from, number}–{to, number} of {total, number} entries",
+      "showDetails": "Show details for {word}",
+      "hasDetails": "Has more details",
+      "translation": "Translation",
+      "etymology": "Etymology",
+      "related": "Related words",
+      "notes": "Notes",
+      "tags": "Tags",
+      "loadingDetails": "Loading details…",
+      "detailsFailed": "Couldn't load the details. Please try again.",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "confirm": {
     "areYouSure": "Are you sure?",
@@ -542,7 +572,12 @@
     "noWordsFound": "No words found.",
     "baseForm": "(base form)",
     "createAndAdd": "Create & Add",
-    "selectItem": "Select an item"
+    "selectItem": "Select an item",
+    "confirmDeleteUnitTitle": "Delete unit “{title}”?",
+    "confirmDeleteUnitDesc": "The unit is removed; its lessons stay in the course without a unit.",
+    "confirmDeleteLessonTitle": "Delete lesson “{title}”?",
+    "confirmDeleteLessonDesc": "This removes the lesson, its items and learners' progress on it. This can't be undone.",
+    "confirmDelete": "Delete"
   },
   "studio": {
     "common": {
@@ -704,7 +739,9 @@
       "ipaOptional": "IPA (optional)",
       "latinOptional": "Latin (optional)",
       "nameOptional": "Name (optional)",
-      "letterPlaceholder": "Letter A"
+      "letterPlaceholder": "Letter A",
+      "confirmDeleteTitle": "Delete “{symbol}”?",
+      "confirmDeleteDesc": "Words that use it keep their spelling, but it leaves the alphabet and its sort order."
     },
     "phonology": {
       "pageTitle": "Phonology",
@@ -901,7 +938,14 @@
       "impColEtymology": "Etymology",
       "impColRelated": "Related",
       "importingBtn": "Importing...",
-      "importEntriesBtn": "Import Entries"
+      "importEntriesBtn": "Import Entries",
+      "linkBackLabel": "Also add this word to their related words",
+      "removeRelated": "Remove {word}",
+      "xsampaConverted": "Converted X-SAMPA to IPA",
+      "xsampaNothing": "No X-SAMPA found in this field",
+      "xsampaTitle": "Convert X-SAMPA in this field to IPA",
+      "editEntryLabel": "Edit {lemma}",
+      "deleteEntryLabel": "Delete {lemma}"
     },
     "paradigms": {
       "pageTitle": "Paradigm Tables",
@@ -1160,7 +1204,14 @@
     "insertParadigm": "Insert Paradigm Table (Structured)",
     "insertWikiLink": "Insert wiki-link — or type [[slug]] inline",
     "generateIpaChart": "Generate IPA Chart",
-    "convertXsampaToIpa": "Convert to IPA"
+    "convertXsampaToIpa": "Convert to IPA",
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "quote": "Quote"
   },
   "userSearch": {
     "unnamed": "Unnamed user",
@@ -1177,7 +1228,8 @@
     "recordAgain": "Record again",
     "saving": "Saving...",
     "checkPermissions": "Please check your browser permissions.",
-    "recordPronunciation": "Record Pronunciation"
+    "recordPronunciation": "Record Pronunciation",
+    "stopRecording": "Stop recording"
   },
   "notifications": {
     "title": "Notifications",
@@ -1299,7 +1351,9 @@
     "creating": "Creating...",
     "createLanguage": "Create Language",
     "errorNameSlugRequired": "Name and slug are required",
-    "createdToast": "Language created successfully"
+    "createdToast": "Language created successfully",
+    "scaffoldAlphabetFailed": "The language was created, but the starter alphabet couldn't be added.",
+    "scaffoldGrammarFailed": "The language was created, but the starter grammar pages couldn't be added."
   },
   "createForm": {
     "evolveLabel": "Evolve from Parent Language (Optional)",

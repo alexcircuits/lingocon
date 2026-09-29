@@ -73,6 +73,21 @@ describe("isSafeSvg", () => {
     expect(isSafeSvg('<svg><script>alert(1)</script></svg>')).toBe(false)
   })
 
+  it("rejects namespace-prefixed script and foreignObject elements", () => {
+    expect(
+      isSafeSvg('<svg xmlns:x="http://www.w3.org/2000/svg"><x:script>alert(document.domain)</x:script></svg>')
+    ).toBe(false)
+    expect(isSafeSvg('<svg xmlns:h="http://www.w3.org/2000/svg"><h:foreignObject/></svg>')).toBe(false)
+  })
+
+  it("rejects XSLT processing instructions", () => {
+    expect(isSafeSvg('<?xml-stylesheet type="text/xsl" href="x.xsl"?><svg/>')).toBe(false)
+  })
+
+  it("still accepts elements that merely contain the word script", () => {
+    expect(isSafeSvg('<svg><text class="scripted">script</text></svg>')).toBe(true)
+  })
+
   it("rejects an inline event handler", () => {
     expect(isSafeSvg('<svg><rect onload="alert(1)"/></svg>')).toBe(false)
   })

@@ -134,15 +134,21 @@ export function SoundChangeEditor({
   // Save rules to language metadata
   const handleSave = useCallback(async () => {
     try {
-      await updateLanguageMetadata(languageId, {
+      // The action reports failure as { error } rather than throwing; checking only for a throw
+      // showed "Rules saved" even when nothing was saved.
+      const result = await updateLanguageMetadata(languageId, {
         soundChangeRules: rulesText,
       })
+      if (result && "error" in result && result.error) {
+        toast.error(result.error || t("saveFailed"))
+        return
+      }
       toast.success(t("rulesSaved"))
       startTransition(() => router.refresh())
     } catch {
       toast.error(t("saveFailed"))
     }
-  }, [languageId, rulesText, router])
+  }, [languageId, rulesText, router, t])
 
   // Copy results to clipboard
   const handleCopyResults = useCallback(() => {
@@ -152,7 +158,7 @@ export function SoundChangeEditor({
       .join("\n")
     navigator.clipboard.writeText(text)
     toast.success(t("copiedToClipboard"))
-  }, [dictionaryResults])
+  }, [dictionaryResults, t])
 
   // Apply rules to the actual dictionary (irreversible)
   const handleApplyToDictionary = useCallback(async () => {
@@ -170,7 +176,7 @@ export function SoundChangeEditor({
     } finally {
       setIsApplying(false)
     }
-  }, [languageId, router])
+  }, [languageId, router, t])
 
   // Export as TSV
   const handleExport = useCallback(() => {
@@ -188,7 +194,7 @@ export function SoundChangeEditor({
     a.click()
     URL.revokeObjectURL(url)
     toast.success(t("exportedToast"))
-  }, [dictionaryResults, languageName])
+  }, [dictionaryResults, languageName, t])
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

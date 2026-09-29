@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { canEditScope } from "@/lib/auth-helpers"
 import { UnauthorizedError, NotFoundError, ConflictError } from "@/lib/errors"
+import { assertParadigmInLanguage } from "@/lib/services/language-scope"
 import {
   createGrammarPageSchema,
   updateGrammarPageSchema,
@@ -15,6 +16,7 @@ export async function createPage(input: CreateGrammarPageInput, userId: string) 
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
+  await assertParadigmInLanguage(validated.paradigmId, validated.languageId)
 
   const existing = await prisma.grammarPage.findUnique({
     where: {
@@ -58,9 +60,10 @@ export async function updatePage(input: UpdateGrammarPageInput, userId: string) 
     select: { languageId: true, slug: true },
   })
 
-  if (!existing) {
+  if (!existing || existing.languageId !== validated.languageId) {
     throw new NotFoundError("Grammar page", validated.id)
   }
+  await assertParadigmInLanguage(validated.paradigmId, validated.languageId)
 
   if (validated.slug && validated.slug !== existing.slug) {
     const conflict = await prisma.grammarPage.findUnique({
@@ -98,6 +101,11 @@ export async function deletePage(pageId: string, languageId: string, userId: str
   const canEdit = await canEditScope(languageId, userId, "write:grammar")
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
+  }
+
+  const existing = await prisma.grammarPage.findUnique({ where: { id: pageId }, select: { languageId: true } })
+  if (!existing || existing.languageId !== languageId) {
+    throw new NotFoundError("Grammar page", pageId)
   }
 
   return prisma.grammarPage.delete({

@@ -62,7 +62,7 @@ export default async function PublicFamiliesPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       <Navbar user={user} isDevMode={isDevMode} />
 
-      <main className="flex-1 overflow-hidden" style={{ paddingTop: "3.5rem" }}>
+      <main id="main-content" tabIndex={-1} className="flex-1 overflow-hidden" style={{ paddingTop: "3.5rem" }}>
         {languages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center space-y-4 max-w-md px-6">

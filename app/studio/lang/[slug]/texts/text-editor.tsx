@@ -25,6 +25,7 @@ import {
 import { Save, ArrowLeft, Trash2, AlertTriangle, Upload, FileText } from "lucide-react"
 import Link from "next/link"
 import { type Editor } from "@tiptap/react"
+import { generateSlug } from "@/lib/utils/slug"
 
 interface TextEditorProps {
   languageId: string
@@ -38,14 +39,6 @@ interface TextEditorProps {
     coverImage?: string | null
     paradigmId?: string | null
   }
-}
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 100)
 }
 
 export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) {
@@ -116,7 +109,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
     } catch (err) {
       toast.error(t("readFailed"))
     }
-  }, [])
+  }, [t])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -324,7 +317,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
             <span className="text-xs text-muted-foreground">
               {isPublished ? t("public") : t("draft")}
             </span>
-            <button
+            <button aria-label={t("public")}
               type="button"
               role="switch"
               aria-checked={isPublished}

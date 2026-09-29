@@ -1,11 +1,12 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
+import { getUserId, canReadLanguage } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createActivity } from "@/lib/utils/activity"
 import { createNotification } from "@/lib/notifications"
+import { rateLimit } from "@/lib/rate-limit"
 
 const createCommentSchema = z.object({
     content: z.string().min(1, "Comment cannot be empty").max(2000, "Comment is too long"),
@@ -16,6 +17,10 @@ const createCommentSchema = z.object({
 export async function createComment(input: z.infer<typeof createCommentSchema>) {
     const userId = await getUserId()
     if (!userId) return { error: "You must be signed in to comment" }
+    // Every comment notifies the language owner; bound the spam rate.
+    if (!rateLimit(`comment:${userId}`, 10, 60_000).ok) {
+        return { error: "You're commenting too fast — please wait a moment." }
+    }
 
     try {
         const validated = createCommentSchema.parse(input)
@@ -152,10 +157,12 @@ export async function hideComment(commentId: string, languageId: string) {
         return { error: "Only the language owner can moderate comments" }
     }
 
-    await prisma.comment.update({
-        where: { id: commentId },
+    // updateMany scoped to the owner's language: a comment id from elsewhere matches nothing.
+    const { count } = await prisma.comment.updateMany({
+        where: { id: commentId, languageId },
         data: { isHidden: true },
     })
+    if (count === 0) return { error: "Comment not found" }
 
     revalidatePath(`/lang/${language.slug}`)
 
@@ -163,6 +170,9 @@ export async function hideComment(commentId: string, languageId: string) {
 }
 
 export async function getComments(languageId: string) {
+    // A language can be made private after it collected comments; don't keep serving them.
+    if (!(await canReadLanguage(languageId, await getUserId()))) return []
+
     return prisma.comment.findMany({
         where: {
             languageId,
@@ -184,5 +194,6 @@ export async function getComments(languageId: string) {
             },
         },
         orderBy: { createdAt: "desc" },
+        take: 200,
     })
 }

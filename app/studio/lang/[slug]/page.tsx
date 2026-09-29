@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { getValidationWarnings } from "@/lib/utils/validation"
+import { getLanguageCounts } from "@/lib/services/language-counts"
 import { ValidationWarnings } from "@/components/validation-warnings"
 import { ActivityFeed } from "@/components/activity-feed"
 import { getActivitiesForLanguage } from "@/lib/utils/activity"
@@ -20,40 +21,41 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { Calendar, Eye, FileText, Activity, Plus, BookOpen, PenLine } from "lucide-react"
-import { Prisma } from "@prisma/client"
 import { InlineLanguageEdit } from "./components/inline-language-edit"
 import { CopyButton } from "@/lib/hooks/use-copy-to-clipboard"
 import { StudioTour } from "@/components/onboarding/studio-tour"
 import { ContextualHelp } from "@/components/contextual-help"
 
-// Define the include type for proper TypeScript inference
-const languageInclude = {
-  scriptSymbols: true,
-  grammarPages: true,
-  dictionaryEntries: true,
-  paradigms: true,
-  _count: {
-    select: {
-      scriptSymbols: true,
-      grammarPages: true,
-      dictionaryEntries: true,
-      paradigms: true,
-    },
-  },
+// Only the columns the overview uses: it previously included every dictionary entry, grammar page
+// (full rich-text JSON), symbol and paradigm with all columns just to show a few numbers,
+// validation warnings and the Swadesh tracker.
+const languageSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  visibility: true,
+  allowsDiacritics: true,
+  createdAt: true,
+  scriptSymbols: { select: { symbol: true, capitalSymbol: true } },
+  dictionaryEntries: { select: { lemma: true, gloss: true, paradigmId: true } },
+  paradigms: { select: { id: true } },
 } as const
 
-type LanguageWithDetails = Prisma.LanguageGetPayload<{
-  include: typeof languageInclude
-}>
-
-async function getLanguageDetails(slug: string): Promise<LanguageWithDetails | null> {
-  const language = await prisma.language.findUnique({
-    where: { slug },
-    include: languageInclude,
-  })
-
-  return language
+async function getLanguageDetails(slug: string) {
+  const language = await prisma.language.findUnique({ where: { slug }, select: languageSelect })
+  if (!language) return null
+  const counts = await getLanguageCounts(language.id, [
+    "scriptSymbols",
+    "grammarPages",
+    "dictionaryEntries",
+    "paradigms",
+  ] as const)
+  return { ...language, _count: counts }
 }
+
+// Warnings are rendered client-side; a large lexicon could produce thousands.
+const MAX_WARNINGS_SHOWN = 50
 
 export default async function OverviewPage({
   params,
@@ -80,12 +82,13 @@ export default async function OverviewPage({
   ])
 
   // Run validation synchronously
-  const warnings = getValidationWarnings(
+  const allWarnings = getValidationWarnings(
     language.scriptSymbols,
     language.dictionaryEntries,
-    language.grammarPages,
-    language.paradigms
+    language.paradigms,
+    { allowsDiacritics: language.allowsDiacritics }
   )
+  const warnings = allWarnings.slice(0, MAX_WARNINGS_SHOWN)
 
   const t = await getTranslations("studio.overview")
 
@@ -145,7 +148,7 @@ export default async function OverviewPage({
       </div>
 
       {warnings.length > 0 && (
-        <ValidationWarnings warnings={warnings} scopeKey={language.id} />
+        <ValidationWarnings warnings={warnings} total={allWarnings.length} scopeKey={language.id} />
       )}
 
       {/* Analytics Charts */}
@@ -183,6 +186,7 @@ export default async function OverviewPage({
                   field="name"
                   value={language.name}
                   maxLength={100}
+                  label={t("name")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -203,6 +207,7 @@ export default async function OverviewPage({
                 field="description"
                 value={language.description || ""}
                 maxLength={1000}
+                label={t("description")}
               />
             </div>
 

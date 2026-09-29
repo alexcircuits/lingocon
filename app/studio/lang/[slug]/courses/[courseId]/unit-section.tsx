@@ -10,6 +10,7 @@ import { updateUnit, deleteUnit } from "@/app/actions/learn"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 import { LessonCard } from "./lesson-card"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { AddLessonButtonForUnit } from "./add-buttons"
 import type { Unit, Lesson, LessonItem, GrammarPage, TextItem } from "./types"
 
@@ -51,6 +52,7 @@ export function UnitSection({
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(unit.title)
   const [busy, setBusy] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   async function saveTitle() {
     const trimmed = title.trim()
@@ -81,6 +83,20 @@ export function UnitSection({
 
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
+      <ConfirmationDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        onConfirm={() => {
+          setConfirmDelete(false)
+          void remove()
+        }}
+        title={t("confirmDeleteUnitTitle", { title: unit.title })}
+        description={t("confirmDeleteUnitDesc")}
+        confirmText={t("confirmDelete")}
+        cancelText={t("cancel")}
+        variant="destructive"
+        isLoading={busy}
+      />
       <div className="mb-3 flex items-center gap-2">
         <span className="inline-flex h-6 items-center rounded-full bg-primary/10 px-2.5 text-xs font-semibold text-primary">
           {t("unitLabel", { index: index + 1 })}
@@ -107,10 +123,10 @@ export function UnitSection({
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" disabled={!canMoveDown} onClick={() => onMoveUnit("down")} aria-label="Move unit down">
               <ChevronDown className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(true)}>
+            <Button aria-label="Rename unit" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(true)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={remove} disabled={busy}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)} disabled={busy}>
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
             </Button>
           </>

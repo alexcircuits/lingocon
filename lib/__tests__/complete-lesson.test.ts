@@ -26,6 +26,10 @@ const { mockPrisma } = vi.hoisted(() => ({
     language: {
       findUnique: vi.fn(),
     },
+    // Friend-streak bookkeeping runs after completion (no mutual friends here).
+    follow: {
+      findMany: vi.fn(async () => []),
+    },
     // lockEnrollment issues `SELECT … FOR UPDATE` via $queryRaw inside the tx.
     $queryRaw: vi.fn(async () => []),
     // Support both the interactive callback form (tx => ...) and the legacy

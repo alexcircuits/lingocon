@@ -102,7 +102,7 @@ export function PublicLayout({ language, children, user, isDevMode }: PublicLayo
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <div className="container mx-auto py-8 px-4">{children}</div>
       </main>
 

@@ -63,6 +63,18 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
 })
 
+const PLACEHOLDER_SECRETS = [
+  "change-me-in-production",
+  "changeme",
+  "secret",
+  "generate-with-openssl-rand-base64-32",
+  "your-secret-here",
+]
+
+export function isPlaceholderAuthSecret(secret: string): boolean {
+  return PLACEHOLDER_SECRETS.includes(secret.trim().toLowerCase())
+}
+
 /**
  * Validate an environment source. Pure and deterministic so it can be unit
  * tested without touching `process.env`.
@@ -90,6 +102,12 @@ export function parseEnv(source: EnvSource): EnvParseResult {
     } else {
       if (!source.AUTH_SECRET) {
         errors.push("AUTH_SECRET: required in production (generate with `openssl rand -base64 32`)")
+      } else if (isPlaceholderAuthSecret(source.AUTH_SECRET)) {
+        // Session JWTs are signed with this; a published value lets anyone mint an admin session.
+        errors.push("AUTH_SECRET: is a known placeholder — generate one with `openssl rand -base64 32`")
+      } else if (source.AUTH_SECRET.length < 32) {
+        // Warn rather than refuse: an existing deployment must not go down on upgrade.
+        warnings.push("AUTH_SECRET is shorter than 32 characters — rotate it (`openssl rand -base64 32`)")
       }
       if (!source.RESEND_API_KEY) {
         warnings.push("RESEND_API_KEY not set — email verification and password reset are disabled")

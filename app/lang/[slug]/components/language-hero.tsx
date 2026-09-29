@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Language } from "@prisma/client"
 import Image from "next/image"
 import Link from "next/link"
+import { isSafeHttpUrl } from "@/lib/utils/safe-url"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
 import { ShareButtons } from "@/components/share-buttons"
@@ -118,35 +119,38 @@ export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps
                                 {visibilityLabel}
                             </Badge>
                             <div className="flex items-center gap-1">
-                                {language.discordUrl && (
-                                    <Link
-                                        href={language.discordUrl}
+                                {isSafeHttpUrl(language.discordUrl ?? "") && (
+                                    <a
+                                        href={language.discordUrl!}
                                         target="_blank"
+                                        rel="noopener noreferrer nofollow"
                                         aria-label="Discord"
                                         className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/5 hover:text-[#5865F2]"
                                     >
                                         <MessageSquare className="h-4 w-4" />
-                                    </Link>
+                                    </a>
                                 )}
-                                {language.telegramUrl && (
-                                    <Link
-                                        href={language.telegramUrl}
+                                {isSafeHttpUrl(language.telegramUrl ?? "") && (
+                                    <a
+                                        href={language.telegramUrl!}
                                         target="_blank"
+                                        rel="noopener noreferrer nofollow"
                                         aria-label="Telegram"
                                         className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/5 hover:text-[#0088cc]"
                                     >
                                         <MessageCircle className="h-4 w-4" />
-                                    </Link>
+                                    </a>
                                 )}
-                                {language.websiteUrl && (
-                                    <Link
-                                        href={language.websiteUrl}
+                                {isSafeHttpUrl(language.websiteUrl ?? "") && (
+                                    <a
+                                        href={language.websiteUrl!}
                                         target="_blank"
+                                        rel="noopener noreferrer nofollow"
                                         aria-label="Website"
                                         className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/5 hover:text-primary"
                                     >
                                         <Globe className="h-4 w-4" />
-                                    </Link>
+                                    </a>
                                 )}
                             </div>
                         </div>
@@ -157,7 +161,7 @@ export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps
                     </div>
 
                     {language.description && (
-                        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                        <p className="max-w-2xl whitespace-pre-line text-base leading-relaxed text-muted-foreground md:text-lg">
                             {language.description}
                         </p>
                     )}

@@ -6,12 +6,12 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  // Only allow internal calls (rudimentary check to prevent abuse, though it's harmless data)
-  const authHeader = request.headers.get("x-internal-auth")
-  if (authHeader !== process.env.INTERNAL_API_KEY && process.env.NODE_ENV === "production") {
-    // In dev we might not have the key, but in prod we should secure it
-    // Actually, to make it simple and bulletproof for both envs without new env vars:
-    // It's a read-only endpoint that just returns the new slug if reserved. No PII.
+  // Called by middleware with x-internal-auth. When INTERNAL_API_KEY is configured, enforce it (the
+  // previous check was an empty if). Without a key the data is harmless — the same old→new slug
+  // mapping is public through the redirect itself — so local setups keep working.
+  const expectedKey = process.env.INTERNAL_API_KEY
+  if (expectedKey && request.headers.get("x-internal-auth") !== expectedKey) {
+    return NextResponse.json({ found: false }, { status: 403 })
   }
 
   try {

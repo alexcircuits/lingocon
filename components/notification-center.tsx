@@ -36,6 +36,7 @@ import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { isSafeHttpUrlOrPath } from "@/lib/utils/safe-url"
 
 type PlatformUpdate = {
     id: string
@@ -83,7 +84,8 @@ export function NotificationCenter() {
                     title: u.title,
                     description: u.description,
                     icon: getIconByName(u.icon),
-                    link: u.link,
+                    // Announcements created before link validation existed may hold unsafe URLs.
+                    link: u.link && isSafeHttpUrlOrPath(u.link.trim()) ? u.link : null,
                     createdAt: new Date(u.createdAt)
                 }))
                 allItems = [...allItems, ...updates]
@@ -163,6 +165,8 @@ export function NotificationCenter() {
 
     useEffect(() => {
         fetchData()
+        // Load once on mount; later refreshes are explicit (opening the popover).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (

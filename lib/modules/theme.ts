@@ -126,5 +126,7 @@ export function themeToStyle(theme: ResolvedTheme): CSSProperties {
   }
   if (theme.radius) style["--radius"] = theme.radius
   if (theme.bodyFont) style.fontFamily = theme.bodyFont
+  // Applied to headings by `.lc-themed-headings` in globals.css.
+  if (theme.headingFont) style["--theme-heading-font"] = theme.headingFont
   return style as CSSProperties
 }

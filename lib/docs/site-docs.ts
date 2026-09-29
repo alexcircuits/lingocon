@@ -23,7 +23,7 @@ export type DocPageMeta = {
 export const DOC_PAGES: DocPageMeta[] = [
   {
     slug: "architecture",
-    file: "architecture.md",
+    file: "ARCHITECTURE.md",
     title: "Architecture",
     description:
       "How requests flow through Next.js, authentication, Prisma, and cache revalidation.",

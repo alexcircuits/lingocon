@@ -1,27 +1,17 @@
 "use server"
 
-import { ZodError } from "zod"
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
-import { AppError } from "@/lib/errors"
+import { getUserId, canReadLanguage } from "@/lib/auth-helpers"
+import { getEtymologyNeighborhood, type EtymologyNode } from "@/lib/services/etymology"
+import { toActionError } from "@/lib/errors"
 import { createActivity } from "@/lib/utils/activity"
 import { revalidateDictionary } from "@/lib/utils/revalidation"
 import { checkDictionaryBadges } from "@/app/actions/badge"
 import type { CreateDictionaryEntryInput, UpdateDictionaryEntryInput } from "@/lib/validations/dictionary-entry"
 import * as dictionaryService from "@/lib/services/dictionary-entry"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof ZodError) {
-    return { error: error.issues[0]?.message || "Validation failed" }
-  }
-  if (error instanceof AppError) {
-    return { error: error.message }
-  }
-  if (error instanceof Error) {
-    return { error: error.message }
-  }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
   const userId = await getUserId()
@@ -191,8 +181,67 @@ export async function getPublicDictionaryEntry(entryId: string) {
       return { error: "Not found" }
     }
 
-    return { success: true as const, data: entry }
+    // relatedWords holds lemma strings; resolve them to entries so the reader can open them even
+    // when they aren't on the current (paginated) page.
+    const relatedLemmas = Array.isArray(entry.relatedWords)
+      ? entry.relatedWords.filter((w): w is string => typeof w === "string")
+      : []
+    const relatedEntries = relatedLemmas.length
+      ? await prisma.dictionaryEntry.findMany({
+          where: { languageId: entry.languageId, lemma: { in: relatedLemmas } },
+          select: { id: true, lemma: true },
+          take: 200,
+        })
+      : []
+
+    return { success: true as const, data: { ...entry, relatedEntries } }
   } catch (error) {
     return handleError(error, "Failed to fetch entry details")
   }
+}
+
+/** Entries needed to draw one entry's derivation tree (see lib/services/etymology.ts). */
+export async function getEntryEtymology(entryId: string): Promise<EtymologyNode[]> {
+  const entry = await prisma.dictionaryEntry.findUnique({
+    where: { id: entryId },
+    select: { languageId: true },
+  })
+  if (!entry || !(await canReadLanguage(entry.languageId, await getUserId()))) return []
+  return getEtymologyNeighborhood(entryId)
+}
+
+/**
+ * Entry picker search across the whole language (e.g. choosing the second word of a compound —
+ * GitHub #25: the wizard used to offer only the 20 entries on the current dictionary page).
+ */
+export async function searchLanguageEntries(languageId: string, query: string) {
+  if (!(await canReadLanguage(languageId, await getUserId()))) return []
+  const q = query.trim().slice(0, 200)
+  return prisma.dictionaryEntry.findMany({
+    where: {
+      languageId,
+      ...(q
+        ? {
+            OR: [
+              { lemma: { contains: q, mode: "insensitive" } },
+              { gloss: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    select: { id: true, lemma: true, gloss: true, partOfSpeech: true },
+    orderBy: [{ lemma: "asc" }, { id: "asc" }],
+    take: 50,
+  })
+}
+
+/** Every lemma in the language — for the word generator's dedupe and phoneme weighting. */
+export async function getLanguageLemmas(languageId: string): Promise<string[]> {
+  if (!(await canReadLanguage(languageId, await getUserId()))) return []
+  const rows = await prisma.dictionaryEntry.findMany({
+    where: { languageId },
+    select: { lemma: true },
+    take: 100_000,
+  })
+  return rows.map((r) => r.lemma)
 }

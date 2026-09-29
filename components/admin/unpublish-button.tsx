@@ -51,7 +51,7 @@ export function UnpublishButton({ id, type, title }: UnpublishButtonProps) {
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                     title="Unpublish"
-                >
+                 aria-label="Unpublish">
                     <EyeOff className="h-4 w-4" />
                 </Button>
             </AlertDialogTrigger>

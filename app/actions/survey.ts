@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { isAdmin } from "@/lib/admin"
 
 const submitResponseSchema = z.object({
     surveySlug: z.string().min(1),
@@ -90,6 +91,8 @@ export async function submitSurveyResponse(input: z.infer<typeof submitResponseS
 }
 
 export async function getSurveyResults(surveyId: string) {
+    // Free-text answers are admin-only.
+    if (!(await isAdmin())) return null
     const survey = await prisma.survey.findUnique({
         where: { id: surveyId },
         include: {
@@ -151,6 +154,7 @@ export async function getSurveyResults(surveyId: string) {
 }
 
 export async function getAllSurveysForAdmin() {
+    if (!(await isAdmin())) return []
     return prisma.survey.findMany({
         include: {
             _count: {

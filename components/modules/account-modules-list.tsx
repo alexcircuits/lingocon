@@ -81,7 +81,7 @@ export function AccountModulesList({ installs }: { installs: AccountInstall[] })
                   </div>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => remove(i.installId)} disabled={pending}>
+              <Button aria-label="Remove module" variant="ghost" size="icon" onClick={() => remove(i.installId)} disabled={pending}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </CardContent>

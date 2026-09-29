@@ -1,40 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
 import { requireAdmin } from "@/lib/admin"
-
-interface LogActionParams {
-    action: string
-    resource: string
-    resourceId?: string
-    details?: any
-}
-
-export async function logAdminAction({
-    action,
-    resource,
-    resourceId,
-    details
-}: LogActionParams) {
-    try {
-        const session = await auth()
-        if (!session?.user?.id) return
-
-        await prisma.auditLog.create({
-            data: {
-                action,
-                resource,
-                resourceId,
-                details: details ? JSON.parse(JSON.stringify(details)) : undefined,
-                adminId: session.user.id
-            }
-        })
-    } catch (error) {
-        console.error("Failed to log admin action:", error)
-        // Don't throw, we don't want to break the main action if logging fails
-    }
-}
 
 export async function getAuditLogs(params: {
     page?: number

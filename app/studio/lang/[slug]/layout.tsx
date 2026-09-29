@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation"
 import { StudioLayout } from "../studio-layout"
 import { FontLoader } from "@/components/font-loader"
 import { getStudioNavInstalls } from "@/lib/services/module"
+import { getLanguageCounts } from "@/lib/services/language-counts"
 import type { ModuleNavTab } from "@/lib/studio-nav"
 
 
@@ -20,21 +21,12 @@ async function getLanguage(slug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
     where: { slug },
     include: {
+      // No email: this object is serialized to the client StudioLayout, and any signed-in user
+      // can open the studio of a public language.
       owner: {
         select: {
           id: true,
           name: true,
-          email: true,
-        },
-      },
-      _count: {
-        select: {
-          scriptSymbols: true,
-          grammarPages: true,
-          dictionaryEntries: true,
-          paradigms: true,
-          articles: true,
-          texts: true,
         },
       },
     },
@@ -52,7 +44,16 @@ async function getLanguage(slug: string, userId: string | null) {
     }
   }
 
-  return language
+  // Scoped counts — Prisma's relation _count aggregates every language's rows (see language-counts).
+  const counts = await getLanguageCounts(language.id, [
+    "scriptSymbols",
+    "grammarPages",
+    "dictionaryEntries",
+    "paradigms",
+    "articles",
+    "texts",
+  ] as const)
+  return { ...language, _count: counts }
 }
 
 export default async function StudioLangLayout({

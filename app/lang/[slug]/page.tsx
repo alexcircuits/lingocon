@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/prisma"
+import { JsonLd } from "@/components/json-ld"
+import { cache } from "react"
+import { getLanguageCounts } from "@/lib/services/language-counts"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,7 +31,8 @@ import { themeToStyle } from "@/lib/modules/theme"
 import { Palette } from "lucide-react"
 import { buildLanguageMetadata, breadcrumbJsonLd, getSiteUrl } from "@/lib/seo"
 
-async function getLanguage(slug: string) {
+// cache(): generateMetadata and the page both load the language in the same request.
+const getLanguage = cache(async (slug: string) => {
   const language = await prisma.language.findUnique({
     where: { slug },
     select: {
@@ -51,17 +55,6 @@ async function getLanguage(slug: string) {
         where: { role: "EDITOR" },
         select: {
           user: { select: { id: true, name: true, image: true } },
-        },
-      },
-      _count: {
-        select: {
-          scriptSymbols: true,
-          grammarPages: true,
-          dictionaryEntries: true,
-          articles: true,
-          texts: true,
-          favorites: true,
-          courses: { where: { visibility: "PUBLISHED" } },
         },
       },
       articles: {
@@ -96,8 +89,18 @@ async function getLanguage(slug: string) {
     return null
   }
 
-  return language
-}
+  // Scoped counts — Prisma's relation _count aggregates every language's rows (see language-counts).
+  const counts = await getLanguageCounts(language.id, [
+    "scriptSymbols",
+    "grammarPages",
+    "dictionaryEntries",
+    "articles",
+    "texts",
+    "favorites",
+    "publishedCourses",
+  ] as const)
+  return { ...language, _count: { ...counts, courses: counts.publishedCourses } }
+})
 
 export async function generateMetadata({
   params,
@@ -235,11 +238,15 @@ export default async function PublicLanguagePage({
 
   return (
     <div
-      className={activeTheme ? "lc-themed space-y-12 rounded-[var(--radius)] pb-20" : "space-y-12 pb-20"}
+      className={
+        activeTheme
+          ? `lc-themed ${activeTheme.theme.headingFont ? "lc-themed-headings " : ""}space-y-12 rounded-[var(--radius)] pb-20`
+          : "space-y-12 pb-20"
+      }
       style={themeStyle}
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={datasetSchema} />
       <LanguageHero language={language} isFavorite={isFavorite} userId={userId} />
 
       <MaintainersSection

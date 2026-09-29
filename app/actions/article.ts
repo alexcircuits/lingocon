@@ -1,16 +1,13 @@
 "use server"
 
 import { getUserId } from "@/lib/auth-helpers"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
 import { checkContentBadges } from "@/app/actions/badge"
 import * as articleService from "@/lib/services/article"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof AppError) return { error: error.message }
-  if (error instanceof Error) return { error: error.message }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 function revalidateArticlePaths(langSlug: string, articleSlug?: string) {
   revalidatePath(`/studio/lang/${langSlug}/articles`)

@@ -17,15 +17,19 @@ export async function GET(
       slug: true,
       description: true,
       externalAncestry: true,
+      visibility: true,
       owner: { select: { name: true } },
       _count: { select: { dictionaryEntries: true, childLanguages: true } },
-      parentLanguage: { select: { name: true } },
+      parentLanguage: { select: { name: true, visibility: true } },
     },
   })
 
-  if (!language) {
+  // Share cards are public; never render one for a private language (or name a private parent).
+  if (!language || language.visibility === "PRIVATE") {
     return new Response("Language not found", { status: 404 })
   }
+  const parentName =
+    language.parentLanguage?.visibility === "PRIVATE" ? "a private language" : language.parentLanguage?.name
 
   // Count tree depth upward
   let depth = 0
@@ -53,7 +57,7 @@ export async function GET(
     batch = kids.map(k => k.id)
   }
 
-  const familyLabel = language.externalAncestry || language.parentLanguage?.name || "Root language"
+  const familyLabel = language.externalAncestry || parentName || "Root language"
   const wordCount = language._count.dictionaryEntries
   const childCount = language._count.childLanguages
 

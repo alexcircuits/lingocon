@@ -1,5 +1,9 @@
-"use server"
-
+/**
+ * Activity log helpers for server code (actions, RSC loaders). Deliberately NOT a "use server"
+ * module: Next registers every export of such a module as a callable endpoint, which previously let
+ * anyone forge activity or read any user's activity (with emails and private-language names).
+ * Client components go through the gated actions in `app/actions/activity.ts`.
+ */
 import { prisma } from "@/lib/prisma"
 import type { ActivityType, ActivityEntityType } from "@prisma/client"
 
@@ -43,7 +47,6 @@ export async function getActivitiesForLanguage(
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },
@@ -53,9 +56,20 @@ export async function getActivitiesForLanguage(
   })
 }
 
-export async function getActivitiesForUser(userId: string, limit: number = 20, cursor?: string) {
+const MAX_ACTIVITY_PAGE = 50
+
+/**
+ * A user's activity as seen by `viewerId`: their own profile shows everything, anyone else only sees
+ * activity on PUBLIC languages (a profile must not advertise private or unlisted work).
+ */
+export async function getActivitiesForUser(
+  userId: string,
+  viewerId: string | null,
+  limit: number = 20,
+  cursor?: string
+) {
   return prisma.activity.findMany({
-    where: { userId },
+    where: viewerId === userId ? { userId } : { userId, language: { visibility: "PUBLIC" } },
     include: {
       language: {
         select: {
@@ -68,13 +82,12 @@ export async function getActivitiesForUser(userId: string, limit: number = 20, c
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },
     },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: Math.min(Math.max(limit, 1), MAX_ACTIVITY_PAGE),
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
   })
 }
@@ -124,7 +137,6 @@ export async function getRecentActivitiesForUserLanguages(
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },
@@ -160,13 +172,12 @@ export async function getFeedActivitiesForUser(userId: string, limit: number = 5
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },
     },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: Math.min(Math.max(limit, 1), MAX_ACTIVITY_PAGE),
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
   })
 }

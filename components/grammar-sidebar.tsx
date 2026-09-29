@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { BookOpen, Menu, Search, X } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect, useTransition } from "react"
 import { searchGrammarPages, type GrammarSearchResult } from "@/app/actions/search-grammar"
 
@@ -114,7 +114,7 @@ export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSide
         className="h-8 pl-8 pr-8 text-sm"
       />
       {query && (
-        <button
+        <button aria-label="Close"
           onClick={() => setQuery("")}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
@@ -134,7 +134,8 @@ export function GrammarSidebar({ languageSlug, pages, currentSlug }: GrammarSide
             Grammar Menu
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-80 p-0">
+        <SheetContent aria-describedby={undefined} side="left" className="w-80 p-0">
+          <SheetTitle className="sr-only">Grammar pages</SheetTitle>
           <div className="p-4 border-b space-y-3">
             <h2 className="font-semibold flex items-center gap-2">
               <BookOpen className="h-4 w-4" />

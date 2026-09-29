@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { isRuntimeMethod } from "@/lib/modules/runtime-protocol"
 import { loadModuleData } from "@/lib/modules/data"
+import { MODULE_RATE_LIMIT_MESSAGE, moduleRateLimitRetryAfterMs } from "@/lib/modules/rate-limits"
 
 export const dynamic = "force-dynamic"
 
@@ -27,6 +28,15 @@ export async function POST(req: Request) {
   const userId = await getUserId()
   if (!(await canEditScope(languageId, userId, "manage:modules"))) {
     return NextResponse.json({ error: "You can only test against your own languages" }, { status: 403 })
+  }
+
+  // Past the edit check, so userId is set.
+  const retryAfterMs = moduleRateLimitRetryAfterMs("playground", `user:${userId}`)
+  if (retryAfterMs) {
+    return NextResponse.json(
+      { error: MODULE_RATE_LIMIT_MESSAGE },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    )
   }
 
   const data = await loadModuleData(method, languageId)

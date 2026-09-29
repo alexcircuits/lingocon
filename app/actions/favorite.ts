@@ -5,6 +5,7 @@ import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { checkFavoriteBadges } from "@/app/actions/badge"
 import { createNotification } from "@/lib/notifications"
+import { rateLimit } from "@/lib/rate-limit"
 
 export interface ToggleFavoriteInput {
   languageId: string
@@ -23,6 +24,10 @@ export async function toggleFavorite(
 
     if (!userId) {
       return { error: "You must be logged in to favorite languages" }
+    }
+    // Favorites notify the language owner; bound the toggle rate.
+    if (!rateLimit(`favorite:${userId}`, 60, 60_000).ok) {
+      return { error: "Too many requests — please wait a moment." }
     }
 
     const existingFavorite = await prisma.favorite.findUnique({
@@ -107,10 +112,10 @@ export async function toggleFavorite(
 
 export async function getUserFavorites(userId: string) {
   try {
+    // Someone else's favorites only list public languages (a private one would leak its name).
+    const viewerId = await getUserId()
     const favorites = await prisma.favorite.findMany({
-      where: {
-        userId,
-      },
+      where: viewerId === userId ? { userId } : { userId, language: { visibility: "PUBLIC" } },
       include: {
         language: {
           select: {

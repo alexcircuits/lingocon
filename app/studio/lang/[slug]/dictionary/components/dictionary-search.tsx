@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useDebounce } from "@/lib/hooks/use-debounce"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -29,14 +29,18 @@ export function DictionarySearch({
   const [field, setField] = useState(defaultField)
   const debouncedValue = useDebounce(value, 300)
 
-  // Trigger search when query (debounced) or field changes
+  // Submit when the debounced query or the field differs from what was last submitted. Comparing
+  // against the last submission (not the initial props) means clearing the box back to "" still
+  // resets the results, and a new `onSearch` identity after navigation does not resubmit.
+  const lastSubmitted = useRef({ query: defaultValue, field: defaultField })
   useEffect(() => {
-    // Skip initial trigger if values haven't changed from default
-    if (value === defaultValue && field === defaultField) return
+    const last = lastSubmitted.current
+    if (debouncedValue === last.query && field === last.field) return
+    lastSubmitted.current = { query: debouncedValue, field }
 
     // If field is "all", we pass undefined to the backend to search all fields
     onSearch(debouncedValue, field === "all" ? undefined : field)
-  }, [debouncedValue, field, onSearch, defaultValue, defaultField, value])
+  }, [debouncedValue, field, onSearch])
 
   const handleFieldChange = (newField: string) => {
     setField(newField)

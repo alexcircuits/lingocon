@@ -137,18 +137,22 @@ export async function POST(request: NextRequest) {
     const BATCH_SIZE = 500
     const errors: string[] = []
 
+    let insertedCount = 0
     for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
       const batch = toInsert.slice(i, i + BATCH_SIZE)
       try {
-        await prisma.dictionaryEntry.createMany({
+        const result = await prisma.dictionaryEntry.createMany({
           data: batch as any,
           skipDuplicates: true,
         })
+        insertedCount += result.count
       } catch (error) {
-        const batchLemmas = batch.map((b) => b.lemma).join(", ")
+        // Log the database error; tell the user which rows failed without leaking internals.
+        console.error("CSV import batch failed:", error)
+        const first = batch[0]?.lemma ?? ""
+        const last = batch[batch.length - 1]?.lemma ?? ""
         errors.push(
-          `Batch ${Math.floor(i / BATCH_SIZE) + 1} failed (${batchLemmas}): ${error instanceof Error ? error.message : "Unknown error"
-          }`
+          `Rows ${i + 1}–${i + batch.length} (${first} … ${last}) could not be saved`
         )
       }
     }
@@ -161,7 +165,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      imported: created.length - errors.length,
+      // Rows actually written (createMany count), not attempted rows minus failed *batches*.
+      imported: insertedCount,
       skipped: skipped.length,
       errors: errors.length,
       details: {
@@ -176,7 +181,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Failed to import CSV",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     )

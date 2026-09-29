@@ -2,7 +2,9 @@
 
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
-import { requireAuth, getUserId, canEditLanguage, canViewLanguage } from "@/lib/auth-helpers"
+import { requireAuth, getUserId, canEditLanguage, canEditScope, canViewLanguage } from "@/lib/auth-helpers"
+import { z } from "zod"
+import { mediaUrlSchema } from "@/lib/validations/url"
 import { scheduleReview, createNewCard, computeLessonXp, LESSON_XP, type CardTypeKey, type RatingKey, type FSRSCardState } from "@/lib/fsrs"
 import { resultToRating } from "@/lib/lesson-to-review"
 import { blankWholeWord } from "@/lib/cloze"
@@ -573,6 +575,23 @@ export async function createCourse(languageId: string, title: string, descriptio
   return { data: course }
 }
 
+// Explicit field allow-lists for the update actions: spreading the raw input let a caller set
+// languageId/courseId and move a course or lesson into another user's language.
+const courseUpdateSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().max(5000).optional().nullable(),
+  visibility: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  coverImage: mediaUrlSchema.optional().nullable().or(z.literal("")),
+})
+const lessonUpdateSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().max(5000).optional().nullable(),
+})
+const unitUpdateSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().max(5000).optional().nullable(),
+})
+
 export async function updateCourse(
   courseId: string,
   data: { title?: string; description?: string; visibility?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; coverImage?: string }
@@ -580,7 +599,13 @@ export async function updateCourse(
   const userId = await requireAuth()
   if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
 
-  const updated = await prisma.course.update({ where: { id: courseId }, data })
+  const parsed = courseUpdateSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid course" }
+  const { coverImage, ...rest } = parsed.data
+  const updated = await prisma.course.update({
+    where: { id: courseId },
+    data: { ...rest, ...(coverImage !== undefined && { coverImage: coverImage || null }) },
+  })
   revalidatePath(`/studio/lang`)
   return { data: updated }
 }
@@ -593,7 +618,9 @@ export async function updateLesson(lessonId: string, data: { title?: string; des
   })
   if (!lesson) return { error: "Not found" }
   if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
-  const updated = await prisma.courseLesson.update({ where: { id: lessonId }, data })
+  const parsed = lessonUpdateSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid lesson" }
+  const updated = await prisma.courseLesson.update({ where: { id: lessonId }, data: parsed.data })
   return { data: updated }
 }
 
@@ -605,8 +632,9 @@ export async function reorderLessonItems(lessonId: string, orderedIds: string[])
   })
   if (!lesson) return { error: "Not found" }
   if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
+  // Scoped to this lesson: item ids from other lessons (other languages) are ignored.
   await prisma.$transaction(
-    orderedIds.map((id, order) => prisma.lessonItem.update({ where: { id }, data: { order } }))
+    orderedIds.map((id, order) => prisma.lessonItem.updateMany({ where: { id, lessonId }, data: { order } }))
   )
   return { data: true }
 }
@@ -663,13 +691,18 @@ export async function createAndAddVocab(
   })
   if (!lesson) return { error: "Not found" }
   if (lesson.course.languageId !== languageId) return { error: "Language mismatch" }
-  if (!(await canEditLanguage(languageId, userId))) return { error: "Not found" }
+  // Creates a dictionary entry, so it needs the dictionary scope, not just "some write access".
+  if (!(await canEditScope(languageId, userId, "write:dictionary"))) return { error: "Not found" }
+  const vocab = z
+    .object({ lemma: z.string().trim().min(1).max(200), gloss: z.string().trim().min(1).max(500), partOfSpeech: z.string().max(50).optional() })
+    .safeParse({ lemma, gloss, partOfSpeech })
+  if (!vocab.success) return { error: vocab.error.issues[0]?.message ?? "Invalid word" }
 
   const last = await prisma.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" } })
 
   const result = await prisma.$transaction(async (tx) => {
     const e = await tx.dictionaryEntry.create({
-      data: { lemma, gloss, partOfSpeech: partOfSpeech || null, languageId },
+      data: { lemma: vocab.data.lemma, gloss: vocab.data.gloss, partOfSpeech: vocab.data.partOfSpeech || null, languageId },
     })
     const i = await tx.lessonItem.create({
       data: { lessonId, type: "VOCAB", order: (last?.order ?? -1) + 1, dictEntryId: e.id },
@@ -779,7 +812,9 @@ export async function updateUnit(unitId: string, data: { title?: string; descrip
   const userId = await requireAuth()
   if (!(await requireUnitEditAccess(unitId, userId))) return { error: "Not found" }
 
-  const updated = await prisma.unit.update({ where: { id: unitId }, data })
+  const parsed = unitUpdateSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid unit" }
+  const updated = await prisma.unit.update({ where: { id: unitId }, data: parsed.data })
   revalidatePath(`/studio/lang`)
   return { data: updated }
 }

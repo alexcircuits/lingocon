@@ -6,9 +6,10 @@ import { getWordOfTheDay } from "@/app/actions/word"
 import { FontLoader } from "@/components/font-loader"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
 import type { ScriptSymbol } from "@prisma/client"
+import { getTranslations } from "next-intl/server"
 
 export async function WordOfTheDay() {
-    const word = await getWordOfTheDay()
+    const [word, t] = await Promise.all([getWordOfTheDay(), getTranslations("landing")])
 
     if (!word) {
         return null
@@ -33,7 +34,7 @@ export async function WordOfTheDay() {
                     <BookOpen className="h-4 w-4 text-primary" />
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Word of the Day
+                    {t("wotdTitle")}
                 </span>
             </div>
 

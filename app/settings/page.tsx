@@ -100,7 +100,7 @@ export default function SettingsPage() {
             <div className="container max-w-4xl py-10 space-y-8">
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
+                    <Button aria-label="Back" variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>

@@ -1,12 +1,13 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
+import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { parseProgram, applyPipeline } from "@/lib/utils/sound-change"
 import { createActivity } from "@/lib/utils/activity"
 
 import { ActionResult } from "@/lib/types/action-result"
+import { applyLemmaRewrites } from "@/lib/services/lemma-rewrite"
 
 export type ApplySoundChangesResult = ActionResult<{
   applied: number
@@ -26,7 +27,10 @@ export async function applySoundChangesToDictionary(
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
-  // Verify ownership / editor access
+  // This rewrites every lemma/IPA in the dictionary, so it needs the dictionary scope — checking
+  // collaborator *role* let a drafts-only contributor (role EDITOR) rewrite the whole lexicon.
+  if (!(await canEditScope(languageId, userId, "write:dictionary"))) return { error: "Unauthorized" }
+
   const language = await prisma.language.findUnique({
     where: { id: languageId },
     select: {
@@ -35,17 +39,10 @@ export async function applySoundChangesToDictionary(
       name: true,
       ownerId: true,
       metadata: true,
-      collaborators: {
-        where: { userId, role: { in: ["OWNER", "EDITOR"] } },
-        select: { role: true },
-      },
     },
   })
 
   if (!language) return { error: "Language not found" }
-  const isOwner = language.ownerId === userId
-  const isEditor = language.collaborators.length > 0
-  if (!isOwner && !isEditor) return { error: "Unauthorized" }
 
   // Extract saved rules from metadata
   const metadata = (language.metadata as Record<string, any>) ?? {}
@@ -99,15 +96,9 @@ export async function applySoundChangesToDictionary(
     return { success: true, data: { applied: 0, unchanged: entries.length } }
   }
 
-  // Apply all updates in a transaction
-  await prisma.$transaction(
-    updates.map(u =>
-      prisma.dictionaryEntry.update({
-        where: { id: u.id },
-        data: { lemma: u.lemma, ipa: u.ipa },
-      })
-    )
-  )
+  // One transaction for the entries plus related-word references; inflected forms regenerate in
+  // the background.
+  await applyLemmaRewrites(languageId, updates)
 
   await createActivity({
     type: "UPDATED",

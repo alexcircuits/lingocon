@@ -1,10 +1,12 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId } from "@/lib/auth-helpers"
 import { toggleFollowSchema, type ToggleFollowInput } from "@/lib/validations/follow"
 import { checkFollowerBadges } from "@/app/actions/badge"
 import { createNotification } from "@/lib/notifications"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function toggleFollow(input: ToggleFollowInput) {
   const userId = await getUserId()
@@ -13,6 +15,10 @@ export async function toggleFollow(input: ToggleFollowInput) {
     return {
       error: "Unauthorized",
     }
+  }
+  // Each follow notifies the followed user; toggling in a loop would spam them.
+  if (!rateLimit(`follow:${userId}`, 30, 60_000).ok) {
+    return { error: "Too many requests — please wait a moment." }
   }
 
   try {
@@ -80,14 +86,7 @@ export async function toggleFollow(input: ToggleFollowInput) {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to toggle follow",
-    }
+    return { ...toActionError(error, "Failed to toggle follow") }
   }
 }
 
@@ -116,14 +115,7 @@ export async function getFollowers(userId: string) {
       data: followers.map((f) => f.follower),
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch followers",
-    }
+    return { ...toActionError(error, "Failed to fetch followers") }
   }
 }
 
@@ -152,14 +144,7 @@ export async function getFollowing(userId: string) {
       data: following.map((f) => f.following),
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch following",
-    }
+    return { ...toActionError(error, "Failed to fetch following") }
   }
 }
 
@@ -207,14 +192,7 @@ export async function getFollowCounts(userId: string) {
       following: followingCount,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch follow counts",
-    }
+    return { ...toActionError(error, "Failed to fetch follow counts") }
   }
 }
 

@@ -57,7 +57,8 @@ export async function loadModuleData(method: RuntimeMethod, languageId: string) 
           id: true,
           name: true,
           slots: true,
-          dictionaryEntries: { select: { lemma: true, gloss: true }, take: 500 },
+          // Paradigm links are validated on write; filter here too so a stray link can't leak.
+          dictionaryEntries: { where: { languageId }, select: { lemma: true, gloss: true }, take: 500 },
         },
         orderBy: { name: "asc" },
         take: 200,

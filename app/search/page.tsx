@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
+import { getTranslations } from "next-intl/server"
 import { getSiteUrl } from "@/lib/seo"
 import { SearchResults } from "./search-results"
 
@@ -12,11 +13,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const [tErrors, tCommon] = await Promise.all([getTranslations("errors"), getTranslations("common")])
   return (
     <div className="min-h-screen bg-background pb-20">
       <Suspense>
-        <SearchResults />
+        <SearchResults labels={{ failed: tErrors("somethingWrong"), retry: tCommon("tryAgain") }} />
       </Suspense>
     </div>
   )

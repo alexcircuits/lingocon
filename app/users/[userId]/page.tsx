@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { JsonLd } from "@/components/json-ld"
 import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
@@ -167,7 +168,7 @@ export default async function UserProfilePage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema) }} />
+      <JsonLd data={profileSchema} />
       <Navbar user={navUser} isDevMode={isDevMode} />
       <div className="h-14" />
       <BackButton />
@@ -189,7 +190,7 @@ export default async function UserProfilePage({
           </aside>
 
           {/* Main Content Area */}
-          <main className="mt-8 md:mt-12 min-w-0">
+          <main id="main-content" tabIndex={-1} className="mt-8 md:mt-12 min-w-0">
             <Tabs defaultValue="languages" className="space-y-6">
               <div className="sticky top-14 z-30 bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-0 md:px-0 md:static md:bg-transparent md:backdrop-blur-none md:p-0">
                 <TabsList className="bg-muted/40 p-1 w-full flex justify-start overflow-x-auto no-scrollbar md:w-auto md:inline-flex">

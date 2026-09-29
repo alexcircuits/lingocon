@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
+import { canReadLanguage, getUserId } from "@/lib/auth-helpers"
 
 export async function getPosDistribution(languageId: string) {
-  const session = await auth()
-  if (!session?.user && process.env.DEV_MODE !== "true") {
+  // Charts of a language's lexicon/activity: same read rule as the language itself.
+  if (!(await canReadLanguage(languageId, await getUserId()))) {
     return []
   }
 
@@ -32,8 +32,8 @@ export async function getPosDistribution(languageId: string) {
 }
 
 export async function getActivityHistory(languageId: string) {
-  const session = await auth()
-  if (!session?.user && process.env.DEV_MODE !== "true") {
+  // Charts of a language's lexicon/activity: same read rule as the language itself.
+  if (!(await canReadLanguage(languageId, await getUserId()))) {
     return []
   }
 
@@ -96,8 +96,7 @@ export async function getActivityHistory(languageId: string) {
 }
 
 export async function getCompletenessStats(languageId: string) {
-  const session = await auth()
-  if (!session?.user && process.env.DEV_MODE !== "true") {
+  if (!(await canReadLanguage(languageId, await getUserId()))) {
     return null
   }
 

@@ -68,3 +68,17 @@ describe("validateEnv", () => {
     expect(result.success).toBe(true)
   })
 })
+
+describe("AUTH_SECRET strength", () => {
+  it("rejects the old docker-compose placeholder in production", () => {
+    const result = parseEnv({ ...base, AUTH_SECRET: "change-me-in-production" })
+    expect(result.success).toBe(false)
+    expect(result.errors.some((e) => e.includes("AUTH_SECRET"))).toBe(true)
+  })
+
+  it("only warns about short secrets so existing deployments keep booting", () => {
+    const result = parseEnv({ ...base, AUTH_SECRET: "short-but-real" })
+    expect(result.success).toBe(true)
+    expect(result.warnings.some((w) => w.includes("AUTH_SECRET"))).toBe(true)
+  })
+})

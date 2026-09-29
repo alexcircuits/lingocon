@@ -120,12 +120,16 @@ export function LanguageWizard() {
 
       const languageId = result.data.id
 
+      // The language exists at this point; scaffolding is optional, so report a failure without
+      // blocking — previously a failed alphabet/grammar scaffold was silently ignored.
       if (data.createAlphabet && data.alphabetType === "latin") {
-        await createLatinAlphabet(languageId)
+        const alphabet = await createLatinAlphabet(languageId)
+        if (alphabet && "error" in alphabet && alphabet.error) toast.warning(t("scaffoldAlphabetFailed"))
       }
 
       if (data.createGrammarPages) {
-        await createGrammarScaffold(languageId)
+        const grammar = await createGrammarScaffold(languageId)
+        if (grammar && "error" in grammar && grammar.error) toast.warning(t("scaffoldGrammarFailed"))
       }
 
       toast.success(t("createdToast"))
@@ -170,7 +174,7 @@ export function LanguageWizard() {
                 value={data.slug}
                 onChange={(e) => setData((prev) => ({ ...prev, slug: e.target.value }))}
                 placeholder={t("slugPlaceholder")}
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 required
                 disabled={isPending}
               />

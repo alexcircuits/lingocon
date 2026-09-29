@@ -29,7 +29,7 @@ export const metadata = {
 
 export default function ContributionsPage() {
     return (
-        <main className="min-h-screen bg-background text-foreground selection:bg-accent/20">
+        <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground selection:bg-accent/20">
             <Navbar />
 
             {/* Hero Section */}

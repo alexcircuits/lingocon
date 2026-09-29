@@ -5,6 +5,7 @@ import type { Language } from "@prisma/client"
 import { getUserId } from "@/lib/auth-helpers"
 import { createActivity } from "@/lib/utils/activity"
 import { parseImportPayload } from "@/lib/validations/import-language"
+import { slugOrFallback } from "@/lib/utils/slug"
 
 export async function importLanguage(jsonContent: string) {
     const userId = await getUserId()
@@ -81,7 +82,7 @@ export async function importLanguage(jsonContent: string) {
         // partial failure can never leave an orphaned language with missing or
         // half-imported data. The slug is unique; on collision (P2002) the whole
         // transaction rolls back and we retry with a numbered suffix.
-        let slug = validData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+        let slug = slugOrFallback(validData.name, "language")
         const originalSlug = slug
         let suffix = 1
 
@@ -158,8 +159,10 @@ export async function importLanguage(jsonContent: string) {
                 error: "Invalid JSON file"
             }
         }
+        console.error("[importLanguage]", error)
         return {
-            error: "Failed to import language: " + (error instanceof Error ? error.message : "Unknown error")
+            // Validation errors are already returned above; don't leak database/driver details.
+            error: "Failed to import language. Please check the file and try again."
         }
     }
 }

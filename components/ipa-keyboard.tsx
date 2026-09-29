@@ -400,6 +400,7 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                                         size="icon"
                                         onClick={onDelete}
                                         className="h-8 w-8"
+                                        aria-label="Delete last character"
                                     >
                                         <Delete className="h-4 w-4" />
                                     </Button>
@@ -445,7 +446,7 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             className="pl-9 pr-9 h-9"
                         />
                         {searchQuery && (
-                            <Button
+                            <Button aria-label="Close keyboard"
                                 type="button"
                                 variant="ghost"
                                 size="icon"

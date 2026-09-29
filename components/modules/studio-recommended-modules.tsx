@@ -72,7 +72,7 @@ export function StudioRecommendedModules({
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">{formatSurfaces(m.type)}</p>
                 </div>
-                <Button
+                <Button aria-label="Add module"
                   size="sm"
                   variant="outline"
                   className="shrink-0"

@@ -13,7 +13,8 @@
     "search": "Пошук",
     "goHome": "На головну",
     "browse": "Огляд",
-    "tryAgain": "Повторити спробу"
+    "tryAgain": "Повторити спробу",
+    "skipToContent": "Перейти до основного вмісту"
   },
   "nav": {
     "home": "Головна",
@@ -352,7 +353,36 @@
     "readText": "Читати текст",
     "createdOn": "Створено {date}",
     "updatedOn": "Оновлено {date}",
-    "themeLabel": "Тема: {name}"
+    "themeLabel": "Тема: {name}",
+    "dictionary": {
+      "title": "Словник",
+      "subtitle": "Лексикон і визначення слів",
+      "searchPlaceholder": "Пошук слів, значень, МФА…",
+      "searchPlaceholderReverse": "Пошук за значенням…",
+      "searchLabel": "Пошук у словнику",
+      "directionForward": "Слово → Значення",
+      "directionReverse": "Значення → Слово",
+      "filteringByTag": "Фільтр за тегом:",
+      "clearTagFilter": "Скинути фільтр тегу",
+      "empty": "До словника ще не додано жодного запису.",
+      "noMatches": "Жоден запис не відповідає пошуку.",
+      "colWord": "Слово",
+      "colMeaning": "Значення",
+      "colIpa": "МФА",
+      "colPos": "Частина мови",
+      "showing": "Показано {from, number}–{to, number} з {total, number} записів",
+      "showDetails": "Показати деталі для {word}",
+      "hasDetails": "Є додаткові відомості",
+      "translation": "Переклад",
+      "etymology": "Етимологія",
+      "related": "Споріднені слова",
+      "notes": "Примітки",
+      "tags": "Теги",
+      "loadingDetails": "Завантаження деталей…",
+      "detailsFailed": "Не вдалося завантажити деталі. Спробуйте ще раз.",
+      "previous": "Назад",
+      "next": "Далі"
+    }
   },
   "confirm": {
     "areYouSure": "Ви впевнені?",
@@ -542,7 +572,12 @@
     "noWordsFound": "Слів не знайдено.",
     "baseForm": "(початкова форма)",
     "createAndAdd": "Створити й додати",
-    "selectItem": "Виберіть елемент"
+    "selectItem": "Виберіть елемент",
+    "confirmDeleteUnitTitle": "Видалити розділ «{title}»?",
+    "confirmDeleteUnitDesc": "Розділ буде видалено; його уроки залишаться в курсі без розділу.",
+    "confirmDeleteLessonTitle": "Видалити урок «{title}»?",
+    "confirmDeleteLessonDesc": "Буде видалено урок, його елементи й прогрес учнів. Цю дію не можна скасувати.",
+    "confirmDelete": "Видалити"
   },
   "studio": {
     "common": {
@@ -704,7 +739,9 @@
       "ipaOptional": "МФА (необов'язково)",
       "latinOptional": "Латиниця (необов'язково)",
       "nameOptional": "Назва (необов'язково)",
-      "letterPlaceholder": "Буква А"
+      "letterPlaceholder": "Буква А",
+      "confirmDeleteTitle": "Видалити «{symbol}»?",
+      "confirmDeleteDesc": "Слова з цим символом збережуть написання, але символ зникне з абетки та порядку сортування."
     },
     "phonology": {
       "pageTitle": "Фонологія",
@@ -901,7 +938,14 @@
       "impColEtymology": "Етимологія",
       "impColRelated": "Пов'язані",
       "importingBtn": "Імпорт...",
-      "importEntriesBtn": "Імпортувати статті"
+      "importEntriesBtn": "Імпортувати статті",
+      "linkBackLabel": "Також додати це слово до їхніх споріднених слів",
+      "removeRelated": "Прибрати {word}",
+      "xsampaConverted": "X-SAMPA перетворено на МФА",
+      "xsampaNothing": "У цьому полі немає X-SAMPA",
+      "xsampaTitle": "Перетворити X-SAMPA в цьому полі на МФА",
+      "editEntryLabel": "Редагувати {lemma}",
+      "deleteEntryLabel": "Видалити {lemma}"
     },
     "paradigms": {
       "pageTitle": "Таблиці парадигм",
@@ -1160,7 +1204,14 @@
     "insertParadigm": "Вставити таблицю парадигми (структурну)",
     "insertWikiLink": "Вставити вікі-посилання — або введіть [[slug]] прямо в тексті",
     "generateIpaChart": "Згенерувати таблицю МФА",
-    "convertXsampaToIpa": "Конвертувати в МФА"
+    "convertXsampaToIpa": "Конвертувати в МФА",
+    "bold": "Жирний",
+    "italic": "Курсив",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "bulletList": "Маркований список",
+    "orderedList": "Нумерований список",
+    "quote": "Цитата"
   },
   "userSearch": {
     "unnamed": "Безіменний користувач",
@@ -1177,7 +1228,8 @@
     "recordAgain": "Записати знову",
     "saving": "Збереження...",
     "checkPermissions": "Перевірте дозволи у браузері.",
-    "recordPronunciation": "Записати вимову"
+    "recordPronunciation": "Записати вимову",
+    "stopRecording": "Зупинити запис"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -1299,7 +1351,9 @@
     "creating": "Створення...",
     "createLanguage": "Створити мову",
     "errorNameSlugRequired": "Назва та ідентифікатор обов'язкові",
-    "createdToast": "Мову успішно створено"
+    "createdToast": "Мову успішно створено",
+    "scaffoldAlphabetFailed": "Мову створено, але не вдалося додати початкову абетку.",
+    "scaffoldGrammarFailed": "Мову створено, але не вдалося додати початкові сторінки граматики."
   },
   "createForm": {
     "evolveLabel": "Розвинути з батьківської мови (необов'язково)",
@@ -1396,6 +1450,7 @@
     "freeRussian": "Російська",
     "ukrainian": "Українська",
     "french": "Французька",
+    "breton": "Бретонська",
     "conlangTranslations": "Переклади конлангів",
     "translated": "{percent}% перекладено",
     "addConlang": "Додати свій конланг",

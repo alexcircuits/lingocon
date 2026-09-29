@@ -44,6 +44,7 @@ export function ErrorMessage({
             size="icon"
             className="h-6 w-6 -mr-2"
             onClick={onDismiss}
+            aria-label="Dismiss"
           >
             <X className="h-3.5 w-3.5" />
           </Button>

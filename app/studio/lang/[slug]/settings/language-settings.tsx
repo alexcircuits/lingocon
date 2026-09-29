@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -32,6 +32,7 @@ import { IPASpeaker } from "@/components/ipa-speaker"
 import { FlagGenerator } from "@/components/flag-generator"
 import { ExportDataCard } from "./export-data-card"
 import { DeleteLanguageCard } from "./delete-language-card"
+import { TTS_VOICES } from "@/lib/constants/tts"
 
 type LanguageCategoryValue =
   | "CONLANG"
@@ -72,24 +73,7 @@ interface LanguageSettingsProps {
   isOwner?: boolean
 }
 
-const availableVoices = [
-  { id: "Joanna", name: "English (US) - Joanna (Default)" },
-  { id: "Matthew", name: "English (US) - Matthew" },
-  { id: "Amy", name: "English (UK) - Amy" },
-  { id: "Brian", name: "English (UK) - Brian" },
-  { id: "Giorgio", name: "Italian - Giorgio (Pure Vowels)" },
-  { id: "Carla", name: "Italian - Carla" },
-  { id: "Conchita", name: "Spanish - Conchita" },
-  { id: "Enrique", name: "Spanish - Enrique" },
-  { id: "Mathieu", name: "French - Mathieu" },
-  { id: "Celine", name: "French - Celine" },
-  { id: "Marlene", name: "German - Marlene" },
-  { id: "Hans", name: "German - Hans" },
-  { id: "Tatyana", name: "Russian - Tatyana" },
-  { id: "Maxim", name: "Russian - Maxim" },
-  { id: "Takumi", name: "Japanese - Takumi" },
-  { id: "Mizuki", name: "Japanese - Mizuki" },
-]
+const availableVoices = TTS_VOICES
 
 export function LanguageSettings({ language, languageSlug, dictionaryEntries, isOwner = false }: LanguageSettingsProps) {
   const t = useTranslations("studio.settings")
@@ -371,14 +355,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   <div className="space-y-2">
                     <Label>{t("fontPreviewLabel")}</Label>
                     <div className="p-4 rounded-lg border border-border/40 bg-secondary/20 overflow-hidden">
-                      <style dangerouslySetInnerHTML={{
-                        __html: `
-                          @font-face {
-                            font-family: 'PreviewFont';
-                            src: url('${formData.fontUrl}');
-                          }
-                        `
-                      }} />
+                      <FontPreviewLoader fontUrl={formData.fontUrl} />
                       <p
                         className="text-2xl break-all"
                         style={{
@@ -508,7 +485,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   />
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title={t("openIpaKeyboard")}>
+                      <Button variant="outline" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title={t("openIpaKeyboard")} aria-label={t("openIpaKeyboard")}>
                         <Keyboard className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -654,3 +631,22 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
   )
 }
 
+/**
+ * Registers the preview font through the FontFace API. Interpolating the URL into a <style> tag
+ * let a crafted fontUrl close the tag and inject markup for anyone opening the settings page.
+ */
+function FontPreviewLoader({ fontUrl }: { fontUrl: string }) {
+  useEffect(() => {
+    let face: FontFace | null = null
+    try {
+      face = new FontFace("PreviewFont", `url(${JSON.stringify(fontUrl)})`)
+    } catch {
+      return
+    }
+    face.load().then((loaded) => document.fonts.add(loaded)).catch(() => {})
+    return () => {
+      if (face) document.fonts.delete(face)
+    }
+  }, [fontUrl])
+  return null
+}

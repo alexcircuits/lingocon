@@ -24,7 +24,7 @@ export default async function NewModulePage() {
       <Navbar user={navUser} isDevMode={process.env.DEV_MODE === "true"} />
       <div className="h-14" />
 
-      <main className="container mx-auto max-w-2xl flex-1 px-4 py-10">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-2xl flex-1 px-4 py-10">
         <Link
           href="/dashboard/modules"
           className="mb-6 inline-block text-sm text-muted-foreground hover:text-foreground"

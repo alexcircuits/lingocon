@@ -8,7 +8,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 import { cn } from "@/lib/utils"
 import { ExternalLink, Menu } from "lucide-react"
 import type { Language } from "@prisma/client"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { StudioSidebar, StudioNavContent } from "@/components/studio-sidebar"
 import { STUDIO_TABS, tabHref, isTabActive, getActiveTab, type ModuleNavTab } from "@/lib/studio-nav"
 import { useState } from "react"
@@ -18,7 +18,6 @@ interface StudioLayoutProps {
     owner: {
       id: string
       name: string | null
-      email: string | null
     }
     _count?: {
       scriptSymbols: number
@@ -51,7 +50,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
   const primaryTabs = STUDIO_TABS.filter((t) => t.primary)
 
   return (
-    <div className="flex h-screen flex-col bg-background overflow-hidden">
+    <div className="flex h-screen supports-[height:100dvh]:h-dvh flex-col bg-background overflow-hidden">
       {/* Top Bar */}
       <header className="z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shrink-0">
         <div className="container-fluid mx-auto flex h-14 items-center justify-between gap-2 px-4">
@@ -59,11 +58,12 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
             {/* Mobile Menu Trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden -ml-2 shrink-0">
+                <Button variant="ghost" size="icon" className="md:hidden -ml-2 shrink-0" aria-label="Open studio navigation">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] p-0 pt-10">
+              <SheetContent aria-describedby={undefined} side="left" className="w-[300px] p-0 pt-10">
+                <SheetTitle className="sr-only">Studio navigation</SheetTitle>
                 <StudioNavContent
                   language={language}
                   basePath={basePath}
@@ -114,7 +114,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
         <StudioSidebar language={language} basePath={basePath} moduleTabs={moduleTabs} userPermissions={userPermissions} isOwner={isOwner} />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background relative scroll-smooth thin-scrollbar">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden bg-background relative scroll-smooth thin-scrollbar">
           <div className="container mx-auto p-4 md:p-8 max-w-6xl">
             {children}
           </div>
@@ -122,7 +122,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
       </div>
 
       {/* Mobile bottom navigation (in-flow so it always pins to the bottom) */}
-      <nav className="z-40 flex shrink-0 items-stretch border-t border-border/40 bg-background/95 backdrop-blur-xl md:hidden">
+      <nav aria-label="Studio sections" className="z-40 flex shrink-0 items-stretch border-t border-border/40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {primaryTabs.map((tab) => {
           const href = tabHref(basePath, tab.segment)
           const active = isTabActive(pathname, basePath, tab.segment)
@@ -131,6 +131,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
                 active ? "text-primary" : "text-muted-foreground",

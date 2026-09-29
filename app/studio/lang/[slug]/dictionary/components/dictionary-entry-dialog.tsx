@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
-import { AlertCircle, PencilLine, Sparkles} from "lucide-react"
+import { AlertCircle, PencilLine, Sparkles, X } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
@@ -24,7 +26,7 @@ import { validateStringAgainstAlphabet, validatePhonotactics } from "@/lib/utils
 import { suggestIpaFromLemma } from "@/lib/utils/ipa-from-lemma"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { getParadigmsForLanguage } from "@/app/actions/paradigm"
-import { xSampa2IPA } from "@/lib/utils/ipa-from-xsampa";
+import { xsampaToIpa } from "@/lib/utils/ipa-from-xsampa"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 
 interface DictionaryEntryDialogProps {
@@ -63,6 +65,8 @@ export function DictionaryEntryDialog({
     notes: "",
     tags: [] as string[],
     paradigmId: "" as string,
+    // GitHub #65: also add this word to each related word's list (and remove it on unlink).
+    linkBack: true,
   })
 
   // Paradigms this entry can be attached to (drives auto-inflection).
@@ -117,6 +121,7 @@ export function DictionaryEntryDialog({
           ? (initialData.tags as string[])
           : [],
         paradigmId: (initialData as { paradigmId?: string | null }).paradigmId || "",
+        linkBack: true,
       })
     } else {
       setFormData({
@@ -130,6 +135,7 @@ export function DictionaryEntryDialog({
         notes: "",
         tags: [],
         paradigmId: "",
+        linkBack: true,
       })
     }
   }, [initialData, open])
@@ -159,16 +165,16 @@ export function DictionaryEntryDialog({
     toast.success("IPA suggested based on alphabet")
   }
 
+  const t = useTranslations("studio.dictionary")
+
   const convertXsampa = () => {
-    const initial = formData.ipa
-    const converted = xSampa2IPA(formData.ipa)
-    if (initial === converted) {
-      toast.info("No X-SAMPA detected")
+    const converted = xsampaToIpa(formData.ipa)
+    if (converted === formData.ipa) {
+      toast.info(t("xsampaNothing"))
+      return
     }
-    else {
-      toast.success("Successfully converted to IPA")
-    }
-    handleFieldChange("ipa", converted);
+    handleFieldChange("ipa", converted)
+    toast.success(t("xsampaConverted"))
   }
 
   const [relatedInput, setRelatedInput] = useState("")
@@ -340,8 +346,9 @@ export function DictionaryEntryDialog({
                     className="h-6 text-xs gap-1 text-muted-foreground hover:text-primary"
                     onClick={convertXsampa}
                     disabled={!formData.ipa}
+                    title={t("xsampaTitle")}
                   >
-                    <PencilLine className={"h-3 w-3"} /> X-SAMPA
+                    <PencilLine className="h-3 w-3" aria-hidden="true" /> X-SAMPA
                   </Button>
                   <Button
                     type="button"
@@ -439,15 +446,16 @@ export function DictionaryEntryDialog({
                 {formData.relatedWords.map((word) => (
                   <div
                     key={word}
-                    className="flex items-center gap-1 bg-primary/10 text-primary-foreground px-2 py-1 rounded-md text-sm border border-primary/20"
+                    className="flex items-center gap-1 bg-primary/10 text-foreground px-2 py-1 rounded-md text-sm border border-primary/20"
                   >
-                    <span>{word}</span>
+                    <span className="font-custom-script">{word}</span>
                     <button
                       type="button"
                       onClick={() => removeRelated(word)}
-                      className="hover:text-destructive transition-colors"
+                      aria-label={t("removeRelated", { word })}
+                      className="rounded-sm p-0.5 hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <AlertCircle className="h-3 w-3 rotate-45" />
+                      <X className="h-3 w-3" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -463,6 +471,14 @@ export function DictionaryEntryDialog({
               <p className="text-xs text-muted-foreground">
                 Link related words, antonyms, or synonyms.
               </p>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={formData.linkBack}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, linkBack: checked === true }))}
+                  disabled={isPending}
+                />
+                {t("linkBackLabel")}
+              </label>
             </div>
 
             <div className="space-y-2">
@@ -491,7 +507,7 @@ export function DictionaryEntryDialog({
                     className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs border"
                   >
                     <span>{tag}</span>
-                    <button
+                    <button aria-label="Remove tag"
                       type="button"
                       onClick={() => removeTag(tag)}
                       className="hover:text-destructive transition-colors"

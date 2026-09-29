@@ -33,6 +33,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
 } from "@/components/ui/sheet"
 import {
   FolderTree,
@@ -358,13 +359,13 @@ export function FamilyManager({ families, unassignedLanguages, targetLanguages }
                   </Button>
                   {family.type !== "SYSTEM" && (
                     <>
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(family)} disabled={isPending}>
+                      <Button aria-label="Edit" variant="ghost" size="icon" onClick={() => openEdit(family)} disabled={isPending}>
                         <Pencil className="h-4 w-4" />
                       </Button>
 
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" disabled={isPending}>
+                          <Button variant="ghost" size="icon" disabled={isPending} aria-label={`Delete ${family.name}`}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
@@ -538,7 +539,8 @@ export function FamilyManager({ families, unassignedLanguages, targetLanguages }
 
       {/* Proto-vocabulary drawer */}
       <Sheet open={!!protoFamily} onOpenChange={(open) => !open && setProtoFamily(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0">
+        <SheetContent aria-describedby={undefined} side="right" className="w-full sm:max-w-md p-0">
+          <SheetTitle className="sr-only">Proto-vocabulary</SheetTitle>
           {protoFamily && (
             <ProtoVocabularyPanel
               familyId={protoFamily.id}

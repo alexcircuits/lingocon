@@ -91,7 +91,7 @@ export default async function CourseEditorPage({
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar user={user} isDevMode={isDevMode} />
       <div className="h-14" />
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
         {/* Breadcrumb */}
         <div className="mb-6">
           <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ml-2">
@@ -109,7 +109,7 @@ export default async function CourseEditorPage({
           texts={texts}
           slug={slug}
         />
-      </main>
+      </div>
       <Footer />
     </div>
   )

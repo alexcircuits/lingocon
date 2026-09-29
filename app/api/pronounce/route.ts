@@ -16,53 +16,33 @@
  * 
  * 3. Restart your Next.js dev server after adding environment variables
  * 
- * SECURITY:
- * - Rate limiting: 1 request per second per IP
- * - Input validation and sanitization
- * - No arbitrary URL fetching
- * - AWS credentials are server-side only (never exposed to client)
+ * SECURITY / COST:
+ * - Rate limited per client IP (from X-Real-IP / the proxy-appended X-Forwarded-For hop — the
+ *   first XFF entry is client-controlled) plus a per-instance global ceiling, since every call is
+ *   a paid Polly request and the route is public (anonymous readers use it).
+ * - Input length capped; voices restricted to the settings allow-list; SSML-escaped.
+ * - AWS credentials are server-side only; AWS error details are logged, not returned.
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
+import { DEFAULT_TTS_VOICE, isAllowedTtsVoice, normalizeIpaForPolly } from "@/lib/constants/tts"
 
-// Simple in-memory rate limiting (per IP)
-const rateLimitMap = new Map<string, number>()
-const RATE_LIMIT_WINDOW = 1000 // 1 second
-const MAX_REQUESTS_PER_WINDOW = 1
+const MAX_IPA_LENGTH = 200
 
 function getClientIP(request: NextRequest): string {
-  // Try to get real IP from headers (for production behind proxy)
-  const forwarded = request.headers.get("x-forwarded-for")
-  if (forwarded) {
-    return forwarded.split(",")[0].trim()
-  }
+  // nginx sets X-Real-IP from $remote_addr; with only X-Forwarded-For, trust the hop the proxy
+  // appended (the last one), never the client-supplied first entry.
   const realIP = request.headers.get("x-real-ip")
-  if (realIP) {
-    return realIP
-  }
-  // Fallback to a default for development
+  if (realIP) return realIP.trim()
+  const forwarded = request.headers.get("x-forwarded-for")
+  if (forwarded) return forwarded.split(",").at(-1)!.trim()
   return "unknown"
 }
 
 function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const lastRequest = rateLimitMap.get(ip)
-
-  if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW) {
-    return false // Rate limited
-  }
-
-  rateLimitMap.set(ip, now)
-  // Clean up old entries periodically (simple cleanup)
-  if (rateLimitMap.size > 1000) {
-    const cutoff = now - RATE_LIMIT_WINDOW * 10
-    for (const [key, value] of rateLimitMap.entries()) {
-      if (value < cutoff) {
-        rateLimitMap.delete(key)
-      }
-    }
-  }
-  return true
+  // Global ceiling first so a spread of IPs cannot run up an unbounded Polly bill.
+  return rateLimit("pronounce:global", 600, 60_000).ok && rateLimit(`pronounce:${ip}`, 30, 60_000).ok
 }
 
 // Validate IPA string - basic validation
@@ -74,7 +54,7 @@ function validateIPA(ipa: string): { valid: boolean; warning?: string } {
   // Remove slashes if present
   const cleaned = ipa.replace(/^\/|\/$/g, "").trim()
 
-  if (cleaned.length === 0) {
+  if (cleaned.length === 0 || cleaned.length > MAX_IPA_LENGTH) {
     return { valid: false }
   }
 
@@ -109,7 +89,7 @@ const SPEED_PERCENTAGE_REGEX = /^\d{1,3}%$/
 async function synthesizeIPA(ipa: string, speed: string = "slow", voiceId?: string): Promise<{ audioUrl?: string; error?: string }> {
   try {
     // Remove slashes if present
-    const cleanedIPA = ipa.replace(/^\/|\/$/g, "").trim()
+    const cleanedIPA = normalizeIpaForPolly(ipa.replace(/^\/|\/$/g, "").trim())
 
     // Validate speed parameter
     const safeSpeed = ALLOWED_SPEEDS.includes(speed) ? speed : 
@@ -138,7 +118,7 @@ async function synthesizeIPA(ipa: string, speed: string = "slow", voiceId?: stri
     const command = new SynthesizeSpeechCommand({
       Text: ssmlText,
       TextType: "ssml",
-      VoiceId: (voiceId || process.env.AWS_POLLY_VOICE_ID || "Joanna") as any,
+      VoiceId: (isAllowedTtsVoice(voiceId) ? voiceId : process.env.AWS_POLLY_VOICE_ID || DEFAULT_TTS_VOICE) as any,
       OutputFormat: "mp3",
     })
 
@@ -162,9 +142,7 @@ async function synthesizeIPA(ipa: string, speed: string = "slow", voiceId?: stri
     return { audioUrl }
   } catch (error) {
     console.error("Error synthesizing IPA:", error)
-    return {
-      error: error instanceof Error ? error.message : "Failed to generate pronunciation audio",
-    }
+    return { error: "Failed to generate pronunciation audio" }
   }
 }
 
@@ -181,10 +159,10 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { ipa, speed = "slow", voiceId } = body
+    const { ipa, speed = "slow", voiceId } = body ?? {}
 
     // Validate input
-    if (!ipa) {
+    if (typeof ipa !== "string" || !ipa) {
       return NextResponse.json(
         { error: "IPA string is required" },
         { status: 400 }
@@ -210,7 +188,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Synthesize audio
-    const result = await synthesizeIPA(sanitizedIPA, speed, voiceId)
+    const result = await synthesizeIPA(sanitizedIPA, typeof speed === "string" ? speed : "slow", voiceId)
 
     if (result.error) {
       return NextResponse.json(
