@@ -1,8 +1,8 @@
 "use server"
 
-import { ZodError } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId, canEditScope, canReadLanguage } from "@/lib/auth-helpers"
 import {
   createParadigmSchema,
@@ -53,19 +53,7 @@ export async function createParadigm(input: CreateParadigmInput) {
       data: paradigm,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create paradigm",
-    }
+    return { ...toActionError(error, "Failed to create paradigm") }
   }
 }
 
@@ -118,19 +106,7 @@ export async function updateParadigm(input: UpdateParadigmInput) {
       data: updated,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update paradigm",
-    }
+    return { ...toActionError(error, "Failed to update paradigm") }
   }
 }
 
@@ -170,14 +146,7 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
       success: true,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to delete paradigm",
-    }
+    return { ...toActionError(error, "Failed to delete paradigm") }
   }
 }
 
@@ -214,8 +183,7 @@ export async function cloneParadigm(paradigmId: string, languageId: string) {
 
     return { success: true, data: clone }
   } catch (error) {
-    if (error instanceof Error) return { error: error.message }
-    return { error: "Failed to clone paradigm" }
+    return { ...toActionError(error, "Failed to clone paradigm") }
   }
 }
 
@@ -242,14 +210,7 @@ export async function getParadigmsForLanguage(languageId: string) {
       data: paradigms,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch paradigms",
-    }
+    return { ...toActionError(error, "Failed to fetch paradigms") }
   }
 }
 
@@ -282,14 +243,7 @@ export async function getParadigmById(paradigmId: string) {
       data: paradigm,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch paradigm",
-    }
+    return { ...toActionError(error, "Failed to fetch paradigm") }
   }
 }
 

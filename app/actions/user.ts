@@ -1,7 +1,7 @@
 "use server"
 
-import { ZodError } from "zod"
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId } from "@/lib/auth-helpers"
 import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
 import { revalidatePath } from "next/cache"
@@ -37,19 +37,7 @@ export async function updateUser(input: UpdateUserInput) {
             data: updated,
         }
     } catch (error) {
-        if (error instanceof ZodError) {
-            return {
-                error: error.issues[0]?.message || "Validation failed",
-            }
-        }
-        if (error instanceof Error) {
-            return {
-                error: error.message,
-            }
-        }
-        return {
-            error: "Failed to update profile",
-        }
+        return { ...toActionError(error, "Failed to update profile") }
     }
 }
 

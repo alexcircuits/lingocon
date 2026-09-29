@@ -1,8 +1,7 @@
 "use server"
 
-import { ZodError } from "zod"
 import { getUserId } from "@/lib/auth-helpers"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
 import { revalidateBrowse, revalidateLanguage } from "@/lib/utils/revalidation"
 import { checkLanguageBadges } from "@/app/actions/badge"
@@ -10,12 +9,8 @@ import type { CreateLanguageInput, UpdateLanguageInput } from "@/lib/validations
 import * as languageService from "@/lib/services/language"
 import { prisma } from "@/lib/prisma"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof ZodError) return { error: error.issues[0]?.message || "Validation failed" }
-  if (error instanceof AppError) return { error: error.message }
-  if (error instanceof Error) return { error: error.message }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function createLanguage(input: CreateLanguageInput) {
   const userId = await getUserId()

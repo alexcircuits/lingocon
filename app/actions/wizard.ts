@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId } from "@/lib/auth-helpers"
 import { generateSlug } from "@/lib/utils/slug"
 
@@ -57,14 +58,7 @@ export async function createLatinAlphabet(languageId: string) {
       success: true,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create Latin alphabet",
-    }
+    return { ...toActionError(error, "Failed to create Latin alphabet") }
   }
 }
 
@@ -135,14 +129,7 @@ export async function createGrammarScaffold(languageId: string) {
       success: true,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to create grammar scaffold",
-    }
+    return { ...toActionError(error, "Failed to create grammar scaffold") }
   }
 }
 

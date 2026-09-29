@@ -3,6 +3,7 @@
 import { ZodError } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId, canEditScope, canViewLanguage } from "@/lib/auth-helpers"
 import { paradigmRuleSchema, type ParadigmRuleInput } from "@/lib/validations/paradigm"
 import { previewParadigmForms } from "@/lib/services/inflection-service"
@@ -61,7 +62,7 @@ export async function upsertParadigmRule(input: ParadigmRuleInput) {
     return { success: true as const, data: rule }
   } catch (error) {
     if (error instanceof ZodError) return { error: error.issues[0]?.message ?? "Validation failed" }
-    return { error: error instanceof Error ? error.message : "Failed to save rule" }
+    return { ...toActionError(error, "Failed to save rule") }
   }
 }
 

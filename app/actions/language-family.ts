@@ -4,15 +4,12 @@ import { getUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { revalidateFamilies } from "@/lib/utils/revalidation"
 import * as familyService from "@/lib/services/language-family"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof AppError) return { error: error.message }
-  if (error instanceof Error) return { error: error.message }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function setParentLanguage(languageId: string, parentLanguageId: string | null) {
   const userId = await getUserId()

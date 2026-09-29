@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId, isLanguageOwner } from "@/lib/auth-helpers"
 import { ZodError } from "zod"
 import {
@@ -99,19 +100,7 @@ export async function inviteCollaborator(input: {
       data: collaborator,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to invite collaborator",
-    }
+    return { ...toActionError(error, "Failed to invite collaborator") }
   }
 }
 
@@ -208,19 +197,7 @@ export async function updateCollaboratorRole(input: {
       data: collaborator,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to update collaborator role",
-    }
+    return { ...toActionError(error, "Failed to update collaborator role") }
   }
 }
 
@@ -250,8 +227,7 @@ export async function updateCollaboratorPermissions(input: {
     return { success: true, data: collaborator }
   } catch (error) {
     if (error instanceof ZodError) return { error: error.issues[0]?.message || "Validation failed" }
-    if (error instanceof Error) return { error: error.message }
-    return { error: "Failed to update collaborator permissions" }
+    return { ...toActionError(error, "Failed to update collaborator permissions") }
   }
 }
 
@@ -288,19 +264,7 @@ export async function removeCollaborator(input: {
       success: true,
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        error: error.issues[0]?.message || "Validation failed",
-      }
-    }
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to remove collaborator",
-    }
+    return { ...toActionError(error, "Failed to remove collaborator") }
   }
 }
 
@@ -342,8 +306,7 @@ export async function transferLanguageOwnership(input: {
     })
     return { success: true }
   } catch (error) {
-    if (error instanceof Error) return { error: error.message }
-    return { error: "Failed to transfer ownership" }
+    return { ...toActionError(error, "Failed to transfer ownership") }
   }
 }
 

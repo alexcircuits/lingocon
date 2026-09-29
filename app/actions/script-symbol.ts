@@ -1,19 +1,14 @@
 "use server"
 
-import { ZodError } from "zod"
 import { getUserId } from "@/lib/auth-helpers"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { revalidateAlphabet } from "@/lib/utils/revalidation"
 import { checkScriptBadges } from "@/app/actions/badge"
 import type { CreateScriptSymbolInput, UpdateScriptSymbolInput } from "@/lib/validations/script-symbol"
 import * as symbolService from "@/lib/services/script-symbol"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof ZodError) return { error: error.issues[0]?.message || "Validation failed" }
-  if (error instanceof AppError) return { error: error.message }
-  if (error instanceof Error) return { error: error.message }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function createScriptSymbol(input: CreateScriptSymbolInput) {
   const userId = await getUserId()

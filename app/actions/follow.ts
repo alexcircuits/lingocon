@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { toActionError } from "@/lib/errors"
 import { getUserId } from "@/lib/auth-helpers"
 import { toggleFollowSchema, type ToggleFollowInput } from "@/lib/validations/follow"
 import { checkFollowerBadges } from "@/app/actions/badge"
@@ -85,14 +86,7 @@ export async function toggleFollow(input: ToggleFollowInput) {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to toggle follow",
-    }
+    return { ...toActionError(error, "Failed to toggle follow") }
   }
 }
 
@@ -121,14 +115,7 @@ export async function getFollowers(userId: string) {
       data: followers.map((f) => f.follower),
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch followers",
-    }
+    return { ...toActionError(error, "Failed to fetch followers") }
   }
 }
 
@@ -157,14 +144,7 @@ export async function getFollowing(userId: string) {
       data: following.map((f) => f.following),
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch following",
-    }
+    return { ...toActionError(error, "Failed to fetch following") }
   }
 }
 
@@ -212,14 +192,7 @@ export async function getFollowCounts(userId: string) {
       following: followingCount,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: error.message,
-      }
-    }
-    return {
-      error: "Failed to fetch follow counts",
-    }
+    return { ...toActionError(error, "Failed to fetch follow counts") }
   }
 }
 

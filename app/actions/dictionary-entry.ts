@@ -1,28 +1,17 @@
 "use server"
 
-import { ZodError } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canReadLanguage } from "@/lib/auth-helpers"
 import { getEtymologyNeighborhood, type EtymologyNode } from "@/lib/services/etymology"
-import { AppError } from "@/lib/errors"
+import { toActionError } from "@/lib/errors"
 import { createActivity } from "@/lib/utils/activity"
 import { revalidateDictionary } from "@/lib/utils/revalidation"
 import { checkDictionaryBadges } from "@/app/actions/badge"
 import type { CreateDictionaryEntryInput, UpdateDictionaryEntryInput } from "@/lib/validations/dictionary-entry"
 import * as dictionaryService from "@/lib/services/dictionary-entry"
 
-function handleError(error: unknown, fallbackMessage: string) {
-  if (error instanceof ZodError) {
-    return { error: error.issues[0]?.message || "Validation failed" }
-  }
-  if (error instanceof AppError) {
-    return { error: error.message }
-  }
-  if (error instanceof Error) {
-    return { error: error.message }
-  }
-  return { error: fallbackMessage }
-}
+// Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
+const handleError = toActionError
 
 export async function createDictionaryEntry(input: CreateDictionaryEntryInput) {
   const userId = await getUserId()

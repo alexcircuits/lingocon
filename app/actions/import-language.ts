@@ -159,8 +159,10 @@ export async function importLanguage(jsonContent: string) {
                 error: "Invalid JSON file"
             }
         }
+        console.error("[importLanguage]", error)
         return {
-            error: "Failed to import language: " + (error instanceof Error ? error.message : "Unknown error")
+            // Validation errors are already returned above; don't leak database/driver details.
+            error: "Failed to import language. Please check the file and try again."
         }
     }
 }
