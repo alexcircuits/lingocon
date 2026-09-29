@@ -4,12 +4,13 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { httpUrlOrPathSchema } from "@/lib/validations/url"
 
 const createPlatformUpdateSchema = z.object({
     title: z.string().min(2, "Title must be at least 2 characters").max(200),
     description: z.string().min(2, "Description must be at least 2 characters").max(2000),
     icon: z.string().max(100).optional(),
-    link: z.string().url("Must be a valid URL").max(500).optional().or(z.literal("")),
+    link: httpUrlOrPathSchema.optional().or(z.literal("")),
 })
 
 const toggleUserAdminSchema = z.object({

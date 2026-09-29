@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -371,14 +371,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                   <div className="space-y-2">
                     <Label>{t("fontPreviewLabel")}</Label>
                     <div className="p-4 rounded-lg border border-border/40 bg-secondary/20 overflow-hidden">
-                      <style dangerouslySetInnerHTML={{
-                        __html: `
-                          @font-face {
-                            font-family: 'PreviewFont';
-                            src: url('${formData.fontUrl}');
-                          }
-                        `
-                      }} />
+                      <FontPreviewLoader fontUrl={formData.fontUrl} />
                       <p
                         className="text-2xl break-all"
                         style={{
@@ -654,3 +647,22 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
   )
 }
 
+/**
+ * Registers the preview font through the FontFace API. Interpolating the URL into a <style> tag
+ * let a crafted fontUrl close the tag and inject markup for anyone opening the settings page.
+ */
+function FontPreviewLoader({ fontUrl }: { fontUrl: string }) {
+  useEffect(() => {
+    let face: FontFace | null = null
+    try {
+      face = new FontFace("PreviewFont", `url(${JSON.stringify(fontUrl)})`)
+    } catch {
+      return
+    }
+    face.load().then((loaded) => document.fonts.add(loaded)).catch(() => {})
+    return () => {
+      if (face) document.fonts.delete(face)
+    }
+  }, [fontUrl])
+  return null
+}

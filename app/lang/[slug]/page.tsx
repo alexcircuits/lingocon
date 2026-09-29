@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { JsonLd } from "@/components/json-ld"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -238,8 +239,8 @@ export default async function PublicLanguagePage({
       className={activeTheme ? "lc-themed space-y-12 rounded-[var(--radius)] pb-20" : "space-y-12 pb-20"}
       style={themeStyle}
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={datasetSchema} />
       <LanguageHero language={language} isFavorite={isFavorite} userId={userId} />
 
       <MaintainersSection

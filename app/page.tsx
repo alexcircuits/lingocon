@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { JsonLd } from "@/components/json-ld"
 import { unstable_cache } from "next/cache"
 import { getTranslations } from "next-intl/server"
 import { prisma } from "@/lib/prisma"
@@ -60,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const siteUrl = getSiteUrl()
 
-function JsonLd({ faqItems }: { faqItems: FaqItem[] }) {
+function HomeStructuredData({ faqItems }: { faqItems: FaqItem[] }) {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -146,22 +147,10 @@ function JsonLd({ faqItems }: { faqItems: FaqItem[] }) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <JsonLd data={websiteSchema} />
+      <JsonLd data={organizationSchema} />
+      <JsonLd data={softwareApplicationSchema} />
+      <JsonLd data={faqSchema} />
     </>
   )
 }
@@ -289,7 +278,7 @@ export default async function Home() {
 
   return (
     <main className="landing-aurora font-display min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
-      <JsonLd faqItems={faqItems} />
+      <HomeStructuredData faqItems={faqItems} />
       <Navbar user={user} isDevMode={isDevMode} />
 
       {/* ═══════════════════════════════════════════════════════════

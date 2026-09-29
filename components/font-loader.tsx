@@ -15,7 +15,7 @@ export function FontLoader({ fontUrl, fontFamily, fontScale = 1.0 }: FontLoaderP
         const fontName = fontFamily || "CustomLanguageFont"
 
         // Create new font face
-        const font = new FontFace(fontName, `url(${fontUrl})`)
+        const font = new FontFace(fontName, `url(${JSON.stringify(fontUrl)})`)
 
         font.load().then((loadedFont) => {
             // Add font to document

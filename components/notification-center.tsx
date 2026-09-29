@@ -36,6 +36,7 @@ import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { httpUrlOrPathSchema } from "@/lib/validations/url"
 
 type PlatformUpdate = {
     id: string
@@ -83,7 +84,8 @@ export function NotificationCenter() {
                     title: u.title,
                     description: u.description,
                     icon: getIconByName(u.icon),
-                    link: u.link,
+                    // Announcements created before link validation existed may hold unsafe URLs.
+                    link: u.link && httpUrlOrPathSchema.safeParse(u.link).success ? u.link : null,
                     createdAt: new Date(u.createdAt)
                 }))
                 allItems = [...allItems, ...updates]

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { assetUrlSchema, optionalExternalLinkSchema } from "./url"
 
 export const LANGUAGE_CATEGORIES = [
   "CONLANG",
@@ -55,11 +56,11 @@ export const updateLanguageSchema = z.object({
     .optional(),
   description: z.string().max(1000).optional(),
   visibility: z.enum(["PRIVATE", "UNLISTED", "PUBLIC"]).optional(),
-  flagUrl: z.string().optional().nullable(),
-  discordUrl: z.string().url().optional().nullable().or(z.literal("")),
-  telegramUrl: z.string().url().optional().nullable().or(z.literal("")),
-  websiteUrl: z.string().optional().nullable(),
-  fontUrl: z.string().optional().nullable(),
+  flagUrl: assetUrlSchema.optional().nullable().or(z.literal("")),
+  discordUrl: optionalExternalLinkSchema,
+  telegramUrl: optionalExternalLinkSchema,
+  websiteUrl: optionalExternalLinkSchema,
+  fontUrl: assetUrlSchema.optional().nullable().or(z.literal("")),
   fontFamily: z.string().max(100).optional().nullable(),
   fontScale: z.number().min(0.5).max(3.0).optional(),
   allowsDiacritics: z.boolean().optional(),

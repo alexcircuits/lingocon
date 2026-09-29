@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { JsonLd } from "@/components/json-ld"
 import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
@@ -167,7 +168,7 @@ export default async function UserProfilePage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema) }} />
+      <JsonLd data={profileSchema} />
       <Navbar user={navUser} isDevMode={isDevMode} />
       <div className="h-14" />
       <BackButton />

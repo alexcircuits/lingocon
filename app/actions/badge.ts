@@ -80,7 +80,9 @@ export async function getNextBadges(userId?: string, limit = 3): Promise<BadgeWi
 /**
  * Update progress for a specific badge and auto-award if threshold met
  */
-export async function updateBadgeProgress(
+// Internal only: an exported function in a "use server" module is a public endpoint, and this one
+// takes an arbitrary userId and progress value.
+async function updateBadgeProgress(
     userId: string,
     badgeKey: string,
     newProgress: number

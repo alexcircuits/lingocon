@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
 import { revalidatePath } from "next/cache"
-import { logAdminAction } from "@/app/actions/admin-audit"
+import { logAdminAction } from "@/lib/admin-audit"
 import { ActionResult } from "@/lib/types/action-result"
 import { User } from "@prisma/client"
 
