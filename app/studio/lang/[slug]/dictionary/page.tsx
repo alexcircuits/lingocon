@@ -3,7 +3,16 @@ import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { DictionaryManager } from "./dictionary-manager"
-import { Prisma } from "@prisma/client"
+import {
+  buildDictionarySearchWhere,
+  dictionaryOrderBy,
+  parsePage,
+  parseQuery,
+  parseSearchField,
+  parseSort,
+  type DictionarySearchField,
+  type DictionarySort,
+} from "@/lib/services/dictionary-query"
 import { Suspense } from "react"
 import { EnhancedLoadingSkeleton } from "@/components/enhanced-loading-skeleton"
 import { languageMetadataSchema } from "@/lib/validations/language"
@@ -38,54 +47,21 @@ async function getLanguageDetails(slug: string, userId: string | null) {
   return language
 }
 
-type SortOption = "lemma" | "createdAt" | "partOfSpeech" | "gloss"
-
-function getOrderBy(sort: SortOption): Prisma.DictionaryEntryOrderByWithRelationInput {
-  switch (sort) {
-    case "createdAt": return { createdAt: "desc" }
-    case "partOfSpeech": return { partOfSpeech: "asc" }
-    case "gloss": return { gloss: "asc" }
-    default: return { lemma: "asc" }
-  }
-}
-
 async function getDictionaryEntries(
   languageId: string,
   page: number,
   query: string,
-  field?: string,
-  sort: SortOption = "lemma"
+  field: DictionarySearchField | undefined,
+  sort: DictionarySort
 ) {
-  const skip = (page - 1) * ITEMS_PER_PAGE
-
-  const where: Prisma.DictionaryEntryWhereInput = {
-    languageId,
-    ...(query
-      ? field === "tags"
-        ? {
-          tags: { array_contains: [query.toLowerCase()] },
-        }
-        : field
-          ? {
-            [field]: { contains: query, mode: "insensitive" },
-          }
-          : {
-            OR: [
-              { lemma: { contains: query, mode: "insensitive" } },
-              { gloss: { contains: query, mode: "insensitive" } },
-              { ipa: { contains: query, mode: "insensitive" } },
-              { partOfSpeech: { contains: query, mode: "insensitive" } },
-            ],
-          }
-      : {}),
-  }
+  const where = buildDictionarySearchWhere(languageId, query, field)
 
   const [entries, total] = await Promise.all([
     prisma.dictionaryEntry.findMany({
       where,
-      orderBy: getOrderBy(sort),
+      orderBy: dictionaryOrderBy(sort),
       take: ITEMS_PER_PAGE,
-      skip,
+      skip: (page - 1) * ITEMS_PER_PAGE,
     }),
     prisma.dictionaryEntry.count({ where }),
   ])
@@ -113,12 +89,10 @@ export default async function DictionaryPage({
   const { slug } = await params
   const { page: pageParam, q: queryParam, f: fieldParam, sort: sortParam } = await searchParams
 
-  const page = Number(pageParam) || 1
-  const query = queryParam || ""
-  const field = fieldParam || ""
-  const sort = (["lemma", "createdAt", "partOfSpeech", "gloss"].includes(sortParam ?? "")
-    ? sortParam
-    : "lemma") as SortOption
+  const page = parsePage(pageParam)
+  const query = parseQuery(queryParam)
+  const field = parseSearchField(fieldParam)
+  const sort = parseSort(sortParam)
 
   const language = await getLanguageDetails(slug, userId)
   const t = await getTranslations("studio.dictionary")
@@ -155,7 +129,7 @@ export default async function DictionaryPage({
           totalPages={totalPages}
           totalEntries={total}
           initialQuery={query}
-          initialField={field}
+          initialField={field ?? ""}
           initialSort={sort}
           enableAudio={isAudioEnabled}
           ttsSettings={languageMetadataSchema.parse(language.metadata ?? {}).tts}

@@ -163,8 +163,9 @@ export function DictionaryManager({
 
     params.delete("page") // Reset to page 1 on search
 
+    // replace, not push: typing a query should not add a history entry per debounce tick
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`)
+      router.replace(`${pathname}?${params.toString()}`)
     })
   }, [pathname, router, searchParams])
 
