@@ -1,100 +1,17 @@
-"use client"
-
-import { useEditor, EditorContent } from "@tiptap/react"
-import StarterKit from "@tiptap/starter-kit"
-import { Table } from "@tiptap/extension-table"
-import { TableRow } from "@tiptap/extension-table-row"
-import { TableCell } from "@tiptap/extension-table-cell"
-import { TableHeader } from "@tiptap/extension-table-header"
-import { IGT } from "@/lib/tiptap/igt-extension"
-import { Paradigm } from "@/lib/tiptap/paradigm-extension"
-import { CustomFont } from "@/lib/tiptap/custom-font-extension"
-import { WikiLink } from "@/lib/tiptap/wiki-link-extension"
-import { IGTBlock } from "@/components/igt-block"
-import { ParadigmEmbed } from "@/components/paradigm-embed"
-import { useMemo, useEffect, useRef } from "react"
-import { headingId } from "@/lib/utils/tiptap-headings"
+/**
+ * Public reader for stored rich text (grammar pages, articles, texts). Server-rendered via
+ * TiptapDocument — see components/rich-text/tiptap-document.tsx for why this no longer mounts a
+ * read-only TipTap editor.
+ */
+import { TiptapDocument } from "@/components/rich-text/tiptap-document"
 
 interface GrammarContentProps {
-  content: any // TipTap JSON content
+  content: unknown // TipTap JSON content (or a legacy plain string)
   className?: string
   /** Needed to resolve [[wiki-link]] hrefs to /lang/{slug}/grammar/{pageSlug} */
   languageSlug?: string
 }
 
 export function GrammarContent({ content, className, languageSlug }: GrammarContentProps) {
-  // Ensure content is in the right format for TipTap
-  const processedContent = useMemo(() => {
-    // If content is a string, wrap it in a proper TipTap JSON structure
-    if (typeof content === "string") {
-      return {
-        type: "doc",
-        content: content.split('\n').filter(line => line.trim()).map(line => ({
-          type: "paragraph",
-          content: [{ type: "text", text: line }]
-        }))
-      }
-    }
-
-    // Ensure content is a valid TipTap JSON object
-    if (!content || typeof content !== "object" || !content.type || !Array.isArray(content.content)) {
-      return {
-        type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            content: [],
-          },
-        ],
-      }
-    }
-
-    return content
-  }, [content])
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Table.configure({ resizable: false }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      IGT,
-      Paradigm,
-      CustomFont,
-      WikiLink.configure({ languageSlug: languageSlug ?? "" }),
-    ],
-    content: processedContent as any,
-    editable: false,
-    immediatelyRender: false,
-  })
-
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // After the editor renders, stamp id attributes on heading elements so
-  // the GrammarTOC scroll targets resolve correctly.
-  useEffect(() => {
-    if (!editor || !containerRef.current) return
-    const headingEls = containerRef.current.querySelectorAll("h1, h2, h3")
-    headingEls.forEach(el => {
-      const text = el.textContent?.trim() ?? ""
-      if (text && !el.id) {
-        el.id = headingId(text)
-      }
-    })
-  }, [editor])
-
-  if (!editor) {
-    return <div className="prose prose-slate dark:prose-invert max-w-none">Loading...</div>
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      className={`prose prose-slate dark:prose-invert max-w-none [&_table]:block [&_table]:w-max [&_table]:max-w-none [&_table]:overflow-x-auto ${className || ""}`}
-    >
-      <EditorContent editor={editor} />
-    </div>
-  )
+  return <TiptapDocument content={content} className={className} languageSlug={languageSlug} />
 }
-
