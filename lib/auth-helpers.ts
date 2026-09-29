@@ -11,11 +11,16 @@ import { getDevUserId } from "./dev-auth"
 import { prisma } from "./prisma"
 import { isAdmin } from "@/lib/admin"
 import type { LanguagePermission } from "@/lib/permissions"
+import { requestCache } from "@/lib/request-cache"
 export { EDITOR_DEFAULT_PERMISSIONS, FULL_EDITOR_PERMISSIONS } from "@/lib/permissions"
 export type { LanguagePermission } from "@/lib/permissions"
 
-/** Returns the authenticated user's id, or `null` for guests / suspended accounts / missing session. */
-export async function getUserId(): Promise<string | null> {
+/**
+ * Returns the authenticated user's id, or `null` for guests / suspended accounts / missing session.
+ * Memoized per request: a single studio render used to call this (and its suspension lookup) from
+ * the layout, the page and every permission helper.
+ */
+export const getUserId = requestCache(async function getUserId(): Promise<string | null> {
   const session = await auth()
   if (session?.user?.id) {
     // Check if user is suspended
@@ -32,7 +37,7 @@ export async function getUserId(): Promise<string | null> {
     return await getDevUserId()
   }
   return null
-}
+})
 
 /** Same as `getUserId` but throws if unauthenticated — handy for actions that must never be public. */
 export async function requireAuth(): Promise<string> {

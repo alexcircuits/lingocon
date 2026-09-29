@@ -13,6 +13,8 @@ interface ValidationWarning {
 
 interface ValidationWarningsProps {
   warnings: ValidationWarning[]
+  /** Total number of warnings when `warnings` is a truncated list. */
+  total?: number
   /**
    * Optional stable key (e.g. language id) used to persist dismissal across
    * sessions in localStorage. When omitted, dismissal is per-tab only.
@@ -22,7 +24,8 @@ interface ValidationWarningsProps {
 
 const STORAGE_PREFIX = "validation-warnings-dismissed:"
 
-export function ValidationWarnings({ warnings, scopeKey }: ValidationWarningsProps) {
+export function ValidationWarnings({ warnings, scopeKey, total }: ValidationWarningsProps) {
+  const count = total ?? warnings.length
   const [open, setOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   // Track when the persisted dismissal state has been loaded — we render
@@ -70,7 +73,7 @@ export function ValidationWarnings({ warnings, scopeKey }: ValidationWarningsPro
           className="inline-flex items-center gap-1.5 rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs text-yellow-800 hover:bg-yellow-100 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-200 dark:hover:bg-yellow-900"
         >
           <AlertTriangle className="h-3 w-3" />
-          {warnings.length} warning{warnings.length !== 1 ? "s" : ""} hidden — show
+          {count} warning{count !== 1 ? "s" : ""} hidden — show
         </button>
       </div>
     )
@@ -93,7 +96,7 @@ export function ValidationWarnings({ warnings, scopeKey }: ValidationWarningsPro
             )}
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             <span className="text-yellow-800 dark:text-yellow-200">
-              {warnings.length} Validation Warning{warnings.length !== 1 ? "s" : ""}
+              {count} Validation Warning{count !== 1 ? "s" : ""}
             </span>
           </button>
           <Button
@@ -120,6 +123,11 @@ export function ValidationWarnings({ warnings, scopeKey }: ValidationWarningsPro
               </li>
             ))}
           </ul>
+          {count > warnings.length && (
+            <p className="mt-2 text-xs text-yellow-700 dark:text-yellow-400">
+              …and {count - warnings.length} more
+            </p>
+          )}
         </CardContent>
       )}
     </Card>
