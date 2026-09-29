@@ -72,7 +72,9 @@ export async function toggleUserAdmin(userId: string, isAdmin: boolean) {
 
     const user = await prisma.user.update({
         where: { id: validated.userId },
-        data: { isAdmin: validated.isAdmin }
+        data: { isAdmin: validated.isAdmin },
+        // Never return the whole row: it includes the password hash.
+        select: { id: true, name: true, email: true, isAdmin: true },
     })
 
     revalidatePath(`/admin/users/${validated.userId}`)

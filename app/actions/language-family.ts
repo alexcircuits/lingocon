@@ -190,11 +190,11 @@ export async function getLanguageDictionary(
 }
 
 export async function getFamilyAncestryPath(familyId: string) {
-  return familyService.getFamilyAncestryPath(familyId)
+  return familyService.getFamilyAncestryPath(familyId, await getUserId())
 }
 
 export async function getFamilyChildren(familyId: string) {
-  return familyService.getFamilyChildren(familyId)
+  return familyService.getFamilyChildren(familyId, await getUserId())
 }
 
 export async function setFamilyParent(familyId: string, parentFamilyId: string | null) {
@@ -245,7 +245,7 @@ export async function getProtoVocabulary(
   page: number = 1,
   pageSize: number = 50
 ) {
-  return familyService.getProtoVocabulary(familyId, query, page, pageSize)
+  return familyService.getProtoVocabulary(familyId, query, page, pageSize, await getUserId())
 }
 
 export async function deriveFromProto(protoWordIds: string[], targetLanguageId: string) {

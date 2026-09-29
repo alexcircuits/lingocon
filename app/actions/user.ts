@@ -25,6 +25,8 @@ export async function updateUser(input: UpdateUserInput) {
                 name: validated.name,
                 image: validated.image || null,
             },
+            // The full row includes the password hash and admin notes.
+            select: { id: true, name: true, image: true },
         })
 
         revalidatePath(`/users/${userId}`)

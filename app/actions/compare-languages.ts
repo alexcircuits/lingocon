@@ -1,12 +1,23 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { canReadLanguage, getUserId } from "@/lib/auth-helpers"
 
 /**
  * Compare two languages' dictionaries.
  * Returns shared glosses (potential cognates), unique words, and overlap percentage.
  */
 export async function compareLanguages(langIdA: string, langIdB: string) {
+  // Both dictionaries are returned in part, so both must be readable by the caller.
+  const viewerId = await getUserId()
+  const [canReadA, canReadB] = await Promise.all([
+    canReadLanguage(langIdA, viewerId),
+    canReadLanguage(langIdB, viewerId),
+  ])
+  if (!canReadA || !canReadB) {
+    return { error: "One or both languages not found" }
+  }
+
   const [langA, langB] = await Promise.all([
     prisma.language.findUnique({
       where: { id: langIdA },

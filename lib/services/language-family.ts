@@ -379,7 +379,22 @@ export async function getExternalAncestries(): Promise<string[]> {
 
 // ─── Family Hierarchy ───────────────────────────────────────────────────────
 
-export async function getFamilyAncestryPath(familyId: string) {
+/** PUBLIC/UNLISTED families are readable by anyone; PRIVATE ones only by their owner. */
+function familyReadableWhere(viewerId: string | null) {
+  return viewerId
+    ? { OR: [{ visibility: { not: "PRIVATE" as const } }, { ownerId: viewerId }] }
+    : { visibility: { not: "PRIVATE" as const } }
+}
+
+export async function canReadFamily(familyId: string, viewerId: string | null) {
+  const family = await prisma.languageFamily.findFirst({
+    where: { id: familyId, ...familyReadableWhere(viewerId) },
+    select: { id: true },
+  })
+  return family !== null
+}
+
+export async function getFamilyAncestryPath(familyId: string, viewerId: string | null = null) {
   const path: { id: string; name: string; slug: string }[] = []
   let currentId: string | null = familyId
   const visited = new Set<string>()
@@ -387,8 +402,8 @@ export async function getFamilyAncestryPath(familyId: string) {
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId)
     const family: { id: string; name: string; slug: string; parentFamilyId: string | null } | null =
-      await prisma.languageFamily.findUnique({
-        where: { id: currentId },
+      await prisma.languageFamily.findFirst({
+        where: { id: currentId, ...familyReadableWhere(viewerId) },
         select: { id: true, name: true, slug: true, parentFamilyId: true },
       })
     if (!family) break
@@ -399,9 +414,9 @@ export async function getFamilyAncestryPath(familyId: string) {
   return path
 }
 
-export async function getFamilyChildren(familyId: string) {
+export async function getFamilyChildren(familyId: string, viewerId: string | null = null) {
   return prisma.languageFamily.findMany({
-    where: { parentFamilyId: familyId },
+    where: { parentFamilyId: familyId, ...familyReadableWhere(viewerId) },
     select: {
       id: true,
       name: true,
@@ -501,8 +516,12 @@ export async function getProtoVocabulary(
   familyId: string,
   query: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
+  viewerId: string | null = null
 ) {
+  if (!(await canReadFamily(familyId, viewerId))) return { words: [], total: 0 }
+  page = Math.max(1, Math.floor(page) || 1)
+  pageSize = Math.min(100, Math.max(1, Math.floor(pageSize) || 50))
   const where = {
     familyId,
     ...(query

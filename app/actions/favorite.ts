@@ -107,10 +107,10 @@ export async function toggleFavorite(
 
 export async function getUserFavorites(userId: string) {
   try {
+    // Someone else's favorites only list public languages (a private one would leak its name).
+    const viewerId = await getUserId()
     const favorites = await prisma.favorite.findMany({
-      where: {
-        userId,
-      },
+      where: viewerId === userId ? { userId } : { userId, language: { visibility: "PUBLIC" } },
       include: {
         language: {
           select: {
