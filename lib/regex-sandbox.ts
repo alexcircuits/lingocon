@@ -7,7 +7,6 @@
  * short-lived worker thread that is terminated at the deadline (V8 interrupts running regex code on
  * termination, verified).
  */
-import "server-only"
 import { Worker } from "node:worker_threads"
 
 const WORKER_SOURCE = `

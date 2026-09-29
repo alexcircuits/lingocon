@@ -3,7 +3,6 @@
  * "use server" module it was a public endpoint, so any signed-in user could write audit rows.
  * Callers must already have verified the caller is an admin.
  */
-import "server-only"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 

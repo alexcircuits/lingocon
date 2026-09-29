@@ -7,6 +7,7 @@ import { parseProgram, applyPipeline } from "@/lib/utils/sound-change"
 import { createActivity } from "@/lib/utils/activity"
 
 import { ActionResult } from "@/lib/types/action-result"
+import { applyLemmaRewrites } from "@/lib/services/lemma-rewrite"
 
 export type ApplySoundChangesResult = ActionResult<{
   applied: number
@@ -95,15 +96,9 @@ export async function applySoundChangesToDictionary(
     return { success: true, data: { applied: 0, unchanged: entries.length } }
   }
 
-  // Apply all updates in a transaction
-  await prisma.$transaction(
-    updates.map(u =>
-      prisma.dictionaryEntry.update({
-        where: { id: u.id },
-        data: { lemma: u.lemma, ipa: u.ipa },
-      })
-    )
-  )
+  // One transaction for the entries plus related-word references; inflected forms regenerate in
+  // the background.
+  await applyLemmaRewrites(languageId, updates)
 
   await createActivity({
     type: "UPDATED",

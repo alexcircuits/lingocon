@@ -12,6 +12,7 @@ import { scanBundle } from "@/lib/modules/scan"
 import { z } from "zod"
 import { rulesTextFromData } from "@/lib/modules/utils"
 import type { ModuleTier } from "@prisma/client"
+import { applyLemmaRewrites } from "@/lib/services/lemma-rewrite"
 import {
   createModuleSchema,
   updateModuleSchema,
@@ -481,11 +482,7 @@ export async function applyModuleTransform(
     return { success: true, data: { applied: 0, unchanged: entries.length } }
   }
 
-  await prisma.$transaction(
-    updates.map((u) =>
-      prisma.dictionaryEntry.update({ where: { id: u.id }, data: { lemma: u.lemma } })
-    )
-  )
+  await applyLemmaRewrites(languageId, updates)
 
   await createActivity({
     type: "UPDATED",

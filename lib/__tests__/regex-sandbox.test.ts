@@ -1,7 +1,6 @@
 // @vitest-environment node
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 
-vi.mock("server-only", () => ({}))
 
 import { replaceInWorker, RegexTimeoutError } from "../regex-sandbox"
 import { computeFindReplaceWith } from "../bulk-lexicon"

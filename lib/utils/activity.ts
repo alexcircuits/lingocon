@@ -4,7 +4,6 @@
  * anyone forge activity or read any user's activity (with emails and private-language names).
  * Client components go through the gated actions in `app/actions/activity.ts`.
  */
-import "server-only"
 import { prisma } from "@/lib/prisma"
 import type { ActivityType, ActivityEntityType } from "@prisma/client"
 
