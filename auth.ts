@@ -18,6 +18,8 @@ import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { getDevUserId } from "@/lib/dev-auth"
 import { PHASE_PRODUCTION_BUILD } from "next/constants"
+import { rateLimit } from "@/lib/rate-limit"
+import { clientIpFromHeaders, normalizeEmail } from "@/lib/request-ip"
 
 // `next build` sets NODE_ENV=production while still reading local `.env` (often with DEV_MODE). Skip
 // the guard only for that phase; `next start` / hosting must never run with DEV_MODE enabled.
@@ -88,11 +90,22 @@ const nextAuthConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null
+        const email = normalizeEmail(String(credentials.email))
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+        // Brute-force guard: per client IP and per account.
+        const ip = clientIpFromHeaders(request.headers)
+        if (
+          !rateLimit(`login:ip:${ip}`, 30, 15 * 60_000).ok ||
+          !rateLimit(`login:email:${email}`, 10, 15 * 60_000).ok
+        ) {
+          return null
+        }
+
+        // Emails were stored as typed; match case-insensitively.
+        const user = await prisma.user.findFirst({
+          where: { email: { equals: email, mode: "insensitive" } },
         })
 
         if (!user || !user.password) return null

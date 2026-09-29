@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createActivity } from "@/lib/utils/activity"
 import { createNotification } from "@/lib/notifications"
+import { rateLimit } from "@/lib/rate-limit"
 
 const createCommentSchema = z.object({
     content: z.string().min(1, "Comment cannot be empty").max(2000, "Comment is too long"),
@@ -16,6 +17,10 @@ const createCommentSchema = z.object({
 export async function createComment(input: z.infer<typeof createCommentSchema>) {
     const userId = await getUserId()
     if (!userId) return { error: "You must be signed in to comment" }
+    // Every comment notifies the language owner; bound the spam rate.
+    if (!rateLimit(`comment:${userId}`, 10, 60_000).ok) {
+        return { error: "You're commenting too fast — please wait a moment." }
+    }
 
     try {
         const validated = createCommentSchema.parse(input)

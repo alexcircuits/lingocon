@@ -5,6 +5,7 @@ import { getUserId } from "@/lib/auth-helpers"
 import { toggleFollowSchema, type ToggleFollowInput } from "@/lib/validations/follow"
 import { checkFollowerBadges } from "@/app/actions/badge"
 import { createNotification } from "@/lib/notifications"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function toggleFollow(input: ToggleFollowInput) {
   const userId = await getUserId()
@@ -13,6 +14,10 @@ export async function toggleFollow(input: ToggleFollowInput) {
     return {
       error: "Unauthorized",
     }
+  }
+  // Each follow notifies the followed user; toggling in a loop would spam them.
+  if (!rateLimit(`follow:${userId}`, 30, 60_000).ok) {
+    return { error: "Too many requests — please wait a moment." }
   }
 
   try {
