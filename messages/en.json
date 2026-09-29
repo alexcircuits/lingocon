@@ -1351,7 +1351,9 @@
     "creating": "Creating...",
     "createLanguage": "Create Language",
     "errorNameSlugRequired": "Name and slug are required",
-    "createdToast": "Language created successfully"
+    "createdToast": "Language created successfully",
+    "scaffoldAlphabetFailed": "The language was created, but the starter alphabet couldn't be added.",
+    "scaffoldGrammarFailed": "The language was created, but the starter grammar pages couldn't be added."
   },
   "createForm": {
     "evolveLabel": "Evolve from Parent Language (Optional)",

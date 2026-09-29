@@ -1351,7 +1351,9 @@
     "creating": "O krouiñ...",
     "createLanguage": "Krouiñ ur yezh",
     "errorNameSlugRequired": "Ret eo an anv hag ar slog",
-    "createdToast": "Krouet eo bet ar yezh mat"
+    "createdToast": "Krouet eo bet ar yezh mat",
+    "scaffoldAlphabetFailed": "Krouet eo bet ar yezh, met n'eus ket bet gallet ouzhpennañ al lizherenneg deraouiñ.",
+    "scaffoldGrammarFailed": "Krouet eo bet ar yezh, met n'eus ket bet gallet ouzhpennañ ar pajennoù yezhadur deraouiñ."
   },
   "createForm": {
     "evolveLabel": "Emdreiñ eus ur yezh-vamm (Diret)",

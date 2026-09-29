@@ -1351,7 +1351,9 @@
     "creating": "Création…",
     "createLanguage": "Créer la langue",
     "errorNameSlugRequired": "Le nom et le slug sont obligatoires",
-    "createdToast": "Langue créée avec succès"
+    "createdToast": "Langue créée avec succès",
+    "scaffoldAlphabetFailed": "La langue a été créée, mais l'alphabet de départ n'a pas pu être ajouté.",
+    "scaffoldGrammarFailed": "La langue a été créée, mais les pages de grammaire de départ n'ont pas pu être ajoutées."
   },
   "createForm": {
     "evolveLabel": "Faire évoluer à partir d'une langue parente (facultatif)",
