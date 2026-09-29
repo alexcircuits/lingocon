@@ -8,6 +8,11 @@ import {
   type UpdateScriptSymbolInput,
 } from "@/lib/validations/script-symbol"
 
+async function assertSymbolInLanguage(symbolId: string, languageId: string) {
+  const symbol = await prisma.scriptSymbol.findUnique({ where: { id: symbolId }, select: { languageId: true } })
+  if (!symbol || symbol.languageId !== languageId) throw new NotFoundError("Symbol", symbolId)
+}
+
 export async function createSymbol(input: CreateScriptSymbolInput, userId: string) {
   const validated = createScriptSymbolSchema.parse(input)
 
@@ -39,6 +44,7 @@ export async function updateSymbol(input: UpdateScriptSymbolInput, userId: strin
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
+  await assertSymbolInLanguage(validated.id, validated.languageId)
 
   return prisma.scriptSymbol.update({
     where: { id: validated.id },
@@ -61,6 +67,7 @@ export async function deleteSymbol(symbolId: string, languageId: string, userId:
   if (!canEdit) {
     throw new UnauthorizedError("You don't have permission to edit this language")
   }
+  await assertSymbolInLanguage(symbolId, languageId)
 
   return prisma.scriptSymbol.delete({
     where: { id: symbolId },
@@ -142,10 +149,11 @@ export async function saveAlphabetOrder(
     select: { slug: true },
   })
 
+  // updateMany scoped by languageId: ids from another language are ignored rather than reordered.
   await prisma.$transaction(
     symbolIds.map((id, index) =>
-      prisma.scriptSymbol.update({
-        where: { id },
+      prisma.scriptSymbol.updateMany({
+        where: { id, languageId },
         data: { order: index },
       })
     )

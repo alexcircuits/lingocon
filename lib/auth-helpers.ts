@@ -142,6 +142,25 @@ export async function canViewLanguage(
 }
 
 /**
+ * Read access to a language's content for data-returning actions: PUBLIC and UNLISTED ("anyone
+ * with the link") are readable by everyone, PRIVATE only by the owner, collaborators and admins.
+ * Prefer this over `canViewLanguage` for reads — that one also gates the studio and treats
+ * UNLISTED as private.
+ */
+export async function canReadLanguage(
+  languageId: string,
+  userId: string | null
+): Promise<boolean> {
+  const language = await prisma.language.findUnique({
+    where: { id: languageId },
+    select: { visibility: true },
+  })
+  if (!language) return false
+  if (language.visibility !== "PRIVATE") return true
+  return canViewLanguage(languageId, userId)
+}
+
+/**
  * Check if user owns a language
  */
 export async function isLanguageOwner(

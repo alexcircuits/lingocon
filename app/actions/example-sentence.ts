@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getUserId, canEditScope } from "@/lib/auth-helpers"
+import { getUserId, canEditScope, canReadLanguage } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -17,6 +17,20 @@ const updateExampleSchema = createExampleSchema.extend({
     id: z.string().min(1),
 })
 
+// The caller is authorized for `languageId`; the rows it names must actually live there.
+async function entryIsInLanguage(entryId: string, languageId: string) {
+    const entry = await prisma.dictionaryEntry.findUnique({ where: { id: entryId }, select: { languageId: true } })
+    return entry?.languageId === languageId
+}
+
+async function exampleIsInLanguage(exampleId: string, languageId: string) {
+    const example = await prisma.exampleSentence.findUnique({
+        where: { id: exampleId },
+        select: { entry: { select: { languageId: true } } },
+    })
+    return example?.entry.languageId === languageId
+}
+
 export async function createExampleSentence(input: z.infer<typeof createExampleSchema>) {
     const userId = await getUserId()
     if (!userId) return { error: "Unauthorized" }
@@ -26,6 +40,9 @@ export async function createExampleSentence(input: z.infer<typeof createExampleS
 
         const canEdit = await canEditScope(validated.languageId, userId, "write:dictionary")
         if (!canEdit) return { error: "You don't have permission to edit this language" }
+        if (!(await entryIsInLanguage(validated.dictionaryEntryId, validated.languageId))) {
+            return { error: "Dictionary entry not found" }
+        }
 
         // Get current max order
         const maxOrder = await prisma.exampleSentence.findFirst({
@@ -73,6 +90,9 @@ export async function updateExampleSentence(input: z.infer<typeof updateExampleS
 
         const canEdit = await canEditScope(validated.languageId, userId, "write:dictionary")
         if (!canEdit) return { error: "You don't have permission to edit this language" }
+        if (!(await exampleIsInLanguage(validated.id, validated.languageId))) {
+            return { error: "Example sentence not found" }
+        }
 
         const example = await prisma.exampleSentence.update({
             where: { id: validated.id },
@@ -108,6 +128,7 @@ export async function deleteExampleSentence(id: string, languageId: string) {
 
     const canEdit = await canEditScope(languageId, userId, "write:dictionary")
     if (!canEdit) return { error: "You don't have permission to edit this language" }
+    if (!(await exampleIsInLanguage(id, languageId))) return { error: "Example sentence not found" }
 
     try {
         const example = await prisma.exampleSentence.delete({
@@ -129,6 +150,12 @@ export async function deleteExampleSentence(id: string, languageId: string) {
 }
 
 export async function getExampleSentences(dictionaryEntryId: string) {
+    const entry = await prisma.dictionaryEntry.findUnique({
+        where: { id: dictionaryEntryId },
+        select: { languageId: true },
+    })
+    if (!entry || !(await canReadLanguage(entry.languageId, await getUserId()))) return []
+
     return prisma.exampleSentence.findMany({
         where: { dictionaryEntryId },
         orderBy: { order: "asc" },

@@ -18,7 +18,6 @@ interface StudioLayoutProps {
     owner: {
       id: string
       name: string | null
-      email: string | null
     }
     _count?: {
       scriptSymbols: number

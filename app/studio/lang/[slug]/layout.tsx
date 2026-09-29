@@ -20,11 +20,12 @@ async function getLanguage(slug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
     where: { slug },
     include: {
+      // No email: this object is serialized to the client StudioLayout, and any signed-in user
+      // can open the studio of a public language.
       owner: {
         select: {
           id: true,
           name: true,
-          email: true,
         },
       },
       _count: {
