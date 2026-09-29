@@ -45,6 +45,10 @@ export function ModuleFrame({
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [height, setHeight] = useState(120)
+  // The iframe's script posts "ready" the moment it loads. Server-rendered, it loaded before
+  // hydration attached our listener, the handshake was lost and the frame timed out into the error
+  // state. So srcDoc is only set once the listener exists.
+  const [listening, setListening] = useState(false)
 
   const srcDoc = useMemo(
     () => (bundleCode ? buildSandboxDocFromCode(bundleCode) : buildSandboxDoc(slug)),
@@ -154,6 +158,7 @@ export function ModuleFrame({
     }
 
     window.addEventListener("message", onMessage)
+    setListening(true)
     const timeout = setTimeout(() => {
       setStatus((s) => (s === "loading" ? "error" : s))
     }, 8000)
@@ -184,7 +189,7 @@ export function ModuleFrame({
         ref={iframeRef}
         title={slug}
         sandbox="allow-scripts"
-        srcDoc={srcDoc ?? undefined}
+        srcDoc={listening ? srcDoc ?? undefined : undefined}
         scrolling="no"
         className="w-full rounded-xl border-0 bg-transparent"
         style={{ height }}
