@@ -328,7 +328,7 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                     </Avatar>
                     <p className="text-sm font-medium">{userLabel(selectedUser)}</p>
                   </div>
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedUser(null)}>
+                  <Button aria-label="Close" type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedUser(null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -459,7 +459,7 @@ export function Collaborators({ languageId, languageSlug, isOwner }: Collaborato
                   ) : (
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1" size="sm" onClick={() => startEditRow(collab)}>Edit Permissions</Button>
-                      <Button variant="outline" size="sm" onClick={() => handleRemove(collab.userId)} disabled={isPending}>
+                      <Button aria-label="Delete" variant="outline" size="sm" onClick={() => handleRemove(collab.userId)} disabled={isPending}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -518,7 +518,7 @@ export function TransferOwnershipCard({ languageId, languageSlug }: { languageId
               </Avatar>
               <p className="text-sm font-medium">{userLabel(transferUser)}</p>
             </div>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setTransferUser(null); setConfirmed(false) }}>
+            <Button aria-label="Close" type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setTransferUser(null); setConfirmed(false) }}>
               <X className="h-4 w-4" />
             </Button>
           </div>

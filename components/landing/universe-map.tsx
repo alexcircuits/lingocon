@@ -453,7 +453,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
 
       {/* Zoom controls */}
       <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-1.5">
-        <Button
+        <Button aria-label="Zoom in"
           variant="outline"
           size="icon"
           onClick={() => zoomBy(1.3)}
@@ -461,7 +461,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
         >
           <ZoomIn className="h-4 w-4" />
         </Button>
-        <Button
+        <Button aria-label="Zoom out"
           variant="outline"
           size="icon"
           onClick={() => zoomBy(0.75)}
@@ -483,7 +483,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
       {/* Search + title overlay */}
       <div className="absolute top-6 left-6 right-6 z-20 flex flex-col sm:flex-row items-end sm:items-start justify-between gap-4 pointer-events-none">
         <div className="sm:hidden pointer-events-auto w-full flex justify-end">
-          <Button
+          <Button aria-label="Search"
             variant="outline"
             size="icon"
             onClick={() => setIsSearchOpen(!isSearchOpen)}

@@ -1197,7 +1197,14 @@
     "insertParadigm": "Insérer un tableau de paradigme (structuré)",
     "insertWikiLink": "Insérer un lien wiki — ou tapez [[slug]] en ligne",
     "generateIpaChart": "Générer un tableau API",
-    "convertXsampaToIpa": "Convertir en API"
+    "convertXsampaToIpa": "Convertir en API",
+    "bold": "Gras",
+    "italic": "Italique",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "bulletList": "Liste à puces",
+    "orderedList": "Liste numérotée",
+    "quote": "Citation"
   },
   "userSearch": {
     "unnamed": "Utilisateur sans nom",

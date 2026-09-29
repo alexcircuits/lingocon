@@ -1197,7 +1197,14 @@
     "insertParadigm": "Вставити таблицю парадигми (структурну)",
     "insertWikiLink": "Вставити вікі-посилання — або введіть [[slug]] прямо в тексті",
     "generateIpaChart": "Згенерувати таблицю МФА",
-    "convertXsampaToIpa": "Конвертувати в МФА"
+    "convertXsampaToIpa": "Конвертувати в МФА",
+    "bold": "Жирний",
+    "italic": "Курсив",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "bulletList": "Маркований список",
+    "orderedList": "Нумерований список",
+    "quote": "Цитата"
   },
   "userSearch": {
     "unnamed": "Безіменний користувач",

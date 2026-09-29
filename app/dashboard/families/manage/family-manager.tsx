@@ -359,7 +359,7 @@ export function FamilyManager({ families, unassignedLanguages, targetLanguages }
                   </Button>
                   {family.type !== "SYSTEM" && (
                     <>
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(family)} disabled={isPending}>
+                      <Button aria-label="Edit" variant="ghost" size="icon" onClick={() => openEdit(family)} disabled={isPending}>
                         <Pencil className="h-4 w-4" />
                       </Button>
 

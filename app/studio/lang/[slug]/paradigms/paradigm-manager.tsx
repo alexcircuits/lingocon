@@ -354,7 +354,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
                       )}
                     </div>
                     <div className="flex gap-1">
-                      <Button
+                      <Button aria-label={t("editContent")}
                         variant="ghost"
                         size="sm"
                         onClick={() => {
@@ -367,7 +367,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
                       >
                         <Grid3X3 className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      <Button
+                      <Button aria-label="Auto-inflection rules"
                         variant="ghost"
                         size="sm"
                         onClick={() => {
@@ -380,7 +380,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
                       >
                         <Wand2 className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      <Button
+                      <Button aria-label={t("editStructure")}
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(paradigm)}
@@ -390,7 +390,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
                       >
                         <Pencil className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      <Button
+                      <Button aria-label={t("duplicateParadigm")}
                         variant="ghost"
                         size="sm"
                         onClick={async () => {

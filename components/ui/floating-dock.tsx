@@ -75,7 +75,7 @@ const FloatingDockMobile = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <button
+      <button aria-label="Open navigation"
         onClick={() => setOpen(!open)}
         className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 dark:bg-neutral-800"
       >

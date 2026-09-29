@@ -93,7 +93,7 @@ export function DictionaryTableMobile({
                   </div>
                 </div>
                 <div className="flex justify-end gap-1 self-start">
-                  <Button
+                  <Button aria-label="Edit"
                     variant="ghost"
                     size="icon"
                     onClick={() => onEdit(entry)}
@@ -101,7 +101,7 @@ export function DictionaryTableMobile({
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
+                  <Button aria-label="Derive Word"
                     variant="ghost"
                     size="icon"
                     onClick={() => onDerive(entry)}
@@ -110,7 +110,7 @@ export function DictionaryTableMobile({
                   >
                     <GitFork className="h-4 w-4" />
                   </Button>
-                  <Button
+                  <Button aria-label="Delete"
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete(entry)}

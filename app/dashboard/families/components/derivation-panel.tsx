@@ -181,7 +181,7 @@ export function DerivationPanel({
         <div className="px-4 py-2 border-t border-border/30 flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page} of {totalPages}</span>
           <div className="flex gap-1">
-            <Button
+            <Button aria-label="Previous page"
               variant="ghost"
               size="icon"
               onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -190,7 +190,7 @@ export function DerivationPanel({
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <Button
+            <Button aria-label="Next page"
               variant="ghost"
               size="icon"
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}

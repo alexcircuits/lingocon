@@ -121,7 +121,7 @@ export function LanguageModulesManager({
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Button
+                <Button aria-label={i.accountWide ? "Remove from Settings → Modules" : "Remove from this language"}
                   variant="ghost"
                   size="icon"
                   onClick={() => remove(i.installId)}

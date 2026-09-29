@@ -446,7 +446,7 @@ export function IPAKeyboard({ onSelect, onDelete, onClose, currentValue = "" }: 
                             className="pl-9 pr-9 h-9"
                         />
                         {searchQuery && (
-                            <Button
+                            <Button aria-label="Close keyboard"
                                 type="button"
                                 variant="ghost"
                                 size="icon"

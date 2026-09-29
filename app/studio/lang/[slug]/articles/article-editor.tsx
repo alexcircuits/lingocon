@@ -235,7 +235,7 @@ export function ArticleEditor({ languageId, languageSlug, article, grammarPages 
             <span className="text-xs text-muted-foreground">
               {isPublished ? t("public") : t("draft")}
             </span>
-            <button
+            <button aria-label={t("public")}
               type="button"
               role="switch"
               aria-checked={isPublished}

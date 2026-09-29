@@ -337,7 +337,7 @@ export function WordGeneratorDialog({
                                                     <Copy className="h-3 w-3" />
                                                 )}
                                             </Button>
-                                            <Button
+                                            <Button aria-label={t("addToDict")}
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-9 w-9 sm:h-8 sm:w-8 text-primary"

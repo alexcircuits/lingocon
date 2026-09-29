@@ -253,7 +253,7 @@ export function LanguageFamilyTree({
           Language Family
         </h4>
           <div className="flex items-center gap-1">
-            <button
+            <button aria-label="Expand All"
               type="button"
               onClick={() => setExpandAction(a => a + 1)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
@@ -261,7 +261,7 @@ export function LanguageFamilyTree({
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </button>
-            <button
+            <button aria-label="Collapse All"
               type="button"
               onClick={() => setCollapseAction(a => a + 1)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"

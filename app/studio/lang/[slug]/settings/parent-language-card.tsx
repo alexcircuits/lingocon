@@ -340,7 +340,7 @@ export function ParentLanguageCard({
                 <Button onClick={handleCreateFamily} disabled={isPending || !newFamilyName.trim()} size="sm">
                   Create
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { setShowNewFamily(false); setNewFamilyName("") }}>
+                <Button aria-label="Remove parent language" variant="ghost" size="sm" onClick={() => { setShowNewFamily(false); setNewFamilyName("") }}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

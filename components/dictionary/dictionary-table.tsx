@@ -175,7 +175,7 @@ export function DictionaryTable({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
+                      <Button aria-label="Edit"
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit(entry)}
@@ -183,7 +183,7 @@ export function DictionaryTable({
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
+                      <Button aria-label="Delete"
                         variant="ghost"
                         size="icon"
                         onClick={() => onDelete(entry)}

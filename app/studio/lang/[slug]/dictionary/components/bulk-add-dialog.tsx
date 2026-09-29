@@ -292,7 +292,7 @@ export function BulkAddDialog({
                     />
                   </td>
                   <td className="px-1 py-1">
-                    <Button
+                    <Button aria-label="Delete"
                       type="button"
                       variant="ghost"
                       size="icon"

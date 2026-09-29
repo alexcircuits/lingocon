@@ -317,7 +317,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
             <span className="text-xs text-muted-foreground">
               {isPublished ? t("public") : t("draft")}
             </span>
-            <button
+            <button aria-label={t("public")}
               type="button"
               role="switch"
               aria-checked={isPublished}

@@ -1197,7 +1197,14 @@
     "insertParadigm": "Insert Paradigm Table (Structured)",
     "insertWikiLink": "Insert wiki-link — or type [[slug]] inline",
     "generateIpaChart": "Generate IPA Chart",
-    "convertXsampaToIpa": "Convert to IPA"
+    "convertXsampaToIpa": "Convert to IPA",
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "quote": "Quote"
   },
   "userSearch": {
     "unnamed": "Unnamed user",

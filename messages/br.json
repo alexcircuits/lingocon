@@ -1197,7 +1197,14 @@
     "insertParadigm": "Ensoc'hañ un daolenn paradigm (frammet)",
     "insertWikiLink": "Ensoc'hañ ul liamm wiki — pe skrivañ [[slog]] e-barzh",
     "generateIpaChart": "Genel un daolenn LRE",
-    "convertXsampaToIpa": "Amdreiñ e LRE"
+    "convertXsampaToIpa": "Amdreiñ e LRE",
+    "bold": "Tev",
+    "italic": "Stouet",
+    "heading1": "Titl 1",
+    "heading2": "Titl 2",
+    "bulletList": "Roll gant pikoù",
+    "orderedList": "Roll niverennet",
+    "quote": "Arroudenn"
   },
   "userSearch": {
     "unnamed": "Implijer hep anv",

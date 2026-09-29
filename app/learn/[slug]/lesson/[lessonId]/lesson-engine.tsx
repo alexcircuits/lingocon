@@ -325,7 +325,7 @@ export function LessonEngine({
 
           {/* Romanization toggle — shown when there's a custom font or latin mappings */}
           {(fontFamily || scriptSymbols.some(s => s.latin)) && (
-            <button
+            <button aria-label={showRoman ? t("toggleRomanHide") : t("toggleRomanShow")}
               onClick={() => setShowRoman(p => !p)}
               className={cn(
                 "flex items-center rounded-lg p-1.5 transition-colors",

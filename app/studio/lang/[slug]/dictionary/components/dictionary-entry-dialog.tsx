@@ -507,7 +507,7 @@ export function DictionaryEntryDialog({
                     className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs border"
                   >
                     <span>{tag}</span>
-                    <button
+                    <button aria-label="Remove tag"
                       type="button"
                       onClick={() => removeTag(tag)}
                       className="hover:text-destructive transition-colors"

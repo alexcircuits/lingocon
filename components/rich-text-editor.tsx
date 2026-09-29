@@ -123,7 +123,7 @@ export function RichTextEditor({
         <div className="flex flex-col border rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm">
             {/* Toolbar */}
             <div className="flex items-center gap-1 p-2 border-b bg-secondary/30 flex-wrap">
-                <Button
+                <Button aria-label={t("bold")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -133,7 +133,7 @@ export function RichTextEditor({
                 >
                     <Bold className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("italic")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -144,7 +144,7 @@ export function RichTextEditor({
                     <Italic className="h-4 w-4" />
                 </Button>
 
-                <Button
+                <Button aria-label={t("toggleCustomFont")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -157,7 +157,7 @@ export function RichTextEditor({
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
-                <Button
+                <Button aria-label={t("heading1")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -167,7 +167,7 @@ export function RichTextEditor({
                 >
                     <Heading1 className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("heading2")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -213,7 +213,7 @@ export function RichTextEditor({
                 </Button>
 
                 <div className="w-px h-6 bg-border mx-1" />
-                <Button
+                <Button aria-label={t("bulletList")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -223,7 +223,7 @@ export function RichTextEditor({
                 >
                     <List className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("orderedList")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -233,7 +233,7 @@ export function RichTextEditor({
                 >
                     <ListOrdered className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button aria-label={t("quote")}
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -395,7 +395,7 @@ export function RichTextEditor({
                 )}
 
                 {withParadigm && (
-                    <Button
+                    <Button aria-label={t("insertParadigm")}
                         type="button"
                         variant="ghost"
                         size="sm"

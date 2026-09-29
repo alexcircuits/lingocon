@@ -58,7 +58,7 @@ export function SearchHero({ value, onChange, onSubmit, compact }: SearchHeroPro
                         className="h-11 w-full rounded-full border border-border/60 bg-background pl-11 pr-10 text-base shadow-sm transition-all hover:shadow-md focus:shadow-md focus:border-border focus:ring-0 dark:bg-muted/10"
                     />
                     {value && (
-                        <button
+                        <button aria-label="Clear search"
                             onClick={() => { onChange(""); inputRef.current?.focus() }}
                             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                         >
@@ -91,7 +91,7 @@ export function SearchHero({ value, onChange, onSubmit, compact }: SearchHeroPro
                     className="h-12 w-full rounded-full border border-border/60 bg-background pl-12 pr-12 text-base shadow-sm transition-all hover:shadow-md focus:shadow-md focus:border-border focus:ring-0 dark:bg-muted/10"
                 />
                 {value && (
-                    <button
+                    <button aria-label="Clear search"
                         onClick={() => { onChange(""); inputRef.current?.focus() }}
                         className="absolute right-8 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                     >
