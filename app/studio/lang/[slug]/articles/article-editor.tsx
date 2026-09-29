@@ -23,6 +23,7 @@ import type { Editor } from "@tiptap/react"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { Save, ArrowLeft, Trash2, AlertTriangle, Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Table2 } from "lucide-react"
 import Link from "next/link"
+import { generateSlug } from "@/lib/utils/slug"
 
 interface ArticleEditorProps {
   languageId: string
@@ -37,14 +38,6 @@ interface ArticleEditorProps {
     published?: boolean
   }
   grammarPages?: { id: string; title: string; slug: string }[]
-}
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 100)
 }
 
 export function ArticleEditor({ languageId, languageSlug, article, grammarPages = [] }: ArticleEditorProps) {

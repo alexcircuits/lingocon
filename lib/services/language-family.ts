@@ -5,6 +5,7 @@ import {
   hasCircularReference,
 } from "@/lib/utils/family-graph"
 import { UnauthorizedError, NotFoundError, ValidationError, ConflictError } from "@/lib/errors"
+import { slugOrFallback } from "@/lib/utils/slug"
 
 // ─── Parent Language ────────────────────────────────────────────────────────
 
@@ -151,7 +152,7 @@ export async function buildFamilyTree(languageId: string) {
 // ─── Family CRUD ────────────────────────────────────────────────────────────
 
 async function generateFamilySlug(name: string): Promise<string> {
-  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+  const base = slugOrFallback(name, "family")
   let slug = base
   let counter = 1
   while (await prisma.languageFamily.findUnique({ where: { slug } })) {

@@ -1,13 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { canEditScope } from "@/lib/auth-helpers"
 import { UnauthorizedError, NotFoundError } from "@/lib/errors"
+import { slugOrFallback } from "@/lib/utils/slug"
 
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 50)
+function articleSlug(title: string): string {
+  return slugOrFallback(title, "article", 50)
 }
 
 async function ensureUniqueSlug(
@@ -59,7 +56,7 @@ export async function createArticle(
     })
   )?.slug
 
-  const slug = await ensureUniqueSlug(data.languageId, generateSlug(data.title))
+  const slug = await ensureUniqueSlug(data.languageId, articleSlug(data.title))
 
   // Draft contributors always save as unpublished; writers respect the param.
   const published = canWrite ? (data.published ?? true) : false
@@ -118,7 +115,7 @@ export async function updateArticle(
 
   let slug = article.slug
   if (data.title && data.title !== article.title) {
-    slug = await ensureUniqueSlug(article.languageId, generateSlug(data.title), id)
+    slug = await ensureUniqueSlug(article.languageId, articleSlug(data.title), id)
   }
 
   // Draft contributors cannot change published state

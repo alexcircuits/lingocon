@@ -15,14 +15,11 @@ import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { TextType } from "@prisma/client"
 import { checkContentBadges } from "@/app/actions/badge"
+import { slugOrFallback } from "@/lib/utils/slug"
 
 /** URL-safe slug derived from a title; not globally unique — uniqueness is enforced per language. */
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 50)
+function textSlug(title: string): string {
+  return slugOrFallback(title, "text", 50)
 }
 
 export async function createText(data: {
@@ -56,7 +53,7 @@ export async function createText(data: {
     select: { slug: true }
   }))?.slug
 
-  const baseSlug = generateSlug(data.title)
+  const baseSlug = textSlug(data.title)
   let slug = baseSlug
   let counter = 1
 
@@ -136,7 +133,7 @@ export async function updateText(
   // Update slug if title changed
   let slug = text.slug
   if (data.title && data.title !== text.title) {
-    const baseSlug = generateSlug(data.title)
+    const baseSlug = textSlug(data.title)
     slug = baseSlug
     let counter = 1
 
