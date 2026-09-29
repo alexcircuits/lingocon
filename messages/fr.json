@@ -572,7 +572,12 @@
     "noWordsFound": "Aucun mot trouvé.",
     "baseForm": "(forme de base)",
     "createAndAdd": "Créer & ajouter",
-    "selectItem": "Sélectionner un élément"
+    "selectItem": "Sélectionner un élément",
+    "confirmDeleteUnitTitle": "Supprimer l'unité « {title} » ?",
+    "confirmDeleteUnitDesc": "L'unité est supprimée ; ses leçons restent dans le cours, sans unité.",
+    "confirmDeleteLessonTitle": "Supprimer la leçon « {title} » ?",
+    "confirmDeleteLessonDesc": "Cela supprime la leçon, ses éléments et la progression des apprenants. Action irréversible.",
+    "confirmDelete": "Supprimer"
   },
   "studio": {
     "common": {
@@ -734,7 +739,9 @@
       "ipaOptional": "API (facultatif)",
       "latinOptional": "Latin (facultatif)",
       "nameOptional": "Nom (facultatif)",
-      "letterPlaceholder": "Lettre A"
+      "letterPlaceholder": "Lettre A",
+      "confirmDeleteTitle": "Supprimer « {symbol} » ?",
+      "confirmDeleteDesc": "Les mots qui l'utilisent gardent leur graphie, mais il quitte l'alphabet et son ordre de tri."
     },
     "phonology": {
       "pageTitle": "Phonologie",

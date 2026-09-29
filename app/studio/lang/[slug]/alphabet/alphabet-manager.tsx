@@ -39,6 +39,7 @@ import { Plus } from "lucide-react"
 import { EmptyState } from "@/components/empty-state"
 import { SymbolFormFields, type SymbolFormData } from "./symbol-form-fields"
 import { SortableSymbol } from "./sortable-symbol"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 
 // Define locally to avoid stale client issues
 export type ScriptSymbol = {
@@ -72,6 +73,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<SymbolFormData>(emptyForm)
+  const [pendingDelete, setPendingDelete] = useState<ScriptSymbol | null>(null)
 
   useEffect(() => {
     setSymbols(initialSymbols)
@@ -297,7 +299,7 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
                   totalCount={symbols.length}
                   isPending={isPending}
                   onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onDelete={(id) => setPendingDelete(symbols.find((s) => s.id === id) ?? null)}
                   onReorder={handleReorder}
                 />
               ))}
@@ -343,6 +345,20 @@ export function AlphabetManager({ languageId, symbols: initialSymbols }: Alphabe
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmationDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) void handleDelete(pendingDelete.id)
+          setPendingDelete(null)
+        }}
+        title={t("confirmDeleteTitle", { symbol: pendingDelete?.symbol ?? "" })}
+        description={t("confirmDeleteDesc")}
+        confirmText={tc("delete")}
+        cancelText={tc("cancel")}
+        variant="destructive"
+        isLoading={isPending}
+      />
     </div>
   )
 }

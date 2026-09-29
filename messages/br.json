@@ -572,7 +572,12 @@
     "noWordsFound": "N'eus bet kavet ger ebet.",
     "baseForm": "(stumm-diazez)",
     "createAndAdd": "Krouiñ hag Ouzhpennañ",
-    "selectItem": "Dibabit un elfenn"
+    "selectItem": "Dibabit un elfenn",
+    "confirmDeleteUnitTitle": "Dilemel an unanenn « {title} » ?",
+    "confirmDeleteUnitDesc": "Dilamet e vo an unanenn ; ar c'hentelioù a chomo er genteliadurezh hep unanenn.",
+    "confirmDeleteLessonTitle": "Dilemel ar gentel « {title} » ?",
+    "confirmDeleteLessonDesc": "Dilamet e vo ar gentel, hec'h elfennoù hag araokadenn an deskidi. N'haller ket dizober.",
+    "confirmDelete": "Dilemel"
   },
   "studio": {
     "common": {
@@ -734,7 +739,9 @@
       "ipaOptional": "LRE (diret)",
       "latinOptional": "Latin (diret)",
       "nameOptional": "Anv (diret)",
-      "letterPlaceholder": "Lizherenn A"
+      "letterPlaceholder": "Lizherenn A",
+      "confirmDeleteTitle": "Dilemel « {symbol} » ?",
+      "confirmDeleteDesc": "Ar gerioù a implij anezhañ a vir o skritur, met ne vo ket ken el lizherenneg nag en urzh-rummañ."
     },
     "phonology": {
       "pageTitle": "Fonologiezh",

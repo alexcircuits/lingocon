@@ -572,7 +572,12 @@
     "noWordsFound": "No words found.",
     "baseForm": "(base form)",
     "createAndAdd": "Create & Add",
-    "selectItem": "Select an item"
+    "selectItem": "Select an item",
+    "confirmDeleteUnitTitle": "Delete unit “{title}”?",
+    "confirmDeleteUnitDesc": "The unit is removed; its lessons stay in the course without a unit.",
+    "confirmDeleteLessonTitle": "Delete lesson “{title}”?",
+    "confirmDeleteLessonDesc": "This removes the lesson, its items and learners' progress on it. This can't be undone.",
+    "confirmDelete": "Delete"
   },
   "studio": {
     "common": {
@@ -734,7 +739,9 @@
       "ipaOptional": "IPA (optional)",
       "latinOptional": "Latin (optional)",
       "nameOptional": "Name (optional)",
-      "letterPlaceholder": "Letter A"
+      "letterPlaceholder": "Letter A",
+      "confirmDeleteTitle": "Delete “{symbol}”?",
+      "confirmDeleteDesc": "Words that use it keep their spelling, but it leaves the alphabet and its sort order."
     },
     "phonology": {
       "pageTitle": "Phonology",

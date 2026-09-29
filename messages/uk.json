@@ -572,7 +572,12 @@
     "noWordsFound": "Слів не знайдено.",
     "baseForm": "(початкова форма)",
     "createAndAdd": "Створити й додати",
-    "selectItem": "Виберіть елемент"
+    "selectItem": "Виберіть елемент",
+    "confirmDeleteUnitTitle": "Видалити розділ «{title}»?",
+    "confirmDeleteUnitDesc": "Розділ буде видалено; його уроки залишаться в курсі без розділу.",
+    "confirmDeleteLessonTitle": "Видалити урок «{title}»?",
+    "confirmDeleteLessonDesc": "Буде видалено урок, його елементи й прогрес учнів. Цю дію не можна скасувати.",
+    "confirmDelete": "Видалити"
   },
   "studio": {
     "common": {
@@ -734,7 +739,9 @@
       "ipaOptional": "МФА (необов'язково)",
       "latinOptional": "Латиниця (необов'язково)",
       "nameOptional": "Назва (необов'язково)",
-      "letterPlaceholder": "Буква А"
+      "letterPlaceholder": "Буква А",
+      "confirmDeleteTitle": "Видалити «{symbol}»?",
+      "confirmDeleteDesc": "Слова з цим символом збережуть написання, але символ зникне з абетки та порядку сортування."
     },
     "phonology": {
       "pageTitle": "Фонологія",
