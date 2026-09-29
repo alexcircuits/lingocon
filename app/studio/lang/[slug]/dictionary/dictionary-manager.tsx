@@ -546,6 +546,7 @@ export function DictionaryManager({
               showLatin={showLatin}
               symbols={symbols}
               enableAudio={enableAudio}
+              ttsSettings={ttsSettings}
               onDerive={(entry) => {
                 setDerivationSourceEntry(entry)
                 setIsDeriveOpen(true)

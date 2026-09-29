@@ -52,9 +52,11 @@ type Paradigm = {
 interface ParadigmManagerProps {
   languageId: string
   paradigms: Paradigm[]
+  /** The language's TTS voice/speed, so previews sound like the dictionary does (GitHub #53). */
+  ttsSettings?: { voiceId?: string; speed?: string }
 }
 
-export function ParadigmManager({ languageId, paradigms: initialParadigms }: ParadigmManagerProps) {
+export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSettings }: ParadigmManagerProps) {
   const router = useRouter()
   const t = useTranslations("studio.paradigms")
   const tc = useTranslations("studio.common")
@@ -452,7 +454,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms }: Par
                                   {isIPA && ipaValue ? (
                                     <div className="flex items-center gap-2">
                                       <span className="font-medium">{cellValue}</span>
-                                      <IPASpeaker ipa={ipaValue} size="sm" />
+                                      <IPASpeaker ipa={ipaValue} size="sm" voiceId={ttsSettings?.voiceId} speed={ttsSettings?.speed} />
                                     </div>
                                   ) : (
                                     <span className={isEmpty ? "" : "font-medium"}>{cellValue}</span>

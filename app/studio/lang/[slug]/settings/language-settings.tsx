@@ -32,6 +32,7 @@ import { IPASpeaker } from "@/components/ipa-speaker"
 import { FlagGenerator } from "@/components/flag-generator"
 import { ExportDataCard } from "./export-data-card"
 import { DeleteLanguageCard } from "./delete-language-card"
+import { TTS_VOICES } from "@/lib/constants/tts"
 
 type LanguageCategoryValue =
   | "CONLANG"
@@ -72,24 +73,7 @@ interface LanguageSettingsProps {
   isOwner?: boolean
 }
 
-const availableVoices = [
-  { id: "Joanna", name: "English (US) - Joanna (Default)" },
-  { id: "Matthew", name: "English (US) - Matthew" },
-  { id: "Amy", name: "English (UK) - Amy" },
-  { id: "Brian", name: "English (UK) - Brian" },
-  { id: "Giorgio", name: "Italian - Giorgio (Pure Vowels)" },
-  { id: "Carla", name: "Italian - Carla" },
-  { id: "Conchita", name: "Spanish - Conchita" },
-  { id: "Enrique", name: "Spanish - Enrique" },
-  { id: "Mathieu", name: "French - Mathieu" },
-  { id: "Celine", name: "French - Celine" },
-  { id: "Marlene", name: "German - Marlene" },
-  { id: "Hans", name: "German - Hans" },
-  { id: "Tatyana", name: "Russian - Tatyana" },
-  { id: "Maxim", name: "Russian - Maxim" },
-  { id: "Takumi", name: "Japanese - Takumi" },
-  { id: "Mizuki", name: "Japanese - Mizuki" },
-]
+const availableVoices = TTS_VOICES
 
 export function LanguageSettings({ language, languageSlug, dictionaryEntries, isOwner = false }: LanguageSettingsProps) {
   const t = useTranslations("studio.settings")

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getTranslations } from "next-intl/server"
 import { ParadigmManager } from "./paradigm-manager"
+import { languageMetadataSchema } from "@/lib/validations/language"
 
 async function getLanguage(slug: string) {
   // The layout already handles access control, so we just need to fetch the language
@@ -10,6 +11,7 @@ async function getLanguage(slug: string) {
       id: true,
       name: true,
       slug: true,
+      metadata: true,
       paradigms: {
         orderBy: {
           createdAt: "desc",
@@ -43,7 +45,11 @@ export default async function ParadigmsPage({
         </p>
       </div>
 
-      <ParadigmManager languageId={language.id} paradigms={language.paradigms} />
+      <ParadigmManager
+        languageId={language.id}
+        paradigms={language.paradigms}
+        ttsSettings={languageMetadataSchema.safeParse(language.metadata ?? {}).data?.tts}
+      />
     </div>
   )
 }

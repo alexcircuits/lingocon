@@ -20,6 +20,7 @@ interface DictionaryTableMobileProps {
   showLatin: boolean
   enableAudio: boolean
   onTagClick?: (tag: string) => void
+  ttsSettings?: { voiceId?: string; speed?: string }
 }
 
 export function DictionaryTableMobile({
@@ -32,6 +33,7 @@ export function DictionaryTableMobile({
   onDerive,
   showLatin,
   enableAudio,
+  ttsSettings,
 }: DictionaryTableMobileProps) {
   const handleSelectOne = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedEntries)
@@ -84,7 +86,7 @@ export function DictionaryTableMobile({
                           /{entry.ipa}/
                         </span>
                         {enableAudio && (
-                          <IPASpeaker ipa={entry.ipa} size="sm" />
+                          <IPASpeaker ipa={entry.ipa} size="sm" voiceId={ttsSettings?.voiceId} speed={ttsSettings?.speed} />
                         )}
                       </div>
                     )}
