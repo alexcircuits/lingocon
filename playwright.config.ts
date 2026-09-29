@@ -18,6 +18,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
+  // `next dev` compiles each route on first hit; a cold CI runner can exceed the 30 s default.
+  timeout: process.env.CI ? 90_000 : 30_000,
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   reporter: process.env.CI ? "list" : [["list"], ["html", { open: "never" }]],
   use: {
     baseURL,
