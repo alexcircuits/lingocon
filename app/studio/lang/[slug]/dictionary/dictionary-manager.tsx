@@ -648,7 +648,7 @@ export function DictionaryManager({
         open={isDeriveOpen}
         onOpenChange={setIsDeriveOpen}
         sourceEntry={derivationSourceEntry}
-        allEntries={initialEntries}
+        languageId={languageId}
         onSubmit={handleDeriveSubmit}
         isPending={isPending}
       />
@@ -658,7 +658,7 @@ export function DictionaryManager({
         onOpenChange={setIsGeneratorOpen}
         symbols={symbols}
         metadata={metadata}
-        existingLemmas={initialEntries.map(e => e.lemma)}
+        languageId={languageId}
         onAddWord={(word) => {
           setPrefillData({ lemma: word })
           setIsAddOpen(true)

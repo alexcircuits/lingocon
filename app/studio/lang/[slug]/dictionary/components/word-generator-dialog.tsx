@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { getLanguageLemmas } from "@/app/actions/dictionary-entry"
 import {
     Dialog,
     DialogContent,
@@ -84,7 +85,8 @@ interface WordGeneratorDialogProps {
     onOpenChange: (open: boolean) => void
     symbols: ScriptSymbol[]
     metadata: LanguageMetadata
-    existingLemmas: string[]
+    /** Dedupe and phoneme weighting use every lemma in the language, fetched when the dialog opens. */
+    languageId: string
     onAddWord: (word: string) => void
 }
 
@@ -93,9 +95,23 @@ export function WordGeneratorDialog({
     onOpenChange,
     symbols,
     metadata,
-    existingLemmas,
+    languageId,
     onAddWord,
 }: WordGeneratorDialogProps) {
+    // The dictionary page only holds 20 entries; "hide words I already have" must see all of them.
+    const [existingLemmas, setExistingLemmas] = useState<string[]>([])
+    useEffect(() => {
+        if (!open) return
+        let cancelled = false
+        getLanguageLemmas(languageId)
+            .then((lemmas) => {
+                if (!cancelled) setExistingLemmas(lemmas)
+            })
+            .catch(() => {})
+        return () => {
+            cancelled = true
+        }
+    }, [open, languageId])
     const t = useTranslations("wordGen")
     const tPhon = useTranslations("studio.phonology")
     const [count, setCount] = useState(20)

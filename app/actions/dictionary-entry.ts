@@ -220,3 +220,39 @@ export async function getEntryEtymology(entryId: string): Promise<EtymologyNode[
   if (!entry || !(await canReadLanguage(entry.languageId, await getUserId()))) return []
   return getEtymologyNeighborhood(entryId)
 }
+
+/**
+ * Entry picker search across the whole language (e.g. choosing the second word of a compound —
+ * GitHub #25: the wizard used to offer only the 20 entries on the current dictionary page).
+ */
+export async function searchLanguageEntries(languageId: string, query: string) {
+  if (!(await canReadLanguage(languageId, await getUserId()))) return []
+  const q = query.trim().slice(0, 200)
+  return prisma.dictionaryEntry.findMany({
+    where: {
+      languageId,
+      ...(q
+        ? {
+            OR: [
+              { lemma: { contains: q, mode: "insensitive" } },
+              { gloss: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    select: { id: true, lemma: true, gloss: true, partOfSpeech: true },
+    orderBy: [{ lemma: "asc" }, { id: "asc" }],
+    take: 50,
+  })
+}
+
+/** Every lemma in the language — for the word generator's dedupe and phoneme weighting. */
+export async function getLanguageLemmas(languageId: string): Promise<string[]> {
+  if (!(await canReadLanguage(languageId, await getUserId()))) return []
+  const rows = await prisma.dictionaryEntry.findMany({
+    where: { languageId },
+    select: { lemma: true },
+    take: 100_000,
+  })
+  return rows.map((r) => r.lemma)
+}

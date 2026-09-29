@@ -24,12 +24,17 @@ import { Loader2, ArrowRight, Search, Check, Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import type { DictionaryEntry } from "@prisma/client"
+import { searchLanguageEntries } from "@/app/actions/dictionary-entry"
+import { useDebounce } from "@/lib/hooks/use-debounce"
+
+type PickableEntry = { id: string; lemma: string; gloss: string; partOfSpeech: string | null }
 
 interface DerivationWizardProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     sourceEntry: DictionaryEntry | null
-    allEntries?: DictionaryEntry[]
+    /** Compound partners are searched across the whole language (GitHub #25), not just this page. */
+    languageId: string
     onSubmit: (data: any) => Promise<void>
     isPending?: boolean
 }
@@ -40,7 +45,7 @@ export function DerivationWizard({
     open,
     onOpenChange,
     sourceEntry,
-    allEntries = [],
+    languageId,
     onSubmit,
     isPending,
 }: DerivationWizardProps) {
@@ -51,30 +56,37 @@ export function DerivationWizard({
     const [newPartOfSpeech, setNewPartOfSpeech] = useState("")
 
     // For compound: second word selection
-    const [secondWordId, setSecondWordId] = useState<string | null>(null)
+    const [secondEntry, setSecondEntry] = useState<PickableEntry | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+    const debouncedQuery = useDebounce(searchQuery, 250)
+    const [searchResults, setSearchResults] = useState<PickableEntry[]>([])
+    const [isSearching, setIsSearching] = useState(false)
 
-    // Get the second entry object
-    const secondEntry = useMemo(() => {
-        if (!secondWordId) return null
-        return allEntries.find(e => e.id === secondWordId) || null
-    }, [secondWordId, allEntries])
+    useEffect(() => {
+        if (!open || type !== "COMPOUND") return
+        let cancelled = false
+        setIsSearching(true)
+        searchLanguageEntries(languageId, debouncedQuery)
+            .then((rows) => {
+                if (!cancelled) setSearchResults(rows)
+            })
+            .catch(() => {
+                if (!cancelled) setSearchResults([])
+            })
+            .finally(() => {
+                if (!cancelled) setIsSearching(false)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [open, type, languageId, debouncedQuery])
 
-    // Filter available entries (exclude the source entry)
-    const availableEntries = useMemo(() => {
-        if (!sourceEntry) return allEntries
-        return allEntries.filter(e => e.id !== sourceEntry.id)
-    }, [allEntries, sourceEntry])
-
-    // Filter by search query
-    const filteredEntries = useMemo(() => {
-        if (!searchQuery.trim()) return availableEntries
-        const query = searchQuery.toLowerCase()
-        return availableEntries.filter(e =>
-            e.lemma.toLowerCase().includes(query) ||
-            e.gloss.toLowerCase().includes(query)
-        )
-    }, [availableEntries, searchQuery])
+    // Exclude the source entry itself
+    const filteredEntries = useMemo(
+        () => searchResults.filter((e) => e.id !== sourceEntry?.id),
+        [searchResults, sourceEntry]
+    )
+    const secondWordId = secondEntry?.id ?? null
 
     // Reset state when opening
     useEffect(() => {
@@ -82,7 +94,7 @@ export function DerivationWizard({
             setAffix("")
             setNewGloss(t("glossDerivedFrom", { lemma: sourceEntry.lemma }))
             setNewPartOfSpeech(sourceEntry.partOfSpeech || "")
-            setSecondWordId(null)
+            setSecondEntry(null)
             setSearchQuery("")
         }
     }, [open, sourceEntry])
@@ -148,8 +160,8 @@ export function DerivationWizard({
     const isCompoundValid = type !== "COMPOUND" || secondEntry !== null
     const canSubmit = resultLemma && isCompoundValid
 
-    const handleSelectSecondWord = (entryId: string) => {
-        setSecondWordId(entryId)
+    const handleSelectSecondWord = (entry: PickableEntry) => {
+        setSecondEntry(entry)
         setSearchQuery("")
     }
 
@@ -173,7 +185,7 @@ export function DerivationWizard({
                                     onValueChange={(v) => {
                                         setType(v as DerivationType)
                                         if (v !== "COMPOUND") {
-                                            setSecondWordId(null)
+                                            setSecondEntry(null)
                                             setSearchQuery("")
                                         }
                                     }}
@@ -201,7 +213,7 @@ export function DerivationWizard({
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => setSecondWordId(null)}
+                                                onClick={() => setSecondEntry(null)}
                                                 className="text-muted-foreground hover:text-destructive"
                                             >
                                                 Change
@@ -220,16 +232,20 @@ export function DerivationWizard({
                                             </div>
                                             <ScrollArea className="h-[120px] rounded-md border">
                                                 <div className="p-1">
-                                                    {filteredEntries.length === 0 ? (
+                                                    {isSearching && filteredEntries.length === 0 ? (
+                                                        <div className="flex justify-center py-4" role="status">
+                                                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+                                                        </div>
+                                                    ) : filteredEntries.length === 0 ? (
                                                         <div className="py-4 text-center text-sm text-muted-foreground">
                                                             {t("noWordsFound")}
                                                         </div>
                                                     ) : (
-                                                        filteredEntries.slice(0, 50).map((entry) => (
+                                                        filteredEntries.map((entry) => (
                                                             <button
                                                                 key={entry.id}
                                                                 type="button"
-                                                                onClick={() => handleSelectSecondWord(entry.id)}
+                                                                onClick={() => handleSelectSecondWord(entry)}
                                                                 className={cn(
                                                                     "w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-left text-sm",
                                                                     "hover:bg-accent hover:text-accent-foreground",
