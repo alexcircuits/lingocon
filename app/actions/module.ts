@@ -449,7 +449,13 @@ export async function applyModuleTransform(
 ): Promise<TransformApply> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
-  if (!(await canEditScope(languageId, userId, "manage:modules"))) return { error: "Forbidden" }
+  // Rewrites every lemma: needs the dictionary scope as well as module management.
+  if (
+    !(await canEditScope(languageId, userId, "manage:modules")) ||
+    !(await canEditScope(languageId, userId, "write:dictionary"))
+  ) {
+    return { error: "Forbidden" }
+  }
 
   const loaded = await loadTransformerRules(userId, moduleId, languageId)
   if (!loaded.ok) return { error: loaded.error }

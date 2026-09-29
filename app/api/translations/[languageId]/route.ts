@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
-import { getDevUserId } from '@/lib/dev-auth';
+import { canEditLanguage, canReadLanguage, getUserId } from '@/lib/auth-helpers';
+import { findTranslationProblem } from '@/lib/i18n/translation-input';
 import { z } from 'zod';
 
 const updateTranslationsSchema = z.object({
@@ -13,21 +13,9 @@ export async function GET(
   { params }: { params: { languageId: string } }
 ) {
   try {
-    const language = await prisma.language.findUnique({
-      where: { id: params.languageId },
-      select: { visibility: true, ownerId: true },
-    });
-
-    if (!language) {
+    // Private languages: owner, collaborators and admins (the old check forgot collaborators).
+    if (!(await canReadLanguage(params.languageId, await getUserId()))) {
       return new NextResponse('Not found', { status: 404 });
-    }
-
-    if (language.visibility !== 'PUBLIC') {
-      const session = await auth();
-      const userId = session?.user?.id;
-      if (!userId || userId !== language.ownerId) {
-        return new NextResponse('Forbidden', { status: 403 });
-      }
     }
 
     const translations = await prisma.conlangTranslation.findMany({
@@ -51,36 +39,24 @@ export async function PUT(
   { params }: { params: { languageId: string } }
 ) {
   try {
-    const session = await auth();
-    const userId = session?.user?.id || (await getDevUserId());
-
+    // getUserId honours suspension; the old fallback to getDevUserId() threw a 500 in production
+    // for every anonymous request.
+    const userId = await getUserId();
     if (!userId) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // Check permissions
-    const language = await prisma.language.findUnique({
-      where: { id: params.languageId },
-      include: {
-        collaborators: true,
-      },
-    });
-
-    if (!language) {
-      return new NextResponse('Not found', { status: 404 });
-    }
-
-    const isOwner = language.ownerId === userId;
-    const isCollaborator = language.collaborators.some(
-      (c) => c.userId === userId && (c.role === 'OWNER' || c.role === 'EDITOR')
-    );
-
-    if (!isOwner && !isCollaborator) {
+    // Scope, not role: a collaborator whose only grant is "submit drafts" is still role EDITOR.
+    if (!(await canEditLanguage(params.languageId, userId))) {
       return new NextResponse('Forbidden', { status: 403 });
     }
 
     const body = await request.json();
     const { translations } = updateTranslationsSchema.parse(body);
+    const problem = findTranslationProblem(translations);
+    if (problem) {
+      return NextResponse.json({ error: problem }, { status: 422 });
+    }
 
     // Perform upserts in a transaction
     await prisma.$transaction(

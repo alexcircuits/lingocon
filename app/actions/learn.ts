@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
-import { requireAuth, getUserId, canEditLanguage, canViewLanguage } from "@/lib/auth-helpers"
+import { requireAuth, getUserId, canEditLanguage, canEditScope, canViewLanguage } from "@/lib/auth-helpers"
 import { z } from "zod"
 import { mediaUrlSchema } from "@/lib/validations/url"
 import { scheduleReview, createNewCard, computeLessonXp, LESSON_XP, type CardTypeKey, type RatingKey, type FSRSCardState } from "@/lib/fsrs"
@@ -691,13 +691,18 @@ export async function createAndAddVocab(
   })
   if (!lesson) return { error: "Not found" }
   if (lesson.course.languageId !== languageId) return { error: "Language mismatch" }
-  if (!(await canEditLanguage(languageId, userId))) return { error: "Not found" }
+  // Creates a dictionary entry, so it needs the dictionary scope, not just "some write access".
+  if (!(await canEditScope(languageId, userId, "write:dictionary"))) return { error: "Not found" }
+  const vocab = z
+    .object({ lemma: z.string().trim().min(1).max(200), gloss: z.string().trim().min(1).max(500), partOfSpeech: z.string().max(50).optional() })
+    .safeParse({ lemma, gloss, partOfSpeech })
+  if (!vocab.success) return { error: vocab.error.issues[0]?.message ?? "Invalid word" }
 
   const last = await prisma.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" } })
 
   const result = await prisma.$transaction(async (tx) => {
     const e = await tx.dictionaryEntry.create({
-      data: { lemma, gloss, partOfSpeech: partOfSpeech || null, languageId },
+      data: { lemma: vocab.data.lemma, gloss: vocab.data.gloss, partOfSpeech: vocab.data.partOfSpeech || null, languageId },
     })
     const i = await tx.lessonItem.create({
       data: { lessonId, type: "VOCAB", order: (last?.order ?? -1) + 1, dictEntryId: e.id },
