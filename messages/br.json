@@ -901,7 +901,9 @@
       "impColEtymology": "Gedarzh",
       "impColRelated": "Gerioù Kar",
       "importingBtn": "Oc'h enporzhiañ...",
-      "importEntriesBtn": "Enporzhiañ Penngerioù"
+      "importEntriesBtn": "Enporzhiañ Penngerioù",
+      "linkBackLabel": "Ouzhpennañ ar ger-mañ d'o gerioù kar ivez",
+      "removeRelated": "Lemel {word}"
     },
     "paradigms": {
       "pageTitle": "Taolennoù Paradigmoù",

@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
-import { AlertCircle, Sparkles } from "lucide-react"
+import { AlertCircle, Sparkles, X } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { StatusIndicator } from "@/components/status-indicator"
 import { useAutoSave } from "@/lib/hooks/use-auto-save"
@@ -62,6 +64,8 @@ export function DictionaryEntryDialog({
     notes: "",
     tags: [] as string[],
     paradigmId: "" as string,
+    // GitHub #65: also add this word to each related word's list (and remove it on unlink).
+    linkBack: true,
   })
 
   // Paradigms this entry can be attached to (drives auto-inflection).
@@ -116,6 +120,7 @@ export function DictionaryEntryDialog({
           ? (initialData.tags as string[])
           : [],
         paradigmId: (initialData as { paradigmId?: string | null }).paradigmId || "",
+        linkBack: true,
       })
     } else {
       setFormData({
@@ -129,6 +134,7 @@ export function DictionaryEntryDialog({
         notes: "",
         tags: [],
         paradigmId: "",
+        linkBack: true,
       })
     }
   }, [initialData, open])
@@ -159,6 +165,7 @@ export function DictionaryEntryDialog({
   }
 
   const [relatedInput, setRelatedInput] = useState("")
+  const t = useTranslations("studio.dictionary")
 
   const handleAddRelated = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === ",") {
@@ -416,15 +423,16 @@ export function DictionaryEntryDialog({
                 {formData.relatedWords.map((word) => (
                   <div
                     key={word}
-                    className="flex items-center gap-1 bg-primary/10 text-primary-foreground px-2 py-1 rounded-md text-sm border border-primary/20"
+                    className="flex items-center gap-1 bg-primary/10 text-foreground px-2 py-1 rounded-md text-sm border border-primary/20"
                   >
-                    <span>{word}</span>
+                    <span className="font-custom-script">{word}</span>
                     <button
                       type="button"
                       onClick={() => removeRelated(word)}
-                      className="hover:text-destructive transition-colors"
+                      aria-label={t("removeRelated", { word })}
+                      className="rounded-sm p-0.5 hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <AlertCircle className="h-3 w-3 rotate-45" />
+                      <X className="h-3 w-3" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -440,6 +448,14 @@ export function DictionaryEntryDialog({
               <p className="text-xs text-muted-foreground">
                 Link related words, antonyms, or synonyms.
               </p>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={formData.linkBack}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, linkBack: checked === true }))}
+                  disabled={isPending}
+                />
+                {t("linkBackLabel")}
+              </label>
             </div>
 
             <div className="space-y-2">

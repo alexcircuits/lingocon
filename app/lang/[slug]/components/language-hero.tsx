@@ -161,7 +161,7 @@ export function LanguageHero({ language, isFavorite, userId }: LanguageHeroProps
                     </div>
 
                     {language.description && (
-                        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                        <p className="max-w-2xl whitespace-pre-line text-base leading-relaxed text-muted-foreground md:text-lg">
                             {language.description}
                         </p>
                     )}

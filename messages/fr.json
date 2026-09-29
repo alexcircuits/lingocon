@@ -901,7 +901,9 @@
       "impColEtymology": "Étymologie",
       "impColRelated": "Liés",
       "importingBtn": "Importation…",
-      "importEntriesBtn": "Importer les entrées"
+      "importEntriesBtn": "Importer les entrées",
+      "linkBackLabel": "Ajouter aussi ce mot à leurs mots apparentés",
+      "removeRelated": "Retirer {word}"
     },
     "paradigms": {
       "pageTitle": "Tableaux de paradigmes",

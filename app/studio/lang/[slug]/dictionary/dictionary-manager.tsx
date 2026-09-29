@@ -197,7 +197,8 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
-      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
+      tags: data.tags && data.tags.length > 0 ? data.tags : null,
+      linkBack: data.linkBack !== false,
     }))
 
     const result = await createDictionaryEntry(sterilizedData)
@@ -269,7 +270,10 @@ export function DictionaryManager({
       etymology: data.etymology || null,
       notes: data.notes || null,
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
-      tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
+      // null, not undefined: JSON drops undefined keys, so removing the last tag used to be
+      // silently ignored by the server (it only updates tags when the key is present).
+      tags: data.tags && data.tags.length > 0 ? data.tags : null,
+      linkBack: data.linkBack !== false,
     }))
 
     const result = await updateDictionaryEntry(sterilizedData)

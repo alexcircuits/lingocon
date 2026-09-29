@@ -901,7 +901,9 @@
       "impColEtymology": "Etymology",
       "impColRelated": "Related",
       "importingBtn": "Importing...",
-      "importEntriesBtn": "Import Entries"
+      "importEntriesBtn": "Import Entries",
+      "linkBackLabel": "Also add this word to their related words",
+      "removeRelated": "Remove {word}"
     },
     "paradigms": {
       "pageTitle": "Paradigm Tables",

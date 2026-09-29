@@ -901,7 +901,9 @@
       "impColEtymology": "Етимологія",
       "impColRelated": "Пов'язані",
       "importingBtn": "Імпорт...",
-      "importEntriesBtn": "Імпортувати статті"
+      "importEntriesBtn": "Імпортувати статті",
+      "linkBackLabel": "Також додати це слово до їхніх споріднених слів",
+      "removeRelated": "Прибрати {word}"
     },
     "paradigms": {
       "pageTitle": "Таблиці парадигм",

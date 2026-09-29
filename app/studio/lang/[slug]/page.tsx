@@ -183,6 +183,7 @@ export default async function OverviewPage({
                   field="name"
                   value={language.name}
                   maxLength={100}
+                  label={t("name")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -203,6 +204,7 @@ export default async function OverviewPage({
                 field="description"
                 value={language.description || ""}
                 maxLength={1000}
+                label={t("description")}
               />
             </div>
 

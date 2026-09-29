@@ -13,6 +13,8 @@ interface InlineLanguageEditProps {
   field: "name" | "description"
   value: string
   maxLength?: number
+  /** Visible field label, reused as the accessible name of the editor. */
+  label?: string
 }
 
 export function InlineLanguageEdit({
@@ -20,26 +22,27 @@ export function InlineLanguageEdit({
   field,
   value,
   maxLength,
+  label,
 }: InlineLanguageEditProps) {
   const t = useTranslations("inlineLanguageEdit")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
+  // Await the action and throw on failure so InlineEdit keeps the editor open with the typed text
+  // and shows the error. (Running it inside startTransition returned immediately: the editor closed,
+  // the input was discarded and the thrown error became an unhandled rejection.)
   const handleSave = async (newValue: string) => {
-    startTransition(async () => {
-      const result = await updateLanguage({
-        id: languageId,
-        [field]: newValue,
-      })
-
-      if ('error' in result) {
-        toast.error(result.error)
-        throw new Error(result.error)
-      } else {
-        toast.success(field === "name" ? t("nameUpdated") : t("descriptionUpdated"))
-        router.refresh()
-      }
+    const result = await updateLanguage({
+      id: languageId,
+      [field]: newValue,
     })
+
+    if ('error' in result) {
+      toast.error(result.error)
+      throw new Error(result.error)
+    }
+    toast.success(field === "name" ? t("nameUpdated") : t("descriptionUpdated"))
+    startTransition(() => router.refresh())
   }
 
   const validate = (val: string) => {
@@ -65,6 +68,8 @@ export function InlineLanguageEdit({
       maxLength={maxLength}
       validate={validate}
       disabled={isPending}
+      label={label}
+      multiline={field === "description"}
     />
   )
 }

@@ -901,7 +901,9 @@
       "impColEtymology": "Этимология",
       "impColRelated": "Связанные",
       "importingBtn": "Импорт...",
-      "importEntriesBtn": "Импортировать статьи"
+      "importEntriesBtn": "Импортировать статьи",
+      "linkBackLabel": "Также добавить это слово в их связанные слова",
+      "removeRelated": "Убрать {word}"
     },
     "paradigms": {
       "pageTitle": "Таблицы парадигм",

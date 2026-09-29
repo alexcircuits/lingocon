@@ -134,15 +134,21 @@ export function SoundChangeEditor({
   // Save rules to language metadata
   const handleSave = useCallback(async () => {
     try {
-      await updateLanguageMetadata(languageId, {
+      // The action reports failure as { error } rather than throwing; checking only for a throw
+      // showed "Rules saved" even when nothing was saved.
+      const result = await updateLanguageMetadata(languageId, {
         soundChangeRules: rulesText,
       })
+      if (result && "error" in result && result.error) {
+        toast.error(result.error || t("saveFailed"))
+        return
+      }
       toast.success(t("rulesSaved"))
       startTransition(() => router.refresh())
     } catch {
       toast.error(t("saveFailed"))
     }
-  }, [languageId, rulesText, router])
+  }, [languageId, rulesText, router, t])
 
   // Copy results to clipboard
   const handleCopyResults = useCallback(() => {
