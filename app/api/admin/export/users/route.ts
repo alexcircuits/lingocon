@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
 import { format } from "date-fns"
+import { sanitizeCsvCell } from "@/lib/export/csv-safe"
 
 export const dynamic = "force-dynamic"
 
@@ -48,15 +49,16 @@ export async function GET() {
             format(new Date(user.createdAt), "yyyy-MM-dd HH:mm:ss")
         ])
 
+        // User names are attacker-controlled: neutralize spreadsheet formulas and quote any cell
+        // containing a delimiter, quote or line break.
+        const csvCell = (cell: string | number) => {
+            if (typeof cell !== "string") return String(cell)
+            const safe = sanitizeCsvCell(cell)
+            return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
+        }
         const csvContent = [
             headers.join(","),
-            ...rows.map(row =>
-                row.map(cell =>
-                    typeof cell === "string" && (cell.includes(",") || cell.includes('"'))
-                        ? `"${cell.replace(/"/g, '""')}"`
-                        : cell
-                ).join(",")
-            )
+            ...rows.map(row => row.map(csvCell).join(","))
         ].join("\n")
 
         return new NextResponse(csvContent, {

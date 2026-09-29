@@ -45,8 +45,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 
-  const page = Math.max(1, parseInt(params.get("page") ?? "1", 10))
+  const parsedPage = parseInt(params.get("page") ?? "1", 10)
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1
   const since = params.get("since")
+  if (since && Number.isNaN(Date.parse(since))) {
+    return NextResponse.json({ error: "since must be an ISO 8601 timestamp" }, { status: 400 })
+  }
 
   const where = {
     languageId,
@@ -77,7 +81,9 @@ export async function GET(request: NextRequest) {
   ])
 
   const updatedAt = maxUpdated._max.updatedAt?.toISOString() ?? new Date(0).toISOString()
-  const etag = `"${createHash("sha256").update(`${languageId}:${updatedAt}`).digest("hex").slice(0, 16)}"`
+  // max(updatedAt) alone doesn't change when an entry is deleted, so clients kept getting 304 and
+  // never dropped deleted words. The entry count and page make the tag change on deletes too.
+  const etag = `"${createHash("sha256").update(`${languageId}:${updatedAt}:${total}:${page}`).digest("hex").slice(0, 16)}"`
 
   const ifNoneMatch = request.headers.get("If-None-Match")
   if (ifNoneMatch === etag && !since) {

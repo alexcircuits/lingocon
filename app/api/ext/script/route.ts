@@ -54,7 +54,8 @@ export async function GET(request: NextRequest) {
   ])
 
   const updatedAt = maxUpdated._max.updatedAt?.toISOString() ?? new Date(0).toISOString()
-  const etag = `"${createHash("sha256").update(`script:${languageId}:${updatedAt}`).digest("hex").slice(0, 16)}"`
+  // Include the symbol count so deleting a symbol changes the tag (max(updatedAt) doesn't).
+  const etag = `"${createHash("sha256").update(`script:${languageId}:${updatedAt}:${symbols.length}`).digest("hex").slice(0, 16)}"`
 
   if (request.headers.get("If-None-Match") === etag) {
     return new NextResponse(null, { status: 304, headers: { ETag: etag } })
