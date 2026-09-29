@@ -9,9 +9,14 @@ import { SearchTabs } from "@/components/search/search-tabs"
 import { ResultCard } from "@/components/search/result-card"
 import { SearchEmpty } from "@/components/search/search-empty"
 import { Loader2 } from "lucide-react"
-import { useTranslations } from "next-intl"
 
-export function SearchResults() {
+/** Strings for the error state, passed from the server page so this page doesn't ship next-intl's client runtime. */
+export interface SearchResultsLabels {
+    failed: string
+    retry: string
+}
+
+export function SearchResults({ labels }: { labels: SearchResultsLabels }) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -24,8 +29,6 @@ export function SearchResults() {
     const [failed, setFailed] = useState(false)
     const hasSearched = useRef(false)
     const inFlight = useRef<AbortController | null>(null)
-    const tErrors = useTranslations("errors")
-    const tCommon = useTranslations("common")
 
     const debouncedQuery = useDebounce(query, 350)
 
@@ -127,13 +130,13 @@ export function SearchResults() {
                         </div>
                     ) : failed ? (
                         <div className="flex flex-col items-center gap-3 py-24 text-center" role="alert">
-                            <p className="text-sm text-muted-foreground">{tErrors("somethingWrong")}</p>
+                            <p className="text-sm text-muted-foreground">{labels.failed}</p>
                             <button
                                 type="button"
                                 onClick={() => fetchResults(debouncedQuery || query, activeTab)}
                                 className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                {tCommon("tryAgain")}
+                                {labels.retry}
                             </button>
                         </div>
                     ) : !results || counts.all === 0 ? (

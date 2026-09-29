@@ -10,7 +10,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { headingId } from "@/lib/utils/tiptap-headings"
-import { isSafeHttpUrl } from "@/lib/validations/url"
+import { isSafeHttpUrl } from "@/lib/utils/safe-url"
 import { IGTBlock } from "@/components/igt-block"
 import { ParadigmEmbed } from "@/components/paradigm-embed"
 

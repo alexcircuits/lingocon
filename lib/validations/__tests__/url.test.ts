@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { httpUrlOrPathSchema, httpUrlSchema, isSafeHttpUrl } from "../url"
+import { isSafeHttpUrlOrPath } from "@/lib/utils/safe-url"
 
 describe("safe link validation", () => {
   it("accepts http(s) URLs", () => {
@@ -17,6 +18,12 @@ describe("safe link validation", () => {
   it("allows in-app paths but not protocol-relative URLs", () => {
     expect(httpUrlOrPathSchema.safeParse("/learn").success).toBe(true)
     expect(httpUrlOrPathSchema.safeParse("//evil.example").success).toBe(false)
+  })
+
+  it("the zod-free helper used by client components agrees with the schema", () => {
+    for (const value of ["/learn", "https://x.test/a", "//evil.example", "javascript:alert(1)", "learn"]) {
+      expect(isSafeHttpUrlOrPath(value)).toBe(httpUrlOrPathSchema.safeParse(value).success)
+    }
   })
 })
 

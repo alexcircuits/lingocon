@@ -1,17 +1,9 @@
 import { z } from "zod"
+import { isSafeHttpUrl, isSafeHttpUrlOrPath } from "@/lib/utils/safe-url"
 
-/**
- * Links users can set that are later rendered as <a href> for other people. `z.string().url()`
- * accepts `javascript:` and `data:` URLs, so every such field must use these instead.
- */
-export function isSafeHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value)
-    return url.protocol === "http:" || url.protocol === "https:"
-  } catch {
-    return false
-  }
-}
+// Links users can set are later rendered as <a href> for other people. `z.string().url()` accepts
+// `javascript:` and `data:` URLs, so every such field must use these schemas instead.
+export { isSafeHttpUrl }
 
 /** Absolute http(s) URL. */
 export const httpUrlSchema = z
@@ -25,10 +17,7 @@ export const httpUrlOrPathSchema = z
   .string()
   .trim()
   .max(500)
-  .refine(
-    (value) => isSafeHttpUrl(value) || (value.startsWith("/") && !value.startsWith("//")),
-    "Must be an http(s) URL or a path starting with /"
-  )
+  .refine(isSafeHttpUrlOrPath, "Must be an http(s) URL or a path starting with /")
 
 /**
  * Optional external link a user sets on their profile/language (Discord, Telegram, website).
