@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { getUserId } from "@/lib/auth-helpers"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
@@ -17,15 +17,14 @@ import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
-
-    // Allow in dev mode or with valid session
-    if (!session?.user?.id && process.env.DEV_MODE !== "true") {
+    // getUserId honours suspension (and resolves the dev user in DEV_MODE).
+    const userId = await getUserId()
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Throttle uploads per user (storage-abuse / repeated-large-body guard).
-    if (!rateLimit(`upload:${session?.user?.id ?? "dev"}`, 30, 60_000).ok) {
+    if (!rateLimit(`upload:${userId}`, 30, 60_000).ok) {
       return NextResponse.json({ error: "Too many uploads — please slow down." }, { status: 429 })
     }
 

@@ -9,6 +9,40 @@ export const config = {
   ],
 }
 
+// Language slugs are [a-z0-9-] (see lib/validations/language.ts). Anything else can't be a renamed
+// language, and must never be interpolated into the internal URL (ported from PR #49, which fixed
+// CodeQL's SSRF finding here).
+const SLUG_PATTERN = /^[a-z0-9-]{1,100}$/
+
+// Reservations (old slug → new slug after a rename) are rare and change rarely, but every /lang and
+// /studio/lang request (including RSC prefetches) used to trigger an HTTP self-call plus a DB query.
+// Cache lookups per slug for a minute in the middleware module scope.
+const CACHE_TTL_MS = 60_000
+const CACHE_MAX_ENTRIES = 5_000
+const reservationCache = new Map<string, { newSlug: string | null; expires: number }>()
+
+function cacheGet(slug: string) {
+  const hit = reservationCache.get(slug)
+  if (!hit) return undefined
+  if (hit.expires < Date.now()) {
+    reservationCache.delete(slug)
+    return undefined
+  }
+  return hit.newSlug
+}
+
+function cacheSet(slug: string, newSlug: string | null) {
+  if (reservationCache.size >= CACHE_MAX_ENTRIES) reservationCache.clear()
+  reservationCache.set(slug, { newSlug, expires: Date.now() + CACHE_TTL_MS })
+}
+
+function redirectToNewSlug(request: NextRequest, slug: string, newSlug: string) {
+  const newPathname = request.nextUrl.pathname.replace(`/${slug}`, `/${newSlug}`)
+  const response = NextResponse.redirect(new URL(newPathname, request.url), 307)
+  response.headers.set('X-Robots-Tag', 'noindex')
+  return response
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
@@ -18,6 +52,12 @@ export async function middleware(request: NextRequest) {
   if (!match) return NextResponse.next()
 
   const slug = match[1]
+  if (!SLUG_PATTERN.test(slug)) return NextResponse.next()
+
+  const cached = cacheGet(slug)
+  if (cached !== undefined) {
+    return cached && cached !== slug ? redirectToNewSlug(request, slug, cached) : NextResponse.next()
+  }
 
   try {
     // We cannot use Prisma in Edge middleware, so we call an internal API route.
@@ -26,7 +66,7 @@ export async function middleware(request: NextRequest) {
     // a TLS handshake against the plain-HTTP Next server (ERR_SSL_PACKET_LENGTH_TOO_LONG).
     const internalOrigin =
       process.env.INTERNAL_API_ORIGIN || `http://127.0.0.1:${process.env.PORT || "3000"}`
-    const url = new URL(`/api/internal/slug-reservation/${slug}`, internalOrigin)
+    const url = new URL(`/api/internal/slug-reservation/${encodeURIComponent(slug)}`, internalOrigin)
     
     // Add a short timeout so we don't hang requests if the DB is slow
     const controller = new AbortController()
@@ -44,15 +84,11 @@ export async function middleware(request: NextRequest) {
 
     if (res.ok) {
       const data = await res.json()
-      if (data.found && data.newSlug && data.newSlug !== slug) {
-        // Replace the old slug with the new slug in the pathname
-        const newPathname = pathname.replace(`/${slug}`, `/${data.newSlug}`)
-        const redirectUrl = new URL(newPathname, request.url)
-        
-        // Return 307 Temporary Redirect with X-Robots-Tag: noindex
-        const response = NextResponse.redirect(redirectUrl, 307)
-        response.headers.set('X-Robots-Tag', 'noindex')
-        return response
+      const newSlug = data.found && typeof data.newSlug === 'string' ? data.newSlug : null
+      cacheSet(slug, newSlug)
+      if (newSlug && newSlug !== slug) {
+        // 307 Temporary Redirect with X-Robots-Tag: noindex
+        return redirectToNewSlug(request, slug, newSlug)
       }
     }
   } catch (error) {

@@ -27,7 +27,8 @@ services:
     environment:
       DATABASE_URL: postgresql://langua:langua@db:5432/langua
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+      # No default: a well-known secret lets anyone forge session JWTs (including admin ones).
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET (openssl rand -base64 32)}
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       # Optional — only needed for OAuth / email features
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}

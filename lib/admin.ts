@@ -15,10 +15,11 @@ export async function isAdmin(): Promise<boolean> {
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { isAdmin: true }
+        select: { isAdmin: true, isSuspended: true }
     })
 
-    return user?.isAdmin ?? false
+    // A suspended admin keeps their session (JWT) but must lose admin rights immediately.
+    return !!user?.isAdmin && !user.isSuspended
 }
 
 /**
