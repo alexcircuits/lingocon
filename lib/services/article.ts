@@ -1,7 +1,23 @@
 import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@prisma/client"
 import { canEditScope } from "@/lib/auth-helpers"
 import { UnauthorizedError, NotFoundError } from "@/lib/errors"
 import { slugOrFallback } from "@/lib/utils/slug"
+import { z } from "zod"
+import { mediaUrlSchema } from "@/lib/validations/url"
+import { assertParadigmInLanguage } from "@/lib/services/language-scope"
+
+// Server actions receive arbitrary objects at runtime, so fields are picked explicitly — spreading
+// the input let a caller set languageId/authorId and move an article into someone else's language.
+const articleFieldsSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  excerpt: z.string().max(1000).optional().nullable(),
+  content: z.unknown().optional(),
+  coverImage: mediaUrlSchema.optional().nullable().or(z.literal("")),
+  published: z.boolean().optional(),
+  paradigmId: z.string().optional().nullable(),
+})
+const articleUpdateSchema = articleFieldsSchema.partial()
 
 function articleSlug(title: string): string {
   return slugOrFallback(title, "article", 50)
@@ -48,6 +64,8 @@ export async function createArticle(
   if (!canWrite && !canDraft) {
     throw new UnauthorizedError("You don't have permission to add articles to this language")
   }
+  const fields = articleFieldsSchema.parse(data)
+  await assertParadigmInLanguage(fields.paradigmId, data.languageId)
 
   const langSlug = (
     await prisma.language.findUnique({
@@ -56,21 +74,21 @@ export async function createArticle(
     })
   )?.slug
 
-  const slug = await ensureUniqueSlug(data.languageId, articleSlug(data.title))
+  const slug = await ensureUniqueSlug(data.languageId, articleSlug(fields.title))
 
   // Draft contributors always save as unpublished; writers respect the param.
-  const published = canWrite ? (data.published ?? true) : false
+  const published = canWrite ? (fields.published ?? true) : false
 
   const article = await prisma.article.create({
     data: {
-      title: data.title,
+      title: fields.title,
       slug,
-      excerpt: data.excerpt,
-      content: data.content,
-      coverImage: data.coverImage,
+      excerpt: fields.excerpt ?? undefined,
+      content: fields.content as Prisma.InputJsonValue,
+      coverImage: fields.coverImage || undefined,
       published,
       publishedAt: published ? new Date() : null,
-      paradigmId: data.paradigmId || null,
+      paradigmId: fields.paradigmId || null,
       languageId: data.languageId,
       authorId: userId,
     },
@@ -113,22 +131,28 @@ export async function updateArticle(
     throw new UnauthorizedError("You don't have permission to edit this article")
   }
 
+  const fields = articleUpdateSchema.parse(data)
+  await assertParadigmInLanguage(fields.paradigmId, article.languageId)
+
   let slug = article.slug
-  if (data.title && data.title !== article.title) {
-    slug = await ensureUniqueSlug(article.languageId, articleSlug(data.title), id)
+  if (fields.title && fields.title !== article.title) {
+    slug = await ensureUniqueSlug(article.languageId, articleSlug(fields.title), id)
   }
 
   // Draft contributors cannot change published state
   const publishedNext = canWrite
-    ? (data.published ?? article.published)
+    ? (fields.published ?? article.published)
     : article.published
 
   const updated = await prisma.article.update({
     where: { id },
     data: {
-      ...data,
+      ...(fields.title !== undefined && { title: fields.title }),
+      ...(fields.excerpt !== undefined && { excerpt: fields.excerpt }),
+      ...(fields.content !== undefined && { content: fields.content as Prisma.InputJsonValue }),
+      ...(fields.coverImage !== undefined && { coverImage: fields.coverImage || null }),
       slug,
-      paradigmId: data.paradigmId !== undefined ? data.paradigmId || null : article.paradigmId,
+      paradigmId: fields.paradigmId !== undefined ? fields.paradigmId || null : article.paradigmId,
       published: publishedNext,
       publishedAt: publishedNext && !article.published ? new Date() : article.publishedAt,
     },

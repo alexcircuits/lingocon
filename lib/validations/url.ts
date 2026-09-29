@@ -63,3 +63,16 @@ export const assetUrlSchema = z
       (/^\/uploads\/[A-Za-z0-9._\/-]+$/.test(value) || (isSafeHttpUrl(value) && value.startsWith("https://"))),
     "Must be an uploaded file or an https URL"
   )
+
+/**
+ * Image/file reference rendered as <img src> or a download link: our own `/uploads/...` path or an
+ * http(s) URL. Looser than `assetUrlSchema` (http allowed) because it never lands in CSS.
+ */
+export const mediaUrlSchema = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine(
+    (value) => !/["'<>\s]/.test(value) && (/^\/uploads\/[A-Za-z0-9._\/-]+$/.test(value) || isSafeHttpUrl(value)),
+    "Must be an uploaded file or an http(s) URL"
+  )

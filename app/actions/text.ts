@@ -16,6 +16,25 @@ import { revalidatePath } from "next/cache"
 import { TextType } from "@prisma/client"
 import { checkContentBadges } from "@/app/actions/badge"
 import { slugOrFallback } from "@/lib/utils/slug"
+import { z } from "zod"
+import type { Prisma } from "@prisma/client"
+import { mediaUrlSchema } from "@/lib/validations/url"
+import { assertParadigmInLanguage } from "@/lib/services/language-scope"
+
+// Explicit, validated fields: spreading the raw action input into prisma.text.update let a caller
+// set languageId/authorId and move a text into another user's language.
+const textFieldsSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().max(2000).optional().nullable(),
+  type: z.nativeEnum(TextType),
+  content: z.unknown().optional(),
+  fileUrl: mediaUrlSchema.optional().nullable().or(z.literal("")),
+  fileName: z.string().max(255).optional().nullable(),
+  fileSize: z.number().int().nonnegative().optional().nullable(),
+  coverImage: mediaUrlSchema.optional().nullable().or(z.literal("")),
+  paradigmId: z.string().optional().nullable(),
+})
+const textUpdateSchema = textFieldsSchema.partial()
 
 /** URL-safe slug derived from a title; not globally unique — uniqueness is enforced per language. */
 function textSlug(title: string): string {
@@ -47,13 +66,22 @@ export async function createText(data: {
     return { error: "You don't have permission to add texts to this language" }
   }
 
+  const parsed = textFieldsSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid text" }
+  const fields = parsed.data
+  try {
+    await assertParadigmInLanguage(fields.paradigmId, data.languageId)
+  } catch {
+    return { error: "Paradigm not found" }
+  }
+
   // Get the slug as well
   const langSlug = (await prisma.language.findUnique({
     where: { id: data.languageId },
     select: { slug: true }
   }))?.slug
 
-  const baseSlug = textSlug(data.title)
+  const baseSlug = textSlug(fields.title)
   let slug = baseSlug
   let counter = 1
 
@@ -68,17 +96,17 @@ export async function createText(data: {
 
   const text = await prisma.text.create({
     data: {
-      title: data.title,
+      title: fields.title,
       slug,
-      description: data.description,
-      type: data.type,
-      content: data.content,
-      fileUrl: data.fileUrl,
-      fileName: data.fileName,
-      fileSize: data.fileSize,
-      coverImage: data.coverImage,
+      description: fields.description ?? undefined,
+      type: fields.type,
+      content: fields.content as Prisma.InputJsonValue | undefined,
+      fileUrl: fields.fileUrl || undefined,
+      fileName: fields.fileName ?? undefined,
+      fileSize: fields.fileSize ?? undefined,
+      coverImage: fields.coverImage || undefined,
       published: true,
-      paradigmId: data.paradigmId || null,
+      paradigmId: fields.paradigmId || null,
       languageId: data.languageId,
       authorId: userId,
     }
@@ -130,10 +158,19 @@ export async function updateText(
     return { error: "You don't have permission to edit this text" }
   }
 
+  const parsed = textUpdateSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid text" }
+  const fields = parsed.data
+  try {
+    await assertParadigmInLanguage(fields.paradigmId, text.languageId)
+  } catch {
+    return { error: "Paradigm not found" }
+  }
+
   // Update slug if title changed
   let slug = text.slug
-  if (data.title && data.title !== text.title) {
-    const baseSlug = textSlug(data.title)
+  if (fields.title && fields.title !== text.title) {
+    const baseSlug = textSlug(fields.title)
     slug = baseSlug
     let counter = 1
 
@@ -153,10 +190,17 @@ export async function updateText(
   const updated = await prisma.text.update({
     where: { id },
     data: {
-      ...data,
+      ...(fields.title !== undefined && { title: fields.title }),
+      ...(fields.description !== undefined && { description: fields.description }),
+      ...(fields.type !== undefined && { type: fields.type }),
+      ...(fields.content !== undefined && { content: fields.content as Prisma.InputJsonValue }),
+      ...(fields.fileUrl !== undefined && { fileUrl: fields.fileUrl || null }),
+      ...(fields.fileName !== undefined && { fileName: fields.fileName }),
+      ...(fields.fileSize !== undefined && { fileSize: fields.fileSize }),
+      ...(fields.coverImage !== undefined && { coverImage: fields.coverImage || null }),
       published: true,
       slug,
-      paradigmId: data.paradigmId !== undefined ? (data.paradigmId || null) : text.paradigmId,
+      paradigmId: fields.paradigmId !== undefined ? (fields.paradigmId || null) : text.paradigmId,
     }
   })
 
