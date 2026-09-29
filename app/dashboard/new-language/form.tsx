@@ -137,7 +137,7 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           placeholder={tWizard("slugPlaceholder")}
-          pattern="[a-z0-9-]+"
+          pattern="[a-z0-9\-]+"
           required
           disabled={isPending}
         />

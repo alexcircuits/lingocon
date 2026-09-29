@@ -182,7 +182,7 @@ export function GrammarEditor({
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder={t("slugPlaceholder")}
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 required
                 disabled={isPending}
                 maxLength={200}

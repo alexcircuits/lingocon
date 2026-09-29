@@ -170,7 +170,7 @@ export function LanguageWizard() {
                 value={data.slug}
                 onChange={(e) => setData((prev) => ({ ...prev, slug: e.target.value }))}
                 placeholder={t("slugPlaceholder")}
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 required
                 disabled={isPending}
               />
