@@ -9,6 +9,7 @@ import { createActivity } from "@/lib/utils/activity"
 import { isAdmin } from "@/lib/admin"
 import { logAdminAction } from "@/lib/admin-audit"
 import { scanBundle } from "@/lib/modules/scan"
+import { MODULE_RATE_LIMIT_MESSAGE, moduleRateLimitRetryAfterMs } from "@/lib/modules/rate-limits"
 import { z } from "zod"
 import { rulesTextFromData } from "@/lib/modules/utils"
 import type { ModuleTier } from "@prisma/client"
@@ -184,6 +185,7 @@ export async function publishVersion(
 export async function addModule(input: AddModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("add", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = addModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -310,6 +312,7 @@ export async function removeModule(installId: string): Promise<ActionResult> {
 export async function reviewModule(input: ReviewModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("review", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = reviewModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }
@@ -355,6 +358,7 @@ export async function reviewModule(input: ReviewModuleInput): Promise<ActionResu
 export async function reportModule(input: ReportModuleInput): Promise<ActionResult> {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
+  if (moduleRateLimitRetryAfterMs("report", `user:${userId}`)) return { error: MODULE_RATE_LIMIT_MESSAGE }
 
   const parsed = reportModuleSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" }

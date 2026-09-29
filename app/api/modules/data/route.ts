@@ -4,6 +4,8 @@ import { getUserId, canViewLanguage, canEditLanguage } from "@/lib/auth-helpers"
 import { resolveGrantedPermissions } from "@/lib/modules/utils"
 import { isRuntimeMethod, permissionForMethod } from "@/lib/modules/runtime-protocol"
 import { loadModuleData } from "@/lib/modules/data"
+import { MODULE_RATE_LIMIT_MESSAGE, moduleRateLimitRetryAfterMs } from "@/lib/modules/rate-limits"
+import { clientIpFromHeaders } from "@/lib/request-ip"
 
 export const dynamic = "force-dynamic"
 
@@ -29,6 +31,13 @@ export async function POST(req: Request) {
   }
 
   const userId = await getUserId()
+  // Keyed per caller, language and module so one busy widget can't starve another (#31).
+  const caller = userId ? `user:${userId}` : `ip:${clientIpFromHeaders(req.headers)}`
+  const retryAfterMs =
+    moduleRateLimitRetryAfterMs("dataCaller", caller) ||
+    moduleRateLimitRetryAfterMs("data", `${caller}:${languageId}:${moduleId}`)
+  if (retryAfterMs) return tooManyRequests(retryAfterMs)
+
   if (!(await canViewLanguage(languageId, userId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
@@ -78,4 +87,11 @@ export async function POST(req: Request) {
 
   const data = await loadModuleData(method, language.id)
   return NextResponse.json({ data })
+}
+
+function tooManyRequests(retryAfterMs: number) {
+  return NextResponse.json(
+    { error: MODULE_RATE_LIMIT_MESSAGE },
+    { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+  )
 }

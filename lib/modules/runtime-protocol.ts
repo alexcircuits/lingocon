@@ -23,7 +23,8 @@ export const RUNTIME_METHODS = {
 export type RuntimeMethod = keyof typeof RUNTIME_METHODS
 
 export function isRuntimeMethod(value: unknown): value is RuntimeMethod {
-  return typeof value === "string" && value in RUNTIME_METHODS
+  // Own keys only: `in` would also accept inherited names like "constructor" or "__proto__".
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(RUNTIME_METHODS, value)
 }
 
 /** Permission required for a method, or null if it's freely available. */
