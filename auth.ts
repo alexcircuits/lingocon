@@ -70,7 +70,9 @@ async function devAuth() {
 const nextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" as const },
-  secret: process.env.AUTH_SECRET,
+  // Auth.js refuses to serve `/api/auth/*` without a secret. DEV_MODE (never allowed in production,
+  // see the guard above) falls back to a fixed local-only value so a fresh `.env.example` works.
+  secret: process.env.AUTH_SECRET ?? (isDevMode ? "lingocon-dev-mode-local-only-secret" : undefined),
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID,
