@@ -30,6 +30,11 @@ describe("vowel-inventory", () => {
     expect(back?.rounded).toBe(true)
   })
 
+  it("falls back to the symbols when language metadata is malformed", () => {
+    expect(extractVowelInventory([{ ipa: "a" }], { vowels: "a, e, i" })).toEqual(["a"])
+    expect(extractVowelInventory([], { vowels: "a, e, i" })).toEqual([])
+  })
+
   it("reports unknown inventory symbols separately", () => {
     const { points, unknown } = buildVowelChartData(["a", "not-a-vowel"])
     expect(points.map((p) => p.ipa)).toEqual(["a"])

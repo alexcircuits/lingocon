@@ -71,7 +71,9 @@ export function extractVowelInventory(
   symbols: Array<{ ipa: string | null }>,
   metadata: unknown
 ): string[] {
-  const parsed = languageMetadataSchema.parse(metadata ?? {})
+  // Malformed metadata (e.g. `vowels` saved as a string) falls back to the symbols, not an exception.
+  const result = languageMetadataSchema.safeParse(metadata ?? {})
+  const parsed = result.success ? result.data : {}
   const override = parsed.phonologyOverride
 
   if (override?.enabled && override.vowels && override.vowels.length > 0) {

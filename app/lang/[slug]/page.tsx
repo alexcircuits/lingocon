@@ -238,7 +238,11 @@ export default async function PublicLanguagePage({
 
   return (
     <div
-      className={activeTheme ? "lc-themed space-y-12 rounded-[var(--radius)] pb-20" : "space-y-12 pb-20"}
+      className={
+        activeTheme
+          ? `lc-themed ${activeTheme.theme.headingFont ? "lc-themed-headings " : ""}space-y-12 rounded-[var(--radius)] pb-20`
+          : "space-y-12 pb-20"
+      }
       style={themeStyle}
     >
       <JsonLd data={breadcrumbSchema} />

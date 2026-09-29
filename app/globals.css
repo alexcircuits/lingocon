@@ -207,6 +207,12 @@
   html[lang="uk"] .font-display {
     font-family: var(--font-gilroy), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
   }
+
+  /* A theme module's heading font on the public language page (see themeToStyle). Only set when
+     the theme defines one; the double class outranks the locale rules above. */
+  .lc-themed.lc-themed-headings :is(h1, h2, h3, h4, .font-display) {
+    font-family: var(--theme-heading-font), var(--font-noto), ui-sans-serif, system-ui, sans-serif;
+  }
 }
 
 @layer utilities {

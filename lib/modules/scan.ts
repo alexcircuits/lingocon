@@ -21,13 +21,14 @@ const DENYLIST: { pattern: RegExp; reason: string }[] = [
   { pattern: /\bnavigator\s*\.\s*sendBeacon\b/, reason: "sendBeacon is not allowed" },
   { pattern: /\bfetch\s*\(/, reason: "Direct fetch is blocked — use host.request() instead" },
   { pattern: /\beval\s*\(/, reason: "eval is not allowed" },
-  { pattern: /new\s+Function\b/, reason: "Function constructor is not allowed" },
+  { pattern: /\bnew\s+Function\b|\bFunction\s*\(/, reason: "Function constructor is not allowed" },
   { pattern: /\bimport\s*\(/, reason: "Dynamic import is not allowed" },
   { pattern: /\bimportScripts\b/, reason: "importScripts is not allowed" },
   { pattern: /\bdocument\s*\.\s*domain\b/, reason: "document.domain is not allowed" },
   { pattern: /\bwindow\s*\.\s*top\b/, reason: "window.top access is not allowed" },
   { pattern: /\bwindow\s*\.\s*opener\b/, reason: "window.opener access is not allowed" },
-  { pattern: /<\/script\s*>/i, reason: "Closing </script> tags are not allowed in bundle code" },
+  // The HTML parser ends a script element at "</script" + whitespace, "/" or ">".
+  { pattern: /<\/script[\s/>]/i, reason: "Closing </script> tags are not allowed in bundle code" },
 ]
 
 export type ScanResult = { ok: true } | { ok: false; reason: string }
@@ -40,8 +41,15 @@ export function scanBundle(code: string): ScanResult {
   if (bytes > MAX_BUNDLE_BYTES) {
     return { ok: false, reason: `Bundle exceeds ${Math.round(MAX_BUNDLE_BYTES / 1000)} KB` }
   }
+  // Comments are whitespace to JS but not to these patterns (`fetch/**/(`), so also scan a copy
+  // with comments removed. Scanning both can only add matches: a "//" inside a string can't hide code.
+  const variants = [code, stripComments(code)]
   for (const { pattern, reason } of DENYLIST) {
-    if (pattern.test(code)) return { ok: false, reason }
+    if (variants.some((variant) => pattern.test(variant))) return { ok: false, reason }
   }
   return { ok: true }
+}
+
+function stripComments(code: string): string {
+  return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, "")
 }
