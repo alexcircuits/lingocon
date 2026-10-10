@@ -37,8 +37,33 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
+      # Optional Rust platform service (see the `api` service below). Unset = the
+      # TypeScript implementations are used.
+      LINGOCON_API_URL: ${LINGOCON_API_URL:-}
+      LINGOCON_API_TOKEN: ${LINGOCON_API_TOKEN:-}
     ports:
       - "3000:3000"
+
+  # Optional Rust platform service (rust/crates/api), started only with
+  #   LINGOCON_API_TOKEN=$(openssl rand -hex 32) LINGOCON_API_URL=http://api:3040 \
+  #     docker compose --profile rust-api up
+  # No published ports: only the app container talks to it.
+  api:
+    profiles: ["rust-api"]
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    # The service drains in-flight requests for up to 20 s after SIGTERM.
+    stop_grace_period: 25s
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://langua:langua@db:5432/langua
+      LINGOCON_API_TOKEN: ${LINGOCON_API_TOKEN:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      RUST_LOG: ${RUST_LOG:-info}
 
   # One-shot migration runner — runs on every `docker compose up`
   migrate:

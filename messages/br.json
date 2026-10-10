@@ -264,7 +264,11 @@
     "pageNotFoundDesc": "Ne ranner ket ar bajenn a glaskit pe dilec'hiet eo bet.",
     "returnToHome": "Distreiñ da LingoCon",
     "somethingWrong": "Un dra bennak a zo aet a-dreuz",
-    "unexpectedError": "Ur fazi dic'hortoz zo bet"
+    "unexpectedError": "Ur fazi dic'hortoz zo bet",
+    "newVersionAvailable": "Hizivaet eo bet LingoCon. Adkargit ar bajenn evit kaout ar stumm nevesañ.",
+    "reload": "Adkargañ",
+    "studioPageNotFound": "N'eus ket eus ar bajenn-mañ er raktres. Marteze eo bet adanvet pe dilamet.",
+    "backToProject": "Distreiñ da sell hollek ar raktres"
   },
   "auth": {
     "signInTitle": "Kevreañ ouzh LingoCon",
@@ -443,8 +447,8 @@
     "maxSyllables": "Muiañ a silabennoù",
     "count": "Niver",
     "rejectPatterns": "Heuliadoù difennet",
-    "rejectPatternsHelp": "Patromoù regex (dispartiet gant skejoù pe linennoù nevez). Lamet e vo ar gerioù a glot gant unan eus ar patromoù.",
     "rejectPatternsPlaceholder": "sk. nn, tk, ^r",
+    "rejectPatternsHelp": "Patromoù regex (dispartiet gant skejoù pe linennoù nevez). Lamet e vo ar gerioù a glot gant unan eus ar patromoù.",
     "regenerate": "Adkrouiñ",
     "generateN": "Krouiñ {count} Ger",
     "copy": "Eilañ",
@@ -590,7 +594,12 @@
       "creating": "O krouiñ...",
       "loading": "O kargañ...",
       "back": "Distreiñ",
-      "search": "Klask"
+      "search": "Klask",
+      "staleConflict": "Cheñchet eo bet an dra-mañ en ul lec'h all (en un ivinell all pe gant ur c'henlabourer) goude m'ho peus e zigoret, setu n'eo ket bet lakaet hoc'h enrolladenn da dalvezout. Eilit ar pezh a fell deoc'h mirout ha adkargit ar stumm diwezhañ.",
+      "reloadLatest": "Adkargañ ar stumm diwezhañ",
+      "mayHaveChanged": "Marteze eo bet cheñchet ar raktres-mañ e-pad ma oac'h kuit.",
+      "refreshView": "Freskaat",
+      "slugGeneratedHint": "Krouet diwar an titl pa enrollit. Ma cheñchit an titl e cheñch ar chomlec'h-mañ ; un niverenn a vez ouzhpennet ma'z eo dija implijet."
     },
     "tabs": {
       "overview": "Selloù hollek",
@@ -619,9 +628,11 @@
     },
     "layout": {
       "viewPublic": "Gwelet ar stumm Foran",
+      "privateNoPublicPage": "Prevez eo ar raktres-mañ, n'en deus ket a bajenn foran neuze. Cheñchit e welusted en arventennoù evit e rannañ.",
       "view": "Gwelet",
       "page": "Pajenn",
-      "more": "Muioc'h"
+      "more": "Muioc'h",
+      "viewOnly": "Lenn hepken — gallout a rit furchal ar rann-mañ, met ezhomm ez eus eus un aotre kemmañ digant ar perc'henn evit cheñch traoù."
     },
     "overview": {
       "subtitle": "Selloù hollek ha stadegoù evit ho yezh",
@@ -656,10 +667,10 @@
       "exportXlsxDesc": "Karned meur a follenn",
       "exportCsv": "CSV (Geriadur)",
       "exportCsvDesc": "Keuriek gant an taolennoù",
-      "exportAnki": "Tokad Anki (CSV)",
-      "exportAnkiDesc": "Kartennoù-deskiñ da enporzhiañ",
       "exportJson": "Roadennoù JSON",
       "exportJsonDesc": "Ezporzhiañ an diaz-titouroù kriz",
+      "exportAnki": "Tokad Anki (CSV)",
+      "exportAnkiDesc": "Kartennoù-deskiñ da enporzhiañ",
       "generalHeading": "Arventennoù Hollek",
       "nameLabel": "Anv",
       "slugLabel": "Slog",
@@ -716,7 +727,8 @@
       "websitePlaceholder": "https://skouer.com",
       "save": "Enrollañ ar c'hemmoù",
       "saving": "Oc'h enrollañ...",
-      "savedToast": "Arventennoù hizivaet mat"
+      "savedToast": "Arventennoù hizivaet mat",
+      "collaboratorsLoadFailed": "N'eus ket bet gallet kargañ ar genlabourerien."
     },
     "alphabet": {
       "pageTitle": "Lizherenneg",
@@ -1030,7 +1042,9 @@
       "copiedToClipboard": "Eilet er golver !",
       "appliedToast": "Arloet d'ar geriadur : {applied} {applied, plural, =1 {pennger} other {pennger}} hizivaet, {unchanged} chomet dicheñch",
       "applyFailed": "C'hwitet war arloañ ar c'hemmoù son",
-      "exportedToast": "Ezporzhiet evel TSV !"
+      "exportedToast": "Ezporzhiet evel TSV !",
+      "applyNeedsSave": "Enrollit ho reolennoù evit o lakaat da dalvezout. Ar reolennoù enrollet a vez implijet, ket ar c'hemmoù n'int ket bet enrollet.",
+      "rulesChangedConflict": "Cheñchet eo bet ar reolennoù enrollet pe ar fonologiezh abaoe m'ho peus sellet ouzh ar rakwel-mañ. Netra n'eo bet lakaet da dalvezout. Gwiriit ar reolennoù diwezhañ ha klaskit en-dro."
     },
     "textsPage": {
       "pageTitle": "Testennoù",
@@ -1074,7 +1088,8 @@
       "readFailed": "C'hwitet eo bet lenn endalc'had ar restr",
       "updatedToast": "Testenn hizivaet mat",
       "createdToast": "Testenn krouet mat",
-      "deletedToast": "Testenn diverket"
+      "deletedToast": "Testenn diverket",
+      "alwaysPublishedHint": "N'eus mod brouilhed ebet evit an testennoù : pa enrollit e vez embannet an destenn e pep lec'h ma'z eo gwelus ar yezh-mañ."
     },
     "courses": {
       "breadcrumb": "Koursoù",
@@ -1150,7 +1165,10 @@
       "delete": "Diverkañ",
       "updatedToast": "Pennad hizivaet mat",
       "createdToast": "Pennad krouet mat",
-      "deletedToast": "Pennad diverket"
+      "deletedToast": "Pennad diverket",
+      "publishFailedTitle": "N'eus ket bet gallet embann « {title} »",
+      "publishFailedForbidden": "N'ho peus ket an aotre da embann pennadoù er yezh-mañ.",
+      "publishFailedGeneric": "Ur gudenn a zo bet e-pad an embann. Klaskit en-dro, mar plij."
     },
     "flashcards": {
       "metaTitle": "Kartennoù-flash",
@@ -1388,7 +1406,8 @@
     "nameTooLong": "An anv a rank bezañ 100 arouezenn pe nebeutoc'h",
     "descriptionTooLong": "An deskrivadur a rank bezañ 1000 arouezenn pe nebeutoc'h",
     "namePlaceholder": "Anv ar yezh",
-    "descriptionPlaceholder": "Ouzhpennañ un deskrivadur..."
+    "descriptionPlaceholder": "Ouzhpennañ un deskrivadur...",
+    "saveFailed": "N'eus ket bet gallet enrollañ. Gwiriit ho kevreadur ha klaskit en-dro."
   },
   "browse": {
     "pageTitle": "Furchal",
@@ -1413,7 +1432,9 @@
   },
   "families": {
     "emptyTitle": "Yezh foran ebet c'hoazh",
-    "emptyDesc": "Pa vo embannet yezhoù savet gant an implijerien, e teuint da welout amañ evel ur gartenn familhoù etrewezhiat."
+    "emptyDesc": "Pa vo embannet yezhoù savet gant an implijerien, e teuint da welout amañ evel ur gartenn familhoù etrewezhiat.",
+    "deriveLoadFailed": "N'eus ket bet gallet kargañ ar gerioù. Klaskit en-dro, mar plij.",
+    "deriveFailed": "N'eus ket bet gallet diorren ar gerioù. Klaskit en-dro, mar plij."
   },
   "seo": {
     "browse": {
@@ -1481,7 +1502,7 @@
     "metaTitle": "Skoazellañ LingoCon | Reiñ",
     "metaDescription": "Skoazellañ an diorren open-source eus LingoCon dre OpenCollective.",
     "eyebrow": "Skoazellañ hor pal",
-    "headline": "Sikourit ac'hanomp da zerc'hel {brand} digoust & digor",
+    "headline": "Sikourit ac'hanomp da zerc'hel <brand>LingoCon</brand> digoust & digor",
     "subhead": "Ur savenn open-source eo LingoCon, kaset gant ar garantez evit ar yezhoù. Ho prof a skoazell ac'hanomp da baeañ al leve-servij, da ziorren arc'hwelioù nevez, ha da zerc'hel an arload tizhus d'an holl.",
     "infrastructureTitle": "Enrolladur",
     "infrastructureDesc": "Skoazellañ da baeañ an diazezioù-roadennoù, an alc'hweziadur koumoul, hag ar mirout evit miliadoù a yezhoù.",

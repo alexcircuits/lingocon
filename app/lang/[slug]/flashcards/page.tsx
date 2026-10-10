@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { getFlashcardPool } from "@/lib/services/flashcard-pool"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { FlashcardSession } from "@/app/studio/lang/[slug]/flashcards/flashcard-session"
@@ -10,7 +11,9 @@ export const dynamic = "force-dynamic"
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const language = await getLanguageSeoData(slug)
-  if (!language) return { title: "Quick Practice", robots: { index: false, follow: false } }
+  // Decided here, before streaming starts, so a missing page is a real 404 (the page's
+  // own notFound() runs inside the loading boundary, after a 200 has been sent).
+  if (!language || language.visibility !== "PUBLIC") notFound()
 
   return buildLanguageMetadata(language, {
     section: "flashcards",
@@ -29,23 +32,17 @@ export default async function PublicFlashcardsPage({ params }: { params: Promise
       id: true,
       name: true,
       slug: true,
-      dictionaryEntries: {
-        select: {
-          id: true,
-          lemma: true,
-          gloss: true,
-          ipa: true,
-          partOfSpeech: true,
-        },
-      },
     },
   })
 
   if (!language) notFound()
 
+  // A bounded sample, not the whole dictionary (see getFlashcardPool).
+  const entries = await getFlashcardPool(language.id)
+
   return (
     <FlashcardSession
-      entries={language.dictionaryEntries}
+      entries={entries}
       languageName={language.name}
       languageSlug={language.slug}
       isPublic

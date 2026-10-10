@@ -23,6 +23,8 @@ interface SortableSymbolProps {
   onEdit: (symbol: ScriptSymbol) => void
   onDelete: (id: string) => void
   onReorder: (id: string, direction: "up" | "down") => void
+  /** Display only: no drag handle and no edit/move/delete menu (visitors without write:alphabet). */
+  readOnly?: boolean
 }
 
 export function SortableSymbol({
@@ -33,6 +35,7 @@ export function SortableSymbol({
   onEdit,
   onDelete,
   onReorder,
+  readOnly = false,
 }: SortableSymbolProps) {
   const {
     attributes,
@@ -41,7 +44,7 @@ export function SortableSymbol({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: symbol.id })
+  } = useSortable({ id: symbol.id, disabled: readOnly })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -60,54 +63,58 @@ export function SortableSymbol({
       )}
     >
       <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px]">
-        <button
-          type="button"
-          className="absolute top-2 left-2 hover-reveal flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground touch-none cursor-grab active:cursor-grabbing"
-          aria-label="Drag to reorder"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-        <div
-          className="absolute top-2 right-2 hover-reveal"
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={`Actions for ${symbol.symbol}`}>
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(symbol)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onReorder(symbol.id, "up")}
-                disabled={index === 0 || isPending}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Move Left
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onReorder(symbol.id, "down")}
-                disabled={index === totalCount - 1 || isPending}
-              >
-                <ArrowRight className="mr-2 h-4 w-4" />
-                Move Right
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(symbol.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {!readOnly && (
+          <>
+            <button
+              type="button"
+              className="absolute top-2 left-2 hover-reveal flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground touch-none cursor-grab active:cursor-grabbing"
+              aria-label="Drag to reorder"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <div
+              className="absolute top-2 right-2 hover-reveal"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={`Actions for ${symbol.symbol}`}>
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(symbol)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onReorder(symbol.id, "up")}
+                    disabled={index === 0 || isPending}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Move Left
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onReorder(symbol.id, "down")}
+                    disabled={index === totalCount - 1 || isPending}
+                  >
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    Move Right
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDelete(symbol.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </>
+        )}
 
         <div className="text-2xl sm:text-4xl font-serif font-medium mb-2 flex flex-wrap items-center justify-center gap-1 max-w-full truncate">
           {symbol.capitalSymbol ? (

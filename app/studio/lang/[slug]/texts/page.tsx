@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { getUserId } from "@/lib/auth-helpers"
+import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { getTranslations } from "next-intl/server"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
@@ -81,6 +81,15 @@ export default async function TextsPage({
     notFound()
   }
 
+  // Adding a text needs write:texts (as every text write does); everyone else browses the list
+  // and opens texts read-only. Dev mode without a user keeps full access.
+  const canWrite = userId
+    ? await canEditScope(language.id, userId, "write:texts")
+    : process.env.DEV_MODE === "true"
+
+  // Unpublished texts are for people who can edit them (as for articles).
+  const texts = canWrite ? language.texts : language.texts.filter((text) => text.published)
+
   const t = await getTranslations("studio.textsPage")
 
   return (
@@ -92,27 +101,29 @@ export default async function TextsPage({
             {t("pageDescription")}
           </p>
         </div>
-        <Link href={`/studio/lang/${slug}/texts/new`}>
-          <Button size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("addText")}
-          </Button>
-        </Link>
+        {canWrite && (
+          <Link href={`/studio/lang/${slug}/texts/new`}>
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("addText")}
+            </Button>
+          </Link>
+        )}
       </div>
 
-      {language.texts.length === 0 ? (
+      {texts.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title={t("emptyTitle")}
           description={t("emptyDesc")}
-          action={{
+          action={canWrite ? {
             label: t("addFirst"),
             href: `/studio/lang/${slug}/texts/new`,
-          }}
+          } : undefined}
         />
       ) : (
         <div className="grid gap-4">
-          {language.texts.map((text) => (
+          {texts.map((text) => (
             <Link
               key={text.id}
               href={`/studio/lang/${slug}/texts/${text.slug}`}

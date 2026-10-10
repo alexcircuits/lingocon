@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
+import { useStudioAccess } from "@/components/studio-access"
 import type {
   DictEntry, GrammarPage, TextItem, SentenceOption, LessonItem, ItemType,
 } from "./types"
@@ -33,6 +34,9 @@ export function AddItemDialog({
   onAdded: (item: LessonItem) => void
 }) {
   const t = useTranslations("courseEditor")
+  // "Write new" creates a dictionary word or example sentence (createAndAddVocab/-Sentence need
+  // write:dictionary); course editors without that scope only pick existing content.
+  const canCreateDictionaryContent = useStudioAccess().canWrite("write:dictionary")
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<ItemType>("VOCAB")
   const [mode, setMode] = useState<"search" | "write">("search")
@@ -253,7 +257,7 @@ export function AddItemDialog({
     }
   }
 
-  const canWrite = type === "VOCAB" || type === "SENTENCE"
+  const canWrite = canCreateDictionaryContent && (type === "VOCAB" || type === "SENTENCE")
 
   const submitDisabled = loading || (
     mode === "search"

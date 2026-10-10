@@ -264,7 +264,11 @@
     "pageNotFoundDesc": "The page you're looking for doesn't exist or has been moved.",
     "returnToHome": "Return to LingoCon",
     "somethingWrong": "Something went wrong",
-    "unexpectedError": "An unexpected error occurred"
+    "unexpectedError": "An unexpected error occurred",
+    "newVersionAvailable": "LingoCon was updated. Reload to load the latest version.",
+    "reload": "Reload",
+    "studioPageNotFound": "This page doesn't exist in this project. It may have been renamed or deleted.",
+    "backToProject": "Back to project overview"
   },
   "auth": {
     "signInTitle": "Sign in to LingoCon",
@@ -590,7 +594,12 @@
       "creating": "Creating...",
       "loading": "Loading...",
       "back": "Back",
-      "search": "Search"
+      "search": "Search",
+      "staleConflict": "This was changed somewhere else (another tab or a collaborator) after you opened it, so your save was not applied. Copy anything you want to keep, then reload the latest version.",
+      "reloadLatest": "Reload latest version",
+      "mayHaveChanged": "This project may have changed while you were away.",
+      "refreshView": "Refresh",
+      "slugGeneratedHint": "Generated from the title when you save. Changing the title changes this address; a number is added if it is already taken."
     },
     "tabs": {
       "overview": "Overview",
@@ -619,9 +628,11 @@
     },
     "layout": {
       "viewPublic": "View Public",
+      "privateNoPublicPage": "This project is private, so it has no public page. Change its visibility in Settings to share it.",
       "view": "View",
       "page": "Page",
-      "more": "More"
+      "more": "More",
+      "viewOnly": "View only — you can browse this section, but changes need edit access from the owner."
     },
     "overview": {
       "subtitle": "Overview and analytics for your language",
@@ -716,7 +727,8 @@
       "websitePlaceholder": "https://example.com",
       "save": "Save Changes",
       "saving": "Saving...",
-      "savedToast": "Settings updated successfully"
+      "savedToast": "Settings updated successfully",
+      "collaboratorsLoadFailed": "Couldn't load collaborators."
     },
     "alphabet": {
       "pageTitle": "Alphabet",
@@ -1030,7 +1042,9 @@
       "copiedToClipboard": "Copied to clipboard!",
       "appliedToast": "Applied to dictionary: {applied} {applied, plural, =1 {entry} other {entries}} updated, {unchanged} unchanged",
       "applyFailed": "Failed to apply sound changes",
-      "exportedToast": "Exported as TSV!"
+      "exportedToast": "Exported as TSV!",
+      "applyNeedsSave": "Save your rules to apply them. Applying uses the saved rules, not unsaved edits.",
+      "rulesChangedConflict": "The saved rules or phonology changed since you reviewed this preview. Nothing was applied. Review the latest rules and try again."
     },
     "textsPage": {
       "pageTitle": "Texts",
@@ -1074,7 +1088,8 @@
       "readFailed": "Failed to read file content",
       "updatedToast": "Text updated successfully",
       "createdToast": "Text created successfully",
-      "deletedToast": "Text deleted"
+      "deletedToast": "Text deleted",
+      "alwaysPublishedHint": "Texts have no draft mode: saving publishes the text wherever this language is visible."
     },
     "courses": {
       "breadcrumb": "Courses",
@@ -1150,7 +1165,10 @@
       "delete": "Delete",
       "updatedToast": "Article updated successfully",
       "createdToast": "Article created successfully",
-      "deletedToast": "Article deleted"
+      "deletedToast": "Article deleted",
+      "publishFailedTitle": "Couldn't publish “{title}”",
+      "publishFailedForbidden": "You don't have permission to publish articles in this language.",
+      "publishFailedGeneric": "Something went wrong while publishing. Please try again."
     },
     "flashcards": {
       "metaTitle": "Flashcards",
@@ -1388,7 +1406,8 @@
     "nameTooLong": "Name must be 100 characters or less",
     "descriptionTooLong": "Description must be 1000 characters or less",
     "namePlaceholder": "Language name",
-    "descriptionPlaceholder": "Add a description..."
+    "descriptionPlaceholder": "Add a description...",
+    "saveFailed": "Couldn't save. Check your connection and try again."
   },
   "browse": {
     "pageTitle": "Browse",
@@ -1413,7 +1432,9 @@
   },
   "families": {
     "emptyTitle": "No Public Languages Yet",
-    "emptyDesc": "Once users publish their constructed languages, they'll appear here as an interactive family map."
+    "emptyDesc": "Once users publish their constructed languages, they'll appear here as an interactive family map.",
+    "deriveLoadFailed": "Couldn't load words. Please try again.",
+    "deriveFailed": "Failed to derive words. Please try again."
   },
   "seo": {
     "browse": {
@@ -1481,7 +1502,7 @@
     "metaTitle": "Support LingoCon | Donate",
     "metaDescription": "Support the open-source development of LingoCon through OpenCollective.",
     "eyebrow": "Support Our Mission",
-    "headline": "Help us keep {brand} free & open",
+    "headline": "Help us keep <brand>LingoCon</brand> free & open",
     "subhead": "LingoCon is an open-source platform driven by passion for languages. Your contribution helps us cover server costs, develop new features, and keep the application accessible to everyone.",
     "infrastructureTitle": "Infrastructure",
     "infrastructureDesc": "Helps cover databases, cloud hosting, and storage for thousands of languages.",

@@ -13,7 +13,10 @@ import (
 	"lingocon/linguistics-core/soundchange"
 )
 
-const version = "soundchange-1"
+// version names the engine semantics: soundchange-2 matches
+// lib/utils/sound-change.ts exactly (any-split environments, String#replace
+// `$` patterns, UTF-16 `.`, JavaScript whitespace in the parser).
+const version = "soundchange-2"
 
 func main() {
 	core := js.Global().Get("Object").New()
@@ -65,10 +68,11 @@ func batchApply(_ js.Value, args []js.Value) any {
 
 // engineFromArgs parses the full program from the rulesText arg (splitting
 // `class NAME = ...` definitions from rules) and builds an engine that honors
-// both the optional vowels/consonants array args (each falling back to the
-// default inventory when absent or empty) and the user-defined classes parsed
-// from the rulesText. The JS call signature is unchanged: classes ride in via
-// the rulesText, so callers need no new argument.
+// both the optional vowels/consonants array args and the user-defined classes
+// parsed from the rulesText. Like the TypeScript engine, an absent (undefined)
+// inventory selects the default set, while a passed array is used as given —
+// even an empty one, which (like an empty Set) matches the empty string. The
+// JS call signature is unchanged: classes ride in via the rulesText.
 func engineFromArgs(args []js.Value, vIdx, cIdx int) (*soundchange.Engine, soundchange.Program) {
 	prog := soundchange.Parse(args[1].String())
 	var v, c []string
@@ -81,7 +85,10 @@ func engineFromArgs(args []js.Value, vIdx, cIdx int) (*soundchange.Engine, sound
 	return soundchange.NewEngineOrDefaultWithClasses(v, c, prog.Classes), prog
 }
 
-// readStringArray converts a JS array value to []string (nil if not an array).
+// readStringArray converts a JS array value to []string. It returns nil for a
+// non-object (undefined/null: "use the default inventory") and a non-nil
+// slice, possibly empty, for an array — the distinction NewEngineOrDefault
+// relies on.
 func readStringArray(v js.Value) []string {
 	if v.Type() != js.TypeObject {
 		return nil

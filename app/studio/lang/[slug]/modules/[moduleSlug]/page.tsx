@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
+import { getUserId, canEditLanguage, canEditScope } from "@/lib/auth-helpers"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Construction, Plus } from "lucide-react"
@@ -34,7 +34,12 @@ export default async function StudioModulePanelPage({
   })
   if (!language) notFound()
 
-  const canEdit = await canEditLanguage(language.id, userId)
+  // Adding the module here and running its transform (preview/apply) need manage:modules on the
+  // server; editors without it are not offered those controls.
+  const [canEdit, canManage] = await Promise.all([
+    canEditLanguage(language.id, userId),
+    canEditScope(language.id, userId, "manage:modules"),
+  ])
   if (!canEdit) notFound()
 
   const mod = await prisma.module.findUnique({
@@ -117,13 +122,15 @@ export default async function StudioModulePanelPage({
               </p>
               <p className="text-xs text-muted-foreground">{formatSurfaces(mod.type)}</p>
             </div>
-            <AddModuleButton
-              moduleId={mod.id}
-              permissions={declaredPermissions}
-              isAuthenticated={Boolean(userId)}
-              languageId={language.id}
-              languageName={language.name}
-            />
+            {canManage && (
+              <AddModuleButton
+                moduleId={mod.id}
+                permissions={declaredPermissions}
+                isAuthenticated={Boolean(userId)}
+                languageId={language.id}
+                languageName={language.name}
+              />
+            )}
             <Link href={`/studio/lang/${language.slug}/modules`}>
               <Button variant="ghost" size="sm">
                 Back to modules
@@ -140,11 +147,13 @@ export default async function StudioModulePanelPage({
       <ModuleHeader mod={mod} typeMeta={typeMeta} languageSlug={language.slug} />
 
       {isDeclarativeTransformer ? (
-        <DeclarativeTransformerPanel
-          languageId={language.id}
-          moduleId={mod.id}
-          rulesPreview={rulesPreview}
-        />
+        canManage ? (
+          <DeclarativeTransformerPanel
+            languageId={language.id}
+            moduleId={mod.id}
+            rulesPreview={rulesPreview}
+          />
+        ) : null
       ) : isTheme ? (
         <ThemePreviewPanel theme={theme} languageSlug={language.slug} enabled />
       ) : isSandboxWidget ? (

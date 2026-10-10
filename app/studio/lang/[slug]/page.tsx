@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { getValidationWarnings } from "@/lib/utils/validation"
 import { getLanguageCounts } from "@/lib/services/language-counts"
-import { ValidationWarnings } from "@/components/validation-warnings"
 import { ActivityFeed } from "@/components/activity-feed"
 import { getActivitiesForLanguage } from "@/lib/utils/activity"
 import { formatDate } from "@/lib/utils"
@@ -10,12 +8,15 @@ import {
   getActivityHistory,
   getCompletenessStats
 } from "@/app/actions/analytics"
-import dynamic from "next/dynamic"
 
-const PosDistributionChart = dynamic(() => import("@/components/analytics/pos-distribution-chart").then(mod => mod.PosDistributionChart), { ssr: false })
-const ActivityChart = dynamic(() => import("@/components/analytics/activity-chart").then(mod => mod.ActivityChart), { ssr: false })
+// Lazy-loaded from a client module: `next/dynamic` called here, in a Server
+// Component, left the charting library in this route's first-load bundle.
+import { LazyActivityChart as ActivityChart, LazyPosDistributionChart as PosDistributionChart } from "@/components/analytics/lazy-charts"
 import { CompletenessCard } from "@/components/analytics/completeness-card"
-import { SwadeshTracker } from "@/components/analytics/swadesh-tracker"
+import { OverviewSwadesh, OverviewWarnings } from "./components/overview-lexicon-sections"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Suspense } from "react"
+import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -25,6 +26,7 @@ import { InlineLanguageEdit } from "./components/inline-language-edit"
 import { CopyButton } from "@/lib/hooks/use-copy-to-clipboard"
 import { StudioTour } from "@/components/onboarding/studio-tour"
 import { ContextualHelp } from "@/components/contextual-help"
+import { IfCanWrite } from "@/components/studio-access"
 
 // Only the columns the overview uses: it previously included every dictionary entry, grammar page
 // (full rich-text JSON), symbol and paradigm with all columns just to show a few numbers,
@@ -37,9 +39,6 @@ const languageSelect = {
   visibility: true,
   allowsDiacritics: true,
   createdAt: true,
-  scriptSymbols: { select: { symbol: true, capitalSymbol: true } },
-  dictionaryEntries: { select: { lemma: true, gloss: true, paradigmId: true } },
-  paradigms: { select: { id: true } },
 } as const
 
 async function getLanguageDetails(slug: string) {
@@ -54,9 +53,6 @@ async function getLanguageDetails(slug: string) {
   return { ...language, _count: counts }
 }
 
-// Warnings are rendered client-side; a large lexicon could produce thousands.
-const MAX_WARNINGS_SHOWN = 50
-
 export default async function OverviewPage({
   params,
 }: {
@@ -66,7 +62,8 @@ export default async function OverviewPage({
   const language = await getLanguageDetails(slug)
 
   if (!language) {
-    return null
+    // An explicit not-found inside the studio shell, never an empty page.
+    notFound()
   }
 
   const [
@@ -80,15 +77,6 @@ export default async function OverviewPage({
     getActivityHistory(language.id),
     getCompletenessStats(language.id)
   ])
-
-  // Run validation synchronously
-  const allWarnings = getValidationWarnings(
-    language.scriptSymbols,
-    language.dictionaryEntries,
-    language.paradigms,
-    { allowsDiacritics: language.allowsDiacritics }
-  )
-  const warnings = allWarnings.slice(0, MAX_WARNINGS_SHOWN)
 
   const t = await getTranslations("studio.overview")
 
@@ -147,9 +135,10 @@ export default async function OverviewPage({
         })}
       </div>
 
-      {warnings.length > 0 && (
-        <ValidationWarnings warnings={warnings} total={allWarnings.length} scopeKey={language.id} />
-      )}
+      {/* Whole-lexicon analysis streams in; the rest of the page doesn't wait for it. */}
+      <Suspense fallback={null}>
+        <OverviewWarnings languageId={language.id} allowsDiacritics={language.allowsDiacritics} />
+      </Suspense>
 
       {/* Analytics Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -158,7 +147,9 @@ export default async function OverviewPage({
         </div>
         <PosDistributionChart data={posData} />
         <CompletenessCard stats={completenessStats} />
-        <SwadeshTracker glosses={language.dictionaryEntries.map(e => e.gloss)} />
+        <Suspense fallback={<Skeleton className="h-[220px] w-full rounded-xl" />}>
+          <OverviewSwadesh languageId={language.id} allowsDiacritics={language.allowsDiacritics} />
+        </Suspense>
       </div>
 
       {/* Details & Activity Grid */}
@@ -176,10 +167,12 @@ export default async function OverviewPage({
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-muted-foreground">{t("name")}</span>
-                  <ContextualHelp
-                    content={t("editHint")}
-                    variant="icon"
-                  />
+                  <IfCanWrite permission="write:settings">
+                    <ContextualHelp
+                      content={t("editHint")}
+                      variant="icon"
+                    />
+                  </IfCanWrite>
                 </div>
                 <InlineLanguageEdit
                   languageId={language.id}

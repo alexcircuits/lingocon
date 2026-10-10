@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Eye, Play } from "lucide-react"
 import { previewModuleTransform, applyModuleTransform } from "@/app/actions/module"
+import { useStudioAccess } from "@/components/studio-access"
 
 interface PreviewRow {
   id: string
@@ -24,6 +25,8 @@ export function DeclarativeTransformerPanel({
   rulesPreview: string
 }) {
   const router = useRouter()
+  // Previewing is harmless; applying rewrites dictionary entries (write:dictionary).
+  const canApply = useStudioAccess().canWrite("write:dictionary")
   const [pending, startTransition] = useTransition()
   const [rows, setRows] = useState<PreviewRow[] | null>(null)
   const [stats, setStats] = useState<{ changedCount: number; total: number } | null>(null)
@@ -73,10 +76,12 @@ export function DeclarativeTransformerPanel({
               <Eye className="mr-2 h-4 w-4" />
               Preview changes
             </Button>
-            <Button onClick={apply} disabled={pending}>
-              <Play className="mr-2 h-4 w-4" />
-              Apply to dictionary
-            </Button>
+            {canApply && (
+              <Button onClick={apply} disabled={pending}>
+                <Play className="mr-2 h-4 w-4" />
+                Apply to dictionary
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

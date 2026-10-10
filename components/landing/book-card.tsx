@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { motion } from "motion/react"
 import { Languages, BookOpen, FileText, Heart, ArrowRight, GraduationCap } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
 
@@ -208,10 +207,10 @@ export function BookCard({ language, view = "grid", className }: BookCardProps) 
 
     return (
         <Link href={`/lang/${language.slug}`} className={cn("group block", className)}>
-            <motion.div
-                whileHover={{ y: -4 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="relative mx-auto h-[320px] w-full max-w-[260px] overflow-hidden rounded-l-none rounded-r-2xl aurora-glass transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-primary/10"
+            {/* The hover lift is CSS: the animation library was this card's only reason to
+                ship ~42 kB to the browse, favourites and profile pages. */}
+            <div
+                className="relative mx-auto h-[320px] w-full max-w-[260px] overflow-hidden rounded-l-none rounded-r-2xl aurora-glass transition-[transform,box-shadow] duration-300 ease-out motion-safe:hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-primary/10"
             >
                 {/* Notebook binding: a flat-edged spine on the left + a fold line */}
                 <div className="absolute left-0 top-0 bottom-0 z-20 w-2.5 bg-gradient-to-b from-primary/50 via-primary/30 to-primary/10" />
@@ -241,7 +240,7 @@ export function BookCard({ language, view = "grid", className }: BookCardProps) 
                         </div>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </Link>
     )
 }

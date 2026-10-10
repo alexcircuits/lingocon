@@ -262,12 +262,27 @@ export function FlashcardSession({ entries, languageName, languageSlug, isPublic
       <div className="max-w-xl mx-auto space-y-4">
         {/* Mid-session exit */}
         <div className="flex">
-          <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ml-2">
-            <Link href={isPublic ? `/lang/${languageSlug}` : `/studio/lang/${languageSlug}/flashcards`}>
+          {isPublic ? (
+            <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground -ml-2">
+              <Link href={`/lang/${languageSlug}`}>
+                <X className="h-4 w-4" />
+                {t("exit")}
+              </Link>
+            </Button>
+          ) : (
+            // The studio session lives on this page: a link to it was a no-op, so Exit
+            // goes back to the setup screen instead.
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-muted-foreground -ml-2"
+              onClick={() => setSessionState("setup")}
+            >
               <X className="h-4 w-4" />
               {t("exit")}
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
 
         {/* Streak counter */}

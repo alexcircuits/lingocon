@@ -22,7 +22,7 @@ async function getLessonData(lessonId: string, userId: string) {
           visibility: true,
           language: {
             select: {
-              id: true, name: true, slug: true,
+              id: true, name: true, slug: true, visibility: true,
               fontUrl: true, fontFamily: true, fontScale: true,
               acceptRomanizedAnswers: true,
               scriptSymbols: {
@@ -58,7 +58,8 @@ async function getLessonData(lessonId: string, userId: string) {
     },
   })
 
-  if (!lesson || lesson.course.visibility !== "PUBLISHED") return null
+  // Same rule as /learn/[slug]: nothing from a private language, even by lesson id.
+  if (!lesson || lesson.course.visibility !== "PUBLISHED" || lesson.course.language.visibility === "PRIVATE") return null
 
   const enrollment = await prisma.enrollment.findUnique({
     where: {

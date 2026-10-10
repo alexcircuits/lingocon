@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { IPAInput } from "@/components/ui/ipa-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useDeferredValue, useMemo } from "react"
 import { toast } from "sonner"
 import { useFormValidation, commonRules } from "@/lib/hooks/use-form-validation"
 import { AlertCircle, PencilLine, Sparkles, X } from "lucide-react"
@@ -78,16 +78,31 @@ export function DictionaryEntryDialog({
     })
   }, [open, languageId])
 
-  // Calculate alphabet warnings (non-blocking validation)
-  const alphabetWarnings =
-    formData.lemma && symbols && symbols.length > 0
-      ? validateStringAgainstAlphabet(formData.lemma, symbols, { allowsDiacritics })
-      : []
+  // Non-blocking validation of the word. It used to run on every render — every keystroke in any
+  // field — and the phonotactics check can take tens of milliseconds on a long word (its pattern
+  // backtracks; ~90 ms for 23 letters against (C)(C)V(C)(C)). Now it runs only when the word or
+  // IPA changes, on deferred copies so typing in them stays responsive.
+  const deferredLemma = useDeferredValue(formData.lemma)
+  const deferredIpa = useDeferredValue(formData.ipa)
+  const alphabetWarnings = useMemo(
+    () =>
+      deferredLemma && symbols && symbols.length > 0
+        ? validateStringAgainstAlphabet(deferredLemma, symbols, { allowsDiacritics })
+        : [],
+    [deferredLemma, symbols, allowsDiacritics]
+  )
 
-  const textToValidate = formData.ipa || formData.lemma
-  const phonotacticsValid = textToValidate && metadata?.syllableStructure && metadata?.consonants && metadata?.vowels
-    ? validatePhonotactics(textToValidate, metadata.syllableStructure, metadata.consonants, metadata.vowels)
-    : true
+  const textToValidate = deferredIpa || deferredLemma
+  const syllableStructure = metadata?.syllableStructure
+  const consonants = metadata?.consonants
+  const vowels = metadata?.vowels
+  const phonotacticsValid = useMemo(
+    () =>
+      textToValidate && syllableStructure && consonants && vowels
+        ? validatePhonotactics(textToValidate, syllableStructure, consonants, vowels)
+        : true,
+    [textToValidate, syllableStructure, consonants, vowels]
+  )
 
   const { errors, touched, handleBlur, handleChange, validateForm } = useFormValidation(
     formData,

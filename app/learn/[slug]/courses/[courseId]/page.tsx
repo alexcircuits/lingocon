@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
-async function getCourseData(courseId: string, userId: string | null) {
-  const course = await prisma.course.findUnique({
-    where: { id: courseId, visibility: "PUBLISHED" },
+async function getCourseData(courseId: string, slug: string, userId: string | null) {
+  // Same rule as /learn/[slug]: published courses of non-private languages, and only
+  // under their own language's URL (a course id must not unlock a private language).
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, visibility: "PUBLISHED", language: { slug, visibility: { not: "PRIVATE" } } },
     include: {
       language: { select: { id: true, name: true, slug: true } },
       author:   { select: { id: true, name: true, image: true } },
@@ -79,7 +81,7 @@ export default async function CourseDetailPage({
   const isDevMode = process.env.DEV_MODE === "true"
   const userId = session?.user?.id || (isDevMode ? await getDevUserId() : null)
 
-  const data = await getCourseData(courseId, userId)
+  const data = await getCourseData(courseId, slug, userId)
   if (!data) notFound()
 
   const { course, enrollment, completedLessonIds, learnerCount } = data

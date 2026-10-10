@@ -11,6 +11,7 @@ import { Search, Loader2, Globe, Save, Check } from "lucide-react";
 import enMessages from "@/messages/en.json";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useStudioAccess } from "@/components/studio-access";
 
 interface FlatMessage {
   key: string;
@@ -21,6 +22,10 @@ interface FlatMessage {
 export default function TranslatePage({ params }: { params: { slug: string } }) {
   const t = useTranslations("i18n");
   const router = useRouter();
+  // Saving needs canEditLanguage on the server (PUT /api/translations): owner/admin or any write:
+  // or manage: scope. Everyone else browses the strings and existing translations read-only.
+  const { fullAccess, permissions } = useStudioAccess();
+  const canEdit = fullAccess || permissions.some((p) => p.startsWith("write:") || p.startsWith("manage:"));
   const [languageId, setLanguageId] = useState<string | null>(null);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -132,10 +137,12 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
             {t("editorSubtitle")}
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
-          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          {t("saveTranslation")}
-        </Button>
+        {canEdit && (
+          <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {t("saveTranslation")}
+          </Button>
+        )}
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
@@ -230,6 +237,7 @@ export default function TranslatePage({ params }: { params: { slug: string } }) 
                     <Textarea
                       value={translations[msg.key] || ""}
                       onChange={(e) => setTranslations((prev) => ({ ...prev, [msg.key]: e.target.value }))}
+                      readOnly={!canEdit}
                       placeholder={msg.enValue}
                       className="min-h-[80px] text-sm resize-y"
                     />

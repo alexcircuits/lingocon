@@ -1,11 +1,15 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage, EDITOR_DEFAULT_PERMISSIONS } from "@/lib/auth-helpers"
+import { isAdmin } from "@/lib/admin"
 import { redirect, notFound } from "next/navigation"
-import { StudioLayout } from "../studio-layout"
+import { headers } from "next/headers"
+import { PATHNAME_HEADER, withRenamedSlug } from "@/lib/project-path"
+import { StudioLayout, type StudioShellLanguage } from "../studio-layout"
 import { FontLoader } from "@/components/font-loader"
 import { getStudioNavInstalls } from "@/lib/services/module"
 import { getLanguageCounts } from "@/lib/services/language-counts"
+import { findReservedSlugTarget } from "@/lib/services/slug-reservation"
 import type { ModuleNavTab } from "@/lib/studio-nav"
 
 
@@ -18,17 +22,21 @@ export const metadata = {
 
 async function getLanguage(slug: string, userId: string | null) {
 
+  // Only the fields the studio shell renders: this object is serialized to the
+  // client StudioLayout on every hard load and refresh, and any signed-in user can
+  // open the studio of a public language (no metadata JSON, description, owner…).
   const language = await prisma.language.findUnique({
     where: { slug },
-    include: {
-      // No email: this object is serialized to the client StudioLayout, and any signed-in user
-      // can open the studio of a public language.
-      owner: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      visibility: true,
+      ownerId: true,
+      updatedAt: true,
+      fontUrl: true,
+      fontFamily: true,
+      fontScale: true,
     },
   })
 
@@ -56,6 +64,27 @@ async function getLanguage(slug: string, userId: string | null) {
   return { ...language, _count: counts }
 }
 
+async function getCollaboratorPermissions(languageId: string, userId: string): Promise<string[]> {
+  const collab = await prisma.languageCollaborator.findUnique({
+    where: { languageId_userId: { languageId, userId } },
+    select: { role: true, permissions: true },
+  })
+  // Legacy EDITOR with empty permissions = full default set
+  if (collab?.role === "EDITOR" && collab.permissions.length === 0) {
+    return [...EDITOR_DEFAULT_PERMISSIONS]
+  }
+  return collab?.permissions ?? []
+}
+
+async function getModuleTabs(userId: string, languageId: string, slug: string): Promise<ModuleNavTab[]> {
+  const installs = await getStudioNavInstalls(userId, languageId)
+  return installs.map((i) => ({
+    name: i.module.name,
+    href: `/studio/lang/${slug}/modules/${i.module.slug}`,
+    icon: i.module.icon,
+  }))
+}
+
 export default async function StudioLangLayout({
   children,
   params,
@@ -74,39 +103,36 @@ export default async function StudioLangLayout({
   const language = await getLanguage(slug, userId)
 
   if (!language) {
+    // Renamed projects keep their old slug reserved. Full page loads are
+    // redirected by middleware; client navigations land here instead.
+    const target = await findReservedSlugTarget(slug)
+    // Same section of the renamed project (the middleware passes the requested path).
+    if (target) redirect(withRenamedSlug(headers().get(PATHNAME_HEADER), "/studio/lang", slug, target))
     notFound()
   }
 
   const isOwner = userId === language.ownerId
 
-  // Fetch collaborator permissions for non-owners
-  let userPermissions: string[] = []
-  if (userId && !isOwner) {
-    const collab = await prisma.languageCollaborator.findUnique({
-      where: { languageId_userId: { languageId: language.id, userId } },
-      select: { role: true, permissions: true },
-    })
-    // Legacy EDITOR with empty permissions = full default set
-    if (collab?.role === "EDITOR" && collab.permissions.length === 0) {
-      userPermissions = [...EDITOR_DEFAULT_PERMISSIONS]
-    } else {
-      userPermissions = collab?.permissions ?? []
-    }
-  }
+  // Independent reads: collaborator permissions (non-owners) and the tabs
+  // contributed by the user's enabled modules.
+  const [userPermissions, moduleTabs, admin] = await Promise.all([
+    userId && !isOwner ? getCollaboratorPermissions(language.id, userId) : Promise.resolve<string[]>([]),
+    userId ? getModuleTabs(userId, language.id, language.slug) : Promise.resolve<ModuleNavTab[]>([]),
+    // Admins may edit every section's content (canEditScope), so the UI must not lock them out.
+    userId && !isOwner ? isAdmin() : Promise.resolve(false),
+  ])
 
-  // Studio-panel tabs contributed by the current user's enabled modules.
-  let moduleTabs: ModuleNavTab[] = []
-  if (userId) {
-    const installs = await getStudioNavInstalls(userId, language.id)
-    moduleTabs = installs.map((i) => ({
-      name: i.module.name,
-      href: `/studio/lang/${language.slug}/modules/${i.module.slug}`,
-      icon: i.module.icon,
-    }))
+  const shellLanguage: StudioShellLanguage = {
+    id: language.id,
+    name: language.name,
+    slug: language.slug,
+    visibility: language.visibility,
+    updatedAt: language.updatedAt,
+    _count: language._count,
   }
 
   return (
-    <StudioLayout language={language} moduleTabs={moduleTabs} userPermissions={userPermissions} isOwner={isOwner}>
+    <StudioLayout language={shellLanguage} moduleTabs={moduleTabs} userPermissions={userPermissions} isOwner={isOwner} hasFullAccess={admin}>
       <FontLoader fontUrl={language.fontUrl} fontFamily={language.fontFamily} fontScale={language.fontScale} />
       {children}
     </StudioLayout>

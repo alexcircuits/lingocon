@@ -1,7 +1,18 @@
+const { resolveDistDir } = require("./lib/release-dir.cjs")
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // deploy.sh releases vs manual builds: see lib/release-dir.cjs.
+  distDir: resolveDistDir({ root: __dirname, argv: process.argv, env: process.env }),
   async headers() {
     return [
+      {
+        // The worker script must never be served from an HTTP cache: clients only
+        // pick up a fixed worker (e.g. one that stops caching project data) when
+        // they re-download this file.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
       {
         source: "/api/ext/:path*",
         headers: [

@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { updateLanguage } from "@/app/actions/language"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { commonRules } from "@/lib/hooks/use-form-validation"
+import { useStudioAccess } from "@/components/studio-access"
 
 interface InlineLanguageEditProps {
   languageId: string
@@ -26,21 +27,42 @@ export function InlineLanguageEdit({
 }: InlineLanguageEditProps) {
   const t = useTranslations("inlineLanguageEdit")
   const router = useRouter()
+  // Renaming or describing the project is a settings change (updateLanguage needs write:settings);
+  // anyone else sees the plain value, without the edit affordance.
+  const canEdit = useStudioAccess().canWrite("write:settings")
   const [isPending, startTransition] = useTransition()
+
+  // Show a saved value immediately (the prop is stale until the refresh lands); follow the server
+  // whenever it sends a different value.
+  const [displayValue, setDisplayValue] = useState(value)
+  const [serverValue, setServerValue] = useState(value)
+  if (value !== serverValue) {
+    setServerValue(value)
+    setDisplayValue(value)
+  }
 
   // Await the action and throw on failure so InlineEdit keeps the editor open with the typed text
   // and shows the error. (Running it inside startTransition returned immediately: the editor closed,
   // the input was discarded and the thrown error became an unhandled rejection.)
   const handleSave = async (newValue: string) => {
-    const result = await updateLanguage({
-      id: languageId,
-      [field]: newValue,
-    })
+    let result: Awaited<ReturnType<typeof updateLanguage>>
+    try {
+      result = await updateLanguage({
+        id: languageId,
+        [field]: newValue,
+      })
+    } catch {
+      // Network failure or a server crash: a readable message, never the raw exception.
+      toast.error(t("saveFailed"))
+      throw new Error(t("saveFailed"))
+    }
 
     if ('error' in result) {
-      toast.error(result.error)
-      throw new Error(result.error)
+      const message = result.error || t("saveFailed")
+      toast.error(message)
+      throw new Error(message)
     }
+    setDisplayValue(newValue)
     toast.success(field === "name" ? t("nameUpdated") : t("descriptionUpdated"))
     startTransition(() => router.refresh())
   }
@@ -62,12 +84,13 @@ export function InlineLanguageEdit({
 
   return (
     <InlineEdit
-      value={value}
+      value={displayValue}
       onSave={handleSave}
-      placeholder={field === "name" ? t("namePlaceholder") : t("descriptionPlaceholder")}
+      // A read-only empty value shows a dash, not an invitation to "Add a description...".
+      placeholder={!canEdit ? "—" : field === "name" ? t("namePlaceholder") : t("descriptionPlaceholder")}
       maxLength={maxLength}
       validate={validate}
-      disabled={isPending}
+      disabled={isPending || !canEdit}
       label={label}
       multiline={field === "description"}
     />

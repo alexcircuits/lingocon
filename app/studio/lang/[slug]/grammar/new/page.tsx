@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
+import { getUserId, canEditScope } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { GrammarEditor } from "../grammar-editor"
 
@@ -32,10 +32,11 @@ async function getLanguage(slug: string, userId: string | null) {
     return null
   }
 
-  // Allow access if user can view (owner, collaborator, or public) - skip in dev mode
+  // The create form is only for visitors who may create pages (write:grammar, as
+  // createGrammarPage requires) - skip in dev mode
   if (process.env.DEV_MODE !== "true" && userId) {
-    const canView = await canViewLanguage(language.id, userId)
-    if (!canView) {
+    const canCreate = await canEditScope(language.id, userId, "write:grammar")
+    if (!canCreate) {
       return null
     }
   }

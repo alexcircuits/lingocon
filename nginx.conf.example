@@ -27,6 +27,11 @@ server {
         proxy_send_timeout 120s;
     }
 
+    # The Rust platform service (lingocon-api, 127.0.0.1:3040) is internal: Next.js
+    # calls it over loopback with a bearer token. Do NOT proxy it here. If pages are
+    # later served by it directly, proxy only those public paths (never /v1/internal/)
+    # and keep the service bound to loopback. See docs/RUST_SERVICE.md.
+
     # Served directly by nginx, so the headers next.config.js sets for
     # /uploads/* never apply here — repeat them. Without CSP sandbox + nosniff,
     # an uploaded SVG opened directly runs script on the lingocon.com origin.

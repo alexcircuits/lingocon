@@ -14,7 +14,7 @@ import {
     TrendAreaChart,
     GroupedBarChart,
     CategoryDonutChart,
-} from "@/components/admin/charts"
+} from "@/components/admin/lazy-charts"
 import { CHART_COLORS } from "@/components/admin/chart-colors"
 import {
     getPlatformOverview,

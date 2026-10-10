@@ -37,7 +37,7 @@ export function LoginForm() {
             })
 
             if (result?.error) {
-                if (result.error.includes("EMAIL_NOT_VERIFIED")) {
+                if (result.code === "email_not_verified") {
                     toast.error(t("verifyEmailFirst"))
                     router.push("/verify-email")
                 } else {

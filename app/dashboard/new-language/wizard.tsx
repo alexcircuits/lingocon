@@ -70,7 +70,8 @@ export function LanguageWizard() {
     setData((prev) => ({
       ...prev,
       name: newName,
-      slug: prev.slug || generateSlug(newName),
+      // Follow the name while the slug is still the generated one; keep a hand-edited slug.
+      slug: !prev.slug || prev.slug === generateSlug(prev.name) ? generateSlug(newName) : prev.slug,
     }))
   }
 

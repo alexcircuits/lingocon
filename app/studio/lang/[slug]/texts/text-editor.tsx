@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useCallback } from "react"
+import { useRef, useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -24,12 +24,17 @@ import {
 } from "@/components/ui/dialog"
 import { Save, ArrowLeft, Trash2, AlertTriangle, Upload, FileText } from "lucide-react"
 import Link from "next/link"
-import { type Editor } from "@tiptap/react"
-import { generateSlug } from "@/lib/utils/slug"
+import { type Editor, type JSONContent } from "@tiptap/react"
+import { slugOrFallback } from "@/lib/utils/slug"
 
 interface TextEditorProps {
   languageId: string
   languageSlug: string
+  /**
+   * The visitor may read but not change texts (decided on the server: no write:texts). Fields are
+   * read-only and no save or delete is offered.
+   */
+  readOnly?: boolean
   text?: {
     id: string
     title: string
@@ -38,12 +43,37 @@ interface TextEditorProps {
     published?: boolean
     coverImage?: string | null
     paradigmId?: string | null
+    /** The stored revision; sent back on save so a stale tab cannot overwrite newer content. */
+    updatedAt: Date | string
   }
 }
 
-export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) {
+/** Preview of the server's slug policy (`textSlug` in lib/services/text.ts): derived from the
+ * title, at most 50 characters; the server may add a numeric suffix if the slug is taken. */
+function previewSlug(title: string): string {
+  return title.trim() ? slugOrFallback(title, "text", 50) : ""
+}
+
+/** The revision token the server compares on save (`expectedUpdatedAt`). */
+function toRevision(value: Date | string | undefined): string | undefined {
+  return value ? new Date(value).toISOString() : undefined
+}
+
+/** Handles stored JSON, a JSON string, or a legacy plain-text string. */
+function initialDocument(content: unknown): JSONContent {
+  if (!content) return { type: "doc", content: [{ type: "paragraph" }] }
+  if (typeof content !== "string") return content as JSONContent
+  try {
+    return JSON.parse(content)
+  } catch {
+    return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: content }] }] }
+  }
+}
+
+export function TextEditor({ languageId, languageSlug, text, readOnly = false }: TextEditorProps) {
   const router = useRouter()
   const t = useTranslations("studio.texts")
+  const tc = useTranslations("studio.common")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -51,33 +81,30 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
   const [uploadMode, setUploadMode] = useState<"paste" | "upload">("paste")
 
-  // Initialize content: handle existing JSON or legacy string
-  const initialContent = text?.content
-    ? (typeof text.content === 'string'
-      ? (() => {
-        try {
-          return JSON.parse(text.content)
-        } catch {
-          return { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: text.content }] }] }
-        }
-      })()
-      : text.content)
-    : { type: 'doc', content: [{ type: 'paragraph' }] }
+  // The document lives in the editor and is read at save time, instead of being copied into
+  // state (re-rendering this form) on every keystroke.
+  const [initialContent] = useState(() => initialDocument(text?.content))
+  const editorRef = useRef<Editor | null>(null)
+  // An uploaded file's document, kept in case it arrives before the editor has mounted.
+  const pendingContentRef = useRef<JSONContent | null>(null)
+  const readContent = (): JSONContent => editorRef.current?.getJSON() ?? pendingContentRef.current ?? initialContent
 
   const [formData, setFormData] = useState({
     title: text?.title || "",
     slug: text?.slug || "",
-    content: initialContent,
   })
   const [paradigmId, setParadigmId] = useState<string | null>(text?.paradigmId || null)
   const [coverImage, setCoverImage] = useState<string | null>(text?.coverImage || null)
-  const [isPublished, setIsPublished] = useState(text?.published ?? false)
+  // The stored revision this tab's draft is based on; adopted from every successful save.
+  const [revision, setRevision] = useState(() => toRevision(text?.updatedAt))
+  const [isConflict, setIsConflict] = useState(false)
 
   const handleTitleChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
       title: value,
-      slug: text ? prev.slug : generateSlug(value),
+      // An existing text shows its current address until a save assigns the new one.
+      slug: text ? prev.slug : previewSlug(value),
     }))
   }
 
@@ -98,11 +125,13 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         }))
       }
 
+      // Show the file in the editor itself: the document is read from the editor at save time.
+      pendingContentRef.current = contentJson
+      editorRef.current?.commands.setContent(contentJson)
       setFormData((prev) => ({
         ...prev,
-        content: contentJson,
         title: prev.title || metadata?.filename?.replace(/\.[^/.]+$/, "") || "Untitled",
-        slug: prev.slug || generateSlug(metadata?.filename?.replace(/\.[^/.]+$/, "") || "untitled"),
+        slug: prev.slug || previewSlug(metadata?.filename?.replace(/\.[^/.]+$/, "") || "untitled"),
       }))
 
       toast.success(t("loadedToast"))
@@ -113,6 +142,7 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (readOnly) return
     setError(null)
 
     startTransition(async () => {
@@ -120,33 +150,49 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
       // const plainText = JSON.stringify(formData.content)
 
       if (text) {
-        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        // JSON round-trip drops undefined keys; null is kept on purpose — it is how a cleared
+        // paradigm or cover image is cleared on the server. `published` is not sent: saving
+        // always publishes a text (see the hint next to the save button).
         const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
-          content: formData.content,
-          published: isPublished,
-          paradigmId: paradigmId || undefined,
+          content: readContent(),
+          paradigmId: paradigmId ?? null,
+          coverImage: coverImage ?? null,
+          expectedUpdatedAt: revision,
         }))
-        if (coverImage !== undefined) {
-          sterilizedData.coverImage = coverImage
-        }
 
         const result = await updateText(String(text.id), sterilizedData)
 
-        if (result.error) {
+        if ('error' in result) {
+          if (result.conflict) {
+            // Keep the draft on screen; saving again cannot succeed until a reload.
+            setIsConflict(true)
+            toast.error(tc("staleConflict"))
+            return
+          }
           setError(result.error ?? null)
           toast.error(result.error)
-        } else {
-          toast.success(t("updatedToast"))
-          router.refresh()
+          return
+        }
+
+        const saved = result.text
+        setRevision(toRevision(saved.updatedAt))
+        setFormData({ title: saved.title, slug: saved.slug })
+        setParadigmId(saved.paradigmId ?? null)
+        setCoverImage(saved.coverImage ?? null)
+        setIsConflict(false)
+        toast.success(t("updatedToast"))
+        // The action already revalidated (and re-rendered) this route, so no refresh. Only a
+        // rename that changed the slug needs navigation: the old URL no longer resolves.
+        if (saved.slug !== text.slug) {
+          router.replace(`/studio/lang/${languageSlug}/texts/${saved.slug}`)
         }
       } else {
         // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
         const sterilizedData = JSON.parse(JSON.stringify({
           title: formData.title,
           type: "OTHER",
-          content: formData.content,
-          published: isPublished,
+          content: readContent(),
           languageId,
           paradigmId: paradigmId || undefined,
         }))
@@ -199,6 +245,16 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
         </div>
       )}
 
+      {isConflict && text && (
+        <div role="alert" className="flex flex-col gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+          <p>{tc("staleConflict")}</p>
+          {/* A full document load: a client navigation would keep this editor's local draft. */}
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <a href={`/studio/lang/${languageSlug}/texts/${text.slug}`}>{tc("reloadLatest")}</a>
+          </Button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6">
           <div className="space-y-4">
@@ -211,51 +267,61 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
                 placeholder={t("titlePlaceholder")}
                 required
                 disabled={isPending}
+                readOnly={readOnly}
                 className="text-lg font-medium"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="slug">{t("slugLabel")}</Label>
+              {/* The server derives the slug from the title and never accepted an edited one, so
+                  the field shows the address instead of offering an edit it would discard. */}
               <Input
                 id="slug"
                 value={formData.slug}
-                onChange={(e) =>
-                  setFormData({ ...formData, slug: e.target.value })
-                }
                 placeholder={t("slugPlaceholder")}
-                required
-                disabled={isPending}
-                pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                readOnly
+                aria-describedby={readOnly ? undefined : "slug-hint"}
+                className="bg-muted/40 text-muted-foreground"
               />
-              <p className="text-xs text-muted-foreground">
-                {t("slugHint")}
-              </p>
+              {!readOnly && (
+                <p id="slug-hint" className="text-xs text-muted-foreground">
+                  {tc("slugGeneratedHint")}
+                </p>
+              )}
             </div>
 
             <ParadigmSelector
               languageId={languageId}
               value={paradigmId}
               onValueChange={setParadigmId}
-              disabled={isPending}
+              disabled={isPending || readOnly}
             />
 
-            <div className="space-y-2">
-              <Label>{t("coverImage")}</Label>
-              <FileUpload
-                type="image"
-                value={coverImage || undefined}
-                onChange={(url) => setCoverImage(url)}
-                placeholder={t("coverImagePlaceholder")}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("coverImageHint")}
-              </p>
-            </div>
+            {!readOnly ? (
+              <div className="space-y-2">
+                <Label>{t("coverImage")}</Label>
+                <FileUpload
+                  type="image"
+                  value={coverImage || undefined}
+                  onChange={(url) => setCoverImage(url)}
+                  placeholder={t("coverImagePlaceholder")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("coverImageHint")}
+                </p>
+              </div>
+            ) : coverImage ? (
+              <div className="space-y-2">
+                <Label>{t("coverImage")}</Label>
+                {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded URL, as in FileUpload's preview */}
+                <img src={coverImage} alt={t("coverImage")} className="aspect-video w-full max-w-xs rounded-xl border border-border/40 object-cover" />
+              </div>
+            ) : null}
           </div>
         </Card>
 
-        {!text && (
+        {!text && !readOnly && (
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -300,9 +366,9 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           <Label>{t("content")}</Label>
           <Card className="overflow-hidden">
             <RichTextEditor
-              content={formData.content}
-              onChange={(newContent) => setFormData(prev => ({ ...prev, content: newContent }))}
-              disabled={isPending}
+              content={initialContent}
+              onEditorReady={(editor) => { editorRef.current = editor }}
+              disabled={isPending || readOnly}
               withParadigm
               onParadigmClick={(editor) => {
                 setActiveEditor(editor)
@@ -312,49 +378,35 @@ export function TextEditor({ languageId, languageSlug, text }: TextEditorProps) 
           </Card>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <label className="inline-flex min-h-11 items-center gap-3 self-start">
-            <span className="text-xs text-muted-foreground">
-              {isPublished ? t("public") : t("draft")}
-            </span>
-            <button aria-label={t("public")}
-              type="button"
-              role="switch"
-              aria-checked={isPublished}
-              onClick={() => setIsPublished(!isPublished)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 ${
-                isPublished ? "bg-primary" : "bg-muted-foreground/30"
-              }`}
-              disabled={isPending}
-            >
-              <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                  isPublished ? "translate-x-4" : "translate-x-0.5"
-                }`}
-              />
-            </button>
-          </label>
+        {!readOnly && (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Saving always publishes a text (the server forces published: true), so a Draft
+                switch here would be silently ignored. */}
+            <p className="inline-flex min-h-11 items-center self-start text-xs text-muted-foreground">
+              {t("alwaysPublishedHint")}
+            </p>
 
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-            {text ? (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setIsDeleteOpen(true)}
-                disabled={isPending}
-                className="w-full sm:w-auto"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {t("deleteText")}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+              {text ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setIsDeleteOpen(true)}
+                  disabled={isPending}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("deleteText")}
+                </Button>
+              ) : null}
+
+              <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
+                <Save className="mr-2 h-4 w-4" />
+                {isPending ? t("saving") : text ? t("saveChanges") : t("saveText")}
               </Button>
-            ) : null}
-
-            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-              <Save className="mr-2 h-4 w-4" />
-              {isPending ? t("saving") : text ? t("saveChanges") : t("saveText")}
-            </Button>
+            </div>
           </div>
-        </div>
+        )}
       </form>
 
       {/* Delete Confirmation Dialog */}

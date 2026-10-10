@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useSectionWritable } from "@/components/studio-access"
 import { Pencil, Trash2, Volume2, GitFork } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
@@ -35,6 +36,7 @@ export function DictionaryTableMobile({
   enableAudio,
   ttsSettings,
 }: DictionaryTableMobileProps) {
+  const canEdit = useSectionWritable()
   const handleSelectOne = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedEntries)
     if (checked) {
@@ -64,13 +66,15 @@ export function DictionaryTableMobile({
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) =>
-                      handleSelectOne(entry.id, checked === true)
-                    }
-                    className="mt-1"
-                  />
+                  {canEdit && (
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) =>
+                        handleSelectOne(entry.id, checked === true)
+                      }
+                      className="mt-1"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-lg font-bold mb-1 break-words font-custom-script">
                       {entry.lemma}
@@ -92,6 +96,7 @@ export function DictionaryTableMobile({
                     )}
                   </div>
                 </div>
+                {canEdit && (
                 <div className="flex justify-end gap-1 self-start">
                   <Button aria-label="Edit"
                     variant="ghost"
@@ -119,6 +124,7 @@ export function DictionaryTableMobile({
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="pt-0">

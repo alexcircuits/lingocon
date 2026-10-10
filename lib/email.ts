@@ -1,6 +1,23 @@
-import { Resend } from "resend"
+import { Resend, type CreateEmailOptions } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Created on first send, not at import: Resend throws without a key, and this module
+// is imported by every auth action (sign-out included), so a missing key used to
+// turn all of them into 500s.
+let client: Resend | null | undefined
+
+/**
+ * Sends through Resend. Without RESEND_API_KEY (local, CI, a misconfigured server)
+ * the email is not sent and an error is logged — the subject only, never the
+ * recipient — instead of failing the action that triggered it.
+ */
+async function send(message: CreateEmailOptions): Promise<void> {
+  client ??= process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+  if (!client) {
+    console.error(`[email] RESEND_API_KEY is not set; not sending "${message.subject}"`)
+    return
+  }
+  await client.emails.send(message)
+}
 
 const FROM_EMAIL = process.env.EMAIL_FROM || "LingoCon <noreply@lingocon.com>"
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
@@ -8,7 +25,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 export async function sendVerificationEmail(email: string, token: string) {
   const verifyUrl = `${SITE_URL}/verify-email?token=${token}`
 
-  await resend.emails.send({
+  await send({
     from: FROM_EMAIL,
     to: email,
     subject: "Verify your email - LingoCon",
@@ -36,7 +53,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${SITE_URL}/reset-password?token=${token}`
 
-  await resend.emails.send({
+  await send({
     from: FROM_EMAIL,
     to: email,
     subject: "Reset your password - LingoCon",

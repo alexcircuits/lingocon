@@ -10,24 +10,10 @@ async function getGrammarPage(languageSlug: string, pageSlug: string, userId: st
       id: true,
       ownerId: true,
       scriptSymbols: {
+        select: { id: true, symbol: true, ipa: true, latin: true, name: true, order: true },
         orderBy: {
           order: "asc",
         },
-      },
-      grammarPages: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          content: true,
-          imageUrl: true,
-          order: true,
-          paradigmId: true,
-          languageId: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        orderBy: { order: "asc" },
       },
     },
   })
@@ -44,14 +30,22 @@ async function getGrammarPage(languageSlug: string, pageSlug: string, userId: st
     }
   }
 
-  const page = language.grammarPages.find(p => p.slug === pageSlug)
+  // Only the edited page's document is loaded; the other pages are wiki-link targets and need
+  // just their titles and slugs.
+  const [page, otherPages] = await Promise.all([
+    prisma.grammarPage.findUnique({
+      where: { languageId_slug: { languageId: language.id, slug: pageSlug } },
+    }),
+    prisma.grammarPage.findMany({
+      where: { languageId: language.id, slug: { not: pageSlug } },
+      select: { id: true, title: true, slug: true },
+      orderBy: { order: "asc" },
+    }),
+  ])
+
   if (!page) {
     return null
   }
-
-  const otherPages = language.grammarPages
-    .filter(p => p.slug !== pageSlug)
-    .map(p => ({ id: p.id, title: p.title, slug: p.slug }))
 
   return { languageId: language.id, page, symbols: language.scriptSymbols, otherPages }
 }

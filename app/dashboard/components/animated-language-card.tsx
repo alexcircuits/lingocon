@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import Link from "next/link"
 import { Calendar, FileText, BookOpen, ArrowRight } from "lucide-react"
 import { formatDate, cn } from "@/lib/utils"
@@ -9,7 +8,7 @@ import type { Language } from "@prisma/client"
 import { LanguagePlaceholder } from "@/components/language-placeholder"
 
 interface AnimatedLanguageCardProps {
-  language: Language & {
+  language: Pick<Language, "id" | "slug" | "name" | "flagUrl" | "description" | "visibility" | "updatedAt"> & {
     _count: {
       dictionaryEntries: number
       grammarPages: number
@@ -36,16 +35,22 @@ function StatPill({
   )
 }
 
+/**
+ * The staggered entrance and the hover lift are CSS (tailwindcss-animate), so the dashboard no
+ * longer ships the animation library for them; reduced-motion users get no movement, as the
+ * app-wide MotionConfig gave them before. Still a client component only so the "Updated" date is
+ * formatted in the viewer's time zone, as before.
+ */
 export function AnimatedLanguageCard({ language, index }: AnimatedLanguageCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04 }}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
+    <div
+      className="animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards duration-300 motion-reduce:animate-none"
+      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >
-      <Link href={`/studio/lang/${language.slug}`} className="group block">
+      <Link
+        href={`/studio/lang/${language.slug}`}
+        className="group block transition-transform duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.99]"
+      >
         <div className="relative flex items-center gap-3.5 rounded-2xl border border-border/60 bg-card p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 sm:gap-4 sm:p-5">
           <LanguagePlaceholder
             name={language.name}
@@ -98,6 +103,6 @@ export function AnimatedLanguageCard({ language, index }: AnimatedLanguageCardPr
           <ArrowRight className="hidden h-5 w-5 shrink-0 self-center text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary sm:block" />
         </div>
       </Link>
-    </motion.div>
+    </div>
   )
 }

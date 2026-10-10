@@ -9,14 +9,37 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDistanceToNow } from "date-fns"
 import { EmptyState } from "@/components/empty-state"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { publishArticle } from "@/app/actions/article"
 import * as articleService from "@/lib/services/article"
 import { getTranslations } from "next-intl/server"
 
-async function publishDraftAction(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  if (id) await publishArticle(id)
+/** Why a draft publish failed. Only this code travels in the URL — never a message — so a crafted link cannot put text on the page. */
+type PublishFailure = "forbidden" | "failed"
+
+function publishFailureOf(message: string): PublishFailure {
+  return /permission|unauthorized/i.test(message) ? "forbidden" : "failed"
+}
+
+/**
+ * Publish a pending draft from the server-rendered list. The page has no client state to hold a
+ * failure, so it returns to the list with a failure code that renders as a notice on that draft.
+ */
+async function publishDraft(slug: string, formData: FormData) {
+  const id = formData.get("id")
+  if (typeof id !== "string" || !id) return
+
+  let failure: PublishFailure | null
+  try {
+    const result = await publishArticle(id)
+    failure = "error" in result && result.error ? publishFailureOf(result.error) : null
+  } catch (error) {
+    console.error("[articles] Failed to publish draft:", error)
+    failure = "failed"
+  }
+  // redirect() throws to navigate, so it stays outside the try.
+  const articlesPath = `/studio/lang/${encodeURIComponent(slug)}/articles`
+  redirect(failure ? `${articlesPath}?${new URLSearchParams({ draft: id, publishError: failure })}` : articlesPath)
 }
 
 async function getPageData(slug: string, userId: string | null) {
@@ -55,8 +78,10 @@ async function getPageData(slug: string, userId: string | null) {
 
 export default async function ArticlesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams?: Promise<{ draft?: string | string[]; publishError?: string | string[] }>
 }) {
   const userId = await getUserId()
 
@@ -68,6 +93,12 @@ export default async function ArticlesPage({
   const language = await getPageData(slug, userId)
 
   if (!language) notFound()
+
+  // Closes over the route's slug (encrypted by Next), so the redirect target is not client input.
+  async function publishDraftAction(formData: FormData) {
+    "use server"
+    await publishDraft(slug, formData)
+  }
 
   const [canWrite, canDraft] = userId
     ? await Promise.all([
@@ -95,6 +126,12 @@ export default async function ArticlesPage({
   )
 
   const t = await getTranslations("studio.articles")
+
+  // A publish failure notice only shows for a draft still pending review here, with fixed text.
+  const { draft: failedDraftId, publishError } = (await searchParams) ?? {}
+  const failedDraft = typeof failedDraftId === "string" && typeof publishError === "string"
+    ? pendingDrafts.find((d) => d.id === failedDraftId)
+    : undefined
 
   return (
     <div className="space-y-8">
@@ -130,6 +167,14 @@ export default async function ArticlesPage({
               {pendingDrafts.length}
             </Badge>
           </h2>
+          {failedDraft && (
+            <Alert variant="destructive">
+              <AlertTitle>{t("publishFailedTitle", { title: failedDraft.title })}</AlertTitle>
+              <AlertDescription>
+                {publishError === "forbidden" ? t("publishFailedForbidden") : t("publishFailedGeneric")}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="grid gap-3">
             {pendingDrafts.map((draft) => (
               <Card key={draft.id} className="p-4">

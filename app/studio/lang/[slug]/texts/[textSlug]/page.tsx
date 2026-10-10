@@ -18,13 +18,14 @@ async function getText(languageSlug: string, textSlug: string, userId: string | 
     return null
   }
 
-  // Allow access if user is owner or collaborator (skip in dev mode)
+  // Every text write needs write:texts (lib/services/text; "draft:texts" is not honoured there).
+  // Anyone else who can view the project — the list shows them every text — reads it read-only.
+  // Dev mode without a user keeps full access.
+  let readOnly = false
   if (process.env.DEV_MODE !== "true" && userId) {
-    const { canEditScope } = await import("@/lib/auth-helpers")
-    const canEdit =
-      (await canEditScope(language.id, userId, "write:texts")) ||
-      (await canEditScope(language.id, userId, "draft:texts"))
-    if (!canEdit) return { language, text: null }
+    const { canEditScope, canViewLanguage } = await import("@/lib/auth-helpers")
+    readOnly = !(await canEditScope(language.id, userId, "write:texts"))
+    if (readOnly && !(await canViewLanguage(language.id, userId))) return { language, text: null, readOnly }
   }
 
   const text = await prisma.text.findUnique({
@@ -42,10 +43,14 @@ async function getText(languageSlug: string, textSlug: string, userId: string | 
       published: true,
       coverImage: true,
       paradigmId: true,
+      // The editor's revision token (optimistic concurrency on save).
+      updatedAt: true,
     },
   })
 
-  return { language, text }
+  // Unpublished texts are for people who can edit them (as for articles).
+  if (text && readOnly && !text.published) return { language, text: null, readOnly }
+  return { language, text, readOnly }
 }
 
 export default async function EditTextPage({
@@ -75,6 +80,7 @@ export default async function EditTextPage({
     <TextEditor
       languageId={result.language.id}
       languageSlug={slug}
+      readOnly={result.readOnly}
       text={{
         id: result.text.id,
         title: result.text.title,
@@ -83,6 +89,7 @@ export default async function EditTextPage({
         published: result.text.published,
         coverImage: result.text.coverImage,
         paradigmId: result.text.paradigmId,
+        updatedAt: result.text.updatedAt,
       }}
     />
   )

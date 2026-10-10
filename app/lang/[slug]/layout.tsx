@@ -1,6 +1,9 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { headers } from "next/headers"
+import { PATHNAME_HEADER, withRenamedSlug } from "@/lib/project-path"
+import { findReservedSlugTarget } from "@/lib/services/slug-reservation"
 import { PublicLayout } from "../public-layout"
 import { getUserId } from "@/lib/auth-helpers"
 import { FontLoader } from "@/components/font-loader"
@@ -54,6 +57,11 @@ export default async function PublicLangLayout({
   const language = await getLanguage(slug, userId)
 
   if (!language) {
+    // Renamed projects keep their old slug reserved. Full page loads are
+    // redirected by middleware; client navigations land here instead.
+    const target = await findReservedSlugTarget(slug)
+    // Same section of the renamed project (the middleware passes the requested path).
+    if (target) redirect(withRenamedSlug(headers().get(PATHNAME_HEADER), "/lang", slug, target))
     notFound()
   }
 

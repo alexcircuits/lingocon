@@ -8,6 +8,7 @@ import "./globals.css";
 import { getSiteUrl } from "@/lib/seo";
 import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
+import { ChunkErrorListener } from "@/components/chunk-error-listener"
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionConfigProvider } from "@/components/motion-config-provider";
@@ -22,6 +23,9 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   variable: "--font-instrument-serif",
   display: "swap",
+  // Accent face for a few headings: fetch it when used instead of preloading it
+  // on every page.
+  preload: false,
 });
 
 const jetBrainsMono = JetBrains_Mono({
@@ -49,6 +53,9 @@ const notoSans = Noto_Sans({
   subsets: ["latin"],
   variable: "--font-noto",
   display: "swap",
+  // Fallback for glyphs the primary faces lack; the browser fetches it only when
+  // such a glyph is rendered.
+  preload: false,
 });
 
 // Gilroy — locally-hosted display face used for the Cyrillic locales (Russian
@@ -67,6 +74,9 @@ const gilroy = localFont({
   ],
   variable: "--font-gilroy",
   display: "swap",
+  // ~500 KB of TTF used only by the Russian/Ukrainian interface. Preloading made
+  // every visitor download it on every cold load; CSS fetches it on demand.
+  preload: false,
 });
 
 
@@ -192,6 +202,7 @@ export default async function RootLayout({
               </a>
               {children}
               <AchievementListener />
+                <ChunkErrorListener />
               <Toaster
                 position="bottom-right"
                 toastOptions={{
@@ -208,7 +219,7 @@ export default async function RootLayout({
               if ('serviceWorker' in navigator) {
                 if ('${process.env.NODE_ENV}' === 'production') {
                   window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js').catch(() => {});
+                    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch((error) => console.warn('Service worker registration failed', error));
                   });
                 } else {
                   // In development mode, unregister any existing service workers

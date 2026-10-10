@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { TransliterationToggle } from "@/components/transliteration-toggle"
 import { ContextualHelp } from "@/components/contextual-help"
+import { useSectionWritable } from "@/components/studio-access"
 import { DictionarySearch } from "./dictionary-search"
 
 interface DictionaryToolbarProps {
@@ -61,6 +62,8 @@ export function DictionaryToolbar({
   onAdd,
 }: DictionaryToolbarProps) {
   const t = useTranslations("studio.dictionary")
+  // Read-only visitors keep search, sort, transliteration and export.
+  const canEdit = useSectionWritable()
 
   function handleExport() {
     const url = `/api/export/csv?languageId=${languageId}`
@@ -107,42 +110,46 @@ export function DictionaryToolbar({
           <Download className="h-4 w-4" />
         </Button>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onImport}
-          disabled={isPending}
-          title={t("importCsv")}
-         aria-label={t("importCsv")}>
-          <Upload className="h-4 w-4" />
-        </Button>
+        {canEdit && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onImport}
+              disabled={isPending}
+              title={t("importCsv")}
+             aria-label={t("importCsv")}>
+              <Upload className="h-4 w-4" />
+            </Button>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onGenerate}
-          disabled={isPending}
-          title={t("generateWords")}
-         aria-label={t("generateWords")}>
-          <Sparkles className="h-4 w-4" />
-        </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onGenerate}
+              disabled={isPending}
+              title={t("generateWords")}
+             aria-label={t("generateWords")}>
+              <Sparkles className="h-4 w-4" />
+            </Button>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onBorrow}
-          disabled={isPending}
-          title={t("borrowWord")}
-         aria-label={t("borrowWord")}>
-          <Languages className="h-4 w-4" />
-        </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onBorrow}
+              disabled={isPending}
+              title={t("borrowWord")}
+             aria-label={t("borrowWord")}>
+              <Languages className="h-4 w-4" />
+            </Button>
 
-        <ContextualHelp
-          content={t("shortcutHelp")}
-          shortcut="⌘N"
-        />
+            <ContextualHelp
+              content={t("shortcutHelp")}
+              shortcut="⌘N"
+            />
+          </>
+        )}
 
-        {selectedCount > 0 && (
+        {canEdit && selectedCount > 0 && (
           <>
             <Button
               variant="outline"
@@ -166,21 +173,38 @@ export function DictionaryToolbar({
           </>
         )}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBulkAdd}
-          className="gap-2 shrink-0"
-          title={t("bulkAddEntries")}
-        >
-          <Table2 className="h-4 w-4" />
-          <span className="hidden sm:inline">{t("bulkAdd")}</span>
-        </Button>
+        {canEdit && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onFindReplace}
+              disabled={isPending || totalEntries === 0}
+              className="shrink-0"
+              title="Find & replace"
+              aria-label="Find & replace"
+            >
+              <Replace className="h-4 w-4" />
+            </Button>
 
-        <Button type="button" onClick={onAdd} className="gap-2 shrink-0 ml-auto sm:ml-0">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">{t("addEntry")}</span>
-        </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBulkAdd}
+              className="gap-2 shrink-0"
+              title={t("bulkAddEntries")}
+            >
+              <Table2 className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("bulkAdd")}</span>
+            </Button>
+
+            <Button type="button" onClick={onAdd} className="gap-2 shrink-0 ml-auto sm:ml-0">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("addEntry")}</span>
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Mobile condensed controls: Sort + primary Add + collapsed "More" menu */}
@@ -214,27 +238,31 @@ export function DictionaryToolbar({
               <Download className="h-4 w-4" />
               {t("exportCsv")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onImport} disabled={isPending}>
-              <Upload className="h-4 w-4" />
-              {t("importCsv")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onGenerate} disabled={isPending}>
-              <Sparkles className="h-4 w-4" />
-              {t("generateWords")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onBorrow} disabled={isPending}>
-              <Languages className="h-4 w-4" />
-              {t("borrowWord")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onBulkAdd}>
-              <Table2 className="h-4 w-4" />
-              {t("bulkAdd")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onFindReplace} disabled={isPending || totalEntries === 0}>
-              <Replace className="h-4 w-4" />
-              Find &amp; replace
-            </DropdownMenuItem>
-            {selectedCount > 0 && (
+            {canEdit && (
+              <>
+                <DropdownMenuItem onClick={onImport} disabled={isPending}>
+                  <Upload className="h-4 w-4" />
+                  {t("importCsv")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onGenerate} disabled={isPending}>
+                  <Sparkles className="h-4 w-4" />
+                  {t("generateWords")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onBorrow} disabled={isPending}>
+                  <Languages className="h-4 w-4" />
+                  {t("borrowWord")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onBulkAdd}>
+                  <Table2 className="h-4 w-4" />
+                  {t("bulkAdd")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onFindReplace} disabled={isPending || totalEntries === 0}>
+                  <Replace className="h-4 w-4" />
+                  Find &amp; replace
+                </DropdownMenuItem>
+              </>
+            )}
+            {canEdit && selectedCount > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onBulkEdit} disabled={isPending}>
@@ -254,10 +282,12 @@ export function DictionaryToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button type="button" onClick={onAdd} className="gap-2 shrink-0 ml-auto">
-          <Plus className="h-4 w-4" />
-          {t("addEntry")}
-        </Button>
+        {canEdit && (
+          <Button type="button" onClick={onAdd} className="gap-2 shrink-0 ml-auto">
+            <Plus className="h-4 w-4" />
+            {t("addEntry")}
+          </Button>
+        )}
       </div>
     </div>
   )

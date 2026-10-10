@@ -1,0 +1,2052 @@
+{
+  "generatedBy": "scripts/rust-parity/generate-lexicon-fixtures.ts",
+  "cases": [
+    {
+      "name": "empty alphabet: no undefined-symbol warnings, paradigms still checked [diacritics off]",
+      "symbols": [],
+      "entries": [
+        {"lemma":"xyz","gloss":"eat","paradigmId":null},
+        {"lemma":"\u011b","gloss":"","paradigmId":"missing"},
+        {"lemma":"","gloss":"","paradigmId":"gone"}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"missing_paradigm","message":"Entry \"\u011b\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [93]
+      }
+    },
+    {
+      "name": "empty alphabet: no undefined-symbol warnings, paradigms still checked [diacritics on]",
+      "symbols": [],
+      "entries": [
+        {"lemma":"xyz","gloss":"eat","paradigmId":null},
+        {"lemma":"\u011b","gloss":"","paradigmId":"missing"},
+        {"lemma":"","gloss":"","paradigmId":"gone"}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"missing_paradigm","message":"Entry \"\u011b\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [93]
+      }
+    },
+    {
+      "name": "alphabet whose symbols are all empty strings [diacritics off]",
+      "symbols": [
+        {"symbol":"","capitalSymbol":null},
+        {"symbol":"","capitalSymbol":""},
+        {"symbol":"","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abc","gloss":"to eat","paradigmId":null},
+        {"lemma":"a b-c 1","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u00e9","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abc\" uses undefined symbols: a, b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a b-c 1\" uses undefined symbols: a, b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e9\" uses undefined symbols: \u00e9","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "alphabet whose symbols are all empty strings [diacritics on]",
+      "symbols": [
+        {"symbol":"","capitalSymbol":null},
+        {"symbol":"","capitalSymbol":""},
+        {"symbol":"","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abc","gloss":"to eat","paradigmId":null},
+        {"lemma":"a b-c 1","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u00e9","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abc\" uses undefined symbols: a, b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a b-c 1\" uses undefined symbols: a, b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e9\" uses undefined symbols: \u00e9","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "digraphs and longest match [diacritics off]",
+      "symbols": [
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"h","capitalSymbol":"H"},
+        {"symbol":"ch","capitalSymbol":"Ch"},
+        {"symbol":"s","capitalSymbol":"S"},
+        {"symbol":"sh","capitalSymbol":"SH"}
+      ],
+      "entries": [
+        {"lemma":"chs","gloss":"to eat","paradigmId":null},
+        {"lemma":"cch","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"hc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"Chsh","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"CH","gloss":"","paradigmId":null},
+        {"lemma":"cHx","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"shch","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"xch","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"SHs","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"sH","gloss":"I","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"cHx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"xch\" uses undefined symbols: x","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "digraphs and longest match [diacritics on]",
+      "symbols": [
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"h","capitalSymbol":"H"},
+        {"symbol":"ch","capitalSymbol":"Ch"},
+        {"symbol":"s","capitalSymbol":"S"},
+        {"symbol":"sh","capitalSymbol":"SH"}
+      ],
+      "entries": [
+        {"lemma":"chs","gloss":"to eat","paradigmId":null},
+        {"lemma":"cch","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"hc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"Chsh","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"CH","gloss":"","paradigmId":null},
+        {"lemma":"cHx","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"shch","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"xch","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"SHs","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"sH","gloss":"I","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"cHx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"xch\" uses undefined symbols: x","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "greedy match does not backtrack [diacritics off]",
+      "symbols": [
+        {"symbol":"ab","capitalSymbol":null},
+        {"symbol":"bc","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abc","gloss":"to eat","paradigmId":null},
+        {"lemma":"abbc","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"aabc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"bca","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"bc","gloss":"","paradigmId":null},
+        {"lemma":"c","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abc\" uses undefined symbols: c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"aabc\" uses undefined symbols: c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"c\" uses undefined symbols: c","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "greedy match does not backtrack [diacritics on]",
+      "symbols": [
+        {"symbol":"ab","capitalSymbol":null},
+        {"symbol":"bc","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abc","gloss":"to eat","paradigmId":null},
+        {"lemma":"abbc","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"aabc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"bca","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"bc","gloss":"","paradigmId":null},
+        {"lemma":"c","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abc\" uses undefined symbols: c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"aabc\" uses undefined symbols: c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"c\" uses undefined symbols: c","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "trigraph beats digraph [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"ab","capitalSymbol":null},
+        {"symbol":"abc","capitalSymbol":null},
+        {"symbol":"d","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abcab","gloss":"to eat","paradigmId":null},
+        {"lemma":"abd","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abcd","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"aabcx","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"dabc","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"aabcx\" uses undefined symbols: x","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "trigraph beats digraph [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"ab","capitalSymbol":null},
+        {"symbol":"abc","capitalSymbol":null},
+        {"symbol":"d","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abcab","gloss":"to eat","paradigmId":null},
+        {"lemma":"abd","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abcd","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"aabcx","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"dabc","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"aabcx\" uses undefined symbols: x","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "capitals: null and empty capitalSymbol [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":null},
+        {"symbol":"c","capitalSymbol":""}
+      ],
+      "entries": [
+        {"lemma":"AbC","gloss":"to eat","paradigmId":null},
+        {"lemma":"aBc","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"ABC","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"AbC\" uses undefined symbols: C","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"aBc\" uses undefined symbols: B","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ABC\" uses undefined symbols: B, C","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "capitals: null and empty capitalSymbol [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":null},
+        {"symbol":"c","capitalSymbol":""}
+      ],
+      "entries": [
+        {"lemma":"AbC","gloss":"to eat","paradigmId":null},
+        {"lemma":"aBc","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abc","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"ABC","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [],
+        "total": 0,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "titlecase and capital digraph forms [diacritics off]",
+      "symbols": [
+        {"symbol":"d\u017e","capitalSymbol":"D\u017e"},
+        {"symbol":"\u01c6","capitalSymbol":"\u01c5"},
+        {"symbol":"d","capitalSymbol":"D"},
+        {"symbol":"z","capitalSymbol":"Z"}
+      ],
+      "entries": [
+        {"lemma":"D\u017ed","gloss":"to eat","paradigmId":null},
+        {"lemma":"D\u017d","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u01c5\u01c6","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u01c4","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"d\u017e","gloss":"","paradigmId":null},
+        {"lemma":"dz\u030c","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"Dz\u030c","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"DZ","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"D\u017d\" uses undefined symbols: \u017d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u01c4\" uses undefined symbols: \u01c4","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "titlecase and capital digraph forms [diacritics on]",
+      "symbols": [
+        {"symbol":"d\u017e","capitalSymbol":"D\u017e"},
+        {"symbol":"\u01c6","capitalSymbol":"\u01c5"},
+        {"symbol":"d","capitalSymbol":"D"},
+        {"symbol":"z","capitalSymbol":"Z"}
+      ],
+      "entries": [
+        {"lemma":"D\u017ed","gloss":"to eat","paradigmId":null},
+        {"lemma":"D\u017d","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u01c5\u01c6","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u01c4","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"d\u017e","gloss":"","paradigmId":null},
+        {"lemma":"dz\u030c","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"Dz\u030c","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"DZ","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [],
+        "total": 0,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "precomposed symbol vs decomposed lemma [diacritics off]",
+      "symbols": [
+        {"symbol":"\u00e9","capitalSymbol":"\u00c9"},
+        {"symbol":"n","capitalSymbol":"N"}
+      ],
+      "entries": [
+        {"lemma":"e\u0301n","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u00e9n","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"E\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"ne\u0301e","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u00e9\u0301","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"ne\u0301e\" uses undefined symbols: e","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e9\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "precomposed symbol vs decomposed lemma [diacritics on]",
+      "symbols": [
+        {"symbol":"\u00e9","capitalSymbol":"\u00c9"},
+        {"symbol":"n","capitalSymbol":"N"}
+      ],
+      "entries": [
+        {"lemma":"e\u0301n","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u00e9n","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"E\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"ne\u0301e","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u00e9\u0301","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u00e9\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "decomposed symbol vs precomposed lemma [diacritics off]",
+      "symbols": [
+        {"symbol":"e\u0301","capitalSymbol":"E\u0301"},
+        {"symbol":"a\u0328","capitalSymbol":null},
+        {"symbol":"n","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u00e9n","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0105","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u0328n","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0105\u0301","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"e\u0301\u0301","gloss":"","paradigmId":null},
+        {"lemma":"\u0104","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0105\u0301\" uses undefined symbols: \u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u0301\u0301\" uses undefined symbols: \u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0104\" uses undefined symbols: \u0104","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "decomposed symbol vs precomposed lemma [diacritics on]",
+      "symbols": [
+        {"symbol":"e\u0301","capitalSymbol":"E\u0301"},
+        {"symbol":"a\u0328","capitalSymbol":null},
+        {"symbol":"n","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u00e9n","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0105","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u0328n","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0105\u0301","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"e\u0301\u0301","gloss":"","paradigmId":null},
+        {"lemma":"\u0104","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0105\u0301\" uses undefined symbols: \u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u0301\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "combining marks and canonical reordering [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"\u1ea1","capitalSymbol":null},
+        {"symbol":"q","capitalSymbol":null},
+        {"symbol":"\u0301","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a\u0323\u0301","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u0301\u0323","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0301a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"q\u0307\u0323","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"q\u0323\u0307","gloss":"","paradigmId":null},
+        {"lemma":"a\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0301\u0302","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\u20dd","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u1ea1\u0302","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"q\u0307\u0323\" uses undefined symbols: \u0323\u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"q\u0323\u0307\" uses undefined symbols: \u0323\u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0301\" uses undefined symbols: \u00e1","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0301\u0302\" uses undefined symbols: \u0302","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u20dd\" uses undefined symbols: \u20dd","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u1ea1\u0302\" uses undefined symbols: \u1ead","severity":"warning"}
+        ],
+        "total": 6,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "combining marks and canonical reordering [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"\u1ea1","capitalSymbol":null},
+        {"symbol":"q","capitalSymbol":null},
+        {"symbol":"\u0301","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a\u0323\u0301","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u0301\u0323","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0301a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"q\u0307\u0323","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"q\u0323\u0307","gloss":"","paradigmId":null},
+        {"lemma":"a\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0301\u0302","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\u20dd","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u1ea1\u0302","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"q\u0307\u0323\" uses undefined symbols: \u0323\u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"q\u0323\u0307\" uses undefined symbols: \u0323\u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0301\u0302\" uses undefined symbols: \u0302","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u20dd\" uses undefined symbols: \u20dd","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "czech letters with and without hacek [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"},
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"d","capitalSymbol":"D"},
+        {"symbol":"e","capitalSymbol":"E"},
+        {"symbol":"i","capitalSymbol":"I"},
+        {"symbol":"n","capitalSymbol":"N"},
+        {"symbol":"o","capitalSymbol":"O"},
+        {"symbol":"r","capitalSymbol":"R"},
+        {"symbol":"s","capitalSymbol":"S"},
+        {"symbol":"u","capitalSymbol":"U"},
+        {"symbol":"z","capitalSymbol":"Z"},
+        {"symbol":"\u010d","capitalSymbol":"\u010c"},
+        {"symbol":"\u0161","capitalSymbol":"\u0160"}
+      ],
+      "entries": [
+        {"lemma":"\u011b\u0161\u010d","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0159eka","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u010cech","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0105\u0105","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u017d\u00cdN\u011a","gloss":"","paradigmId":null},
+        {"lemma":"e\u030c","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\ufb01n","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u00df","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u011b\u0161\u010d\" uses undefined symbols: \u011b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0159eka\" uses undefined symbols: \u0159, k","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u010cech\" uses undefined symbols: h","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0105\u0105\" uses undefined symbols: \u0105","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u017d\u00cdN\u011a\" uses undefined symbols: \u017d, \u00cd, \u011a","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u030c\" uses undefined symbols: \u011b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ufb01n\" uses undefined symbols: \ufb01","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00df\" uses undefined symbols: \u00df","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "czech letters with and without hacek [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"},
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"d","capitalSymbol":"D"},
+        {"symbol":"e","capitalSymbol":"E"},
+        {"symbol":"i","capitalSymbol":"I"},
+        {"symbol":"n","capitalSymbol":"N"},
+        {"symbol":"o","capitalSymbol":"O"},
+        {"symbol":"r","capitalSymbol":"R"},
+        {"symbol":"s","capitalSymbol":"S"},
+        {"symbol":"u","capitalSymbol":"U"},
+        {"symbol":"z","capitalSymbol":"Z"},
+        {"symbol":"\u010d","capitalSymbol":"\u010c"},
+        {"symbol":"\u0161","capitalSymbol":"\u0160"}
+      ],
+      "entries": [
+        {"lemma":"\u011b\u0161\u010d","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0159eka","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u010cech","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0105\u0105","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u017d\u00cdN\u011a","gloss":"","paradigmId":null},
+        {"lemma":"e\u030c","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\ufb01n","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u00df","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0159eka\" uses undefined symbols: k","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u010cech\" uses undefined symbols: h","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ufb01n\" uses undefined symbols: \ufb01","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00df\" uses undefined symbols: \u00df","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "uppercase-only symbols are lowercased for diacritic bases [diacritics off]",
+      "symbols": [
+        {"symbol":"A","capitalSymbol":null},
+        {"symbol":"B","capitalSymbol":null},
+        {"symbol":"\u03a3","capitalSymbol":null},
+        {"symbol":"\u0130","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a","gloss":"to eat","paradigmId":null},
+        {"lemma":"AB","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"ab","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u03c3","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u03c2","gloss":"","paradigmId":null},
+        {"lemma":"\u03a3","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"i","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0130","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"i\u0307","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"I","gloss":"I","paradigmId":null},
+        {"lemma":"\u00e1","gloss":"to eat","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\" uses undefined symbols: a","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ab\" uses undefined symbols: a, b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03c3\" uses undefined symbols: \u03c3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"i\" uses undefined symbols: i","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"i\u0307\" uses undefined symbols: i\u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"I\" uses undefined symbols: I","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e1\" uses undefined symbols: \u00e1","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "uppercase-only symbols are lowercased for diacritic bases [diacritics on]",
+      "symbols": [
+        {"symbol":"A","capitalSymbol":null},
+        {"symbol":"B","capitalSymbol":null},
+        {"symbol":"\u03a3","capitalSymbol":null},
+        {"symbol":"\u0130","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a","gloss":"to eat","paradigmId":null},
+        {"lemma":"AB","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"ab","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u03c3","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u03c2","gloss":"","paradigmId":null},
+        {"lemma":"\u03a3","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"i","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0130","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"i\u0307","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"I","gloss":"I","paradigmId":null},
+        {"lemma":"\u00e1","gloss":"to eat","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u03c2\" uses undefined symbols: \u03c2","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "astral letters and emoji sequences [diacritics off]",
+      "symbols": [
+        {"symbol":"\ud800\udf30","capitalSymbol":null},
+        {"symbol":"\ud800\udf31","capitalSymbol":null},
+        {"symbol":"\ud835\udd1e","capitalSymbol":"\ud835\udd04"},
+        {"symbol":"\ud83d\ude42","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":"A"}
+      ],
+      "entries": [
+        {"lemma":"\ud800\udf30\ud800\udf31\ud800\udf32","gloss":"to eat","paradigmId":null},
+        {"lemma":"\ud835\udd04\ud835\udd1e","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\ud83d\ude42a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\ud83c\uddfa\ud83c\udde6","gloss":"","paradigmId":null},
+        {"lemma":"\ud83c\uddfa\ud83c\udde6\ud83c\uddfa","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u2764\ufe0f","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\ud83d\udc4d\ud83c\udffd","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\ud83d\udc4d","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"#\ufe0f\u20e3","gloss":"I","paradigmId":null},
+        {"lemma":"1\u20e3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\ud83c\udff3\ufe0f\u200d\ud83c\udf08","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud80c\udc00a","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\ud800\udf30\ud800\udf31\ud800\udf32\" uses undefined symbols: \ud800\udf32","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\" uses undefined symbols: \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u2764\ufe0f\" uses undefined symbols: \u2764\ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\ufe0f\u20e3\" uses undefined symbols: #\ufe0f\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"1\u20e3\" uses undefined symbols: 1\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83c\udff3\ufe0f\u200d\ud83c\udf08\" uses undefined symbols: \ud83c\udff3\ufe0f\u200d\ud83c\udf08","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f\" uses undefined symbols: \ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud80c\udc00a\" uses undefined symbols: \ud80c\udc00","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "astral letters and emoji sequences [diacritics on]",
+      "symbols": [
+        {"symbol":"\ud800\udf30","capitalSymbol":null},
+        {"symbol":"\ud800\udf31","capitalSymbol":null},
+        {"symbol":"\ud835\udd1e","capitalSymbol":"\ud835\udd04"},
+        {"symbol":"\ud83d\ude42","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":"A"}
+      ],
+      "entries": [
+        {"lemma":"\ud800\udf30\ud800\udf31\ud800\udf32","gloss":"to eat","paradigmId":null},
+        {"lemma":"\ud835\udd04\ud835\udd1e","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\ud83d\ude42a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\ud83c\uddfa\ud83c\udde6","gloss":"","paradigmId":null},
+        {"lemma":"\ud83c\uddfa\ud83c\udde6\ud83c\uddfa","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u2764\ufe0f","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\ud83d\udc4d\ud83c\udffd","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\ud83d\udc4d","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"#\ufe0f\u20e3","gloss":"I","paradigmId":null},
+        {"lemma":"1\u20e3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\ud83c\udff3\ufe0f\u200d\ud83c\udf08","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud80c\udc00a","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\ud800\udf30\ud800\udf31\ud800\udf32\" uses undefined symbols: \ud800\udf32","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\" uses undefined symbols: \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u2764\ufe0f\" uses undefined symbols: \u2764\ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\ufe0f\u20e3\" uses undefined symbols: #\ufe0f\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"1\u20e3\" uses undefined symbols: 1\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83c\udff3\ufe0f\u200d\ud83c\udf08\" uses undefined symbols: \ud83c\udff3\ufe0f\u200d\ud83c\udf08","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f\" uses undefined symbols: \ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud80c\udc00a\" uses undefined symbols: \ud80c\udc00","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "emoji symbols with modifiers and joiners [diacritics off]",
+      "symbols": [
+        {"symbol":"\ud83d\udc4d","capitalSymbol":null},
+        {"symbol":"\u2764","capitalSymbol":null},
+        {"symbol":"#","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\ud83d\udc4d\ud83c\udffd","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u2764\ufe0f","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u2764","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud83d\udc4d\u200d","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"#\ufe0f\u20e3","gloss":"","paradigmId":null},
+        {"lemma":"#\u0301","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u2764\ufe0f\" uses undefined symbols: \ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83d\udc4d\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\ufe0f\u20e3\" uses undefined symbols: \ufe0f\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "emoji symbols with modifiers and joiners [diacritics on]",
+      "symbols": [
+        {"symbol":"\ud83d\udc4d","capitalSymbol":null},
+        {"symbol":"\u2764","capitalSymbol":null},
+        {"symbol":"#","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\ud83d\udc4d\ud83c\udffd","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u2764\ufe0f","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u2764","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ud83d\udc4d\u200d","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"#\ufe0f\u20e3","gloss":"","paradigmId":null},
+        {"lemma":"#\u0301","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u2764\ufe0f\" uses undefined symbols: \ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud83d\udc4d\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\ufe0f\u20e3\" uses undefined symbols: \ufe0f\u20e3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"#\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "greek final sigma [diacritics off]",
+      "symbols": [
+        {"symbol":"\u03b1","capitalSymbol":"\u0391"},
+        {"symbol":"\u03c3","capitalSymbol":"\u03a3"},
+        {"symbol":"\u03bf","capitalSymbol":"\u039f"},
+        {"symbol":"\u03ac","capitalSymbol":"\u0386"}
+      ],
+      "entries": [
+        {"lemma":"\u0391\u03a3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u03b1\u03c2","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u03c3\u03c2","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u039f\u03a3\u039f\u03a3","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u03ac\u03c3","gloss":"","paradigmId":null},
+        {"lemma":"\u03b1\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0390","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0391\u03c2","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u03ca\u0301","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u03b1\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03c3\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0390\" uses undefined symbols: \u0390","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0391\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03ca\u0301\" uses undefined symbols: \u0390","severity":"warning"}
+        ],
+        "total": 5,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "greek final sigma [diacritics on]",
+      "symbols": [
+        {"symbol":"\u03b1","capitalSymbol":"\u0391"},
+        {"symbol":"\u03c3","capitalSymbol":"\u03a3"},
+        {"symbol":"\u03bf","capitalSymbol":"\u039f"},
+        {"symbol":"\u03ac","capitalSymbol":"\u0386"}
+      ],
+      "entries": [
+        {"lemma":"\u0391\u03a3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u03b1\u03c2","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u03c3\u03c2","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u039f\u03a3\u039f\u03a3","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u03ac\u03c3","gloss":"","paradigmId":null},
+        {"lemma":"\u03b1\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0390","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0391\u03c2","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u03ca\u0301","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u03b1\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03c3\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0390\" uses undefined symbols: \u0390","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0391\u03c2\" uses undefined symbols: \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03ca\u0301\" uses undefined symbols: \u0390","severity":"warning"}
+        ],
+        "total": 5,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "greek multi-letter symbol [diacritics off]",
+      "symbols": [
+        {"symbol":"\u039f\u03a3","capitalSymbol":null},
+        {"symbol":"\u03b1","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u039f\u03a3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u03bf\u03c2","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u03bf\u03c3","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u039f\u03a3\u03b1","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0391\u03a3","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u03bf\u03c2\" uses undefined symbols: \u03bf, \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03bf\u03c3\" uses undefined symbols: \u03bf, \u03c3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0391\u03a3\" uses undefined symbols: \u0391, \u03a3","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "greek multi-letter symbol [diacritics on]",
+      "symbols": [
+        {"symbol":"\u039f\u03a3","capitalSymbol":null},
+        {"symbol":"\u03b1","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u039f\u03a3","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u03bf\u03c2","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u03bf\u03c3","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u039f\u03a3\u03b1","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0391\u03a3","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u03bf\u03c2\" uses undefined symbols: \u03bf, \u03c2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u03bf\u03c3\" uses undefined symbols: \u03bf, \u03c3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0391\u03a3\" uses undefined symbols: \u03a3","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "turkish dotted and dotless i [diacritics off]",
+      "symbols": [
+        {"symbol":"i","capitalSymbol":"\u0130"},
+        {"symbol":"\u0131","capitalSymbol":"I"},
+        {"symbol":"k","capitalSymbol":"K"}
+      ],
+      "entries": [
+        {"lemma":"\u0130ki","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0131k\u0131","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"IKI","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"i\u0307","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0130","gloss":"","paradigmId":null},
+        {"lemma":"\u0130\u0307","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u212a","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0131\u0307","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"i\u0307\" uses undefined symbols: \u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0130\u0307\" uses undefined symbols: \u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0131\u0307\" uses undefined symbols: \u0307","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "turkish dotted and dotless i [diacritics on]",
+      "symbols": [
+        {"symbol":"i","capitalSymbol":"\u0130"},
+        {"symbol":"\u0131","capitalSymbol":"I"},
+        {"symbol":"k","capitalSymbol":"K"}
+      ],
+      "entries": [
+        {"lemma":"\u0130ki","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0131k\u0131","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"IKI","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"i\u0307","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0130","gloss":"","paradigmId":null},
+        {"lemma":"\u0130\u0307","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u212a","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0131\u0307","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"i\u0307\" uses undefined symbols: \u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0130\u0307\" uses undefined symbols: \u0307","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0131\u0307\" uses undefined symbols: \u0307","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "whitespace and line terminators [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u00a0b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\tb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\r\nb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\nb","gloss":"","paradigmId":null},
+        {"lemma":"a\rb","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u0085b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\ufeffb","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u2028b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u2029b","gloss":"I","paradigmId":null},
+        {"lemma":"a\u3000b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u200bb","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u180eb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u000bb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\fb","gloss":"","paradigmId":null},
+        {"lemma":"a\u1680b","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u202fb","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\u205fb","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u2007b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u0001b","gloss":"I","paradigmId":null},
+        {"lemma":"a\u007fb","gloss":"to eat","paradigmId":null},
+        {"lemma":"   ","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0085","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ufeff","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\u0085b\" uses undefined symbols: \u0085","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200bb\" uses undefined symbols: \u200b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u180eb\" uses undefined symbols: \u180e","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0001b\" uses undefined symbols: \u0001","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u007fb\" uses undefined symbols: \u007f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0085\" uses undefined symbols: \u0085","severity":"warning"}
+        ],
+        "total": 6,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "whitespace and line terminators [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u00a0b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\tb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\r\nb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\nb","gloss":"","paradigmId":null},
+        {"lemma":"a\rb","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u0085b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\ufeffb","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u2028b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u2029b","gloss":"I","paradigmId":null},
+        {"lemma":"a\u3000b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u200bb","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u180eb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u000bb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\fb","gloss":"","paradigmId":null},
+        {"lemma":"a\u1680b","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u202fb","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\u205fb","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u2007b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u0001b","gloss":"I","paradigmId":null},
+        {"lemma":"a\u007fb","gloss":"to eat","paradigmId":null},
+        {"lemma":"   ","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0085","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\ufeff","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\u0085b\" uses undefined symbols: \u0085","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200bb\" uses undefined symbols: \u200b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u180eb\" uses undefined symbols: \u180e","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0001b\" uses undefined symbols: \u0001","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u007fb\" uses undefined symbols: \u007f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0085\" uses undefined symbols: \u0085","severity":"warning"}
+        ],
+        "total": 6,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "ascii and non-ascii digits [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a1","gloss":"to eat","paradigmId":null},
+        {"lemma":"b0123456789","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u0663","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\uff11","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u00b2","gloss":"","paradigmId":null},
+        {"lemma":"a\u00bd","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u2167","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0661\u0662","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u0966","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"1\u0301","gloss":"I","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\u0663\" uses undefined symbols: \u0663","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\uff11\" uses undefined symbols: \uff11","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u00b2\" uses undefined symbols: \u00b2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u00bd\" uses undefined symbols: \u00bd","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u2167\" uses undefined symbols: \u2167","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0661\u0662\" uses undefined symbols: \u0661, \u0662","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0966\" uses undefined symbols: \u0966","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"1\u0301\" uses undefined symbols: 1\u0301","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "ascii and non-ascii digits [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a1","gloss":"to eat","paradigmId":null},
+        {"lemma":"b0123456789","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u0663","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\uff11","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u00b2","gloss":"","paradigmId":null},
+        {"lemma":"a\u00bd","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u2167","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"\u0661\u0662","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\u0966","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"1\u0301","gloss":"I","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\u0663\" uses undefined symbols: \u0663","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\uff11\" uses undefined symbols: \uff11","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u00b2\" uses undefined symbols: \u00b2","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u00bd\" uses undefined symbols: \u00bd","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u2167\" uses undefined symbols: \u2167","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0661\u0662\" uses undefined symbols: \u0661, \u0662","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0966\" uses undefined symbols: \u0966","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"1\u0301\" uses undefined symbols: 1\u0301","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "punctuation and symbol graphemes [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a-b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a'b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u2019b","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u00aba\u00bb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a$","gloss":"","paradigmId":null},
+        {"lemma":"a\u20ac","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a+b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a^","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a`","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u00a8","gloss":"I","paradigmId":null},
+        {"lemma":"a\u02d8","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u00b4","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u00a9","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u2122","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u2190","gloss":"","paradigmId":null},
+        {"lemma":"a\u00b0","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a_b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\\b","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\"b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a|b~","gloss":"I","paradigmId":null},
+        {"lemma":"@#%&*","gloss":"to eat","paradigmId":null},
+        {"lemma":"$\u0301","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"-\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u02bc","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u02c8","gloss":"","paradigmId":null},
+        {"lemma":"a\u02d0","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u3001\u300c\u300d","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\ud83d\ude00","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"$\u0301\" uses undefined symbols: $\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"-\u0301\" uses undefined symbols: -\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02bc\" uses undefined symbols: \u02bc","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02c8\" uses undefined symbols: \u02c8","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02d0\" uses undefined symbols: \u02d0","severity":"warning"}
+        ],
+        "total": 5,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "punctuation and symbol graphemes [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a-b","gloss":"to eat","paradigmId":null},
+        {"lemma":"a'b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u2019b","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u00aba\u00bb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a$","gloss":"","paradigmId":null},
+        {"lemma":"a\u20ac","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a+b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a^","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a`","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a\u00a8","gloss":"I","paradigmId":null},
+        {"lemma":"a\u02d8","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u00b4","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u00a9","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u2122","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u2190","gloss":"","paradigmId":null},
+        {"lemma":"a\u00b0","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a_b","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\\b","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"a\"b","gloss":"\ufefffire","paradigmId":null},
+        {"lemma":"a|b~","gloss":"I","paradigmId":null},
+        {"lemma":"@#%&*","gloss":"to eat","paradigmId":null},
+        {"lemma":"$\u0301","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"-\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u02bc","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"a\u02c8","gloss":"","paradigmId":null},
+        {"lemma":"a\u02d0","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"a\u3001\u300c\u300d","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"a\ud83d\ude00","gloss":"water\u0085","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"$\u0301\" uses undefined symbols: $\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"-\u0301\" uses undefined symbols: -\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02bc\" uses undefined symbols: \u02bc","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02c8\" uses undefined symbols: \u02c8","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u02d0\" uses undefined symbols: \u02d0","severity":"warning"}
+        ],
+        "total": 5,
+        "matchedIds": [1,2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "symbols that are punctuation or modifier letters [diacritics off]",
+      "symbols": [
+        {"symbol":"'","capitalSymbol":null},
+        {"symbol":"\u02bc","capitalSymbol":null},
+        {"symbol":"-","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"\u02bb","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a'a","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u02bca","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u02bba","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u2019a","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"$\u0301","gloss":"","paradigmId":null},
+        {"lemma":"'\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"-a-","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"$\u0301\" uses undefined symbols: $\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"'\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "symbols that are punctuation or modifier letters [diacritics on]",
+      "symbols": [
+        {"symbol":"'","capitalSymbol":null},
+        {"symbol":"\u02bc","capitalSymbol":null},
+        {"symbol":"-","capitalSymbol":null},
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"\u02bb","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a'a","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u02bca","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u02bba","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u2019a","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"$\u0301","gloss":"","paradigmId":null},
+        {"lemma":"'\u0301","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"-a-","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"$\u0301\" uses undefined symbols: $\u0301","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"'\u0301\" uses undefined symbols: \u0301","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "symbol made only of a combining mark [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"\u0301","capitalSymbol":null},
+        {"symbol":"e","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a\u0301","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0301","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"e\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0301\u0301","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"o\u0301","gloss":"","paradigmId":null},
+        {"lemma":"a\u0300","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\u0301\" uses undefined symbols: \u00e1","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u0301\" uses undefined symbols: \u00e9","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"o\u0301\" uses undefined symbols: \u00f3","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u0300\" uses undefined symbols: \u00e0","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "symbol made only of a combining mark [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":null},
+        {"symbol":"\u0301","capitalSymbol":null},
+        {"symbol":"e","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"a\u0301","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0301","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"e\u0301","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0301\u0301","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"o\u0301","gloss":"","paradigmId":null},
+        {"lemma":"a\u0300","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"o\u0301\" uses undefined symbols: \u00f3","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "compatibility characters and singleton normalisation [diacritics off]",
+      "symbols": [
+        {"symbol":"\u00c5","capitalSymbol":null},
+        {"symbol":"k","capitalSymbol":"K"},
+        {"symbol":"\u8c48","capitalSymbol":null},
+        {"symbol":"fi","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u212b","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u00c5","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u212a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u212ak","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\uf900","gloss":"","paradigmId":null},
+        {"lemma":"\ufb01","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"fi","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"A\u030a","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u00e5","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\ufb01\" uses undefined symbols: \ufb01","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e5\" uses undefined symbols: \u00e5","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "compatibility characters and singleton normalisation [diacritics on]",
+      "symbols": [
+        {"symbol":"\u00c5","capitalSymbol":null},
+        {"symbol":"k","capitalSymbol":"K"},
+        {"symbol":"\u8c48","capitalSymbol":null},
+        {"symbol":"fi","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u212b","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u00c5","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u212a","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u212ak","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\uf900","gloss":"","paradigmId":null},
+        {"lemma":"\ufb01","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"fi","gloss":"to\u00a0drink","paradigmId":null},
+        {"lemma":"A\u030a","gloss":"water\u0085","paradigmId":null},
+        {"lemma":"\u00e5","gloss":"\ufefffire","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\ufb01\" uses undefined symbols: \ufb01","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,22,39,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "angstrom-sign symbol [diacritics off]",
+      "symbols": [
+        {"symbol":"\u212b","capitalSymbol":"\u212b"},
+        {"symbol":"b","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u00c5b","gloss":"to eat","paradigmId":null},
+        {"lemma":"A\u030ab","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u212bb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u00e5b","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u00e5b\" uses undefined symbols: \u00e5","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "angstrom-sign symbol [diacritics on]",
+      "symbols": [
+        {"symbol":"\u212b","capitalSymbol":"\u212b"},
+        {"symbol":"b","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u00c5b","gloss":"to eat","paradigmId":null},
+        {"lemma":"A\u030ab","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u212bb","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u00e5b","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [],
+        "total": 0,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "hangul syllables and jamo [diacritics off]",
+      "symbols": [
+        {"symbol":"\ud55c","capitalSymbol":null},
+        {"symbol":"\u1100\u1161","capitalSymbol":null},
+        {"symbol":"\u3131","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\ud55c","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u1112\u1161\u11ab","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\uac00","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u1100\u1161","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\uac01","gloss":"","paradigmId":null},
+        {"lemma":"\u3131\u3134","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\ud55c\uad6d","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\uac01\" uses undefined symbols: \uac01","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u3131\u3134\" uses undefined symbols: \u3134","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud55c\uad6d\" uses undefined symbols: \uad6d","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "hangul syllables and jamo [diacritics on]",
+      "symbols": [
+        {"symbol":"\ud55c","capitalSymbol":null},
+        {"symbol":"\u1100\u1161","capitalSymbol":null},
+        {"symbol":"\u3131","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\ud55c","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u1112\u1161\u11ab","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\uac00","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u1100\u1161","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\uac01","gloss":"","paradigmId":null},
+        {"lemma":"\u3131\u3134","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\ud55c\uad6d","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\uac01\" uses undefined symbols: \uac01","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u3131\u3134\" uses undefined symbols: \u3134","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ud55c\uad6d\" uses undefined symbols: \uad6d","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "indic, thai and prepend clusters [diacritics off]",
+      "symbols": [
+        {"symbol":"\u0915","capitalSymbol":null},
+        {"symbol":"\u0937","capitalSymbol":null},
+        {"symbol":"\u094d","capitalSymbol":null},
+        {"symbol":"\u093f","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u0915\u094d\u0937","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0915\u093f","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0915\u094d","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0915\u0937","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0e01\u0e33","gloss":"","paradigmId":null},
+        {"lemma":"\u0600\u0661","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0928","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0e01\u0e33\" uses undefined symbols: \u0e01\u0e33","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0600\u0661\" uses undefined symbols: \u0600\u0661","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0928\" uses undefined symbols: \u0928","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "indic, thai and prepend clusters [diacritics on]",
+      "symbols": [
+        {"symbol":"\u0915","capitalSymbol":null},
+        {"symbol":"\u0937","capitalSymbol":null},
+        {"symbol":"\u094d","capitalSymbol":null},
+        {"symbol":"\u093f","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"\u0915\u094d\u0937","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0915\u093f","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0915\u094d","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0915\u0937","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0e01\u0e33","gloss":"","paradigmId":null},
+        {"lemma":"\u0600\u0661","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u0928","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0e01\u0e33\" uses undefined symbols: \u0e01\u0e33","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0600\u0661\" uses undefined symbols: \u0600\u0661","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0928\" uses undefined symbols: \u0928","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "invalid symbol dedupe and message formatting [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"}
+      ],
+      "entries": [
+        {"lemma":"xyx","gloss":"to eat","paradigmId":null},
+        {"lemma":"a,b, c","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\"quoted\"","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"x, y","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u00e9 \u00e9 \u00e9","gloss":"","paradigmId":null},
+        {"lemma":"Entry \"x\" uses","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"${lemma}","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"xyx\" uses undefined symbols: x, y","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a,b, c\" uses undefined symbols: b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\"quoted\"\" uses undefined symbols: q, u, o, t, e, d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"x, y\" uses undefined symbols: x, y","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e9 \u00e9 \u00e9\" uses undefined symbols: \u00e9","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"Entry \"x\" uses\" uses undefined symbols: E, n, t, r, y, x, u, s, e","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"${lemma}\" uses undefined symbols: l, e, m","severity":"warning"}
+        ],
+        "total": 7,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "invalid symbol dedupe and message formatting [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"}
+      ],
+      "entries": [
+        {"lemma":"xyx","gloss":"to eat","paradigmId":null},
+        {"lemma":"a,b, c","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\"quoted\"","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"x, y","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u00e9 \u00e9 \u00e9","gloss":"","paradigmId":null},
+        {"lemma":"Entry \"x\" uses","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"${lemma}","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"xyx\" uses undefined symbols: x, y","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a,b, c\" uses undefined symbols: b, c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\"quoted\"\" uses undefined symbols: q, u, o, t, e, d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"x, y\" uses undefined symbols: x, y","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u00e9 \u00e9 \u00e9\" uses undefined symbols: \u00e9","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"Entry \"x\" uses\" uses undefined symbols: E, n, t, r, y, x, u, s, e","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"${lemma}\" uses undefined symbols: l, e, m","severity":"warning"}
+        ],
+        "total": 7,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "duplicate entries [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"ab","gloss":"to eat","paradigmId":null},
+        {"lemma":"abx","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abx","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"abx","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"ab","gloss":"","paradigmId":null},
+        {"lemma":"ABX","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ABX\" uses undefined symbols: X","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "duplicate entries [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"ab","gloss":"to eat","paradigmId":null},
+        {"lemma":"abx","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"abx","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"abx","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"ab","gloss":"","paradigmId":null},
+        {"lemma":"ABX","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ABX\" uses undefined symbols: X","severity":"warning"}
+        ],
+        "total": 4,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "long lemmas [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"},
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"ch","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc","gloss":"to eat","paradigmId":null},
+        {"lemma":"ab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"ab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011b\" uses undefined symbols: x, \u00e9, \u011b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\" uses undefined symbols: q","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301\" uses undefined symbols: \u00e9","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "long lemmas [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"},
+        {"symbol":"c","capitalSymbol":"C"},
+        {"symbol":"ch","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":"abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc","gloss":"to eat","paradigmId":null},
+        {"lemma":"ab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011b","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301","gloss":"Sun; star / moon","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"ab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011bab-ch x\u00e9\u011b\" uses undefined symbols: x, \u00e9, \u011b","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\" uses undefined symbols: q","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301\" uses undefined symbols: \u00e9","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "variation selectors and joiners [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a\ufe00","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u200d","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u200c","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u034fb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u200d","gloss":"","paradigmId":null},
+        {"lemma":"\ufe0f","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u200da","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\ufe00\" uses undefined symbols: \ufe00","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200c\" uses undefined symbols: \u200c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u034fb\" uses undefined symbols: \u034f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ufe0f\" uses undefined symbols: \ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u200da\" uses undefined symbols: \u200d","severity":"warning"}
+        ],
+        "total": 7,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "variation selectors and joiners [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a\ufe00","gloss":"to eat","paradigmId":null},
+        {"lemma":"a\u200d","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"a\u200c","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"a\u034fb","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u200d","gloss":"","paradigmId":null},
+        {"lemma":"\ufe0f","gloss":"\u212anee","paradigmId":null},
+        {"lemma":"\u200da","gloss":"to\u00a0drink","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\ufe00\" uses undefined symbols: \ufe00","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u200c\" uses undefined symbols: \u200c","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"a\u034fb\" uses undefined symbols: \u034f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u200d\" uses undefined symbols: \u200d","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\ufe0f\" uses undefined symbols: \ufe0f","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u200da\" uses undefined symbols: \u200d","severity":"warning"}
+        ],
+        "total": 7,
+        "matchedIds": [2,5,22,57,58,59,93,94,151]
+      }
+    },
+    {
+      "name": "cyrillic short i and yo [diacritics off]",
+      "symbols": [
+        {"symbol":"\u0438","capitalSymbol":"\u0418"},
+        {"symbol":"\u0439","capitalSymbol":"\u0419"},
+        {"symbol":"\u0435","capitalSymbol":"\u0415"}
+      ],
+      "entries": [
+        {"lemma":"\u0438\u0306","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0439","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0451","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0435\u0308","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0401","gloss":"","paradigmId":null},
+        {"lemma":"\u0419\u0418","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"\u0451\" uses undefined symbols: \u0451","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0435\u0308\" uses undefined symbols: \u0451","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"\u0401\" uses undefined symbols: \u0401","severity":"warning"}
+        ],
+        "total": 3,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "cyrillic short i and yo [diacritics on]",
+      "symbols": [
+        {"symbol":"\u0438","capitalSymbol":"\u0418"},
+        {"symbol":"\u0439","capitalSymbol":"\u0419"},
+        {"symbol":"\u0435","capitalSymbol":"\u0415"}
+      ],
+      "entries": [
+        {"lemma":"\u0438\u0306","gloss":"to eat","paradigmId":null},
+        {"lemma":"\u0439","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"\u0451","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"\u0435\u0308","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"\u0401","gloss":"","paradigmId":null},
+        {"lemma":"\u0419\u0418","gloss":"\u212anee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [],
+        "total": 0,
+        "matchedIds": [2,5,22,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "symbols with surrounding whitespace [diacritics off]",
+      "symbols": [
+        {"symbol":" a","capitalSymbol":null},
+        {"symbol":"b ","capitalSymbol":null},
+        {"symbol":"c","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":" a","gloss":"to eat","paradigmId":null},
+        {"lemma":"a","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"b ","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"cb c","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"  a","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\" uses undefined symbols: a","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "symbols with surrounding whitespace [diacritics on]",
+      "symbols": [
+        {"symbol":" a","capitalSymbol":null},
+        {"symbol":"b ","capitalSymbol":null},
+        {"symbol":"c","capitalSymbol":null}
+      ],
+      "entries": [
+        {"lemma":" a","gloss":"to eat","paradigmId":null},
+        {"lemma":"a","gloss":"big (in size)","paradigmId":null},
+        {"lemma":"b ","gloss":"you (singular)","paradigmId":null},
+        {"lemma":"cb c","gloss":"Sun; star / moon","paradigmId":null},
+        {"lemma":"  a","gloss":"","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"a\" uses undefined symbols: a","severity":"warning"}
+        ],
+        "total": 1,
+        "matchedIds": [2,5,57,58,59,93,151]
+      }
+    },
+    {
+      "name": "paradigms present, missing, empty and null [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"ab","gloss":"","paradigmId":"p1"},
+        {"lemma":"ab","gloss":"","paradigmId":"missing"},
+        {"lemma":"abx","gloss":"","paradigmId":""},
+        {"lemma":"ax","gloss":"","paradigmId":null},
+        {"lemma":"ab","gloss":"","paradigmId":"p3"},
+        {"lemma":"b","gloss":"","paradigmId":"p2"},
+        {"lemma":"b","gloss":"","paradigmId":" p1"},
+        {"lemma":"","gloss":"","paradigmId":"gone"},
+        {"lemma":"x\u0301","gloss":"","paradigmId":"gone"}
+      ],
+      "paradigmIds": ["p1","p2","P3"],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ax\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"x\u0301\" uses undefined symbols: x\u0301","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"ab\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"ab\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"b\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"x\u0301\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": []
+      }
+    },
+    {
+      "name": "paradigms present, missing, empty and null [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"ab","gloss":"","paradigmId":"p1"},
+        {"lemma":"ab","gloss":"","paradigmId":"missing"},
+        {"lemma":"abx","gloss":"","paradigmId":""},
+        {"lemma":"ax","gloss":"","paradigmId":null},
+        {"lemma":"ab","gloss":"","paradigmId":"p3"},
+        {"lemma":"b","gloss":"","paradigmId":"p2"},
+        {"lemma":"b","gloss":"","paradigmId":" p1"},
+        {"lemma":"","gloss":"","paradigmId":"gone"},
+        {"lemma":"x\u0301","gloss":"","paradigmId":"gone"}
+      ],
+      "paradigmIds": ["p1","p2","P3"],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"abx\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"ax\" uses undefined symbols: x","severity":"warning"},
+          {"type":"undefined_symbol","message":"Entry \"x\u0301\" uses undefined symbols: x\u0301","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"ab\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"ab\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"b\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"\" references a missing paradigm","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"x\u0301\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 8,
+        "matchedIds": []
+      }
+    },
+    {
+      "name": "duplicated paradigm ids [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a","gloss":"","paradigmId":"x"},
+        {"lemma":"b","gloss":"","paradigmId":"z"},
+        {"lemma":"c","gloss":"","paradigmId":""}
+      ],
+      "paradigmIds": ["x","x","y",""],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"c\" uses undefined symbols: c","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"b\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": []
+      }
+    },
+    {
+      "name": "duplicated paradigm ids [diacritics on]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"},
+        {"symbol":"b","capitalSymbol":"B"}
+      ],
+      "entries": [
+        {"lemma":"a","gloss":"","paradigmId":"x"},
+        {"lemma":"b","gloss":"","paradigmId":"z"},
+        {"lemma":"c","gloss":"","paradigmId":""}
+      ],
+      "paradigmIds": ["x","x","y",""],
+      "allowsDiacritics": true,
+      "expected": {
+        "warnings": [
+          {"type":"undefined_symbol","message":"Entry \"c\" uses undefined symbols: c","severity":"warning"},
+          {"type":"missing_paradigm","message":"Entry \"b\" references a missing paradigm","severity":"warning"}
+        ],
+        "total": 2,
+        "matchedIds": []
+      }
+    },
+    {
+      "name": "swadesh gloss shapes [diacritics off]",
+      "symbols": [
+        {"symbol":"a","capitalSymbol":"A"}
+      ],
+      "entries": [
+        {"lemma":"","gloss":"to eat","paradigmId":null},
+        {"lemma":"","gloss":"BIG, large","paradigmId":null},
+        {"lemma":"","gloss":"you","paradigmId":null},
+        {"lemma":"","gloss":"(hand)","paradigmId":null},
+        {"lemma":"","gloss":"foot (body part)","paradigmId":null},
+        {"lemma":"","gloss":"to\tdrink","paradigmId":null},
+        {"lemma":"","gloss":"toswim","paradigmId":null},
+        {"lemma":"","gloss":"fly/fly","paradigmId":null},
+        {"lemma":"","gloss":"\u0130","paradigmId":null},
+        {"lemma":"","gloss":"worm (earth); snake","paradigmId":null},
+        {"lemma":"","gloss":"to (x) see","paradigmId":null},
+        {"lemma":"","gloss":"knee","paradigmId":null}
+      ],
+      "paradigmIds": [],
+      "allowsDiacritics": false,
+      "expected": {
+        "warnings": [],
+        "total": 0,
+        "matchedIds": [2,5,21,22,75,76,77,93,94,103,121,151]
+      }
+    }
+  ]
+}

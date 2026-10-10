@@ -12,6 +12,7 @@ import { prisma } from "./prisma"
 import { isAdmin } from "@/lib/admin"
 import type { LanguagePermission } from "@/lib/permissions"
 import { requestCache } from "@/lib/request-cache"
+import { isUserSuspended } from "@/lib/suspension"
 export { EDITOR_DEFAULT_PERMISSIONS, FULL_EDITOR_PERMISSIONS } from "@/lib/permissions"
 export type { LanguagePermission } from "@/lib/permissions"
 
@@ -23,14 +24,9 @@ export type { LanguagePermission } from "@/lib/permissions"
 export const getUserId = requestCache(async function getUserId(): Promise<string | null> {
   const session = await auth()
   if (session?.user?.id) {
-    // Check if user is suspended
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isSuspended: true },
-    })
-    if (user?.isSuspended) {
-      return null
-    }
+    // `auth()` already drops suspended sessions; checked again (same cached lookup) so this
+    // stays true wherever `auth` is replaced, e.g. in tests.
+    if (await isUserSuspended(session.user.id)) return null
     return session.user.id
   }
   if (process.env.DEV_MODE === "true") {

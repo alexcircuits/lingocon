@@ -25,8 +25,9 @@ import {
     Check,
     Delete,
 } from "lucide-react"
-import { updateLanguage } from "@/app/actions/language"
+import { updateLanguageMetadata } from "@/app/actions/language"
 import { IPAKeyboard } from "@/components/ipa-keyboard"
+import { useStudioAccess } from "@/components/studio-access"
 import {
     IPA_CONSONANT_MAP,
     VOWEL_HEIGHTS,
@@ -36,18 +37,24 @@ import {
     getPhonemeKind,
     buildConsonantChart,
 } from "@/lib/data/ipa-data"
-import { languageMetadataSchema } from "@/lib/validations/language"
-import type { Language, ScriptSymbol } from "@prisma/client"
+import type { LanguageMetadata } from "@/lib/validations/language"
 
+/** The metadata keys this editor owns (and the only ones it writes). */
+export type PhonologyMetadata = Pick<LanguageMetadata, "syllableStructure" | "allophonyRules" | "phonologyOverride">
 
 interface PhonologyViewProps {
-    language: Language
-    symbols: ScriptSymbol[]
+    languageId: string
+    /** Parsed once on the server (tolerant of legacy invalid fields). */
+    metadata: PhonologyMetadata
+    /** IPA values of the alphabet's script symbols, in alphabet order. */
+    symbolIpas: string[]
 }
 
-export function PhonologyView({ language, symbols }: PhonologyViewProps) {
+export function PhonologyView({ languageId, metadata, symbolIpas }: PhonologyViewProps) {
     const t = useTranslations("studio.phonology")
-    const metadata = languageMetadataSchema.parse(language.metadata ?? {})
+    // Visitors without the phonology scope see the charts and rules read-only: no inventory
+    // editing, reset or save (the server would refuse the metadata patch).
+    const canEdit = useStudioAccess().canWrite("write:phonology")
     const [syllableStructure, setSyllableStructure] = useState(metadata.syllableStructure ?? "")
     const [allophonyRules, setAllophonyRules] = useState(metadata.allophonyRules ?? "")
     const [isSaving, setIsSaving] = useState(false)
@@ -69,9 +76,9 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             ...Object.keys(IPA_VOWEL_MAP),
         ].sort((a, b) => b.length - a.length)
 
-        symbols.forEach((s) => {
-            if (s.ipa) {
-                const cleaned = s.ipa.replace(/[\/\[\]]/g, "").trim()
+        symbolIpas.forEach((ipa) => {
+            if (ipa) {
+                const cleaned = ipa.replace(/[\/\[\]]/g, "").trim()
                 if (IPA_CONSONANT_MAP[cleaned] || IPA_VOWEL_MAP[cleaned]) {
                     ipas.add(cleaned)
                 } else {
@@ -94,7 +101,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             }
         })
         return ipas
-    }, [symbols])
+    }, [symbolIpas])
 
     // Determine effective phoneme sets based on override
     const ipaSymbols = useMemo(() => {
@@ -173,16 +180,14 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            const result = await updateLanguage({
-                id: language.id,
-                metadata: {
-                    ...metadata,
-                    syllableStructure,
-                    allophonyRules,
-                    phonologyOverride: overrideEnabled
-                        ? { enabled: true, consonants: customConsonants, vowels: customVowels }
-                        : { enabled: false },
-                },
+            // Only the keys this editor owns, merged server-side: sending the whole snapshot from
+            // page load put back older sound-change rules and settings saved elsewhere since.
+            const result = await updateLanguageMetadata(languageId, {
+                syllableStructure,
+                allophonyRules,
+                phonologyOverride: overrideEnabled
+                    ? { enabled: true, consonants: customConsonants, vowels: customVowels }
+                    : { enabled: false },
             })
             if (result && 'error' in result) {
                 toast.error(result.error)
@@ -227,39 +232,41 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                         </Badge>
                     )}
                 </div>
-                <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
-                    {!isEditing ? (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleStartEditing}
-                            className="gap-2 w-full sm:w-auto"
-                        >
-                            <Pencil className="h-3.5 w-3.5" />
-                            {t("editInventory")}
-                        </Button>
-                    ) : (
-                        <>
+                {canEdit && (
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
+                        {!isEditing ? (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={handleResetToAuto}
-                                className="gap-2 text-muted-foreground w-full sm:w-auto"
+                                onClick={handleStartEditing}
+                                className="gap-2 w-full sm:w-auto"
                             >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                                {t("resetToAuto")}
+                                <Pencil className="h-3.5 w-3.5" />
+                                {t("editInventory")}
                             </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsEditing(false)}
-                                className="w-full sm:w-auto"
-                            >
-                                {t("doneEditing")}
-                            </Button>
-                        </>
-                    )}
-                </div>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleResetToAuto}
+                                    className="gap-2 text-muted-foreground w-full sm:w-auto"
+                                >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                    {t("resetToAuto")}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsEditing(false)}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {t("doneEditing")}
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             {isEditing && (
@@ -534,6 +541,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             value={syllableStructure}
                             onChange={(e) => setSyllableStructure(e.target.value)}
                             placeholder={t("syllablePlaceholder")}
+                            readOnly={!canEdit}
                             className="font-mono"
                         />
                         <p className="text-xs text-muted-foreground">
@@ -558,6 +566,7 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
                             value={allophonyRules}
                             onChange={(e) => setAllophonyRules(e.target.value)}
                             placeholder={`/t/ → [tʰ] / #_V  (aspiration word-initially before vowels)\n/s/ → [z] / V_V  (voicing between vowels)\n/n/ → [ŋ] / _k  (place assimilation before velars)`}
+                            readOnly={!canEdit}
                             className="font-mono text-sm min-h-[120px]"
                             rows={5}
                         />
@@ -569,12 +578,14 @@ export function PhonologyView({ language, symbols }: PhonologyViewProps) {
             </Card>
 
             {/* Save Button */}
-            <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
-                    <Save className="h-4 w-4" />
-                    {isSaving ? t("savingPhonology") : t("savePhonology")}
-                </Button>
-            </div>
+            {canEdit && (
+                <div className="flex justify-end">
+                    <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
+                        <Save className="h-4 w-4" />
+                        {isSaving ? t("savingPhonology") : t("savePhonology")}
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

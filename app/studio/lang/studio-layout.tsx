@@ -7,35 +7,43 @@ import { Button } from "@/components/ui/button"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { cn } from "@/lib/utils"
 import { ExternalLink, Menu } from "lucide-react"
-import type { Language } from "@prisma/client"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { StudioSidebar, StudioNavContent } from "@/components/studio-sidebar"
+import { StudioFreshness } from "@/components/studio-freshness"
+import { StudioAccessProvider, sectionPermission } from "@/components/studio-access"
+import { Eye } from "lucide-react"
 import { STUDIO_TABS, tabHref, isTabActive, getActiveTab, type ModuleNavTab } from "@/lib/studio-nav"
 import { useState } from "react"
 
-interface StudioLayoutProps {
-  language: Language & {
-    owner: {
-      id: string
-      name: string | null
-    }
-    _count?: {
-      scriptSymbols: number
-      grammarPages: number
-      dictionaryEntries: number
-      paradigms: number
-      articles?: number
-      texts?: number
-    }
+/** The language fields the studio shell renders — nothing private or large. */
+export interface StudioShellLanguage {
+  id: string
+  name: string
+  slug: string
+  visibility: "PUBLIC" | "UNLISTED" | "PRIVATE"
+  updatedAt: Date
+  _count?: {
+    scriptSymbols: number
+    grammarPages: number
+    dictionaryEntries: number
+    paradigms: number
+    articles?: number
+    texts?: number
   }
+}
+
+interface StudioLayoutProps {
+  language: StudioShellLanguage
   /** Studio-panel tabs contributed by the user's enabled modules. */
   moduleTabs?: ModuleNavTab[]
   userPermissions?: string[]
   isOwner?: boolean
+  /** Owner or admin: may edit every section (owner-only actions still need isOwner). */
+  hasFullAccess?: boolean
   children: React.ReactNode
 }
 
-export function StudioLayout({ language, moduleTabs = [], userPermissions = [], isOwner = false, children }: StudioLayoutProps) {
+export function StudioLayout({ language, moduleTabs = [], userPermissions = [], isOwner = false, hasFullAccess = false, children }: StudioLayoutProps) {
   const pathname = usePathname()
   const tTabs = useTranslations("studio.tabs")
   const tNav = useTranslations("nav")
@@ -44,6 +52,9 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const activeTab = getActiveTab(pathname, basePath)
+  const fullAccess = isOwner || hasFullAccess
+  const requiredPermission = sectionPermission(pathname)
+  const viewOnly = requiredPermission !== null && !fullAccess && !userPermissions.includes(requiredPermission)
   const activeModuleTab = moduleTabs.find((t) => pathname === t.href)
   const activeTabLabel = activeTab ? tTabs(activeTab.i18nKey) : undefined
   const activeName = activeModuleTab?.name ?? activeTabLabel
@@ -51,6 +62,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
 
   return (
     <div className="flex h-screen supports-[height:100dvh]:h-dvh flex-col bg-background overflow-hidden">
+      <StudioFreshness />
       {/* Top Bar */}
       <header className="z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shrink-0">
         <div className="container-fluid mx-auto flex h-14 items-center justify-between gap-2 px-4">
@@ -69,7 +81,7 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
                   basePath={basePath}
                   moduleTabs={moduleTabs}
                   userPermissions={userPermissions}
-                  isOwner={isOwner}
+                  isOwner={fullAccess}
                   onNavigate={() => setMobileOpen(false)}
                 />
               </SheetContent>
@@ -99,24 +111,49 @@ export function StudioLayout({ language, moduleTabs = [], userPermissions = [], 
             />
           </div>
 
-          <Link href={`/lang/${language.slug}`} target="_blank" className="shrink-0">
-            <Button variant="outline" size="sm" className="h-8 border-border/60 bg-background/50 hover:bg-background hover:shadow-sm transition-all">
-              <ExternalLink className="mr-2 h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tLayout("viewPublic")}</span>
-              <span className="sm:hidden">{tLayout("view")}</span>
-            </Button>
-          </Link>
+          {language.visibility === "PRIVATE" ? (
+            // Public pages 404 for private projects; don't offer a dead link.
+            <span className="shrink-0" title={tLayout("privateNoPublicPage")}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                aria-label={`${tLayout("viewPublic")}: ${tLayout("privateNoPublicPage")}`}
+                className="h-8 border-border/60 bg-background/50"
+              >
+                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tLayout("viewPublic")}</span>
+                <span className="sm:hidden">{tLayout("view")}</span>
+              </Button>
+            </span>
+          ) : (
+            <Link href={`/lang/${language.slug}`} target="_blank" className="shrink-0">
+              <Button variant="outline" size="sm" className="h-8 border-border/60 bg-background/50 hover:bg-background hover:shadow-sm transition-all">
+                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tLayout("viewPublic")}</span>
+                <span className="sm:hidden">{tLayout("view")}</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Desktop */}
-        <StudioSidebar language={language} basePath={basePath} moduleTabs={moduleTabs} userPermissions={userPermissions} isOwner={isOwner} />
+        <StudioSidebar language={language} basePath={basePath} moduleTabs={moduleTabs} userPermissions={userPermissions} isOwner={fullAccess} />
 
         {/* Main Content Area */}
         <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden bg-background relative scroll-smooth thin-scrollbar">
           <div className="container mx-auto p-4 md:p-8 max-w-6xl">
-            {children}
+            {viewOnly && (
+              <p role="note" className="mb-4 flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                <Eye className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {tLayout("viewOnly")}
+              </p>
+            )}
+            <StudioAccessProvider value={{ isOwner, fullAccess, permissions: userPermissions }}>
+              {children}
+            </StudioAccessProvider>
           </div>
         </main>
       </div>

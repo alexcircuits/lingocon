@@ -1,0 +1,1358 @@
+{
+  "generatedBy": "scripts/rust-parity/generate-lexicon-fixtures.ts",
+  "list": [
+    {"id":1,"english":"I","category":"Pronouns"},
+    {"id":2,"english":"you (singular)","category":"Pronouns"},
+    {"id":3,"english":"he","category":"Pronouns"},
+    {"id":4,"english":"we","category":"Pronouns"},
+    {"id":5,"english":"you (plural)","category":"Pronouns"},
+    {"id":6,"english":"they","category":"Pronouns"},
+    {"id":7,"english":"this","category":"Pronouns"},
+    {"id":8,"english":"that","category":"Pronouns"},
+    {"id":9,"english":"who","category":"Pronouns"},
+    {"id":10,"english":"what","category":"Pronouns"},
+    {"id":11,"english":"head","category":"Body"},
+    {"id":12,"english":"hair","category":"Body"},
+    {"id":13,"english":"eye","category":"Body"},
+    {"id":14,"english":"ear","category":"Body"},
+    {"id":15,"english":"nose","category":"Body"},
+    {"id":16,"english":"mouth","category":"Body"},
+    {"id":17,"english":"tooth","category":"Body"},
+    {"id":18,"english":"tongue","category":"Body"},
+    {"id":19,"english":"neck","category":"Body"},
+    {"id":20,"english":"hand","category":"Body"},
+    {"id":21,"english":"foot","category":"Body"},
+    {"id":22,"english":"knee","category":"Body"},
+    {"id":23,"english":"belly","category":"Body"},
+    {"id":24,"english":"breast","category":"Body"},
+    {"id":25,"english":"back","category":"Body"},
+    {"id":26,"english":"arm","category":"Body"},
+    {"id":27,"english":"leg","category":"Body"},
+    {"id":28,"english":"skin","category":"Body"},
+    {"id":29,"english":"bone","category":"Body"},
+    {"id":30,"english":"blood","category":"Body"},
+    {"id":31,"english":"heart","category":"Body"},
+    {"id":32,"english":"liver","category":"Body"},
+    {"id":33,"english":"nail","category":"Body"},
+    {"id":34,"english":"horn","category":"Body"},
+    {"id":35,"english":"tail","category":"Body"},
+    {"id":36,"english":"feather","category":"Body"},
+    {"id":37,"english":"egg","category":"Body"},
+    {"id":38,"english":"water","category":"Nature"},
+    {"id":39,"english":"fire","category":"Nature"},
+    {"id":40,"english":"earth","category":"Nature"},
+    {"id":41,"english":"stone","category":"Nature"},
+    {"id":42,"english":"sand","category":"Nature"},
+    {"id":43,"english":"mountain","category":"Nature"},
+    {"id":44,"english":"river","category":"Nature"},
+    {"id":45,"english":"lake","category":"Nature"},
+    {"id":46,"english":"sea","category":"Nature"},
+    {"id":47,"english":"salt","category":"Nature"},
+    {"id":48,"english":"rain","category":"Nature"},
+    {"id":49,"english":"snow","category":"Nature"},
+    {"id":50,"english":"ice","category":"Nature"},
+    {"id":51,"english":"smoke","category":"Nature"},
+    {"id":52,"english":"ash","category":"Nature"},
+    {"id":53,"english":"cloud","category":"Nature"},
+    {"id":54,"english":"fog","category":"Nature"},
+    {"id":55,"english":"sky","category":"Nature"},
+    {"id":56,"english":"wind","category":"Nature"},
+    {"id":57,"english":"sun","category":"Nature"},
+    {"id":58,"english":"moon","category":"Nature"},
+    {"id":59,"english":"star","category":"Nature"},
+    {"id":60,"english":"tree","category":"Nature"},
+    {"id":61,"english":"flower","category":"Nature"},
+    {"id":62,"english":"grass","category":"Nature"},
+    {"id":63,"english":"root","category":"Nature"},
+    {"id":64,"english":"bark","category":"Nature"},
+    {"id":65,"english":"leaf","category":"Nature"},
+    {"id":66,"english":"seed","category":"Nature"},
+    {"id":67,"english":"forest","category":"Nature"},
+    {"id":68,"english":"path","category":"Nature"},
+    {"id":69,"english":"dust","category":"Nature"},
+    {"id":70,"english":"mud","category":"Nature"},
+    {"id":71,"english":"dog","category":"Animals"},
+    {"id":72,"english":"fish","category":"Animals"},
+    {"id":73,"english":"bird","category":"Animals"},
+    {"id":74,"english":"louse","category":"Animals"},
+    {"id":75,"english":"snake","category":"Animals"},
+    {"id":76,"english":"worm","category":"Animals"},
+    {"id":77,"english":"fly","category":"Animals"},
+    {"id":78,"english":"animal","category":"Animals"},
+    {"id":79,"english":"red","category":"Colors"},
+    {"id":80,"english":"green","category":"Colors"},
+    {"id":81,"english":"yellow","category":"Colors"},
+    {"id":82,"english":"white","category":"Colors"},
+    {"id":83,"english":"black","category":"Colors"},
+    {"id":84,"english":"one","category":"Numbers"},
+    {"id":85,"english":"two","category":"Numbers"},
+    {"id":86,"english":"three","category":"Numbers"},
+    {"id":87,"english":"four","category":"Numbers"},
+    {"id":88,"english":"five","category":"Numbers"},
+    {"id":89,"english":"many","category":"Numbers"},
+    {"id":90,"english":"all","category":"Numbers"},
+    {"id":91,"english":"few","category":"Numbers"},
+    {"id":92,"english":"other","category":"Numbers"},
+    {"id":93,"english":"eat","category":"Actions"},
+    {"id":94,"english":"drink","category":"Actions"},
+    {"id":95,"english":"bite","category":"Actions"},
+    {"id":96,"english":"suck","category":"Actions"},
+    {"id":97,"english":"spit","category":"Actions"},
+    {"id":98,"english":"vomit","category":"Actions"},
+    {"id":99,"english":"blow","category":"Actions"},
+    {"id":100,"english":"breathe","category":"Actions"},
+    {"id":101,"english":"laugh","category":"Actions"},
+    {"id":102,"english":"cry","category":"Actions"},
+    {"id":103,"english":"see","category":"Actions"},
+    {"id":104,"english":"hear","category":"Actions"},
+    {"id":105,"english":"know","category":"Actions"},
+    {"id":106,"english":"think","category":"Actions"},
+    {"id":107,"english":"smell","category":"Actions"},
+    {"id":108,"english":"fear","category":"Actions"},
+    {"id":109,"english":"sleep","category":"Actions"},
+    {"id":110,"english":"die","category":"Actions"},
+    {"id":111,"english":"live","category":"Actions"},
+    {"id":112,"english":"kill","category":"Actions"},
+    {"id":113,"english":"fight","category":"Actions"},
+    {"id":114,"english":"hunt","category":"Actions"},
+    {"id":115,"english":"hit","category":"Actions"},
+    {"id":116,"english":"cut","category":"Actions"},
+    {"id":117,"english":"stab","category":"Actions"},
+    {"id":118,"english":"scratch","category":"Actions"},
+    {"id":119,"english":"dig","category":"Actions"},
+    {"id":120,"english":"swim","category":"Actions"},
+    {"id":121,"english":"fly","category":"Actions"},
+    {"id":122,"english":"walk","category":"Actions"},
+    {"id":123,"english":"come","category":"Actions"},
+    {"id":124,"english":"lie","category":"Actions"},
+    {"id":125,"english":"sit","category":"Actions"},
+    {"id":126,"english":"stand","category":"Actions"},
+    {"id":127,"english":"turn","category":"Actions"},
+    {"id":128,"english":"fall","category":"Actions"},
+    {"id":129,"english":"give","category":"Actions"},
+    {"id":130,"english":"hold","category":"Actions"},
+    {"id":131,"english":"squeeze","category":"Actions"},
+    {"id":132,"english":"rub","category":"Actions"},
+    {"id":133,"english":"wash","category":"Actions"},
+    {"id":134,"english":"wipe","category":"Actions"},
+    {"id":135,"english":"pull","category":"Actions"},
+    {"id":136,"english":"push","category":"Actions"},
+    {"id":137,"english":"throw","category":"Actions"},
+    {"id":138,"english":"tie","category":"Actions"},
+    {"id":139,"english":"sew","category":"Actions"},
+    {"id":140,"english":"count","category":"Actions"},
+    {"id":141,"english":"say","category":"Actions"},
+    {"id":142,"english":"sing","category":"Actions"},
+    {"id":143,"english":"play","category":"Actions"},
+    {"id":144,"english":"float","category":"Actions"},
+    {"id":145,"english":"flow","category":"Actions"},
+    {"id":146,"english":"freeze","category":"Actions"},
+    {"id":147,"english":"swell","category":"Actions"},
+    {"id":148,"english":"burn","category":"Actions"},
+    {"id":149,"english":"cook","category":"Actions"},
+    {"id":150,"english":"split","category":"Actions"},
+    {"id":151,"english":"big","category":"Descriptors"},
+    {"id":152,"english":"small","category":"Descriptors"},
+    {"id":153,"english":"long","category":"Descriptors"},
+    {"id":154,"english":"short","category":"Descriptors"},
+    {"id":155,"english":"wide","category":"Descriptors"},
+    {"id":156,"english":"narrow","category":"Descriptors"},
+    {"id":157,"english":"thick","category":"Descriptors"},
+    {"id":158,"english":"thin","category":"Descriptors"},
+    {"id":159,"english":"warm","category":"Descriptors"},
+    {"id":160,"english":"cold","category":"Descriptors"},
+    {"id":161,"english":"full","category":"Descriptors"},
+    {"id":162,"english":"new","category":"Descriptors"},
+    {"id":163,"english":"old","category":"Descriptors"},
+    {"id":164,"english":"good","category":"Descriptors"},
+    {"id":165,"english":"bad","category":"Descriptors"},
+    {"id":166,"english":"round","category":"Descriptors"},
+    {"id":167,"english":"dry","category":"Descriptors"},
+    {"id":168,"english":"wet","category":"Descriptors"},
+    {"id":169,"english":"right","category":"Descriptors"},
+    {"id":170,"english":"smooth","category":"Descriptors"},
+    {"id":171,"english":"sharp","category":"Descriptors"},
+    {"id":172,"english":"dull","category":"Descriptors"},
+    {"id":173,"english":"dirty","category":"Descriptors"},
+    {"id":174,"english":"straight","category":"Descriptors"},
+    {"id":175,"english":"heavy","category":"Descriptors"},
+    {"id":176,"english":"rotten","category":"Descriptors"},
+    {"id":177,"english":"correct","category":"Descriptors"},
+    {"id":178,"english":"near","category":"Spatial"},
+    {"id":179,"english":"far","category":"Spatial"},
+    {"id":180,"english":"right","category":"Spatial"},
+    {"id":181,"english":"left","category":"Spatial"},
+    {"id":182,"english":"at","category":"Spatial"},
+    {"id":183,"english":"in","category":"Spatial"},
+    {"id":184,"english":"with","category":"Spatial"},
+    {"id":185,"english":"and","category":"Spatial"},
+    {"id":186,"english":"if","category":"Spatial"},
+    {"id":187,"english":"because","category":"Spatial"},
+    {"id":188,"english":"not","category":"Spatial"},
+    {"id":189,"english":"here","category":"Spatial"},
+    {"id":190,"english":"there","category":"Spatial"},
+    {"id":191,"english":"where","category":"Spatial"},
+    {"id":192,"english":"when","category":"Spatial"},
+    {"id":193,"english":"how","category":"Spatial"},
+    {"id":194,"english":"name","category":"Other"},
+    {"id":195,"english":"man","category":"Other"},
+    {"id":196,"english":"woman","category":"Other"},
+    {"id":197,"english":"person","category":"Other"},
+    {"id":198,"english":"child","category":"Other"},
+    {"id":199,"english":"wife","category":"Other"},
+    {"id":200,"english":"husband","category":"Other"},
+    {"id":201,"english":"mother","category":"Other"},
+    {"id":202,"english":"father","category":"Other"},
+    {"id":203,"english":"night","category":"Other"},
+    {"id":204,"english":"day","category":"Other"},
+    {"id":205,"english":"year","category":"Other"},
+    {"id":206,"english":"rope","category":"Other"},
+    {"id":207,"english":"road","category":"Other"}
+  ],
+  "glossCases": [
+    {
+      "gloss": "eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "Eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "EAT",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "To Eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to  eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to\teat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to\u00a0eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to\u3000eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "toeat",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to ",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to eat ",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "  eat  ",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "\ufeffeat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "eat\ufeff",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "eat\u0085",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u0085eat",
+      "matchedIds": []
+    },
+    {
+      "gloss": "eat\u2028",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "eat\u180e",
+      "matchedIds": []
+    },
+    {
+      "gloss": "eat\u200b",
+      "matchedIds": []
+    },
+    {
+      "gloss": "eat\u000b",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "eat\r\n",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "big (in size)",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "(big)",
+      "matchedIds": []
+    },
+    {
+      "gloss": "big(",
+      "matchedIds": []
+    },
+    {
+      "gloss": "big)",
+      "matchedIds": []
+    },
+    {
+      "gloss": "b(i)g",
+      "matchedIds": []
+    },
+    {
+      "gloss": "(x) big",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big (a, b)",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big, large",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big; large",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big/large",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big,large",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "big ,  large",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "sun; star / moon",
+      "matchedIds": [57,58,59]
+    },
+    {
+      "gloss": "you",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "you (singular)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "You (Singular)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "you (plural)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "you(singular)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "you ( singular )",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "you (sg)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "thou, you",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "(you)",
+      "matchedIds": []
+    },
+    {
+      "gloss": "I",
+      "matchedIds": [1]
+    },
+    {
+      "gloss": "i",
+      "matchedIds": [1]
+    },
+    {
+      "gloss": "\u0130",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u0131",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u212anee",
+      "matchedIds": [22]
+    },
+    {
+      "gloss": "KNEE",
+      "matchedIds": [22]
+    },
+    {
+      "gloss": "to be big (of size)",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to (be) eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to (x) eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "(to) eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to to eat",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to, eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to; eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "right",
+      "matchedIds": [169,180]
+    },
+    {
+      "gloss": "Right side",
+      "matchedIds": []
+    },
+    {
+      "gloss": "near/far",
+      "matchedIds": [178,179]
+    },
+    {
+      "gloss": "",
+      "matchedIds": []
+    },
+    {
+      "gloss": "  ",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u03a3\u0391\u03a3",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u03c3\u03b1\u03c2",
+      "matchedIds": []
+    },
+    {
+      "gloss": "\u043c\u0430\u0442\u044c",
+      "matchedIds": []
+    },
+    {
+      "gloss": "mother-in-law",
+      "matchedIds": []
+    },
+    {
+      "gloss": "mother (biological), mom",
+      "matchedIds": [201]
+    },
+    {
+      "gloss": "father/dad;papa",
+      "matchedIds": [202]
+    },
+    {
+      "gloss": "hand\u0301",
+      "matchedIds": []
+    },
+    {
+      "gloss": "worm (earth)",
+      "matchedIds": [76]
+    },
+    {
+      "gloss": "dust",
+      "matchedIds": [69]
+    },
+    {
+      "gloss": "snake (any)",
+      "matchedIds": [75]
+    },
+    {
+      "gloss": "((eat))",
+      "matchedIds": []
+    },
+    {
+      "gloss": "(eat)) eat",
+      "matchedIds": []
+    },
+    {
+      "gloss": "eat (",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to\u2028eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "to\u0085eat",
+      "matchedIds": []
+    },
+    {
+      "gloss": "to\ufeffeat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "I",
+      "matchedIds": [1]
+    },
+    {
+      "gloss": "you (singular)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "he",
+      "matchedIds": [3]
+    },
+    {
+      "gloss": "we",
+      "matchedIds": [4]
+    },
+    {
+      "gloss": "you (plural)",
+      "matchedIds": [2,5]
+    },
+    {
+      "gloss": "they",
+      "matchedIds": [6]
+    },
+    {
+      "gloss": "this",
+      "matchedIds": [7]
+    },
+    {
+      "gloss": "that",
+      "matchedIds": [8]
+    },
+    {
+      "gloss": "who",
+      "matchedIds": [9]
+    },
+    {
+      "gloss": "what",
+      "matchedIds": [10]
+    },
+    {
+      "gloss": "head",
+      "matchedIds": [11]
+    },
+    {
+      "gloss": "hair",
+      "matchedIds": [12]
+    },
+    {
+      "gloss": "eye",
+      "matchedIds": [13]
+    },
+    {
+      "gloss": "ear",
+      "matchedIds": [14]
+    },
+    {
+      "gloss": "nose",
+      "matchedIds": [15]
+    },
+    {
+      "gloss": "mouth",
+      "matchedIds": [16]
+    },
+    {
+      "gloss": "tooth",
+      "matchedIds": [17]
+    },
+    {
+      "gloss": "tongue",
+      "matchedIds": [18]
+    },
+    {
+      "gloss": "neck",
+      "matchedIds": [19]
+    },
+    {
+      "gloss": "hand",
+      "matchedIds": [20]
+    },
+    {
+      "gloss": "foot",
+      "matchedIds": [21]
+    },
+    {
+      "gloss": "knee",
+      "matchedIds": [22]
+    },
+    {
+      "gloss": "belly",
+      "matchedIds": [23]
+    },
+    {
+      "gloss": "breast",
+      "matchedIds": [24]
+    },
+    {
+      "gloss": "back",
+      "matchedIds": [25]
+    },
+    {
+      "gloss": "arm",
+      "matchedIds": [26]
+    },
+    {
+      "gloss": "leg",
+      "matchedIds": [27]
+    },
+    {
+      "gloss": "skin",
+      "matchedIds": [28]
+    },
+    {
+      "gloss": "bone",
+      "matchedIds": [29]
+    },
+    {
+      "gloss": "blood",
+      "matchedIds": [30]
+    },
+    {
+      "gloss": "heart",
+      "matchedIds": [31]
+    },
+    {
+      "gloss": "liver",
+      "matchedIds": [32]
+    },
+    {
+      "gloss": "nail",
+      "matchedIds": [33]
+    },
+    {
+      "gloss": "horn",
+      "matchedIds": [34]
+    },
+    {
+      "gloss": "tail",
+      "matchedIds": [35]
+    },
+    {
+      "gloss": "feather",
+      "matchedIds": [36]
+    },
+    {
+      "gloss": "egg",
+      "matchedIds": [37]
+    },
+    {
+      "gloss": "water",
+      "matchedIds": [38]
+    },
+    {
+      "gloss": "fire",
+      "matchedIds": [39]
+    },
+    {
+      "gloss": "earth",
+      "matchedIds": [40]
+    },
+    {
+      "gloss": "stone",
+      "matchedIds": [41]
+    },
+    {
+      "gloss": "sand",
+      "matchedIds": [42]
+    },
+    {
+      "gloss": "mountain",
+      "matchedIds": [43]
+    },
+    {
+      "gloss": "river",
+      "matchedIds": [44]
+    },
+    {
+      "gloss": "lake",
+      "matchedIds": [45]
+    },
+    {
+      "gloss": "sea",
+      "matchedIds": [46]
+    },
+    {
+      "gloss": "salt",
+      "matchedIds": [47]
+    },
+    {
+      "gloss": "rain",
+      "matchedIds": [48]
+    },
+    {
+      "gloss": "snow",
+      "matchedIds": [49]
+    },
+    {
+      "gloss": "ice",
+      "matchedIds": [50]
+    },
+    {
+      "gloss": "smoke",
+      "matchedIds": [51]
+    },
+    {
+      "gloss": "ash",
+      "matchedIds": [52]
+    },
+    {
+      "gloss": "cloud",
+      "matchedIds": [53]
+    },
+    {
+      "gloss": "fog",
+      "matchedIds": [54]
+    },
+    {
+      "gloss": "sky",
+      "matchedIds": [55]
+    },
+    {
+      "gloss": "wind",
+      "matchedIds": [56]
+    },
+    {
+      "gloss": "sun",
+      "matchedIds": [57]
+    },
+    {
+      "gloss": "moon",
+      "matchedIds": [58]
+    },
+    {
+      "gloss": "star",
+      "matchedIds": [59]
+    },
+    {
+      "gloss": "tree",
+      "matchedIds": [60]
+    },
+    {
+      "gloss": "flower",
+      "matchedIds": [61]
+    },
+    {
+      "gloss": "grass",
+      "matchedIds": [62]
+    },
+    {
+      "gloss": "root",
+      "matchedIds": [63]
+    },
+    {
+      "gloss": "bark",
+      "matchedIds": [64]
+    },
+    {
+      "gloss": "leaf",
+      "matchedIds": [65]
+    },
+    {
+      "gloss": "seed",
+      "matchedIds": [66]
+    },
+    {
+      "gloss": "forest",
+      "matchedIds": [67]
+    },
+    {
+      "gloss": "path",
+      "matchedIds": [68]
+    },
+    {
+      "gloss": "dust",
+      "matchedIds": [69]
+    },
+    {
+      "gloss": "mud",
+      "matchedIds": [70]
+    },
+    {
+      "gloss": "dog",
+      "matchedIds": [71]
+    },
+    {
+      "gloss": "fish",
+      "matchedIds": [72]
+    },
+    {
+      "gloss": "bird",
+      "matchedIds": [73]
+    },
+    {
+      "gloss": "louse",
+      "matchedIds": [74]
+    },
+    {
+      "gloss": "snake",
+      "matchedIds": [75]
+    },
+    {
+      "gloss": "worm",
+      "matchedIds": [76]
+    },
+    {
+      "gloss": "fly",
+      "matchedIds": [77,121]
+    },
+    {
+      "gloss": "animal",
+      "matchedIds": [78]
+    },
+    {
+      "gloss": "red",
+      "matchedIds": [79]
+    },
+    {
+      "gloss": "green",
+      "matchedIds": [80]
+    },
+    {
+      "gloss": "yellow",
+      "matchedIds": [81]
+    },
+    {
+      "gloss": "white",
+      "matchedIds": [82]
+    },
+    {
+      "gloss": "black",
+      "matchedIds": [83]
+    },
+    {
+      "gloss": "one",
+      "matchedIds": [84]
+    },
+    {
+      "gloss": "two",
+      "matchedIds": [85]
+    },
+    {
+      "gloss": "three",
+      "matchedIds": [86]
+    },
+    {
+      "gloss": "four",
+      "matchedIds": [87]
+    },
+    {
+      "gloss": "five",
+      "matchedIds": [88]
+    },
+    {
+      "gloss": "many",
+      "matchedIds": [89]
+    },
+    {
+      "gloss": "all",
+      "matchedIds": [90]
+    },
+    {
+      "gloss": "few",
+      "matchedIds": [91]
+    },
+    {
+      "gloss": "other",
+      "matchedIds": [92]
+    },
+    {
+      "gloss": "eat",
+      "matchedIds": [93]
+    },
+    {
+      "gloss": "drink",
+      "matchedIds": [94]
+    },
+    {
+      "gloss": "bite",
+      "matchedIds": [95]
+    },
+    {
+      "gloss": "suck",
+      "matchedIds": [96]
+    },
+    {
+      "gloss": "spit",
+      "matchedIds": [97]
+    },
+    {
+      "gloss": "vomit",
+      "matchedIds": [98]
+    },
+    {
+      "gloss": "blow",
+      "matchedIds": [99]
+    },
+    {
+      "gloss": "breathe",
+      "matchedIds": [100]
+    },
+    {
+      "gloss": "laugh",
+      "matchedIds": [101]
+    },
+    {
+      "gloss": "cry",
+      "matchedIds": [102]
+    },
+    {
+      "gloss": "see",
+      "matchedIds": [103]
+    },
+    {
+      "gloss": "hear",
+      "matchedIds": [104]
+    },
+    {
+      "gloss": "know",
+      "matchedIds": [105]
+    },
+    {
+      "gloss": "think",
+      "matchedIds": [106]
+    },
+    {
+      "gloss": "smell",
+      "matchedIds": [107]
+    },
+    {
+      "gloss": "fear",
+      "matchedIds": [108]
+    },
+    {
+      "gloss": "sleep",
+      "matchedIds": [109]
+    },
+    {
+      "gloss": "die",
+      "matchedIds": [110]
+    },
+    {
+      "gloss": "live",
+      "matchedIds": [111]
+    },
+    {
+      "gloss": "kill",
+      "matchedIds": [112]
+    },
+    {
+      "gloss": "fight",
+      "matchedIds": [113]
+    },
+    {
+      "gloss": "hunt",
+      "matchedIds": [114]
+    },
+    {
+      "gloss": "hit",
+      "matchedIds": [115]
+    },
+    {
+      "gloss": "cut",
+      "matchedIds": [116]
+    },
+    {
+      "gloss": "stab",
+      "matchedIds": [117]
+    },
+    {
+      "gloss": "scratch",
+      "matchedIds": [118]
+    },
+    {
+      "gloss": "dig",
+      "matchedIds": [119]
+    },
+    {
+      "gloss": "swim",
+      "matchedIds": [120]
+    },
+    {
+      "gloss": "fly",
+      "matchedIds": [77,121]
+    },
+    {
+      "gloss": "walk",
+      "matchedIds": [122]
+    },
+    {
+      "gloss": "come",
+      "matchedIds": [123]
+    },
+    {
+      "gloss": "lie",
+      "matchedIds": [124]
+    },
+    {
+      "gloss": "sit",
+      "matchedIds": [125]
+    },
+    {
+      "gloss": "stand",
+      "matchedIds": [126]
+    },
+    {
+      "gloss": "turn",
+      "matchedIds": [127]
+    },
+    {
+      "gloss": "fall",
+      "matchedIds": [128]
+    },
+    {
+      "gloss": "give",
+      "matchedIds": [129]
+    },
+    {
+      "gloss": "hold",
+      "matchedIds": [130]
+    },
+    {
+      "gloss": "squeeze",
+      "matchedIds": [131]
+    },
+    {
+      "gloss": "rub",
+      "matchedIds": [132]
+    },
+    {
+      "gloss": "wash",
+      "matchedIds": [133]
+    },
+    {
+      "gloss": "wipe",
+      "matchedIds": [134]
+    },
+    {
+      "gloss": "pull",
+      "matchedIds": [135]
+    },
+    {
+      "gloss": "push",
+      "matchedIds": [136]
+    },
+    {
+      "gloss": "throw",
+      "matchedIds": [137]
+    },
+    {
+      "gloss": "tie",
+      "matchedIds": [138]
+    },
+    {
+      "gloss": "sew",
+      "matchedIds": [139]
+    },
+    {
+      "gloss": "count",
+      "matchedIds": [140]
+    },
+    {
+      "gloss": "say",
+      "matchedIds": [141]
+    },
+    {
+      "gloss": "sing",
+      "matchedIds": [142]
+    },
+    {
+      "gloss": "play",
+      "matchedIds": [143]
+    },
+    {
+      "gloss": "float",
+      "matchedIds": [144]
+    },
+    {
+      "gloss": "flow",
+      "matchedIds": [145]
+    },
+    {
+      "gloss": "freeze",
+      "matchedIds": [146]
+    },
+    {
+      "gloss": "swell",
+      "matchedIds": [147]
+    },
+    {
+      "gloss": "burn",
+      "matchedIds": [148]
+    },
+    {
+      "gloss": "cook",
+      "matchedIds": [149]
+    },
+    {
+      "gloss": "split",
+      "matchedIds": [150]
+    },
+    {
+      "gloss": "big",
+      "matchedIds": [151]
+    },
+    {
+      "gloss": "small",
+      "matchedIds": [152]
+    },
+    {
+      "gloss": "long",
+      "matchedIds": [153]
+    },
+    {
+      "gloss": "short",
+      "matchedIds": [154]
+    },
+    {
+      "gloss": "wide",
+      "matchedIds": [155]
+    },
+    {
+      "gloss": "narrow",
+      "matchedIds": [156]
+    },
+    {
+      "gloss": "thick",
+      "matchedIds": [157]
+    },
+    {
+      "gloss": "thin",
+      "matchedIds": [158]
+    },
+    {
+      "gloss": "warm",
+      "matchedIds": [159]
+    },
+    {
+      "gloss": "cold",
+      "matchedIds": [160]
+    },
+    {
+      "gloss": "full",
+      "matchedIds": [161]
+    },
+    {
+      "gloss": "new",
+      "matchedIds": [162]
+    },
+    {
+      "gloss": "old",
+      "matchedIds": [163]
+    },
+    {
+      "gloss": "good",
+      "matchedIds": [164]
+    },
+    {
+      "gloss": "bad",
+      "matchedIds": [165]
+    },
+    {
+      "gloss": "round",
+      "matchedIds": [166]
+    },
+    {
+      "gloss": "dry",
+      "matchedIds": [167]
+    },
+    {
+      "gloss": "wet",
+      "matchedIds": [168]
+    },
+    {
+      "gloss": "right",
+      "matchedIds": [169,180]
+    },
+    {
+      "gloss": "smooth",
+      "matchedIds": [170]
+    },
+    {
+      "gloss": "sharp",
+      "matchedIds": [171]
+    },
+    {
+      "gloss": "dull",
+      "matchedIds": [172]
+    },
+    {
+      "gloss": "dirty",
+      "matchedIds": [173]
+    },
+    {
+      "gloss": "straight",
+      "matchedIds": [174]
+    },
+    {
+      "gloss": "heavy",
+      "matchedIds": [175]
+    },
+    {
+      "gloss": "rotten",
+      "matchedIds": [176]
+    },
+    {
+      "gloss": "correct",
+      "matchedIds": [177]
+    },
+    {
+      "gloss": "near",
+      "matchedIds": [178]
+    },
+    {
+      "gloss": "far",
+      "matchedIds": [179]
+    },
+    {
+      "gloss": "right",
+      "matchedIds": [169,180]
+    },
+    {
+      "gloss": "left",
+      "matchedIds": [181]
+    },
+    {
+      "gloss": "at",
+      "matchedIds": [182]
+    },
+    {
+      "gloss": "in",
+      "matchedIds": [183]
+    },
+    {
+      "gloss": "with",
+      "matchedIds": [184]
+    },
+    {
+      "gloss": "and",
+      "matchedIds": [185]
+    },
+    {
+      "gloss": "if",
+      "matchedIds": [186]
+    },
+    {
+      "gloss": "because",
+      "matchedIds": [187]
+    },
+    {
+      "gloss": "not",
+      "matchedIds": [188]
+    },
+    {
+      "gloss": "here",
+      "matchedIds": [189]
+    },
+    {
+      "gloss": "there",
+      "matchedIds": [190]
+    },
+    {
+      "gloss": "where",
+      "matchedIds": [191]
+    },
+    {
+      "gloss": "when",
+      "matchedIds": [192]
+    },
+    {
+      "gloss": "how",
+      "matchedIds": [193]
+    },
+    {
+      "gloss": "name",
+      "matchedIds": [194]
+    },
+    {
+      "gloss": "man",
+      "matchedIds": [195]
+    },
+    {
+      "gloss": "woman",
+      "matchedIds": [196]
+    },
+    {
+      "gloss": "person",
+      "matchedIds": [197]
+    },
+    {
+      "gloss": "child",
+      "matchedIds": [198]
+    },
+    {
+      "gloss": "wife",
+      "matchedIds": [199]
+    },
+    {
+      "gloss": "husband",
+      "matchedIds": [200]
+    },
+    {
+      "gloss": "mother",
+      "matchedIds": [201]
+    },
+    {
+      "gloss": "father",
+      "matchedIds": [202]
+    },
+    {
+      "gloss": "night",
+      "matchedIds": [203]
+    },
+    {
+      "gloss": "day",
+      "matchedIds": [204]
+    },
+    {
+      "gloss": "year",
+      "matchedIds": [205]
+    },
+    {
+      "gloss": "rope",
+      "matchedIds": [206]
+    },
+    {
+      "gloss": "road",
+      "matchedIds": [207]
+    }
+  ]
+}

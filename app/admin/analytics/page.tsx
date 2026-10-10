@@ -25,7 +25,7 @@ import {
     GroupedBarChart,
     CategoryDonutChart,
     RankedBarChart,
-} from "@/components/admin/charts"
+} from "@/components/admin/lazy-charts"
 import { CHART_COLORS } from "@/components/admin/chart-colors"
 
 type GrowthPoint = {

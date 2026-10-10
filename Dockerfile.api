@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1
+
+# LingoCon Axum platform service (rust/crates/api). Build from the repo root:
+#   docker build -f Dockerfile.api -t lingocon-api .
+# See docs/RUST_SERVICE.md.
+
+# ─── Stage 1: build ──────────────────────────────────────────────────────────
+# Matches the workspace's rust-version (rust/Cargo.toml).
+FROM rust:1.88-bookworm AS builder
+WORKDIR /src
+
+COPY rust/ ./rust/
+
+# Cache the registry and target dir between builds; copy the binary out of the
+# cache mount so the next stage can see it.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/rust/target \
+    cargo build --release --locked --manifest-path rust/Cargo.toml -p lingocon-api \
+ && install -D -m 0755 rust/target/release/lingocon-api /out/lingocon-api
+
+# ─── Stage 2: runtime ────────────────────────────────────────────────────────
+# glibc + libgcc only, no shell, runs as uid 65532.
+FROM gcr.io/distroless/cc-debian12:nonroot
+
+COPY --from=builder /out/lingocon-api /usr/local/bin/lingocon-api
+
+USER nonroot:nonroot
+
+# Inside a container the service must listen on the private network interface;
+# do not publish this port on the host.
+ENV LINGOCON_API_BIND=0.0.0.0:3040 \
+    LINGOCON_API_ALLOW_PUBLIC_BIND=1 \
+    RUST_LOG=info
+
+EXPOSE 3040
+
+ENTRYPOINT ["/usr/local/bin/lingocon-api"]

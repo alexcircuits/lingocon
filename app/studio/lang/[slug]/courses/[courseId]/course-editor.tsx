@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,10 @@ import { UnitSection } from "./unit-section"
 import { LessonCard } from "./lesson-card"
 import { AddLessonButton, AddUnitButton } from "./add-buttons"
 import type { Course, Lesson, Unit, LessonItem, GrammarPage, TextItem } from "./types"
+import {
+  beginOp, emptyLedger, itemOrderEdit, lessonOrderEdit, lessonUnitEdit, rebase, settleOp, unitOrderEdit,
+  type OptimisticLedger, type ScopedEdit,
+} from "./course-optimism"
 
 /** Move an array element from one index to another (returns a new array). */
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
@@ -40,6 +44,36 @@ interface Props {
 export function CourseEditor({ course: initialCourse, language, grammarPages, texts, slug }: Props) {
   const t = useTranslations("courseEditor")
   const [course, setCourse] = useState(initialCourse)
+  const ledgerRef = useRef<OptimisticLedger>(emptyLedger)
+
+  // Course mutations revalidate this route, so their responses (and router.refresh / returning to
+  // the page) deliver fresh props. Adopt them, re-applying any optimistic edit still in flight so
+  // it is not lost. Open inline editors keep their drafts in their own state.
+  const syncedCourseRef = useRef(initialCourse)
+  useEffect(() => {
+    if (syncedCourseRef.current === initialCourse) return
+    syncedCourseRef.current = initialCourse
+    const rebased = rebase(ledgerRef.current, initialCourse)
+    ledgerRef.current = rebased.ledger
+    setCourse(rebased.course)
+  }, [initialCourse])
+
+  /** Show `edit` now; keep it if the server accepts, else fall back to the last confirmed state. */
+  async function runOptimistic(edit: ScopedEdit, action: () => Promise<{ error?: string }>, failMessage: string) {
+    const begun = beginOp(ledgerRef.current, edit.scope, edit, course)
+    ledgerRef.current = begun.ledger
+    setCourse(edit.after)
+    let accepted = false
+    try {
+      accepted = !(await action()).error
+    } catch (error) {
+      console.error(failMessage, error)
+    }
+    if (!accepted) toast.error(failMessage)
+    const settled = settleOp(ledgerRef.current, edit.scope, begun.seq, accepted ? edit.after : null)
+    ledgerRef.current = settled.ledger
+    if (settled.restore) setCourse(settled.restore)
+  }
 
   // Visibility
   const [savingVisibility, setSavingVisibility] = useState(false)
@@ -69,6 +103,8 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
       if (result.data) {
         setCourse(prev => ({ ...prev, visibility: next }))
         toast.success(next === "PUBLISHED" ? t("coursePublished") : t("movedToDraft"))
+      } else {
+        toast.error(t("failUpdate"))
       }
     } catch {
       toast.error(t("failUpdate"))
@@ -113,17 +149,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
     const target = dir === "up" ? idx - 1 : idx + 1
     if (idx < 0 || target < 0 || target >= ids.length) return
     const newIds = arrayMove(ids, idx, target)
-    const orderMap = new Map(newIds.map((id, i) => [id, i]))
-    setCourse(prev => ({
-      ...prev,
-      lessons: prev.lessons.map(l =>
-        l.id === lessonId
-          ? { ...l, items: l.items.map(i => orderMap.has(i.id) ? { ...i, order: orderMap.get(i.id)! } : i) }
-          : l
-      ),
-    }))
-    const r = await reorderLessonItems(lessonId, newIds)
-    if (r.error) toast.error(t("failReorderItems"))
+    await runOptimistic(itemOrderEdit(lessonId, newIds), () => reorderLessonItems(lessonId, newIds), t("failReorderItems"))
   }
 
   const unitsSorted = [...course.units].sort((a, b) => a.order - b.order)
@@ -139,11 +165,22 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
     }
   }
 
+  // Additions are idempotent: revalidated props may already contain the new row.
   function handleItemAdded(lessonId: string, item: LessonItem) {
     setCourse(prev => ({
       ...prev,
-      lessons: prev.lessons.map(l => (l.id === lessonId ? { ...l, items: [...l.items, item] } : l)),
+      lessons: prev.lessons.map(l =>
+        l.id === lessonId && !l.items.some(i => i.id === item.id) ? { ...l, items: [...l.items, item] } : l,
+      ),
     }))
+  }
+
+  function handleLessonAdded(lesson: Lesson) {
+    setCourse(prev => (prev.lessons.some(l => l.id === lesson.id) ? prev : { ...prev, lessons: [...prev.lessons, lesson] }))
+  }
+
+  function handleUnitAdded(unit: Unit) {
+    setCourse(prev => (prev.units.some(u => u.id === unit.id) ? prev : { ...prev, units: [...prev.units, unit] }))
   }
 
   function handleItemDeleted(lessonId: string, itemId: string) {
@@ -156,12 +193,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
   }
 
   async function handleSetLessonUnit(lessonId: string, unitId: string | null) {
-    setCourse(prev => ({
-      ...prev,
-      lessons: prev.lessons.map(l => (l.id === lessonId ? { ...l, unitId } : l)),
-    }))
-    const r = await setLessonUnit(lessonId, unitId)
-    if (r.error) toast.error(t("failMoveLesson"))
+    await runOptimistic(lessonUnitEdit(lessonId, unitId), () => setLessonUnit(lessonId, unitId), t("failMoveLesson"))
   }
 
   async function handleMoveLesson(lessonId: string, unitId: string | null, dir: "up" | "down") {
@@ -172,13 +204,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
     if (idx < 0 || target < 0 || target >= ids.length) return
 
     const newIds = arrayMove(ids, idx, target)
-    const orderMap = new Map(newIds.map((id, i) => [id, i]))
-    setCourse(prev => ({
-      ...prev,
-      lessons: prev.lessons.map(l => (orderMap.has(l.id) ? { ...l, order: orderMap.get(l.id)! } : l)),
-    }))
-    const r = await reorderLessons(course.id, newIds)
-    if (r.error) toast.error(t("failReorderLessons"))
+    await runOptimistic(lessonOrderEdit(unitId, newIds), () => reorderLessons(course.id, newIds), t("failReorderLessons"))
   }
 
   async function handleMoveUnit(unitId: string, dir: "up" | "down") {
@@ -188,13 +214,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
     if (idx < 0 || target < 0 || target >= ids.length) return
 
     const newIds = arrayMove(ids, idx, target)
-    const orderMap = new Map(newIds.map((id, i) => [id, i]))
-    setCourse(prev => ({
-      ...prev,
-      units: prev.units.map(u => (orderMap.has(u.id) ? { ...u, order: orderMap.get(u.id)! } : u)),
-    }))
-    const r = await reorderUnits(course.id, newIds)
-    if (r.error) toast.error(t("failReorderUnits"))
+    await runOptimistic(unitOrderEdit(newIds), () => reorderUnits(course.id, newIds), t("failReorderUnits"))
   }
 
   return (
@@ -339,7 +359,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
             onMoveItem={handleMoveItem}
             onUpdateLesson={handleUpdateLesson}
             onSetUnit={handleSetLessonUnit}
-            onLessonAdded={(lesson) => setCourse(prev => ({ ...prev, lessons: [...prev.lessons, lesson] }))}
+            onLessonAdded={handleLessonAdded}
             onUnitUpdated={(u) => setCourse(prev => ({ ...prev, units: prev.units.map(x => x.id === u.id ? { ...x, ...u } : x) }))}
             onUnitDeleted={() => setCourse(prev => ({
               ...prev,
@@ -383,7 +403,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
             <AddLessonButton
               courseId={course.id}
               unitId={null}
-              onAdded={(lesson) => setCourse(prev => ({ ...prev, lessons: [...prev.lessons, lesson] }))}
+              onAdded={handleLessonAdded}
             />
           </div>
         )}
@@ -392,7 +412,7 @@ export function CourseEditor({ course: initialCourse, language, grammarPages, te
       <div className="mt-6">
         <AddUnitButton
           courseId={course.id}
-          onAdded={(unit) => setCourse(prev => ({ ...prev, units: [...prev.units, unit] }))}
+          onAdded={handleUnitAdded}
         />
       </div>
     </div>

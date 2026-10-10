@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useSectionWritable } from "@/components/studio-access"
 import { Pencil, Trash2, GitFork, ChevronDown, ChevronRight, BookOpen, Tag, Link2 } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
 import { transliterateToLatin } from "@/lib/utils/transliterate"
@@ -56,6 +57,7 @@ export function DictionaryTable({
   allEntries = [],
 }: DictionaryTableProps) {
   const t = useTranslations("studio.dictionary")
+  const canEdit = useSectionWritable()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -92,10 +94,12 @@ export function DictionaryTable({
           <TableRow>
             <TableHead className="w-12">
               <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedEntries.size === entries.length && entries.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
+                {canEdit && (
+                  <Checkbox
+                    checked={selectedEntries.size === entries.length && entries.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                )}
                 <ContextualHelp
                   content={t("helpSelectAll")}
                   variant="icon"
@@ -144,10 +148,12 @@ export function DictionaryTable({
               <React.Fragment key={entry.id}>
               <TableRow className={isSelected ? "bg-muted/50" : ""}>
                 <TableCell>
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) => handleSelectOne(entry.id, checked as boolean)}
-                  />
+                  {canEdit && (
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handleSelectOne(entry.id, checked as boolean)}
+                    />
+                  )}
                 </TableCell>
                 <TableCell className="font-medium">
                   <button
@@ -237,38 +243,42 @@ export function DictionaryTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(entry)}
-                      disabled={isPending}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      aria-label={t("editEntryLabel", { lemma: entry.lemma })}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDerive(entry)}
-                      disabled={isPending}
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      title={t("deriveWord")}
-                      aria-label={t("deriveWord")}
-                    >
-                      <GitFork className="h-4 w-4" />
-                    </Button>
-                    <Button
+                    {canEdit && (
+                      <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(entry)}
+                        disabled={isPending}
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        aria-label={t("editEntryLabel", { lemma: entry.lemma })}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDerive(entry)}
+                        disabled={isPending}
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title={t("deriveWord")}
+                        aria-label={t("deriveWord")}
+                      >
+                        <GitFork className="h-4 w-4" />
+                      </Button>
+                      <Button
 
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(entry.id)}
-                      disabled={isPending}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      aria-label={t("deleteEntryLabel", { lemma: entry.lemma })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(entry.id)}
+                        disabled={isPending}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        aria-label={t("deleteEntryLabel", { lemma: entry.lemma })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

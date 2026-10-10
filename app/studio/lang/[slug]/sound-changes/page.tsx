@@ -3,6 +3,7 @@ import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { SoundChangeEditor } from "./sound-change-editor"
+import { soundChangeInputs } from "./sound-change-inputs"
 
 async function getLanguageDetails(slug: string, userId: string | null) {
   const language = await prisma.language.findUnique({
@@ -54,9 +55,8 @@ export default async function SoundChangesPage({
     notFound()
   }
 
-  const metadata = (language.metadata as Record<string, any>) || {}
-  const savedRules = metadata.soundChangeRules || ""
-  const phonology = metadata.phonology || {}
+  // Derived exactly as the apply action derives what it applies, so preview == apply.
+  const { rules: savedRules, vowels, consonants } = soundChangeInputs(language.metadata)
 
   return (
     <div className="space-y-8">
@@ -72,7 +72,7 @@ export default async function SoundChangesPage({
         languageName={language.name}
         entries={language.dictionaryEntries}
         savedRules={savedRules}
-        phonology={phonology}
+        phonology={{ vowels, consonants }}
       />
     </div>
   )

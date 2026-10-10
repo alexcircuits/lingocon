@@ -1,5 +1,7 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { getLanguageCountsMany } from "@/lib/services/language-counts"
+import { isAdmin } from "@/lib/admin"
 import { getDevUserId } from "@/lib/dev-auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
@@ -14,7 +16,7 @@ import { getRecentActivitiesForUserLanguages } from "@/lib/utils/activity"
 import { getNextBadges } from "@/app/actions/badge"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { BadgeProgress } from "@/components/badges"
+import { BadgeProgress } from "@/components/badges/badge-showcase"
 import { cn } from "@/lib/utils"
 import { DashboardTour } from "@/components/onboarding/dashboard-tour"
 import { SupportWidget } from "@/components/support-widget"
@@ -40,26 +42,36 @@ function getGreetingKey(): "morning" | "afternoon" | "evening" {
 }
 
 async function getLanguages(userId: string) {
-  return prisma.language.findMany({
+  // Only what the cards render (not the metadata JSON etc.), and scoped counts
+  // instead of relation `_count`, which aggregates every language's rows.
+  const languages = await prisma.language.findMany({
     where: {
       OR: [
         { ownerId: userId },
         { collaborators: { some: { userId: userId } } }
       ]
     },
-    include: {
-      _count: {
-        select: {
-          scriptSymbols: true,
-          grammarPages: true,
-          dictionaryEntries: true,
-        },
-      },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      flagUrl: true,
+      description: true,
+      visibility: true,
+      updatedAt: true,
     },
     orderBy: {
       updatedAt: "desc",
     },
   })
+  const counts = await getLanguageCountsMany(
+    languages.map((language) => language.id),
+    ["scriptSymbols", "grammarPages", "dictionaryEntries"] as const
+  )
+  return languages.map((language) => ({
+    ...language,
+    _count: counts.get(language.id) ?? { scriptSymbols: 0, grammarPages: 0, dictionaryEntries: 0 },
+  }))
 }
 
 
@@ -73,7 +85,13 @@ export default async function DashboardPage() {
   }
 
   const userId = session?.user?.id || (await getDevUserId())
-  const languages = await getLanguages(userId)
+  // Independent reads, issued together rather than one after another.
+  const [languages, activities, nextBadges, admin] = await Promise.all([
+    getLanguages(userId),
+    userId ? getRecentActivitiesForUserLanguages(userId, 10) : Promise.resolve([]),
+    userId ? getNextBadges(userId) : Promise.resolve([]),
+    isAdmin(),
+  ])
   const stats = {
     totalLanguages: languages.length,
     totalSymbols: languages.reduce((sum, lang) => sum + lang._count.scriptSymbols, 0),
@@ -87,14 +105,6 @@ export default async function DashboardPage() {
     { key: "totalPages", label: t("grammarPages"), icon: BookOpen },
     { key: "totalEntries", label: t("dictionaryEntries"), icon: Library },
   ] as const
-  const activities = userId ? await getRecentActivitiesForUserLanguages(userId, 10) : []
-  const nextBadges = userId ? await getNextBadges(userId) : []
-
-  // Fetch isAdmin status from database
-  const dbUser = userId ? await prisma.user.findUnique({
-    where: { id: userId },
-    select: { isAdmin: true }
-  }) : null
 
   const isDevMode = process.env.DEV_MODE === "true"
   const user = session?.user ? {
@@ -102,7 +112,7 @@ export default async function DashboardPage() {
     name: session.user.name,
     email: session.user.email,
     image: session.user.image,
-    isAdmin: dbUser?.isAdmin || false,
+    isAdmin: admin,
   } : null
 
   const greetingKey = getGreetingKey()

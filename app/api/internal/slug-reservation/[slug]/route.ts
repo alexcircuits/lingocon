@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { findReservedSlugTarget } from "@/lib/services/slug-reservation"
 
 // Internal route called by Edge middleware to check slug reservations
 export async function GET(
@@ -18,23 +18,8 @@ export async function GET(
     const { slug } = await params
     if (!slug) return NextResponse.json({ found: false })
 
-    const reservation = await prisma.slugReservation.findUnique({
-      where: { slug },
-      include: {
-        language: {
-          select: { slug: true }
-        }
-      }
-    })
-
-    if (reservation && reservation.reservedUntil > new Date() && reservation.language?.slug) {
-      return NextResponse.json({
-        found: true,
-        newSlug: reservation.language.slug
-      })
-    }
-
-    return NextResponse.json({ found: false })
+    const newSlug = await findReservedSlugTarget(slug)
+    return NextResponse.json(newSlug ? { found: true, newSlug } : { found: false })
   } catch (error) {
     console.error("[SlugReservation API]", error)
     return NextResponse.json({ found: false }, { status: 500 })

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
-import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getDevUserId } from "@/lib/dev-auth"
+import { getUserId } from "@/lib/auth-helpers"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
@@ -18,12 +18,14 @@ export default async function SettingsLayout({
 }: {
     children: React.ReactNode
 }) {
-    const session = await auth()
-    const userId = session?.user?.id || (await getDevUserId())
-    const navUser = userId ? await prisma.user.findUnique({
+    // Session user (or the DEV_MODE user locally); signed-out and suspended
+    // visitors go to sign in instead of crashing on the dev-only fallback.
+    const userId = await getUserId()
+    if (!userId) redirect("/login")
+    const navUser = await prisma.user.findUnique({
         where: { id: userId },
         select: { id: true, name: true, email: true, image: true, isAdmin: true },
-    }) : null
+    })
     const isDevMode = process.env.DEV_MODE === "true"
 
     return (

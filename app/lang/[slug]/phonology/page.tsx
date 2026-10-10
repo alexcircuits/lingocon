@@ -6,7 +6,8 @@ import { PhonemeFrequencyChart } from "@/components/phoneme-frequency-chart"
 import { getLanguageSeoData } from "@/lib/seo-data"
 import { buildLanguageMetadata } from "@/lib/seo"
 
-export const revalidate = 3600
+// No `revalidate` export: this page reads cookies (session, locale), so it is
+// rendered per request; studio writes call revalidatePath for it.
 
 export async function generateMetadata({
     params,
@@ -15,7 +16,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
     const { slug } = await params
     const language = await getLanguageSeoData(slug)
-    if (!language) return { title: "Phonology Not Found", robots: { index: false, follow: false } }
+    // Decided here, before streaming starts, so a missing page is a real 404 (the page's
+    // own notFound() runs inside the loading boundary, after a 200 has been sent).
+    if (!language) notFound()
 
     return buildLanguageMetadata(language, {
         section: "phonology",

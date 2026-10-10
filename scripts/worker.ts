@@ -84,6 +84,9 @@ async function main() {
   }
   await prisma.$disconnect()
   console.log("[worker] shut down cleanly")
+  // node-cron's scheduled tasks keep the event loop alive: without this PM2 waits
+  // the whole kill_timeout (30 s) on every reload/deploy and then SIGKILLs us.
+  process.exit(0)
 }
 
 void main()

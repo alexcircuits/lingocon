@@ -1,13 +1,21 @@
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { canEditScope } from "@/lib/auth-helpers"
 import { UnauthorizedError, NotFoundError, ConflictError } from "@/lib/errors"
 import { assertParadigmInLanguage } from "@/lib/services/language-scope"
+import { StaleRevisionError, nextRevision, parseExpectedRevision } from "@/lib/services/document-revision"
 import {
   createGrammarPageSchema,
   updateGrammarPageSchema,
   type CreateGrammarPageInput,
-  type UpdateGrammarPageInput,
 } from "@/lib/validations/grammar-page"
+
+/** The page fields plus the revision the editor loaded (`expectedUpdatedAt`, ISO). Omitting the
+ * revision skips the check, so older clients keep working. */
+const updatePageCommandSchema = updateGrammarPageSchema.extend({
+  expectedUpdatedAt: z.string().nullish(),
+})
+export type UpdateGrammarPageCommand = z.input<typeof updatePageCommandSchema>
 
 export async function createPage(input: CreateGrammarPageInput, userId: string) {
   const validated = createGrammarPageSchema.parse(input)
@@ -47,8 +55,9 @@ export async function createPage(input: CreateGrammarPageInput, userId: string) 
   })
 }
 
-export async function updatePage(input: UpdateGrammarPageInput, userId: string) {
-  const validated = updateGrammarPageSchema.parse(input)
+export async function updatePage(input: UpdateGrammarPageCommand, userId: string) {
+  const validated = updatePageCommandSchema.parse(input)
+  const expected = parseExpectedRevision(validated.expectedUpdatedAt, "grammar page")
 
   const canEdit = await canEditScope(validated.languageId, userId, "write:grammar")
   if (!canEdit) {
@@ -57,7 +66,7 @@ export async function updatePage(input: UpdateGrammarPageInput, userId: string) 
 
   const existing = await prisma.grammarPage.findUnique({
     where: { id: validated.id },
-    select: { languageId: true, slug: true },
+    select: { languageId: true, slug: true, updatedAt: true },
   })
 
   if (!existing || existing.languageId !== validated.languageId) {
@@ -87,14 +96,28 @@ export async function updatePage(input: UpdateGrammarPageInput, userId: string) 
   if (validated.imageUrl !== undefined) updateData.imageUrl = validated.imageUrl || null
   if (validated.order !== undefined) updateData.order = validated.order
   if (validated.paradigmId !== undefined) updateData.paradigmId = validated.paradigmId || null
+  updateData.updatedAt = nextRevision(expected ?? existing.updatedAt)
 
-  return prisma.grammarPage.update({
-    where: { id: validated.id },
-    data: updateData,
-    include: {
-      language: { select: { slug: true } },
-    },
+  // One conditional UPDATE: with a revision, it matches only if nobody saved since the editor
+  // loaded the page. Reading the row back in the same transaction returns exactly this write.
+  const page = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.grammarPage.updateMany({
+      where: { id: validated.id, languageId: validated.languageId, ...(expected && { updatedAt: expected }) },
+      data: updateData,
+    })
+    if (count === 0) {
+      if (expected && (await tx.grammarPage.count({ where: { id: validated.id } })) > 0) {
+        throw new StaleRevisionError("grammar page")
+      }
+      throw new NotFoundError("Grammar page", validated.id)
+    }
+    return tx.grammarPage.findUniqueOrThrow({
+      where: { id: validated.id },
+      include: { language: { select: { slug: true } } },
+    })
   })
+
+  return { page, previousSlug: existing.slug }
 }
 
 export async function deletePage(pageId: string, languageId: string, userId: string) {
@@ -155,15 +178,12 @@ export async function reorderPages(
 
   const targetPage = allPages[newIndex]
 
+  // Raw updates of `order` only: Prisma would also bump `updatedAt`, which is the
+  // editor's revision token, and an editor open in another tab would then report a
+  // false "changed elsewhere" conflict although no content changed.
   await prisma.$transaction([
-    prisma.grammarPage.update({
-      where: { id: pageId },
-      data: { order: targetPage.order },
-    }),
-    prisma.grammarPage.update({
-      where: { id: targetPage.id },
-      data: { order: page.order },
-    }),
+    prisma.$executeRaw`UPDATE grammar_pages SET "order" = ${targetPage.order} WHERE id = ${pageId} AND "languageId" = ${languageId}`,
+    prisma.$executeRaw`UPDATE grammar_pages SET "order" = ${page.order} WHERE id = ${targetPage.id} AND "languageId" = ${languageId}`,
   ])
 
   return { slug: page.language.slug }

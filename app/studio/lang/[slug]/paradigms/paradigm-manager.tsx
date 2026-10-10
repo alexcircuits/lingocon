@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { createParadigm, updateParadigm, deleteParadigm, cloneParadigm } from "@/app/actions/paradigm"
@@ -37,6 +36,7 @@ import { DeleteConfirmDialog } from "../dictionary/components/delete-confirm-dia
 import { ParadigmContentEditor } from "./paradigm-content-editor"
 import { ParadigmInflectionDialog } from "./paradigm-inflection-dialog"
 import { Grid3X3, Wand2 } from "lucide-react"
+import { useStudioAccess } from "@/components/studio-access"
 
 // Define types locally to avoid stale definition issues in IDE
 type Paradigm = {
@@ -57,9 +57,11 @@ interface ParadigmManagerProps {
 }
 
 export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSettings }: ParadigmManagerProps) {
-  const router = useRouter()
   const t = useTranslations("studio.paradigms")
   const tc = useTranslations("studio.common")
+  // Visitors without the paradigm scope read the tables (and hear IPA cells); creating,
+  // editing structure or cells, inflection rules, duplicating and deleting are not offered.
+  const canEdit = useStudioAccess().canWrite("write:paradigms")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [editingParadigm, setEditingParadigm] = useState<Paradigm | null>(null)
@@ -111,7 +113,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
           toast.success(t("createdToast"))
           setIsAddOpen(false)
           setFormData({ name: "", rows: "", columns: "", notes: "" })
-          router.refresh()
+          // The action revalidated this page; its response already re-rendered it.
         }
       })
     } catch (err) {
@@ -173,7 +175,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
           setIsEditOpen(false)
           setEditingParadigm(null)
           setFormData({ name: "", rows: "", columns: "", notes: "" })
-          router.refresh()
+          // The action revalidated this page; its response already re-rendered it.
         }
       })
     } catch (err) {
@@ -202,7 +204,7 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
         toast.error(result.error)
       } else {
         toast.success(t("contentUpdatedToast"))
-        router.refresh()
+        // The action revalidated this page; its response already re-rendered it.
       }
     })
   }
@@ -220,117 +222,119 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
         toast.success(t("deletedToast"))
         setDeletingId(null)
         setIsDeleteOpen(false)
-        router.refresh()
+        // The action revalidated this page; its response already re-rendered it.
       }
     })
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t("addParadigm")}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <form onSubmit={handleAdd}>
-              <DialogHeader>
-                <DialogTitle>{t("createTitle")}</DialogTitle>
-                <DialogDescription>
-                  {t("createDesc")}
-                </DialogDescription>
-              </DialogHeader>
+      {canEdit && (
+        <div className="flex justify-end">
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("addParadigm")}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <form onSubmit={handleAdd}>
+                <DialogHeader>
+                  <DialogTitle>{t("createTitle")}</DialogTitle>
+                  <DialogDescription>
+                    {t("createDesc")}
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="add-name">{t("nameLabel")}</Label>
-                  <Input
-                    id="add-name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={t("namePlaceholder")}
-                    required
-                    disabled={isPending}
-                    maxLength={200}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="add-rows">{t("rowLabels")}</Label>
-                    <p className="text-xs text-muted-foreground">{t("rowLabelsHint")}</p>
-                    <Textarea
-                      id="add-rows"
-                      value={formData.rows}
-                      onChange={(e) => setFormData({ ...formData, rows: e.target.value })}
-                      placeholder={t("rowsPlaceholder")}
+                    <Label htmlFor="add-name">{t("nameLabel")}</Label>
+                    <Input
+                      id="add-name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder={t("namePlaceholder")}
                       required
                       disabled={isPending}
-                      rows={6}
-                      className="font-mono text-sm"
+                      maxLength={200}
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="add-rows">{t("rowLabels")}</Label>
+                      <p className="text-xs text-muted-foreground">{t("rowLabelsHint")}</p>
+                      <Textarea
+                        id="add-rows"
+                        value={formData.rows}
+                        onChange={(e) => setFormData({ ...formData, rows: e.target.value })}
+                        placeholder={t("rowsPlaceholder")}
+                        required
+                        disabled={isPending}
+                        rows={6}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="add-columns">{t("columnLabels")}</Label>
+                      <p className="text-xs text-muted-foreground">{t("columnLabelsHint")}</p>
+                      <Textarea
+                        id="add-columns"
+                        value={formData.columns}
+                        onChange={(e) => setFormData({ ...formData, columns: e.target.value })}
+                        placeholder={t("columnsPlaceholder")}
+                        required
+                        disabled={isPending}
+                        rows={6}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="add-columns">{t("columnLabels")}</Label>
-                    <p className="text-xs text-muted-foreground">{t("columnLabelsHint")}</p>
+                    <Label htmlFor="add-notes">{t("notesLabel")}</Label>
                     <Textarea
-                      id="add-columns"
-                      value={formData.columns}
-                      onChange={(e) => setFormData({ ...formData, columns: e.target.value })}
-                      placeholder={t("columnsPlaceholder")}
-                      required
+                      id="add-notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      placeholder={t("notesPlaceholder")}
                       disabled={isPending}
-                      rows={6}
-                      className="font-mono text-sm"
+                      rows={3}
+                      maxLength={2000}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="add-notes">{t("notesLabel")}</Label>
-                  <Textarea
-                    id="add-notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder={t("notesPlaceholder")}
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddOpen(false)}
                     disabled={isPending}
-                    rows={3}
-                    maxLength={2000}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddOpen(false)}
-                  disabled={isPending}
-                >
-                  {tc("cancel")}
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? t("creating") : t("createParadigm")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                  >
+                    {tc("cancel")}
+                  </Button>
+                  <Button type="submit" disabled={isPending}>
+                    {isPending ? t("creating") : t("createParadigm")}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       {initialParadigms.length === 0 ? (
         <EmptyState
           icon={Plus}
           title={t("emptyTitle")}
           description={t("emptyDesc")}
-          action={{
+          action={canEdit ? {
             label: t("addParadigm"),
-            href: "#",
-          }}
+            onClick: () => setIsAddOpen(true),
+          } : undefined}
         />
       ) : (
         <div className="grid gap-6">
@@ -353,75 +357,77 @@ export function ParadigmManager({ languageId, paradigms: initialParadigms, ttsSe
                         </CardDescription>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <Button aria-label={t("editContent")}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingParadigm(paradigm)
-                          setIsContentEditOpen(true)
-                        }}
-                        disabled={isPending}
-                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title={t("editContent")}
-                      >
-                        <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button aria-label="Auto-inflection rules"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingParadigm(paradigm)
-                          setIsInflectOpen(true)
-                        }}
-                        disabled={isPending}
-                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title="Auto-inflection rules"
-                      >
-                        <Wand2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button aria-label={t("editStructure")}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(paradigm)}
-                        disabled={isPending}
-                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title={t("editStructure")}
-                      >
-                        <Pencil className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button aria-label={t("duplicateParadigm")}
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                          const result = await cloneParadigm(paradigm.id, languageId)
-                          if ("error" in result) {
-                            toast.error(result.error)
-                          } else {
-                            toast.success(t("duplicatedToast", { name: paradigm.name }))
-                            startTransition(() => router.refresh())
-                          }
-                        }}
-                        disabled={isPending}
-                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-                        title={t("duplicateParadigm")}
-                      >
-                        <Copy className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDeletingId(paradigm.id)
-                          setIsDeleteOpen(true)
-                        }}
-                        disabled={isPending}
-                        aria-label={t("deleteParadigm")}
-                        className="h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {canEdit && (
+                      <div className="flex gap-1">
+                        <Button aria-label={t("editContent")}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingParadigm(paradigm)
+                            setIsContentEditOpen(true)
+                          }}
+                          disabled={isPending}
+                          className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                          title={t("editContent")}
+                        >
+                          <Grid3X3 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button aria-label="Auto-inflection rules"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingParadigm(paradigm)
+                            setIsInflectOpen(true)
+                          }}
+                          disabled={isPending}
+                          className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                          title="Auto-inflection rules"
+                        >
+                          <Wand2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button aria-label={t("editStructure")}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(paradigm)}
+                          disabled={isPending}
+                          className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                          title={t("editStructure")}
+                        >
+                          <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button aria-label={t("duplicateParadigm")}
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            const result = await cloneParadigm(paradigm.id, languageId)
+                            if ("error" in result) {
+                              toast.error(result.error)
+                            } else {
+                              toast.success(t("duplicatedToast", { name: paradigm.name }))
+                              // The action revalidated this page; its response already re-rendered it.
+                            }
+                          }}
+                          disabled={isPending}
+                          className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                          title={t("duplicateParadigm")}
+                        >
+                          <Copy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDeletingId(paradigm.id)
+                            setIsDeleteOpen(true)
+                          }}
+                          disabled={isPending}
+                          aria-label={t("deleteParadigm")}
+                          className="h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 overflow-x-auto scroll-fade-x">

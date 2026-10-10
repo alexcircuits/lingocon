@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { getTranslations } from "next-intl/server"
 import { ParadigmManager } from "./paradigm-manager"
-import { languageMetadataSchema } from "@/lib/validations/language"
+import { parseLanguageMetadata } from "@/lib/validations/language"
+import { notFound } from "next/navigation"
 
 async function getLanguage(slug: string) {
   // The layout already handles access control, so we just need to fetch the language
@@ -33,7 +34,8 @@ export default async function ParadigmsPage({
   const t = await getTranslations("studio.paradigms")
 
   if (!language) {
-    return null
+    // An explicit not-found inside the studio shell, never an empty page.
+    notFound()
   }
 
   return (
@@ -48,7 +50,7 @@ export default async function ParadigmsPage({
       <ParadigmManager
         languageId={language.id}
         paradigms={language.paradigms}
-        ttsSettings={languageMetadataSchema.safeParse(language.metadata ?? {}).data?.tts}
+        ttsSettings={parseLanguageMetadata(language.metadata).tts}
       />
     </div>
   )

@@ -46,7 +46,7 @@ export default async function DonatePage() {
 
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-medium tracking-tight mb-8 leading-[1.1] text-foreground">
                         {t.rich("headline", {
-                            brand: () => <span className="text-primary">LingoCon</span>,
+                            brand: (chunks) => <span className="text-primary">{chunks}</span>,
                         })}
                     </h1>
 

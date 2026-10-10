@@ -264,7 +264,11 @@
     "pageNotFoundDesc": "La page que vous recherchez n'existe pas ou a été déplacée.",
     "returnToHome": "Retour à LingoCon",
     "somethingWrong": "Une erreur s'est produite",
-    "unexpectedError": "Une erreur inattendue s'est produite"
+    "unexpectedError": "Une erreur inattendue s'est produite",
+    "newVersionAvailable": "LingoCon a été mis à jour. Rechargez la page pour obtenir la dernière version.",
+    "reload": "Recharger",
+    "studioPageNotFound": "Cette page n'existe pas dans ce projet. Elle a peut-être été renommée ou supprimée.",
+    "backToProject": "Retour à l'aperçu du projet"
   },
   "auth": {
     "signInTitle": "Connectez-vous à LingoCon",
@@ -590,7 +594,12 @@
       "creating": "Création…",
       "loading": "Chargement…",
       "back": "Retour",
-      "search": "Rechercher"
+      "search": "Rechercher",
+      "staleConflict": "Ce contenu a été modifié ailleurs (dans un autre onglet ou par un collaborateur) après son ouverture : votre enregistrement n'a pas été appliqué. Copiez ce que vous voulez garder, puis rechargez la dernière version.",
+      "reloadLatest": "Recharger la dernière version",
+      "mayHaveChanged": "Ce projet a peut-être changé pendant votre absence.",
+      "refreshView": "Actualiser",
+      "slugGeneratedHint": "Généré à partir du titre lors de l'enregistrement. Modifier le titre change cette adresse ; un numéro est ajouté si elle est déjà prise."
     },
     "tabs": {
       "overview": "Vue d'ensemble",
@@ -619,9 +628,11 @@
     },
     "layout": {
       "viewPublic": "Voir la page publique",
+      "privateNoPublicPage": "Ce projet est privé : il n'a donc pas de page publique. Modifiez sa visibilité dans les paramètres pour le partager.",
       "view": "Voir",
       "page": "Page",
-      "more": "Plus"
+      "more": "Plus",
+      "viewOnly": "Lecture seule — vous pouvez parcourir cette section, mais les modifications nécessitent un accès en écriture accordé par le propriétaire."
     },
     "overview": {
       "subtitle": "Vue d'ensemble et statistiques de votre langue",
@@ -716,7 +727,8 @@
       "websitePlaceholder": "https://exemple.com",
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement…",
-      "savedToast": "Paramètres mis à jour avec succès"
+      "savedToast": "Paramètres mis à jour avec succès",
+      "collaboratorsLoadFailed": "Impossible de charger les collaborateurs."
     },
     "alphabet": {
       "pageTitle": "Alphabet",
@@ -1030,7 +1042,9 @@
       "copiedToClipboard": "Copié dans le presse-papiers !",
       "appliedToast": "Appliqué au dictionnaire : {applied} {applied, plural, =1 {entrée mise à jour} other {entrées mises à jour}}, {unchanged} inchangées",
       "applyFailed": "Échec de l'application des changements phonétiques",
-      "exportedToast": "Exporté en TSV !"
+      "exportedToast": "Exporté en TSV !",
+      "applyNeedsSave": "Enregistrez vos règles pour les appliquer. L'application utilise les règles enregistrées, pas les modifications non enregistrées.",
+      "rulesChangedConflict": "Les règles ou la phonologie enregistrées ont changé depuis que vous avez consulté cet aperçu. Rien n'a été appliqué. Vérifiez les règles les plus récentes et réessayez."
     },
     "textsPage": {
       "pageTitle": "Textes",
@@ -1074,7 +1088,8 @@
       "readFailed": "Échec de la lecture du contenu du fichier",
       "updatedToast": "Texte mis à jour avec succès",
       "createdToast": "Texte créé avec succès",
-      "deletedToast": "Texte supprimé"
+      "deletedToast": "Texte supprimé",
+      "alwaysPublishedHint": "Les textes n'ont pas de mode brouillon : l'enregistrement publie le texte partout où cette langue est visible."
     },
     "courses": {
       "breadcrumb": "Cours",
@@ -1150,7 +1165,10 @@
       "delete": "Supprimer",
       "updatedToast": "Article mis à jour avec succès",
       "createdToast": "Article créé avec succès",
-      "deletedToast": "Article supprimé"
+      "deletedToast": "Article supprimé",
+      "publishFailedTitle": "Impossible de publier « {title} »",
+      "publishFailedForbidden": "Vous n'avez pas l'autorisation de publier des articles dans cette langue.",
+      "publishFailedGeneric": "Un problème est survenu lors de la publication. Veuillez réessayer."
     },
     "flashcards": {
       "metaTitle": "Cartes mémo",
@@ -1388,7 +1406,8 @@
     "nameTooLong": "Le nom doit comporter 100 caractères ou moins",
     "descriptionTooLong": "La description doit comporter 1000 caractères ou moins",
     "namePlaceholder": "Nom de la langue",
-    "descriptionPlaceholder": "Ajoutez une description…"
+    "descriptionPlaceholder": "Ajoutez une description…",
+    "saveFailed": "Enregistrement impossible. Vérifiez votre connexion et réessayez."
   },
   "browse": {
     "pageTitle": "Explorer",
@@ -1413,7 +1432,9 @@
   },
   "families": {
     "emptyTitle": "Aucune langue publique pour l'instant",
-    "emptyDesc": "Une fois que les utilisateurs auront publié leurs langues construites, elles apparaîtront ici sous forme de carte généalogique interactive."
+    "emptyDesc": "Une fois que les utilisateurs auront publié leurs langues construites, elles apparaîtront ici sous forme de carte généalogique interactive.",
+    "deriveLoadFailed": "Impossible de charger les mots. Veuillez réessayer.",
+    "deriveFailed": "Impossible de dériver les mots. Veuillez réessayer."
   },
   "seo": {
     "browse": {
@@ -1481,7 +1502,7 @@
     "metaTitle": "Soutenir LingoCon | Faire un don",
     "metaDescription": "Soutenez le développement open source de LingoCon via OpenCollective.",
     "eyebrow": "Soutenez notre mission",
-    "headline": "Aidez-nous à garder {brand} gratuit & ouvert",
+    "headline": "Aidez-nous à garder <brand>LingoCon</brand> gratuit & ouvert",
     "subhead": "LingoCon est une plateforme open source animée par la passion des langues. Votre contribution nous aide à couvrir les coûts des serveurs, à développer de nouvelles fonctionnalités et à garder l'application accessible à tous.",
     "infrastructureTitle": "Infrastructure",
     "infrastructureDesc": "Aide à couvrir les bases de données, l'hébergement cloud et le stockage pour des milliers de langues.",

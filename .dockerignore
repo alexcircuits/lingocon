@@ -22,3 +22,6 @@ tests
 vitest.config.ts
 vitest.setup.ts
 tsconfig.tsbuildinfo
+/.next-releases
+/.next-release
+/rust/target

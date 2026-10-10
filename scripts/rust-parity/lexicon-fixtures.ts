@@ -1,0 +1,150 @@
+/**
+ * Builds every artefact that pins the Rust lexicon analysis (rust/crates/core) to main's
+ * TypeScript: JSON fixtures holding inputs *and* the outputs of the real TS functions, plus the
+ * Rust copy of the Swadesh list. Pure (no file I/O) so the vitest freshness check can rebuild
+ * everything in memory and compare it with what is committed.
+ */
+import { getValidationWarnings } from "@/lib/utils/validation"
+import { matchSwadeshList, SWADESH_LIST } from "@/lib/data/swadesh-list"
+import { buildCorpusInputs } from "./corpus"
+import { toFixtureJson } from "./fixture-json"
+import { TARGETED_CASES } from "./lexicon-cases"
+import type { LexiconCase, LexiconExpected, LexiconInput } from "./lexicon-types"
+import { buildUnicodeTables } from "./unicode-tables"
+
+export const FIXTURE_DIR = "rust/crates/core/tests/fixtures"
+export const SWADESH_RUST_SOURCE = "rust/crates/core/src/swadesh_data.rs"
+const GENERATOR = "scripts/rust-parity/generate-lexicon-fixtures.ts"
+
+export interface FixtureFile {
+  /** Repository-relative path. */
+  path: string
+  content: string
+  /** Set for engine-dependent files: the Unicode version of the Node that produced them. */
+  engineUnicodeVersion?: string
+}
+
+/** Run main's TypeScript exactly as the studio overview does. */
+export function analyzeWithTypeScript(input: LexiconInput): LexiconExpected {
+  const warnings = getValidationWarnings(
+    input.symbols,
+    input.entries,
+    input.paradigmIds.map((id) => ({ id })),
+    { allowsDiacritics: input.allowsDiacritics }
+  )
+  const { matched } = matchSwadeshList(input.entries.map((entry) => entry.gloss))
+  return { warnings, total: warnings.length, matchedIds: Array.from(matched).sort((a, b) => a - b) }
+}
+
+function withExpected(input: LexiconInput & { name: string }): LexiconCase {
+  return { ...input, expected: analyzeWithTypeScript(input) }
+}
+
+export function buildTargetedCases(): LexiconCase[] {
+  return TARGETED_CASES.flatMap((targeted) => {
+    const modes = targeted.allowsDiacritics === undefined ? [false, true] : [targeted.allowsDiacritics]
+    return modes.map((allowsDiacritics) =>
+      withExpected({
+        name: `${targeted.name} [diacritics ${allowsDiacritics ? "on" : "off"}]`,
+        symbols: targeted.symbols,
+        entries: targeted.entries,
+        paradigmIds: targeted.paradigmIds,
+        allowsDiacritics,
+      })
+    )
+  })
+}
+
+export function buildCorpusCases(): LexiconCase[] {
+  return buildCorpusInputs().map(withExpected)
+}
+
+/** Single glosses through matchSwadeshList, to localise any gloss-normalisation mismatch. */
+const GLOSS_CASES: readonly string[] = [
+  "eat", "Eat", "EAT", "to eat", "To Eat", "to  eat", "to\teat", "to\u00a0eat", "to\u3000eat", "toeat", "to",
+  "to ", "to eat ", "  eat  ", "\ufeffeat", "eat\ufeff", "eat\u0085", "\u0085eat", "eat\u2028", "eat\u180e",
+  "eat\u200b", "eat\u000b", "eat\r\n", "big (in size)", "(big)", "big(", "big)", "b(i)g", "(x) big",
+  "big (a, b)", "big, large", "big; large", "big/large", "big,large", "big ,  large", "sun; star / moon",
+  "you", "you (singular)", "You (Singular)", "you (plural)", "you(singular)", "you ( singular )", "you (sg)",
+  "thou, you", "(you)", "I", "i", "\u0130", "\u0131", "\u212anee", "KNEE", "to be big (of size)",
+  "to (be) eat", "to (x) eat", "(to) eat", "to to eat", "to, eat", "to; eat", "right", "Right side",
+  "near/far", "", "  ", "\u03a3\u0391\u03a3", "\u03c3\u03b1\u03c2", "\u043c\u0430\u0442\u044c",
+  "mother-in-law", "mother (biological), mom", "father/dad;papa", "hand\u0301", "worm (earth)", "dust",
+  "snake (any)", "((eat))", "(eat)) eat", "eat (", "to\u2028eat", "to\u0085eat", "to\ufeffeat",
+]
+
+export interface SwadeshFixture {
+  generatedBy: string
+  list: Array<{ id: number; english: string; category: string }>
+  glossCases: Array<{ gloss: string; matchedIds: number[] }>
+}
+
+export function buildSwadeshFixture(): SwadeshFixture {
+  const matchedIds = (glosses: string[]) =>
+    Array.from(matchSwadeshList(glosses).matched).sort((a, b) => a - b)
+  return {
+    generatedBy: GENERATOR,
+    list: SWADESH_LIST.map(({ id, english, category }) => ({ id, english, category })),
+    glossCases: [
+      ...GLOSS_CASES.map((gloss) => ({ gloss, matchedIds: matchedIds([gloss]) })),
+      ...SWADESH_LIST.map(({ english }) => ({ gloss: english, matchedIds: matchedIds([english]) })),
+    ],
+  }
+}
+
+function rustString(value: string): string {
+  let out = '"'
+  for (const ch of value) {
+    const cp = ch.codePointAt(0) ?? 0
+    if (ch === '"' || ch === "\\") out += "\\" + ch
+    else if (cp >= 0x20 && cp < 0x7f) out += ch
+    else out += `\\u{${cp.toString(16)}}`
+  }
+  return out + '"'
+}
+
+export function buildSwadeshRustSource(): string {
+  const rows = SWADESH_LIST.map(
+    ({ id, english, category }) =>
+      `    SwadeshConcept { id: ${id}, english: ${rustString(english)}, category: ${rustString(category)} },`
+  )
+  return [
+    `//! @generated by \`npx tsx ${GENERATOR}\` from \`lib/data/swadesh-list.ts\`.`,
+    "//! Do not edit by hand: regenerate. `npm test` fails while this file is stale",
+    "//! (scripts/rust-parity/__tests__/lexicon-fixtures.test.ts).",
+    "",
+    "use crate::swadesh::SwadeshConcept;",
+    "",
+    "/// The Swadesh 207-concept list, in TypeScript `SWADESH_LIST` order.",
+    "#[rustfmt::skip]",
+    "pub const SWADESH_LIST: &[SwadeshConcept] = &[",
+    ...rows,
+    "];",
+    "",
+  ].join("\n")
+}
+
+function lexiconFile(cases: LexiconCase[]): string {
+  return toFixtureJson({ generatedBy: GENERATOR, cases })
+}
+
+/**
+ * Every generated file. `includeUnicodeTables` adds the engine snapshot, which walks
+ * all 1.1M code points and depends on the Node version (see unicode-tables.ts).
+ */
+export function buildFixtureFiles(options: { includeUnicodeTables: boolean }): FixtureFile[] {
+  const files: FixtureFile[] = [
+    { path: `${FIXTURE_DIR}/lexicon-cases.json`, content: lexiconFile(buildTargetedCases()) },
+    { path: `${FIXTURE_DIR}/lexicon-corpus.json`, content: lexiconFile(buildCorpusCases()) },
+    { path: `${FIXTURE_DIR}/swadesh.json`, content: toFixtureJson(buildSwadeshFixture()) },
+    { path: SWADESH_RUST_SOURCE, content: buildSwadeshRustSource() },
+  ]
+  if (options.includeUnicodeTables) {
+    files.push({
+      path: `${FIXTURE_DIR}/unicode-tables.json`,
+      content: toFixtureJson(buildUnicodeTables()),
+      engineUnicodeVersion: process.versions.unicode ?? "unknown",
+    })
+  }
+  return files
+}
