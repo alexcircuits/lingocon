@@ -41,6 +41,25 @@ test.describe("interface language", () => {
     await expect(page.locator("footer")).toContainText(EN.footer.copyright.replace("{year}", String(YEAR)))
   })
 
+  test("the switch is applied even when the server answers the refresh slowly", async ({ page, pageErrors }) => {
+    // Regression: under load, a router.refresh() whose RSC response streamed in slowly was never
+    // applied (React dropped the ping of an already-arrived chunk; patches/README.md). Hold the
+    // refresh response back the way a busy server does.
+    await page.route(/\/browse\?_rsc=/, async (route) => {
+      if (route.request().headers()["next-router-prefetch"]) return route.continue()
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      await route.continue()
+    })
+    const fr = readMessages("fr")
+    await page.goto("/browse")
+    await page.getByRole("button", { name: EN.i18n.switcherLabel }).click()
+    await page.getByRole("menuitem", { name: new RegExp(EN.i18n.french) }).click()
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr")
+    await expect(page.locator("footer").getByRole("heading", { name: fr.footer.product })).toBeVisible()
+    expectNoPageErrors(pageErrors)
+  })
+
   test("the language switcher sets the cookie and re-renders the page", async ({ page, context, pageErrors }) => {
     const fr = readMessages("fr")
     await page.goto("/browse")
