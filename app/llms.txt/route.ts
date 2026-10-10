@@ -111,6 +111,9 @@ Built with Next.js (App Router), TypeScript, PostgreSQL, Prisma ORM, NextAuth.js
 LingoCon operates under a "No Shame Policy" — all contributions are welcome, including AI-generated content, partial implementations, and napkin-sketch ideas submitted via email. The project is open-source and community-funded.
 `
 
+// Constant text: build it once (GET handlers are dynamic by default since Next 15).
+export const dynamic = "force-static"
+
 export async function GET() {
   return new NextResponse(content, {
     headers: {

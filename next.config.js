@@ -4,6 +4,8 @@ const { resolveDistDir } = require("./lib/release-dir.cjs")
 const nextConfig = {
   // deploy.sh releases vs manual builds: see lib/release-dir.cjs.
   distDir: resolveDistDir({ root: __dirname, argv: process.argv, env: process.env }),
+  // The app root, not whichever parent directory happens to hold another lockfile.
+  outputFileTracingRoot: __dirname,
   async headers() {
     return [
       {
@@ -36,10 +38,8 @@ const nextConfig = {
       },
     ]
   },
+  // instrumentation.ts register() (env validation at startup) runs without a flag since Next 15.
   experimental: {
-    // Runs instrumentation.ts register() once at server startup (env validation).
-    // Stable and flag-free in Next 15+; required on Next 14.
-    instrumentationHook: true,
     serverActions: {
       bodySizeLimit: "10mb",
     },

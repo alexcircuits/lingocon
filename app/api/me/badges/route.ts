@@ -9,7 +9,7 @@ const NO_STORE = { "Cache-Control": "private, no-store" }
 /**
  * Earned badges the signed-in user has not been shown yet.
  *
- * Polled after navigations, so it must not be a Server Action: Next 14 runs
+ * Polled after navigations, so it must not be a Server Action: Next (14, 15) runs
  * those one at a time per tab, and a navigation that interrupts one forces an
  * extra full-tree refresh afterwards.
  */

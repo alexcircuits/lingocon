@@ -43,10 +43,13 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      # Non-blocking for now: the outstanding advisories are in Next.js and
-      # require the deliberate framework upgrade. Surfaces new high/critical CVEs
-      # without failing the build. Tighten to a blocking gate once Next is bumped.
-      - name: Dependency audit
+      # What runs in production must have no high/critical advisories.
+      - name: Dependency audit (runtime)
+        run: npm audit --omit=dev --audit-level=high
+
+      # Build/dev tooling, informational: Tailwind 3, eslint-config-next and patch-package
+      # reach `braces` (no patched release; they only expand our own glob patterns).
+      - name: Dependency audit (all, informational)
         run: npm audit --audit-level=high
         continue-on-error: true
 

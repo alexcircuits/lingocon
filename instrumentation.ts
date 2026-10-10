@@ -6,7 +6,7 @@
  * Guarded to the Node.js runtime (skips the Edge runtime, where most server
  * env vars are unavailable and validation would be meaningless).
  *
- * Requires `experimental.instrumentationHook` in next.config.js on Next 14.
+ * Next 15 runs this without a config flag (Next 14 needed `experimental.instrumentationHook`).
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {

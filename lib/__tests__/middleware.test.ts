@@ -13,7 +13,7 @@ describe("slug-reservation middleware", () => {
     vi.unstubAllGlobals()
   })
 
-  // What middleware really receives: Next 14.2 strips the RSC, router-state and
+  // What middleware really receives: Next (14.2, 15.5) strips the RSC, router-state and
   // prefetch headers and the `_rsc` query parameter before middleware runs
   // (next/dist/server/web/adapter.js), so in-app fetches look like plain fetches.
   const browserDocument = { "sec-fetch-dest": "document", accept: "text/html,application/xhtml+xml,*/*;q=0.8" }

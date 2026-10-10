@@ -4,7 +4,7 @@ import { defaultLocale, getIntlLocale, LOCALE_COOKIE, locales } from './config';
 import { getConlangMessages, mergeMessages } from './conlang-messages';
 
 export default getRequestConfig(async () => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const localeCookie = cookieStore.get(LOCALE_COOKIE)?.value || defaultLocale;
 
   let messages: Record<string, any>;

@@ -12,7 +12,7 @@ const NO_STORE = { "Cache-Control": "private, no-store" }
  * Bell-menu data for the signed-in user.
  *
  * A GET route rather than Server Actions: the navbar mounts on most pages, and
- * Next 14 runs Server Actions one at a time per tab, so four read-only actions
+ * Next (14, 15) runs Server Actions one at a time per tab, so four read-only actions
  * per navigation queued in front of the user's real saves.
  */
 export async function GET() {

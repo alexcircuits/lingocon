@@ -1,0 +1,76 @@
+diff --git a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js
+index 4376913..acfe822 100644
+--- a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js
++++ b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js
+@@ -15776,6 +15776,14 @@
+           break;
+         case 5:
+           resetHooksOnUnwind(unitOfWork);
++          var fiber = unitOfWork;
++          fiber === hydrationParentFiber &&
++            (isHydrating
++              ? (popToNextHostParent(fiber),
++                5 === fiber.tag &&
++                  null != fiber.stateNode &&
++                  (nextHydratableInstance = fiber.stateNode))
++              : (popToNextHostParent(fiber), (isHydrating = !0)));
+         default:
+           unwindInterruptedWork(current, unitOfWork),
+             (unitOfWork = workInProgress =
+diff --git a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.production.js b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.production.js
+index 755076a..9f656d0 100644
+--- a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.production.js
++++ b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.production.js
+@@ -11210,6 +11210,14 @@ function replaySuspendedUnitOfWork(unitOfWork) {
+       break;
+     case 5:
+       resetHooksOnUnwind(next);
++      var fiber = next;
++      fiber === hydrationParentFiber &&
++        (isHydrating
++          ? (popToNextHostParent(fiber),
++            5 === fiber.tag &&
++              null != fiber.stateNode &&
++              (nextHydratableInstance = fiber.stateNode))
++          : (popToNextHostParent(fiber), (isHydrating = !0)));
+     default:
+       unwindInterruptedWork(current, next),
+         (next = workInProgress =
+diff --git a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.development.js b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
+index 43d0363..3cf4608 100644
+--- a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
++++ b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
+@@ -15784,6 +15784,14 @@
+           break;
+         case 5:
+           resetHooksOnUnwind(unitOfWork);
++          var fiber = unitOfWork;
++          fiber === hydrationParentFiber &&
++            (isHydrating
++              ? (popToNextHostParent(fiber),
++                5 === fiber.tag &&
++                  null != fiber.stateNode &&
++                  (nextHydratableInstance = fiber.stateNode))
++              : (popToNextHostParent(fiber), (isHydrating = !0)));
+         default:
+           unwindInterruptedWork(current, unitOfWork),
+             (unitOfWork = workInProgress =
+diff --git a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
+index 85185b0..beb4491 100644
+--- a/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
++++ b/node_modules/next/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
+@@ -11814,6 +11814,14 @@ function replaySuspendedUnitOfWork(unitOfWork) {
+       break;
+     case 5:
+       resetHooksOnUnwind(next);
++      var fiber = next;
++      fiber === hydrationParentFiber &&
++        (isHydrating
++          ? (popToNextHostParent(fiber),
++            5 === fiber.tag &&
++              null != fiber.stateNode &&
++              (nextHydratableInstance = fiber.stateNode))
++          : (popToNextHostParent(fiber), (isHydrating = !0)));
+     default:
+       unwindInterruptedWork(current, next),
+         (next = workInProgress =

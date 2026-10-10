@@ -4,8 +4,9 @@ import { canReadLanguage, getUserId } from '@/lib/auth-helpers';
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params: paramsPromise }: { params: Promise<{ slug: string }> }
 ) {
+  const params = await paramsPromise;
   try {
     const userId = await getUserId();
     if (!userId) {

@@ -757,7 +757,7 @@ function TranslateCard({
   feedback: FeedbackState
   onChange: (v: string) => void
   onSubmit: () => void
-  inputRef: React.RefObject<HTMLInputElement>
+  inputRef: React.RefObject<HTMLInputElement | null>
   scriptSymbols: ScriptSymbol[]
   showRoman: boolean
 }) {

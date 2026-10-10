@@ -10,8 +10,9 @@ const updateTranslationsSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { languageId: string } }
+  { params: paramsPromise }: { params: Promise<{ languageId: string }> }
 ) {
+  const params = await paramsPromise;
   try {
     // Private languages: owner, collaborators and admins (the old check forgot collaborators).
     if (!(await canReadLanguage(params.languageId, await getUserId()))) {
@@ -36,8 +37,9 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { languageId: string } }
+  { params: paramsPromise }: { params: Promise<{ languageId: string }> }
 ) {
+  const params = await paramsPromise;
   try {
     // getUserId honours suspension; the old fallback to getDevUserId() threw a 500 in production
     // for every anonymous request.

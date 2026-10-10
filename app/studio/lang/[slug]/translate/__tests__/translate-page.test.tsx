@@ -1,9 +1,13 @@
-import { cleanup, render, screen } from "@testing-library/react"
-import type { ReactNode } from "react"
+import { act, cleanup, render, screen } from "@testing-library/react"
+import { Suspense, type ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }))
+vi.mock("next-intl", () => {
+  // Stable like next-intl's own `t`: the page's load effect depends on it.
+  const t = (key: string) => key
+  return { useTranslations: () => t }
+})
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 // A two-string catalogue instead of every message in the app.
 vi.mock("@/messages/en.json", () => ({ default: { common: { save: "Save", cancel: "Cancel" } } }))
@@ -26,7 +30,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 async function open(access: Access) {
-  render(<TranslatePage params={{ slug: "lingua" }} />, { wrapper: withAccess(access) })
+  // Next 15 passes params as a Promise; the page unwraps it with use(), which suspends.
+  await act(async () => {
+    render(
+      <Suspense fallback={null}><TranslatePage params={Promise.resolve({ slug: "lingua" })} /></Suspense>,
+      { wrapper: withAccess(access) }
+    )
+  })
   return screen.findByPlaceholderText("Save")
 }
 

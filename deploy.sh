@@ -93,10 +93,24 @@ mkdir -p "$RELEASES_DIR"
 
 # Reuse the previous build cache (webpack, image optimizer) so builds and the first
 # requests after a deploy are not cold. `next build` keeps <distDir>/cache.
+# Webpack's cache treats node_modules as immutable: after a change to patches/ at the same
+# package version it would keep serving the unpatched modules, so drop it then.
+patches_fingerprint() {
+  local hasher="sha256sum"
+  command -v sha256sum >/dev/null 2>&1 || hasher="shasum -a 256"
+  { cat patches/*.patch 2>/dev/null || true; } | $hasher | cut -d' ' -f1
+}
+PATCHES_FINGERPRINT="$(patches_fingerprint)"
 if [ -d "$PREVIOUS_RELEASE/cache" ]; then
   mkdir -p "$RELEASE"
   cp -a "$PREVIOUS_RELEASE/cache" "$RELEASE/cache"
+  if [ "$(cat "$RELEASE/cache/patches.sha256" 2>/dev/null || true)" != "$PATCHES_FINGERPRINT" ]; then
+    echo "🧩 patches/ changed since the last release — rebuilding without the webpack cache"
+    rm -rf "$RELEASE/cache/webpack"
+  fi
 fi
+mkdir -p "$RELEASE/cache"
+echo "$PATCHES_FINGERPRINT" > "$RELEASE/cache/patches.sha256"
 
 # Build into the new release directory. If this fails, the script aborts before
 # anything points at it.

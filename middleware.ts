@@ -55,7 +55,7 @@ function redirectToNewSlug(request: NextRequest, slug: string, newSlug: string) 
  */
 /**
  * Only full page loads need the old-slug redirect: in-app navigations follow fresh
- * links and the studio layout redirects the rest. Next 14.2 strips the RSC/prefetch
+ * links and the studio layout redirects the rest. Next (14.2, 15.5) strips the RSC/prefetch
  * headers and the `_rsc` parameter before middleware runs, so in-app fetches can't
  * be recognised by those. Page loads ask for HTML (RSC fetches accept any type):
  * that also covers crawlers and navigations the service worker forwards with fetch(),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,8 @@ interface FlatMessage {
   section: string;
 }
 
-export default function TranslatePage({ params }: { params: { slug: string } }) {
+export default function TranslatePage({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+  const params = use(paramsPromise);
   const t = useTranslations("i18n");
   const router = useRouter();
   // Saving needs canEditLanguage on the server (PUT /api/translations): owner/admin or any write:

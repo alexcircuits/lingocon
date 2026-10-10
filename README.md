@@ -19,7 +19,7 @@ A platform for creating and documenting constructed languages. Live at [lingocon
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router), React 19
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Database**: PostgreSQL with Prisma ORM

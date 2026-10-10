@@ -61,7 +61,7 @@ export default async function PublicLangLayout({
     // redirected by middleware; client navigations land here instead.
     const target = await findReservedSlugTarget(slug)
     // Same section of the renamed project (the middleware passes the requested path).
-    if (target) redirect(withRenamedSlug(headers().get(PATHNAME_HEADER), "/lang", slug, target))
+    if (target) redirect(withRenamedSlug((await headers()).get(PATHNAME_HEADER), "/lang", slug, target))
     notFound()
   }
 

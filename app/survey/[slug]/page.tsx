@@ -7,7 +7,8 @@ import { auth } from "@/auth"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+    const params = await paramsPromise
     const survey = await getSurvey(params.slug)
     if (!survey) return { title: "Survey Not Found | LingoCon" }
     return {
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     }
 }
 
-export default async function SurveyPage({ params }: { params: { slug: string } }) {
+export default async function SurveyPage({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+    const params = await paramsPromise
     const session = await auth()
     const isDevMode = process.env.DEV_MODE === "true"
     const survey = await getSurvey(params.slug)

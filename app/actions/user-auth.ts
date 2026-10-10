@@ -21,8 +21,8 @@ type AuthActionResult = { success?: boolean; error?: string }
 const TOO_MANY: AuthActionResult = { error: "Too many attempts. Please wait a few minutes and try again." }
 
 /** Per-IP and (optionally) per-email throttle for the unauthenticated account endpoints. */
-function throttled(action: string, email: string | null, perIp: number, perEmail: number, windowMs: number) {
-    const ip = clientIpFromHeaders(headers())
+async function throttled(action: string, email: string | null, perIp: number, perEmail: number, windowMs: number): Promise<boolean> {
+    const ip = clientIpFromHeaders(await headers())
     if (!rateLimit(`${action}:ip:${ip}`, perIp, windowMs).ok) return true
     return email !== null && !rateLimit(`${action}:email:${email}`, perEmail, windowMs).ok
 }
@@ -39,7 +39,7 @@ export async function registerUser(formData: FormData): Promise<AuthActionResult
 
     try {
         signUpSchema.parse({ name, email, password })
-        if (throttled("register", null, 10, 0, 60 * 60_000)) return TOO_MANY
+        if (await throttled("register", null, 10, 0, 60 * 60_000)) return TOO_MANY
 
         const existingUser = await findUserByEmail(email)
 
@@ -93,7 +93,7 @@ export async function verifyEmail(token: string): Promise<AuthActionResult> {
 export async function resendVerificationEmail(rawEmail: string): Promise<AuthActionResult> {
     try {
         const email = normalizeEmail(String(rawEmail ?? ""))
-        if (throttled("verify-resend", email, 10, 3, 60 * 60_000)) return TOO_MANY
+        if (await throttled("verify-resend", email, 10, 3, 60 * 60_000)) return TOO_MANY
         const user = await findUserByEmail(email)
 
         if (!user) {
@@ -119,7 +119,7 @@ export async function resendVerificationEmail(rawEmail: string): Promise<AuthAct
 export async function requestPasswordReset(rawEmail: string): Promise<AuthActionResult> {
     try {
         const email = normalizeEmail(String(rawEmail ?? ""))
-        if (throttled("password-reset", email, 10, 3, 60 * 60_000)) return TOO_MANY
+        if (await throttled("password-reset", email, 10, 3, 60 * 60_000)) return TOO_MANY
         const user = await findUserByEmail(email)
 
         // Don't reveal whether the user exists
@@ -146,7 +146,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
         if (newPassword.length > 200) {
             return { error: "Password is too long." }
         }
-        if (throttled("password-reset-consume", null, 20, 0, 60 * 60_000)) return TOO_MANY
+        if (await throttled("password-reset-consume", null, 20, 0, 60 * 60_000)) return TOO_MANY
 
         const email = await consumePasswordResetToken(token)
 

@@ -32,8 +32,24 @@ Pre-existing risks found (not changed by deploying):
 
 ## What a deploy of this branch changes
 
-- **No database change**: `prisma migrate deploy` has nothing to apply. `package.json`
-  and the lockfile equal `main`'s, so `npm install` adds nothing.
+- **No database change**: `prisma migrate deploy` has nothing to apply.
+- **Framework upgrade (security)**: Next 14.2.35 (end of life; critical advisories incl.
+  RCE in the image optimizer, which this site uses) → **Next 15.5.27 + React 19**, plus
+  patched Auth.js, sharp (re-encodes uploads), Tiptap/ProseMirror. `npm audit --omit=dev`
+  reports nothing. `npm install` downloads the new packages and its `postinstall` applies
+  `patches/next+15.5.27.patch` (a React hydration fix, see `patches/README.md`); if the
+  patch does not apply, `npm install` fails and `deploy.sh` stops before building. Needs
+  Node ≥ 20.9 (the VPS has 22.22).
+- **Deploy this one in a quiet window.** `npm install` replaces `node_modules` in place
+  before the build: for the few build minutes the running Next 14 workers serve from
+  already-loaded code, but a worker that restarts in that window (crash, OOM) would boot
+  the Next 14 release on the Next 15 packages and fail until the deploy reloads it. If the
+  deploy fails after `npm install`, restore consistency before any restart: put back the
+  previous `package.json` and `package-lock.json` and run `npm install` (or finish the
+  deploy). Later deploys without dependency changes are unaffected.
+- **Tabs left open across this deploy** run the Next 14 client against the Next 15
+  server: their next in-app navigation may fall back to a full page load (or, rarely,
+  show an error that a reload fixes). Later deploys are not affected.
 - **Release directories**: `deploy.sh` builds into `.next-releases/<timestamp>` while the
   old build keeps serving, records the live one in `.next-release`, reloads PM2, checks
   that every worker serves the new `BUILD_ID`, and **rolls back automatically** if not.
