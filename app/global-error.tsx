@@ -24,6 +24,8 @@ export default function GlobalError({ error, reset }: {
           <p>Please try again. If the problem continues, include the reference below when reporting it.</p>
           {error.digest && <p>Reference: {error.digest}</p>}
           <button onClick={retry} style={{ padding: ".75rem 1rem" }}>Try again</button>
+          {/* A full page load on purpose: the root layout itself failed, so client navigation is not trustworthy. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <p><a href="/">Go to the homepage</a></p>
         </main>
       </body>

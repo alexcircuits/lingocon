@@ -17,6 +17,7 @@ import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
+import { unstable_rethrow } from "next/navigation";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -176,7 +177,9 @@ export default async function RootLayout({
     getTranslations("common"),
     // A failed lookup (e.g. the database is down) must not take down every page: without an
     // initial session the provider fetches it itself.
-    auth().catch((error) => {
+    auth().catch((error: unknown) => {
+      // Next's own signals (dynamic rendering, redirects) are not failures: let them through.
+      unstable_rethrow(error);
       console.error("[layout] session lookup failed", error);
       return undefined;
     }),
