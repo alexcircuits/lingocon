@@ -295,9 +295,11 @@ test.describe("language settings (owner)", () => {
     await expect(page.locator(`a[href="${studioPath(language.slug)}"]`)).toHaveCount(0)
     expect(await db().language.count({ where: { id: language.id } })).toBe(0)
 
-    await page.goto(studioPath(language.slug))
+    // A real 404 (not a not-found page streamed into a 200): no loading boundary wraps the
+    // studio layout that looks the language up.
+    expect((await page.goto(studioPath(language.slug)))?.status()).toBe(404)
     await expect(notFound(page)).toBeVisible()
-    await page.goto(studioPath(language.slug, "dictionary"))
+    expect((await page.goto(studioPath(language.slug, "dictionary")))?.status()).toBe(404)
     await expect(notFound(page)).toBeVisible()
     expectNoPageErrors(pageErrors)
   })

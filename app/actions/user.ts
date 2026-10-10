@@ -5,7 +5,21 @@ import { toActionError } from "@/lib/errors"
 import { getUserId } from "@/lib/auth-helpers"
 import { updateUserSchema, type UpdateUserInput } from "@/lib/validations/user"
 import { revalidatePath } from "next/cache"
-import { signOut } from "@/auth"
+import { signOut, unstable_update } from "@/auth"
+
+/**
+ * The name and avatar travel in the session JWT, which pages now render from: re-issue the
+ * cookie in this response so a reload right after saving shows the new profile. The save
+ * itself already succeeded, so a failed refresh is logged, not reported (the settings page
+ * also asks the client session to update).
+ */
+async function refreshSessionProfile(): Promise<void> {
+    try {
+        await unstable_update({})
+    } catch (error) {
+        console.error("[updateUser] session refresh failed", error)
+    }
+}
 
 export async function updateUser(input: UpdateUserInput) {
     const userId = await getUserId()
@@ -31,6 +45,7 @@ export async function updateUser(input: UpdateUserInput) {
 
         revalidatePath(`/users/${userId}`)
         revalidatePath("/settings")
+        await refreshSessionProfile()
 
         return {
             success: true,

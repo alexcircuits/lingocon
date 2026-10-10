@@ -68,7 +68,9 @@ test.describe("create a language (owner)", () => {
     const nameField = page.locator("#name")
     const slugField = page.locator("#slug")
 
-    // Typed key by key, as a person would.
+    // Typed key by key, as a person would — once the field is on screen: pressSequentially does
+    // not wait for visibility, and the streamed form is revealed only after the first paint.
+    await expect(nameField).toBeVisible()
     await nameField.pressSequentially("Tōki Бретонский ß")
     await expect(slugField).toHaveValue("toki-bretonskii-ss")
     await nameField.fill("Ŋaŧ Þorn's Tongue")
@@ -102,7 +104,8 @@ test.describe("create a language (owner)", () => {
     cleanupLater(slug)
 
     await page.goto("/dashboard/new-language")
-    await page.getByRole("button", { name: "Use Guided Setup" }).click()
+    // A link (works before hydration), not a button.
+    await page.getByRole("link", { name: "Use Guided Setup" }).click()
     await expect(page.getByText("Create Language - Step 1 of 5")).toBeVisible()
     await page.locator("#wizard-name").fill(name)
     await expect(page.locator("#wizard-slug")).toHaveValue(slug)
@@ -138,6 +141,8 @@ test.describe("create a language (owner)", () => {
 
   test("guided wizard: the slug follows a name typed key by key", async ({ page, pageErrors }) => {
     await page.goto("/dashboard/new-language?wizard=true")
+    // On screen first (pressSequentially does not wait for visibility; see the form test).
+    await expect(page.locator("#wizard-name")).toBeVisible()
     await page.locator("#wizard-name").pressSequentially("Wizard Tongue")
     await expect(page.locator("#wizard-slug")).toHaveValue("wizard-tongue")
     expectNoPageErrors(pageErrors)

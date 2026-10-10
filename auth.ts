@@ -79,7 +79,7 @@ async function devAuth() {
   }
 }
 
-const nextAuthConfig = {
+export const nextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" as const },
   // Auth.js refuses to serve `/api/auth/*` without a secret. DEV_MODE (never allowed in production,
@@ -164,6 +164,8 @@ const nextAuthConfig = {
         if (dbUser) {
           token.name = dbUser.name
           token.image = dbUser.image
+          // Auth.js builds session.user.image from `picture` (set at sign-in): keep it in step.
+          token.picture = dbUser.image
         }
       }
       return token
@@ -180,14 +182,17 @@ const nextAuthConfig = {
       if (session.user && userId) {
         session.user.id = userId as string
         if (token.name) session.user.name = token.name as string
-        if (token.image) session.user.image = token.image as string
+        // A removed avatar is null and must clear the picture; tokens without `image` keep theirs.
+        if (token.image !== undefined) session.user.image = token.image as string | null
       }
       return session
     },
   },
 }
 
-export const { handlers, signIn, signOut, auth: nextAuth } = NextAuth(nextAuthConfig)
+// `unstable_update` re-issues the session cookie server-side (the jwt "update" trigger
+// re-reads name and image), e.g. right after a profile save.
+export const { handlers, signIn, signOut, auth: nextAuth, unstable_update } = NextAuth(nextAuthConfig)
 
 /**
  * The session for server code. A suspended account's still-valid session cookie counts

@@ -16,6 +16,7 @@ import { Instrument_Serif, JetBrains_Mono, Noto_Sans, Plus_Jakarta_Sans } from "
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { auth } from "@/auth";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -169,9 +170,18 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-  const skipLabel = (await getTranslations("common"))("skipToContent");
+  const [locale, messages, common, session] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getTranslations("common"),
+    // A failed lookup (e.g. the database is down) must not take down every page: without an
+    // initial session the provider fetches it itself.
+    auth().catch((error) => {
+      console.error("[layout] session lookup failed", error);
+      return undefined;
+    }),
+  ]);
+  const skipLabel = common("skipToContent");
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -191,7 +201,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
+          {/* Seeded with the server session: without it the provider fetches the session on
+              mount, and that early context update makes React client-render Suspense
+              boundaries still waiting for their streamed reveal (duplicated content). */}
+          <SessionProvider session={session}>
             <NextIntlClientProvider messages={messages}>
               <MotionConfigProvider>
               <a
