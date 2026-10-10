@@ -20,7 +20,7 @@
     "db:generate": "prisma generate"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.1",
+    "@auth/prisma-adapter": "^2.11.3",
     "@aws-sdk/client-polly": "^3.958.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -45,14 +45,14 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.3.2",
     "@tailwindcss/typography": "^0.5.19",
-    "@tiptap/core": "^3.15.1",
-    "@tiptap/extension-table": "^3.15.3",
-    "@tiptap/extension-table-cell": "^3.15.3",
-    "@tiptap/extension-table-header": "^3.15.3",
-    "@tiptap/extension-table-row": "^3.15.3",
-    "@tiptap/pm": "^3.14.0",
-    "@tiptap/react": "^3.14.0",
-    "@tiptap/starter-kit": "^3.14.0",
+    "@tiptap/core": "^3.31.4",
+    "@tiptap/extension-table": "^3.31.4",
+    "@tiptap/extension-table-cell": "^3.31.4",
+    "@tiptap/extension-table-header": "^3.31.4",
+    "@tiptap/extension-table-row": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
@@ -66,7 +66,7 @@
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "next": "^14.2.0",
-    "next-auth": "^5.0.0-beta.30",
+    "next-auth": "^5.0.0-beta.32",
     "next-intl": "^4.13.0",
     "next-themes": "^0.4.6",
     "node-cron": "^4.5.0",
@@ -81,7 +81,7 @@
     "recharts": "^3.6.0",
     "remark-gfm": "^4.0.1",
     "resend": "^6.10.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
@@ -107,13 +107,24 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
     "jsdom": "^25.0.1",
-    "postcss": "^8.4.0",
+    "postcss": "^8.5.29",
     "tailwindcss": "^3.4.0",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^2.1.9"
   },
   "overrides": {
-    "glob": "10.5.0"
+    "glob": "10.5.0",
+    "postcss": "$postcss",
+    "docx": {
+      "nanoid": "^5.1.16"
+    },
+    "exceljs": {
+      "uuid": "^11.1.1"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "^8.0.2"
+    },
+    "postcss-selector-parser": "^7.1.6"
   }
 }
