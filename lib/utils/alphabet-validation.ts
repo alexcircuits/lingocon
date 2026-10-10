@@ -128,6 +128,26 @@ export function validateStringAgainstAlphabet(
     return Array.from(new Set(invalidChars))
 }
 
+/** One phoneme as a sticky, case-insensitive matcher (same flags as the old alternation). */
+function phonemeMatchers(phonemes: string[]): RegExp[] {
+    return Array.from(new Set(phonemes)).map(
+        (p) => new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'iy')
+    )
+}
+
+/**
+ * Does `str` split into one or more syllables of `syllableStructure` (e.g. "(C)V(C)"),
+ * with C/V slots filled by the given phonemes, ignoring case, whitespace, digits,
+ * punctuation and symbols?
+ *
+ * This used to compile `^((C)?V(C)?)+$` into one regex. Correct, but a word that
+ * almost fits made it backtrack exponentially (≈10 s at 31 letters, ≈100 s at 37
+ * for "(C)(C)V(C)(C)"), synchronously on the server during every dictionary save.
+ * Now it is a reachability search over (position, slot) states: each phoneme is
+ * still matched by its own case-insensitive regex — exactly how the alternation
+ * matched one alternative — so results are unchanged, in O(length × slots ×
+ * phonemes) time.
+ */
 export function validatePhonotactics(
     str: string,
     syllableStructure?: string | null,
@@ -136,37 +156,58 @@ export function validatePhonotactics(
 ): boolean {
     if (!str || !syllableStructure || !consonants?.length || !vowels?.length) return true // Cannot validate
 
-    // Basic regex conversion
-    // e.g., (C)V(C) -> (C)?V(C)?
-    // C -> (p|t|k)
-    // V -> (a|e|i)
-    
-    // Sort to match longest phonemes first (digraphs)
-    const sortedC = [...consonants].sort((a,b) => b.length - a.length).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    const sortedV = [...vowels].sort((a,b) => b.length - a.length).map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    
-    const cGroup = `(${sortedC.join('|')})`
-    const vGroup = `(${sortedV.join('|')})`
-    
     const slots = parseSyllableStructure(syllableStructure)
     if (slots.length === 0) return true
-    
-    let syllableRegexStr = ""
-    for (const slot of slots) {
-        if (slot.type === "C") {
-            syllableRegexStr += cGroup + (slot.optional ? "?" : "")
-        } else if (slot.type === "V") {
-            syllableRegexStr += vGroup + (slot.optional ? "?" : "")
-        }
-    }
-    
-    // The word must be composed entirely of these syllables
-    const wordRegex = new RegExp(`^(${syllableRegexStr})+$`, 'i')
-    
+
     // Strip whitespace and punctuation before checking
-    const cleanStr = str.replace(/[\s\d\p{P}\p{S}]+/gu, '')
-    if (!cleanStr) return true // only punctuation
-    
-    return wordRegex.test(cleanStr)
+    const word = str.replace(/[\s\d\p{P}\p{S}]+/gu, '')
+    if (!word) return true // only punctuation
+
+    const matchers = { C: phonemeMatchers(consonants), V: phonemeMatchers(vowels) }
+    // End positions of every phoneme of a class starting at a position, computed once.
+    const endsCache = { C: new Map<number, number[]>(), V: new Map<number, number[]>() }
+    const endsAt = (type: "C" | "V", position: number): number[] => {
+        const cached = endsCache[type].get(position)
+        if (cached) return cached
+        const ends: number[] = []
+        for (const matcher of matchers[type]) {
+            matcher.lastIndex = position
+            const match = matcher.exec(word)
+            if (match) ends.push(position + match[0].length)
+        }
+        endsCache[type].set(position, ends)
+        return ends
+    }
+
+    // State = (position in word, next slot); slot === slots.length means a
+    // syllable just ended there. Accept when a syllable ends at the very end.
+    const slotCount = slots.length
+    const visited = new Uint8Array((word.length + 1) * (slotCount + 1))
+    const stack: number[] = [0, 0]
+    const push = (position: number, slot: number) => {
+        const key = position * (slotCount + 1) + slot
+        if (visited[key]) return
+        visited[key] = 1
+        stack.push(position, slot)
+    }
+    visited[0] = 1
+
+    while (stack.length > 0) {
+        const slot = stack.pop()!
+        const position = stack.pop()!
+        if (slot === slotCount) {
+            if (position === word.length) return true
+            push(position, 0) // the next syllable starts here
+            continue
+        }
+        const { type, optional } = slots[slot]
+        if (optional) push(position, slot + 1)
+        if (type !== "C" && type !== "V") {
+            push(position, slot + 1)
+            continue
+        }
+        for (const end of endsAt(type, position)) push(end, slot + 1)
+    }
+    return false
 }
 
