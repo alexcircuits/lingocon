@@ -597,7 +597,8 @@ export function LanguageSettings({ language, isOwner = false }: LanguageSettings
               onValueChange={(value: "PRIVATE" | "UNLISTED" | "PUBLIC") =>
                 setFormData({ ...formData, visibility: value })
               }
-              disabled={locked}
+              // Publishing or hiding the project is the owner's call (enforced on the server).
+              disabled={!isOwner || locked}
             >
               <SelectTrigger id="visibility">
                 <SelectValue />
@@ -609,7 +610,7 @@ export function LanguageSettings({ language, isOwner = false }: LanguageSettings
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {t("visibilityHint")}
+              {isOwner ? t("visibilityHint") : t("visibilityOwnerOnly")}
             </p>
           </div>
 

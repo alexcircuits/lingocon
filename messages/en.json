@@ -728,7 +728,8 @@
       "save": "Save Changes",
       "saving": "Saving...",
       "savedToast": "Settings updated successfully",
-      "collaboratorsLoadFailed": "Couldn't load collaborators."
+      "collaboratorsLoadFailed": "Couldn't load collaborators.",
+      "visibilityOwnerOnly": "Only the project owner can change who can see it."
     },
     "alphabet": {
       "pageTitle": "Alphabet",

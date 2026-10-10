@@ -728,7 +728,8 @@
       "save": "Зберегти зміни",
       "saving": "Збереження...",
       "savedToast": "Налаштування успішно оновлено",
-      "collaboratorsLoadFailed": "Не вдалося завантажити співавторів."
+      "collaboratorsLoadFailed": "Не вдалося завантажити співавторів.",
+      "visibilityOwnerOnly": "Лише власник проєкту може змінювати, хто його бачить."
     },
     "alphabet": {
       "pageTitle": "Алфавіт",

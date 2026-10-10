@@ -98,6 +98,22 @@ async function changeSlug(
   return { slug: newSlug, lastSlugChangedAt: new Date() }
 }
 
+/**
+ * Visibility, like the slug, is the owner's (or an admin's) call: publishing or hiding the
+ * project is not part of `write:settings`. Collaborators' saves resend the current value,
+ * which stays allowed.
+ */
+async function assertMayChangeVisibility(
+  tx: Prisma.TransactionClient,
+  languageId: string,
+  userId: string,
+  visibility: string
+): Promise<void> {
+  const current = await tx.language.findUnique({ where: { id: languageId }, select: { visibility: true, ownerId: true } })
+  if (!current || current.visibility === visibility) return
+  if (current.ownerId !== userId && !(await isAdmin())) throw new UnauthorizedError()
+}
+
 export async function updateLanguage(input: UpdateLanguageInput, userId: string) {
   const validated = updateLanguageSchema.parse(input)
 
@@ -133,6 +149,7 @@ export async function updateLanguage(input: UpdateLanguageInput, userId: string)
 
   // Slug reservation, columns and the metadata patch commit together: a rejected part rolls all back.
   return prisma.$transaction(async (tx) => {
+    if (validated.visibility !== undefined) await assertMayChangeVisibility(tx, validated.id, userId, validated.visibility)
     const slugChange = validated.slug !== undefined ? await changeSlug(tx, validated.id, validated.slug, userId) : {}
     await mergeLanguageMetadata(tx, validated.id, metadataPatch)
     const data = { ...updateData, ...slugChange }

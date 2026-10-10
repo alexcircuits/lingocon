@@ -728,7 +728,8 @@
       "save": "Enrollañ ar c'hemmoù",
       "saving": "Oc'h enrollañ...",
       "savedToast": "Arventennoù hizivaet mat",
-      "collaboratorsLoadFailed": "N'eus ket bet gallet kargañ ar genlabourerien."
+      "collaboratorsLoadFailed": "N'eus ket bet gallet kargañ ar genlabourerien.",
+      "visibilityOwnerOnly": "Perc'henn ar raktres hepken a c'hall cheñch piv a c'hall e welet."
     },
     "alphabet": {
       "pageTitle": "Lizherenneg",

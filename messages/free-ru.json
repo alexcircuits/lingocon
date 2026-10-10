@@ -728,7 +728,8 @@
       "save": "Сохранить изменения",
       "saving": "Сохранение...",
       "savedToast": "Настройки успешно обновлены",
-      "collaboratorsLoadFailed": "Не удалось загрузить соавторов."
+      "collaboratorsLoadFailed": "Не удалось загрузить соавторов.",
+      "visibilityOwnerOnly": "Только владелец проекта может менять, кто его видит."
     },
     "alphabet": {
       "pageTitle": "Алфавит",

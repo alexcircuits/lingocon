@@ -728,7 +728,8 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement…",
       "savedToast": "Paramètres mis à jour avec succès",
-      "collaboratorsLoadFailed": "Impossible de charger les collaborateurs."
+      "collaboratorsLoadFailed": "Impossible de charger les collaborateurs.",
+      "visibilityOwnerOnly": "Seul le propriétaire du projet peut modifier qui peut le voir."
     },
     "alphabet": {
       "pageTitle": "Alphabet",

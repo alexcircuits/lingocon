@@ -9,7 +9,10 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock("@/app/actions/language", () => ({ updateLanguage: mocks.update }))
 vi.mock("@/components/ui/select", () => {
   const Pass = ({ children }: { children?: ReactNode }) => <>{children}</>
-  return { Select: Pass, SelectContent: Pass, SelectItem: Pass, SelectTrigger: Pass, SelectValue: () => null }
+  // Like Radix: `disabled` on the root disables the trigger, which carries the id labels point at.
+  const Select = ({ children, disabled }: { children?: ReactNode; disabled?: boolean }) => <fieldset disabled={disabled}>{children}</fieldset>
+  const SelectTrigger = ({ id }: { id?: string }) => <button type="button" id={id} />
+  return { Select, SelectContent: () => null, SelectItem: Pass, SelectTrigger, SelectValue: () => null }
 })
 vi.mock("@/components/ui/slider", () => ({ Slider: () => null }))
 vi.mock("@/components/ui/file-upload", () => ({ FileUpload: () => <span>upload field</span> }))
@@ -81,5 +84,14 @@ describe("language settings access", () => {
     expect(screen.getAllByText("upload field").length).toBeGreaterThan(0)
     expect(screen.getByLabelText("nameLabel")).toBeEnabled()
     expect(screen.getByLabelText("slugLabel")).toBeDisabled()
+    // Visibility is the owner's call too, and the form says so.
+    expect(screen.getByLabelText("visibilityLabel")).toBeDisabled()
+    expect(screen.getByText("visibilityOwnerOnly")).toBeInTheDocument()
+  })
+
+  it("lets the owner change visibility", () => {
+    render(<LanguageSettings language={language} languageSlug="test" isOwner />, { wrapper: withAccess(owner) })
+    expect(screen.getByLabelText("visibilityLabel")).toBeEnabled()
+    expect(screen.getByText("visibilityHint")).toBeInTheDocument()
   })
 })

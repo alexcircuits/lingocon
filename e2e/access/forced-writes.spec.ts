@@ -211,17 +211,19 @@ test.describe("editor (legacy EDITOR, full write)", () => {
     expectNoPageErrors(pageErrors)
   })
 
-  test("cannot make the owner's private language public", async ({ page, pageErrors }) => {
-    test.fixme(
-      true,
-      "BUG?: a collaborator with write:settings can change visibility (form and updateLanguage allow it) — confirm whether visibility should be owner-only like slug/delete"
-    )
+  test("cannot make the owner's private language public (owner-only field), even with a forged save", async ({ page, pageErrors }) => {
+    // Owner decision (2026-10-10): visibility, like the slug, is the owner's call.
     const shared = await scratchPrivateWithCollaborators()
     await page.goto(`/studio/lang/${shared.slug}/settings`)
-    await page.locator("#visibility").click()
-    await page.getByRole("option", { name: "Public" }).click()
-    await page.getByRole("button", { name: "Save Changes" }).click()
-    await expect(page.getByText(NOT_PERMITTED).first()).toBeVisible()
+    // Hydrated, and the collaborators list (same Server Action body shape) has loaded.
+    await expect(page.getByText(E2E_USERS.viewer.name).first()).toBeVisible()
+    await expect(page.locator("#visibility")).toBeDisabled()
+    await expect(page.getByText("Only the project owner can change who can see it.")).toBeVisible()
+    const result = await interceptServerAction(page, () => page.getByRole("button", { name: "Save Changes" }).click(), {
+      match: (body) => body.includes(shared.id) && body.includes('"visibility"'),
+      rewrite: (body) => swap(body, '"visibility":"PRIVATE"', '"visibility":"PUBLIC"'),
+    })
+    expect(result.responseText).toContain(NOT_PERMITTED)
     const after = await db().language.findUniqueOrThrow({ where: { id: shared.id }, select: { visibility: true } })
     expect(after.visibility).toBe("PRIVATE")
     expectNoPageErrors(pageErrors)

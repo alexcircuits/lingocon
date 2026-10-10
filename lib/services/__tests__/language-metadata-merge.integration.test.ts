@@ -126,6 +126,19 @@ describe.skipIf(!testDb)("language metadata editors merge only the keys they own
     })
   })
 
+  it("lets only the owner change visibility; a settings collaborator may resend the current one", async () => {
+    // Publishing the owner's work (or hiding it) is the owner's call, like the slug.
+    await expect(updateLanguage({ id: project, visibility: "PUBLIC" }, settingsEditor)).rejects.toThrow(UnauthorizedError)
+    expect((await prisma.language.findUniqueOrThrow({ where: { id: project } })).visibility).toBe("PRIVATE")
+    // The settings form sends the unchanged visibility with every save; that stays allowed.
+    await expect(updateLanguage({ id: project, visibility: "PRIVATE", name: "Edited by editor" }, settingsEditor)).resolves.toMatchObject({
+      visibility: "PRIVATE",
+      name: "Edited by editor",
+    })
+    await expect(updateLanguage({ id: project, visibility: "UNLISTED" }, owner)).resolves.toMatchObject({ visibility: "UNLISTED" })
+    await prisma.language.update({ where: { id: project }, data: { visibility: "PRIVATE" } })
+  })
+
   it("requires every scope a mixed patch touches (settings + phonology keys)", async () => {
     // A settings-only collaborator must not smuggle phonology keys in with a settings key…
     await expect(
