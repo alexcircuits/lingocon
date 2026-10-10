@@ -112,7 +112,23 @@ export function Globe({
             // WebGL unavailable — leave the canvas hidden, page stays intact.
         }
 
+        // Draw frames only while someone can see them. Scrolled away or in a background tab the
+        // loop kept a CPU core busy (82% of the main thread without GPU acceleration).
+        let onScreen = typeof IntersectionObserver === "undefined"
+        const updateRendering = () => globe?.toggle(onScreen && document.visibilityState === "visible")
+        const observer =
+            typeof IntersectionObserver === "undefined"
+                ? null
+                : new IntersectionObserver(([entry]) => {
+                      onScreen = entry.isIntersecting
+                      updateRendering()
+                  })
+        if (observer && canvasRef.current) observer.observe(canvasRef.current)
+        document.addEventListener("visibilitychange", updateRendering)
+
         return () => {
+            observer?.disconnect()
+            document.removeEventListener("visibilitychange", updateRendering)
             globe?.destroy()
             window.removeEventListener("resize", onResize)
         }

@@ -86,7 +86,8 @@ test.describe("stranger", () => {
   test("a published course in a private language is not readable by course id", async ({ page, pageErrors }) => {
     const course = await scratchCourse({ visibility: "PRIVATE", vocab: true })
     for (const slug of [course.language.slug, SLUG]) {
-      await page.goto(`/learn/${slug}/courses/${course.courseId}`)
+      // A real 404, not a not-found page streamed into a 200 (no loading boundary above it).
+      expect((await page.goto(`/learn/${slug}/courses/${course.courseId}`))?.status()).toBe(404)
       await expectNotFound(page)
       await expect(page.getByText(course.courseTitle)).toHaveCount(0)
       await expect(page.getByText(course.grammarTitle)).toHaveCount(0)

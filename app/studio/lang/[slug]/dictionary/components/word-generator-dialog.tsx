@@ -100,14 +100,21 @@ export function WordGeneratorDialog({
 }: WordGeneratorDialogProps) {
     // The dictionary page only holds 20 entries; "hide words I already have" must see all of them.
     const [existingLemmas, setExistingLemmas] = useState<string[]>([])
+    // Generating before the list arrives (slow server) proposed words the language already has.
+    // A failed fetch still lets you generate, as before, just without that dedupe.
+    const [lemmasLoaded, setLemmasLoaded] = useState(false)
     useEffect(() => {
         if (!open) return
         let cancelled = false
+        setLemmasLoaded(false)
         getLanguageLemmas(languageId)
             .then((lemmas) => {
                 if (!cancelled) setExistingLemmas(lemmas)
             })
             .catch(() => {})
+            .finally(() => {
+                if (!cancelled) setLemmasLoaded(true)
+            })
         return () => {
             cancelled = true
         }
@@ -297,7 +304,8 @@ export function WordGeneratorDialog({
                     {/* Generate button */}
                     <Button
                         onClick={handleGenerate}
-                        disabled={!hasPhonemes}
+                        disabled={!hasPhonemes || !lemmasLoaded}
+                        aria-busy={!lemmasLoaded}
                         className="w-full gap-2"
                     >
                         {generatedWords.length > 0 ? (

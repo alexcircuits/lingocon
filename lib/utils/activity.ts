@@ -5,7 +5,15 @@
  * Client components go through the gated actions in `app/actions/activity.ts`.
  */
 import { prisma } from "@/lib/prisma"
-import type { ActivityType, ActivityEntityType } from "@prisma/client"
+import { Prisma, type ActivityType, type ActivityEntityType } from "@prisma/client"
+
+/**
+ * Prisma loads `include`d relations with a second query: a language (or user) deleted in
+ * between came back null for a required relation ("Inconsistent query result") and crashed the
+ * page reading it, e.g. the dashboard while a project was being deleted. Reads that include
+ * relations run in one REPEATABLE READ transaction, so both queries see the same snapshot.
+ */
+const ONE_SNAPSHOT = { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
 
 interface CreateActivityInput {
   type: ActivityType
@@ -40,7 +48,7 @@ export async function getActivitiesForLanguage(
   languageId: string,
   limit: number = 20
 ) {
-  return prisma.activity.findMany({
+  return prisma.$transaction((tx) => tx.activity.findMany({
     where: { languageId },
     include: {
       user: {
@@ -53,7 +61,7 @@ export async function getActivitiesForLanguage(
     },
     orderBy: { createdAt: "desc" },
     take: limit,
-  })
+  }), ONE_SNAPSHOT)
 }
 
 const MAX_ACTIVITY_PAGE = 50
@@ -68,7 +76,7 @@ export async function getActivitiesForUser(
   limit: number = 20,
   cursor?: string
 ) {
-  return prisma.activity.findMany({
+  return prisma.$transaction((tx) => tx.activity.findMany({
     where: viewerId === userId ? { userId } : { userId, language: { visibility: "PUBLIC" } },
     include: {
       language: {
@@ -89,7 +97,7 @@ export async function getActivitiesForUser(
     orderBy: { createdAt: "desc" },
     take: Math.min(Math.max(limit, 1), MAX_ACTIVITY_PAGE),
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-  })
+  }), ONE_SNAPSHOT)
 }
 
 export async function getRecentActivitiesForUserLanguages(
@@ -119,7 +127,7 @@ export async function getRecentActivitiesForUserLanguages(
     return []
   }
 
-  return prisma.activity.findMany({
+  return prisma.$transaction((tx) => tx.activity.findMany({
     where: {
       languageId: {
         in: languageIds,
@@ -143,7 +151,7 @@ export async function getRecentActivitiesForUserLanguages(
     },
     orderBy: { createdAt: "desc" },
     take: limit,
-  })
+  }), ONE_SNAPSHOT)
 }
 
 export async function getFeedActivitiesForUser(userId: string, limit: number = 50, cursor?: string) {
@@ -155,7 +163,7 @@ export async function getFeedActivitiesForUser(userId: string, limit: number = 5
   
   if (followingIds.length === 0) return []
   
-  return prisma.activity.findMany({
+  return prisma.$transaction((tx) => tx.activity.findMany({
     where: {
       userId: { in: followingIds },
       language: { visibility: "PUBLIC" }
@@ -179,6 +187,6 @@ export async function getFeedActivitiesForUser(userId: string, limit: number = 5
     orderBy: { createdAt: "desc" },
     take: Math.min(Math.max(limit, 1), MAX_ACTIVITY_PAGE),
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-  })
+  }), ONE_SNAPSHOT)
 }
 
