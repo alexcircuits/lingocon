@@ -16,12 +16,13 @@ import { analyzeWithTypeScript, buildFixtureFiles, FIXTURE_DIR, type FixtureFile
 const ROOT = process.cwd()
 const REGENERATE = "npx tsx scripts/rust-parity/generate-lexicon-fixtures.ts"
 
-function staleness(file: FixtureFile, regenerate = REGENERATE): string | null {
+function staleness(file: FixtureFile, regenerate = REGENERATE, normalize = (text: string) => text): string | null {
   const target = path.join(ROOT, file.path)
   if (!existsSync(target)) return `${file.path} is missing - run ${regenerate}`
-  const committed = readFileSync(target, "utf8")
-  if (committed === file.content) return null
-  const want = file.content.split("\n")
+  const committed = normalize(readFileSync(target, "utf8"))
+  const content = normalize(file.content)
+  if (committed === content) return null
+  const want = content.split("\n")
   const have = committed.split("\n")
   const line = want.findIndex((text, i) => text !== have[i])
   return (
@@ -67,7 +68,10 @@ describe("Rust lexicon parity fixtures", () => {
       const [tables] = buildFixtureFiles({ includeUnicodeTables: true }).filter((file) =>
         file.path.endsWith("unicode-tables.json")
       )
-      expect(staleness(tables, `${REGENERATE} --unicode-tables`)).toBeNull()
+      // The ICU patch version is recorded for information only: Nodes with the same Unicode
+      // version but another ICU patch (22.23.2 → 78.2, 22.23.3 → 78.3) must still compare tables.
+      const withoutIcuVersion = (text: string) => text.replace(/"icuVersion": "[^"]*"/, '"icuVersion": "*"')
+      expect(staleness(tables, `${REGENERATE} --unicode-tables`, withoutIcuVersion)).toBeNull()
     },
     60_000
   )
