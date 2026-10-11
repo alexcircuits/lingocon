@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createLanguage } from "@/app/actions/language"
 import { evolveLanguage } from "@/app/actions/evolve-language"
 import { generateSlug } from "@/lib/utils/slug"
+import { useAdoptTypedValue } from "@/lib/hooks/use-adopt-typed-value"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,13 +39,21 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
   >("CONLANG")
   const [parentId, setParentId] = useState<string>(initialParentId)
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
+  const applyName = (newName: string) => {
     setName(newName)
     if (!slug || slug === generateSlug(name)) {
       setSlug(generateSlug(newName))
     }
   }
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => applyName(e.target.value)
+
+  // Keep anything typed before the form hydrated (slow devices); the name also sets the slug.
+  const nameRef = useRef<HTMLInputElement>(null)
+  const slugRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  useAdoptTypedValue(nameRef, name, applyName)
+  useAdoptTypedValue(slugRef, slug, setSlug)
+  useAdoptTypedValue(descriptionRef, description, setDescription)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -122,6 +131,7 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
         <Label htmlFor="name">{tWizard("nameLabel")}</Label>
         <Input
           id="name"
+          ref={nameRef}
           value={name}
           onChange={handleNameChange}
           placeholder={tWizard("namePlaceholder")}
@@ -134,6 +144,7 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
         <Label htmlFor="slug">{tWizard("slugLabel")}</Label>
         <Input
           id="slug"
+          ref={slugRef}
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           placeholder={tWizard("slugPlaceholder")}
@@ -148,6 +159,7 @@ export function CreateLanguageForm({ userLanguages = [], initialParentId = "none
         <Label htmlFor="description">{tWizard("descriptionLabel")}</Label>
         <Textarea
           id="description"
+          ref={descriptionRef}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={tWizard("descriptionPlaceholder")}

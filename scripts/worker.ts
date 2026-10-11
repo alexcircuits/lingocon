@@ -64,6 +64,11 @@ async function main() {
     void enqueueJob("heartbeat")
   })
 
+  // Anonymous visitor statistics: daily totals and retention, 10 past each hour.
+  cron.schedule("10 * * * *", () => {
+    void enqueueJob("stats_rollup")
+  }, { timezone: "UTC" })
+
   // Weekly league rollover — Monday 00:05 UTC, just after the week boundary.
   // The handler is idempotent, so an occasional double-fire is harmless.
   cron.schedule("5 0 * * 1", () => {
@@ -84,6 +89,9 @@ async function main() {
   }
   await prisma.$disconnect()
   console.log("[worker] shut down cleanly")
+  // node-cron's scheduled tasks keep the event loop alive: without this PM2 waits
+  // the whole kill_timeout (30 s) on every reload/deploy and then SIGKILLs us.
+  process.exit(0)
 }
 
 void main()

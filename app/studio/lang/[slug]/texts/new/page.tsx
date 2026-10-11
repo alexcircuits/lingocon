@@ -18,13 +18,11 @@ async function getLanguage(slug: string, userId: string | null) {
     return null
   }
 
-  // Allow access if user is owner or collaborator (skip in dev mode)
+  // Creating a text needs write:texts (lib/services/text refuses everyone else, "draft:texts"
+  // included), so nobody else is offered the form (skip in dev mode).
   if (process.env.DEV_MODE !== "true" && userId) {
     const { canEditScope } = await import("@/lib/auth-helpers")
-    const canEdit =
-      (await canEditScope(language.id, userId, "write:texts")) ||
-      (await canEditScope(language.id, userId, "draft:texts"))
-    if (!canEdit) return null
+    if (!(await canEditScope(language.id, userId, "write:texts"))) return null
   }
 
   return language

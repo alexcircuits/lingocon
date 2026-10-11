@@ -6,6 +6,8 @@ RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+# postinstall applies these (patch-package fails the install if one does not apply).
+COPY patches ./patches
 RUN npm ci
 
 # ─── Stage 2: builder ────────────────────────────────────────────────────────

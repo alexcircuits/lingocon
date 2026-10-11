@@ -9,16 +9,25 @@ import { ListChecks, ChevronDown, ChevronUp, CheckCircle2, Circle } from "lucide
 import { SWADESH_LIST, SWADESH_CATEGORIES, matchSwadeshList } from "@/lib/data/swadesh-list"
 
 interface SwadeshTrackerProps {
-  glosses: string[]
+  /** Glosses to match in the browser. Prefer `matchedIds` for large lexicons. */
+  glosses?: string[]
+  /** Swadesh concept IDs already matched on the server (avoids shipping every gloss). */
+  matchedIds?: number[]
 }
 
-export function SwadeshTracker({ glosses }: SwadeshTrackerProps) {
+export function SwadeshTracker({ glosses = [], matchedIds }: SwadeshTrackerProps) {
   const [expanded, setExpanded] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   const { matched, percentage, total } = useMemo(
-    () => matchSwadeshList(glosses),
-    [glosses]
+    () => matchedIds
+      ? {
+          matched: new Set(matchedIds),
+          total: SWADESH_LIST.length,
+          percentage: Math.round((matchedIds.length / SWADESH_LIST.length) * 100),
+        }
+      : matchSwadeshList(glosses),
+    [glosses, matchedIds]
   )
 
   // Group by category for detail view

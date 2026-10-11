@@ -1332,3 +1332,58 @@ model Job {
   @@index([startedAt, runAfter])
   @@map("jobs")
 }
+
+// ── Anonymous visitor statistics (lib/stats) ────────────────────────────────
+// No cookies, no IP addresses, no user ids. A visitor is a salted hash of
+// (IP, User-Agent) whose salt is random per UTC day and deleted after it, so the
+// same person cannot be linked across days. Raw page views are kept 90 days and
+// rolled up into stats_daily; presence rows are deleted after an hour.
+
+model StatsSalt {
+  day       DateTime @id @db.Date
+  salt      String
+  createdAt DateTime @default(now())
+
+  @@map("stats_salts")
+}
+
+// Who is online now: one row per visitor key, refreshed by page views and pings.
+// Deliberately no index on lastSeen: the table holds about an hour of visitors, so
+// a scan is cheap, and an unindexed column lets every ping be a HOT update.
+model StatsPresence {
+  visitorKey String   @id
+  path       String
+  signedIn   Boolean  @default(false)
+  lastSeen   DateTime @default(now())
+
+  @@map("stats_presence")
+}
+
+model StatsPageView {
+  id           String   @id @default(cuid())
+  // Truncated to the hour.
+  createdAt    DateTime @default(now())
+  // Route template (e.g. /studio/lang/[slug]/dictionary), never the raw URL.
+  path         String
+  // Only the slug of a PUBLIC language, on its reader and learn pages (/lang/…, /learn/…).
+  languageSlug String?
+  visitorKey   String
+  signedIn     Boolean  @default(false)
+  // Host of an external referrer only.
+  referrer     String?
+  // mobile | tablet | desktop
+  device       String
+
+  @@index([createdAt])
+  @@map("stats_page_views")
+}
+
+model StatsDaily {
+  day              DateTime @id @db.Date
+  pageViews        Int
+  visitors         Int
+  signedInVisitors Int
+  updatedAt        DateTime @updatedAt
+
+  @@map("stats_daily")
+}

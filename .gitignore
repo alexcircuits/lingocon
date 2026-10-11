@@ -10,6 +10,8 @@
 
 # next.js
 /.next/
+# Builds into another directory (NEXT_DIST_DIR), e.g. local probe builds
+/.next-*/
 /out/
 
 # production
@@ -49,6 +51,9 @@ next-env.d.ts
 #scripts (keep setup.sh tracked for npm run setup)
 /scripts/*
 !/scripts/setup.sh
+# Rust/TypeScript parity fixtures generator + its freshness test (run by npm test).
+!/scripts/rust-parity/
+!/scripts/bench-overview-analysis.ts
 build_log.txt
 
 nginx.conf.example
@@ -58,3 +63,12 @@ nginx.conf.example
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+# Session cookies of the E2E fixture accounts (e2e/auth.setup.ts)
+/e2e/.auth/
+
+# Release-per-deploy build output (deploy.sh)
+/.next-releases/
+/.next-release
+
+# Rust workspace build output
+/rust/target/

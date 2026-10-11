@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -36,27 +37,46 @@ export function DerivationPanel({
   onClose,
 }: DerivationPanelProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const t = useTranslations("families")
+  const tCommon = useTranslations("common")
+  const [isDeriving, setIsDeriving] = useState(false)
   const [query, setQuery] = useState("")
   const [entries, setEntries] = useState<DictionaryEntry[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const pageSize = 30
 
-  // Fetch entries
+  // Fetch entries (debounced). A response for a search/page the user has already moved on from is
+  // dropped, so a slow earlier request can never overwrite the newer list.
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let current = true
+    const timer = setTimeout(async () => {
       setIsLoading(true)
-      getLanguageDictionary(sourceLanguageId, query, page, pageSize).then(res => {
+      setLoadFailed(false)
+      try {
+        const res = await getLanguageDictionary(sourceLanguageId, query, page, pageSize)
+        if (!current) return
         setEntries(res.entries)
         setTotal(res.total)
-        setIsLoading(false)
-      })
+      } catch (error) {
+        if (!current) return
+        console.error("Failed to load words for derivation", error)
+        setEntries([])
+        setTotal(0)
+        setLoadFailed(true)
+      } finally {
+        if (current) setIsLoading(false)
+      }
     }, 300)
-    return () => clearTimeout(timer)
-  }, [sourceLanguageId, query, page])
+    return () => {
+      current = false
+      clearTimeout(timer)
+    }
+  }, [sourceLanguageId, query, page, reloadKey])
 
   const toggleEntry = (id: string) => {
     setSelectedIds(prev => {
@@ -78,9 +98,10 @@ export function DerivationPanel({
     }
   }
 
-  const handleDerive = () => {
-    if (selectedIds.size === 0) return
-    startTransition(async () => {
+  const handleDerive = async () => {
+    if (selectedIds.size === 0 || isDeriving) return
+    setIsDeriving(true)
+    try {
       const result = await deriveWords(sourceLanguageId, targetLanguageId, Array.from(selectedIds))
       if ('error' in result) {
         toast.error(result.error)
@@ -90,7 +111,12 @@ export function DerivationPanel({
         router.refresh()
         onClose()
       }
-    })
+    } catch (error) {
+      console.error("Failed to derive words", error)
+      toast.error(t("deriveFailed"))
+    } finally {
+      setIsDeriving(false)
+    }
   }
 
   const totalPages = Math.ceil(total / pageSize)
@@ -127,6 +153,13 @@ export function DerivationPanel({
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : loadFailed ? (
+            <div role="alert" className="text-center py-8 space-y-3 text-sm text-muted-foreground">
+              <p>{t("deriveLoadFailed")}</p>
+              <Button variant="outline" size="sm" onClick={() => setReloadKey(k => k + 1)}>
+                {tCommon("tryAgain")}
+              </Button>
             </div>
           ) : entries.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
@@ -207,11 +240,11 @@ export function DerivationPanel({
       <div className="p-3 border-t border-border/50">
         <Button
           onClick={handleDerive}
-          disabled={isPending || selectedIds.size === 0}
+          disabled={isDeriving || selectedIds.size === 0}
           className="w-full gap-2 text-sm"
           size="sm"
         >
-          {isPending ? (
+          {isDeriving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <ArrowRight className="h-4 w-4" />

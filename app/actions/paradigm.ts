@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { revalidateParadigms } from "@/lib/utils/revalidation"
 import { prisma } from "@/lib/prisma"
 import { toActionError } from "@/lib/errors"
 import { getUserId, canEditScope, canReadLanguage } from "@/lib/auth-helpers"
@@ -45,6 +46,8 @@ export async function createParadigm(input: CreateParadigmInput) {
       }
     })
 
+    // The paradigms page lists these, and grammar pages embed them.
+    revalidateParadigms(paradigm.language.slug)
     revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
     revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
@@ -98,6 +101,8 @@ export async function updateParadigm(input: UpdateParadigmInput) {
       data: updateData,
     })
 
+    // The paradigms page lists these, and grammar pages embed them.
+    revalidateParadigms(paradigm.language.slug)
     revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
     revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
@@ -139,6 +144,8 @@ export async function deleteParadigm(paradigmId: string, languageId: string) {
       include: { language: { select: { slug: true } } },
     })
 
+    // The paradigms page lists these, and grammar pages embed them.
+    revalidateParadigms(paradigm.language.slug)
     revalidatePath(`/studio/lang/${paradigm.language.slug}/grammar`)
     revalidatePath(`/lang/${paradigm.language.slug}/grammar`)
 
@@ -179,7 +186,7 @@ export async function cloneParadigm(paradigmId: string, languageId: string) {
       },
     })
 
-    revalidatePath(`/studio/lang/${source.language.slug}/paradigms`)
+    revalidateParadigms(source.language.slug)
 
     return { success: true, data: clone }
   } catch (error) {

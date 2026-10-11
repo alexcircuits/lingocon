@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useTransition, useEffect, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useRevealCreatedEntry } from "@/lib/hooks/use-reveal-created-entry"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { readJson, NonJsonResponseError } from "@/lib/utils/http-response"
@@ -14,26 +16,34 @@ import {
 } from "@/app/actions/dictionary-entry"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2 } from "lucide-react"
-import { BulkEdit } from "@/components/dictionary/bulk-edit"
 import { DictionaryToolbar } from "./components/dictionary-toolbar"
 import { DictionaryTable } from "./components/dictionary-table"
 import { DictionaryTableMobile } from "@/components/dictionary/dictionary-table-mobile"
-import { DictionaryEntryDialog } from "./components/dictionary-entry-dialog"
 import { DeleteConfirmDialog } from "./components/delete-confirm-dialog"
-import { ImportDialog } from "./components/import-dialog"
 import { DictionaryPagination } from "@/components/dictionary/dictionary-pagination"
-import { DerivationWizard } from "./components/derivation-wizard"
-import { WordGeneratorDialog } from "./components/word-generator-dialog"
-import { BorrowWordDialog } from "./components/borrow-word-dialog"
-import { BulkAddDialog } from "./components/bulk-add-dialog"
-import { FindReplaceDialog } from "./components/find-replace-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts"
-import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help"
+import { useOpenedOnce } from "@/lib/hooks/use-opened-once"
+import { useSectionWritable } from "@/components/studio-access"
 import { BulkActionsBar } from "@/components/bulk-actions-bar"
 import { FeatureHighlight } from "@/components/feature-highlight"
 import type { DictionaryEntry, ScriptSymbol } from "@prisma/client"
 import type { LanguageMetadata } from "@/lib/validations/language"
+
+// Dialogs are code-split from the word list and mount the first time they are opened (see
+// useOpenedOnce). The add/edit dialog's chunk is also preloaded once the page is idle, so the
+// first ⌘N opens it at once; a failed preload (offline, a deploy) costs nothing, whereas a
+// closed dialog that failed to load used to replace the whole dictionary with an error.
+const loadEntryDialog = () => import("./components/dictionary-entry-dialog")
+const DictionaryEntryDialog = dynamic(() => loadEntryDialog().then((m) => m.DictionaryEntryDialog))
+const ImportDialog = dynamic(() => import("./components/import-dialog").then((m) => m.ImportDialog))
+const DerivationWizard = dynamic(() => import("./components/derivation-wizard").then((m) => m.DerivationWizard))
+const WordGeneratorDialog = dynamic(() => import("./components/word-generator-dialog").then((m) => m.WordGeneratorDialog))
+const BorrowWordDialog = dynamic(() => import("./components/borrow-word-dialog").then((m) => m.BorrowWordDialog))
+const BulkAddDialog = dynamic(() => import("./components/bulk-add-dialog").then((m) => m.BulkAddDialog))
+const FindReplaceDialog = dynamic(() => import("./components/find-replace-dialog").then((m) => m.FindReplaceDialog))
+const BulkEdit = dynamic(() => import("@/components/dictionary/bulk-edit").then((m) => m.BulkEdit))
+const KeyboardShortcutsHelp = dynamic(() => import("@/components/keyboard-shortcuts-help").then((m) => m.KeyboardShortcutsHelp))
 
 interface DictionaryManagerProps {
   languageId: string
@@ -77,6 +87,17 @@ export function DictionaryManager({
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
+  // A new word sorted onto another page (or hidden by the current filter) looks
+  // unsaved; switch to the newest-first view so it is on screen.
+  const isNewestFirstView = currentPage === 1 && initialSort === "createdAt" && !initialQuery
+  const revealCreatedEntry = useCallback(() => {
+    if (isNewestFirstView) return
+    startTransition(() => {
+      router.replace(`${pathname}?sort=createdAt`)
+    })
+  }, [isNewestFirstView, pathname, router])
+  const createdEntryReveal = useRevealCreatedEntry(languageId, initialEntries, revealCreatedEntry)
+
   const [showLatin, setShowLatin] = useState(false)
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set())
 
@@ -101,13 +122,34 @@ export function DictionaryManager({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
 
+  const canEdit = useSectionWritable()
+  const addMounted = useOpenedOnce(isAddOpen)
+  const editMounted = useOpenedOnce(isEditOpen)
+  useEffect(() => {
+    if (!canEdit) return
+    const preload = () => { void loadEntryDialog().catch(() => {}) }
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(preload)
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = window.setTimeout(preload, 200)
+    return () => window.clearTimeout(id)
+  }, [canEdit])
+  const importMounted = useOpenedOnce(isImportOpen)
+  const deriveMounted = useOpenedOnce(isDeriveOpen)
+  const generatorMounted = useOpenedOnce(isGeneratorOpen)
+  const borrowMounted = useOpenedOnce(isBorrowOpen)
+  const bulkAddMounted = useOpenedOnce(isBulkAddOpen)
+  const findReplaceMounted = useOpenedOnce(isFindReplaceOpen)
+  const shortcutsMounted = useOpenedOnce(showShortcuts)
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
     {
       key: "n",
       metaKey: true,
       handler: () => {
-        if (!isAddOpen && !isEditOpen) {
+        if (canEdit && !isAddOpen && !isEditOpen) {
           setIsAddOpen(true)
         }
       },
@@ -201,7 +243,13 @@ export function DictionaryManager({
       linkBack: data.linkBack !== false,
     }))
 
-    const result = await createDictionaryEntry(sterilizedData)
+    const before = createdEntryReveal.begin()
+    let result: Awaited<ReturnType<typeof createDictionaryEntry>>
+    try {
+      result = await createDictionaryEntry(sterilizedData)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error, {
@@ -211,6 +259,7 @@ export function DictionaryManager({
         },
       })
     } else {
+      createdEntryReveal.settle(before, result.data.id)
       toast.success(`"${data.lemma}" added successfully`, {
         action: {
           label: "Add Another",
@@ -220,9 +269,9 @@ export function DictionaryManager({
         },
       })
       setIsAddOpen(false)
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
@@ -241,16 +290,23 @@ export function DictionaryManager({
       relatedWords: data.relatedWords && data.relatedWords.length > 0 ? data.relatedWords : null,
     }))
 
-    const result = await createDictionaryEntry(sterilizedData)
+    const before = createdEntryReveal.begin()
+    let result: Awaited<ReturnType<typeof createDictionaryEntry>>
+    try {
+      result = await createDictionaryEntry(sterilizedData)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error)
     } else {
+      createdEntryReveal.settle(before, result.data.id)
       toast.success(`derived word "${data.lemma}" created`)
       setIsDeriveOpen(false)
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
@@ -276,7 +332,12 @@ export function DictionaryManager({
       linkBack: data.linkBack !== false,
     }))
 
-    const result = await updateDictionaryEntry(sterilizedData)
+    let result: Awaited<ReturnType<typeof updateDictionaryEntry>>
+    try {
+      result = await updateDictionaryEntry(sterilizedData)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error, {
@@ -289,9 +350,9 @@ export function DictionaryManager({
       toast.success(`"${data.lemma}" updated successfully`)
       setIsEditOpen(false)
       setEditingEntry(null)
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
@@ -301,7 +362,12 @@ export function DictionaryManager({
     const deletedEntry = initialEntries.find(e => e.id === deletingId)
     const entryLemma = deletedEntry?.lemma || t("entryFallback")
 
-    const result = await deleteDictionaryEntry(deletingId, languageId)
+    let result: Awaited<ReturnType<typeof deleteDictionaryEntry>>
+    try {
+      result = await deleteDictionaryEntry(deletingId, languageId)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error, {
@@ -329,9 +395,9 @@ export function DictionaryManager({
         setSelectedEntries(newSelected)
       }
 
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
@@ -339,7 +405,12 @@ export function DictionaryManager({
     if (selectedEntries.size === 0) return
 
     const ids = Array.from(selectedEntries)
-    const result = await bulkDeleteDictionaryEntries(ids, languageId)
+    let result: Awaited<ReturnType<typeof bulkDeleteDictionaryEntries>>
+    try {
+      result = await bulkDeleteDictionaryEntries(ids, languageId)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error)
@@ -347,14 +418,19 @@ export function DictionaryManager({
       toast.success(t("bulkDeleted", { count: result.data?.deletedCount ?? 0 }))
       setIsBulkDeleteOpen(false)
       setSelectedEntries(new Set())
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
   const handleDeleteAll = async () => {
-    const result = await deleteAllDictionaryEntries(languageId)
+    let result: Awaited<ReturnType<typeof deleteAllDictionaryEntries>>
+    try {
+      result = await deleteAllDictionaryEntries(languageId)
+    } catch (error) {
+      result = { error: error instanceof Error ? error.message : t("unknownError") }
+    }
 
     if ('error' in result) {
       toast.error(result.error)
@@ -362,9 +438,9 @@ export function DictionaryManager({
       toast.success(t("allDeleted", { count: result.data?.deletedCount ?? 0 }))
       setIsDeleteAllOpen(false)
       setSelectedEntries(new Set())
-      startTransition(() => {
-        router.refresh()
-      })
+      // The action revalidated this route: its response already carried the
+      // re-rendered page. A router.refresh() here would render everything again
+      // (and an outdated service worker could answer it with a stale snapshot).
     }
   }
 
@@ -464,19 +540,21 @@ export function DictionaryManager({
               <Button type="button" variant="link" onClick={() => handleSearch("")}>
                 {t("clearSearch")}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => {
-                  setPrefillData({ gloss: initialQuery })
-                  setIsAddOpen(true)
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {t("addQuoted", { query: initialQuery })}
-              </Button>
+              {canEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    setPrefillData({ gloss: initialQuery })
+                    setIsAddOpen(true)
+                  }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("addQuoted", { query: initialQuery })}
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -484,10 +562,10 @@ export function DictionaryManager({
             icon={Plus}
             title={t("emptyTitle")}
             description={t("emptyDesc")}
-            action={{
+            action={canEdit ? {
               label: t("addEntry"),
               onClick: () => setIsAddOpen(true),
-            }}
+            } : undefined}
           />
         )
       ) : (
@@ -581,34 +659,38 @@ export function DictionaryManager({
         </>
       )}
 
-      <DictionaryEntryDialog
-        open={isAddOpen}
-        onOpenChange={(open) => {
-          setIsAddOpen(open)
-          if (!open) setPrefillData(null)
-        }}
-        onSubmit={handleCreate}
-        isPending={isPending}
-        mode="create"
-        symbols={symbols}
-        allowsDiacritics={allowsDiacritics}
-        metadata={metadata}
-        languageId={languageId}
-        initialData={prefillData ? prefillData as any : undefined}
-      />
+      {addMounted && (
+        <DictionaryEntryDialog
+          open={isAddOpen}
+          onOpenChange={(open) => {
+            setIsAddOpen(open)
+            if (!open) setPrefillData(null)
+          }}
+          onSubmit={handleCreate}
+          isPending={isPending}
+          mode="create"
+          symbols={symbols}
+          allowsDiacritics={allowsDiacritics}
+          metadata={metadata}
+          languageId={languageId}
+          initialData={prefillData ? prefillData as any : undefined}
+        />
+      )}
 
-      <DictionaryEntryDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        onSubmit={handleUpdate}
-        initialData={editingEntry}
-        isPending={isPending}
-        mode="edit"
-        symbols={symbols}
-        allowsDiacritics={allowsDiacritics}
-        metadata={metadata}
-        languageId={languageId}
-      />
+      {editMounted && (
+        <DictionaryEntryDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          onSubmit={handleUpdate}
+          initialData={editingEntry}
+          isPending={isPending}
+          mode="edit"
+          symbols={symbols}
+          allowsDiacritics={allowsDiacritics}
+          metadata={metadata}
+          languageId={languageId}
+        />
+      )}
 
       <DeleteConfirmDialog
         open={isDeleteOpen}
@@ -637,56 +719,68 @@ export function DictionaryManager({
         description={t("deleteAllDesc", { count: totalEntries })}
       />
 
-      <ImportDialog
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        onImport={handleImport}
-        isPending={isPending}
-      />
+      {importMounted && (
+        <ImportDialog
+          open={isImportOpen}
+          onOpenChange={setIsImportOpen}
+          onImport={handleImport}
+          isPending={isPending}
+        />
+      )}
 
-      <DerivationWizard
-        open={isDeriveOpen}
-        onOpenChange={setIsDeriveOpen}
-        sourceEntry={derivationSourceEntry}
-        languageId={languageId}
-        onSubmit={handleDeriveSubmit}
-        isPending={isPending}
-      />
+      {deriveMounted && (
+        <DerivationWizard
+          open={isDeriveOpen}
+          onOpenChange={setIsDeriveOpen}
+          sourceEntry={derivationSourceEntry}
+          languageId={languageId}
+          onSubmit={handleDeriveSubmit}
+          isPending={isPending}
+        />
+      )}
 
-      <WordGeneratorDialog
-        open={isGeneratorOpen}
-        onOpenChange={setIsGeneratorOpen}
-        symbols={symbols}
-        metadata={metadata}
-        languageId={languageId}
-        onAddWord={(word) => {
-          setPrefillData({ lemma: word })
-          setIsAddOpen(true)
-        }}
-      />
+      {generatorMounted && (
+        <WordGeneratorDialog
+          open={isGeneratorOpen}
+          onOpenChange={setIsGeneratorOpen}
+          symbols={symbols}
+          metadata={metadata}
+          languageId={languageId}
+          onAddWord={(word) => {
+            setPrefillData({ lemma: word })
+            setIsAddOpen(true)
+          }}
+        />
+      )}
 
-      <BorrowWordDialog
-        open={isBorrowOpen}
-        onOpenChange={setIsBorrowOpen}
-        languageId={languageId}
-        languageName={languageName}
-        onBorrow={(data) => handleCreate(data)}
-      />
+      {borrowMounted && (
+        <BorrowWordDialog
+          open={isBorrowOpen}
+          onOpenChange={setIsBorrowOpen}
+          languageId={languageId}
+          languageName={languageName}
+          onBorrow={(data) => handleCreate(data)}
+        />
+      )}
 
-      <BulkAddDialog
-        open={isBulkAddOpen}
-        onOpenChange={setIsBulkAddOpen}
-        onSubmit={handleCreate}
-        isPending={isPending}
-        symbols={symbols}
-      />
+      {bulkAddMounted && (
+        <BulkAddDialog
+          open={isBulkAddOpen}
+          onOpenChange={setIsBulkAddOpen}
+          onSubmit={handleCreate}
+          isPending={isPending}
+          symbols={symbols}
+        />
+      )}
 
-      <FindReplaceDialog
-        languageId={languageId}
-        open={isFindReplaceOpen}
-        onOpenChange={setIsFindReplaceOpen}
-        onApplied={() => startTransition(() => router.refresh())}
-      />
+      {findReplaceMounted && (
+        <FindReplaceDialog
+          languageId={languageId}
+          open={isFindReplaceOpen}
+          onOpenChange={setIsFindReplaceOpen}
+          onApplied={() => startTransition(() => router.refresh())}
+        />
+      )}
 
       {isBulkEditOpen && (
         <BulkEdit
@@ -699,27 +793,29 @@ export function DictionaryManager({
         />
       )}
 
-      <KeyboardShortcutsHelp
-        open={showShortcuts}
-        onOpenChange={setShowShortcuts}
-        shortcuts={[
-          {
-            category: "Dictionary",
-            keys: ["⌘", "N"],
-            description: "New entry",
-          },
-          {
-            category: "Dictionary",
-            keys: ["Esc"],
-            description: "Close dialog",
-          },
-          {
-            category: "General",
-            keys: ["⌘", "/"],
-            description: "Show keyboard shortcuts",
-          },
-        ]}
-      />
+      {shortcutsMounted && (
+        <KeyboardShortcutsHelp
+          open={showShortcuts}
+          onOpenChange={setShowShortcuts}
+          shortcuts={[
+            {
+              category: "Dictionary",
+              keys: ["⌘", "N"],
+              description: "New entry",
+            },
+            {
+              category: "Dictionary",
+              keys: ["Esc"],
+              description: "Close dialog",
+            },
+            {
+              category: "General",
+              keys: ["⌘", "/"],
+              description: "Show keyboard shortcuts",
+            },
+          ]}
+        />
+      )}
     </div>
   )
 }

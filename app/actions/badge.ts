@@ -334,10 +334,13 @@ export async function checkLearnerBadges(userId: string) {
 }
 
 /**
- * Get recently earned badges for notification display
+ * Get the signed-in user's recently earned badges for notification display.
+ *
+ * Exported Server Actions are callable from any client with any arguments, so
+ * the user is always taken from the session, never from a parameter.
  */
-export async function getRecentAchievements(userId?: string, hoursAgo = 24) {
-    const targetUserId = userId || (await getUserId())
+export async function getRecentAchievements(hoursAgo = 24) {
+    const targetUserId = await getUserId()
 
     if (!targetUserId) {
         return []

@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useCallback, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import type { Editor, JSONContent } from "@tiptap/react"
+import type { Editor, EditorEvents, JSONContent } from "@tiptap/react"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import {
   createGrammarPage,
@@ -12,6 +12,7 @@ import {
   deleteGrammarPage,
 } from "@/app/actions/grammar-page"
 import { generateSlug } from "@/lib/utils/slug"
+import { useUnsavedChangesWarning } from "@/lib/hooks/use-unsaved-changes-warning"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +30,17 @@ import {
 import { Save, ArrowLeft, Trash2, AlertTriangle, Bold, Italic, List, ListOrdered, Heading1, Heading2, Table2 } from "lucide-react"
 import Link from "next/link"
 import type { GrammarPage, ScriptSymbol } from "@prisma/client"
+import { useStudioAccess } from "@/components/studio-access"
+
+/** The revision token the server compares on save (`expectedUpdatedAt`). */
+function toRevision(value: Date | string | undefined): string | undefined {
+  return value ? new Date(value).toISOString() : undefined
+}
+
+const defaultContent: JSONContent = {
+  type: "doc",
+  content: [{ type: "paragraph" }],
+}
 
 interface GrammarEditorProps {
   languageId: string
@@ -50,6 +62,9 @@ export function GrammarEditor({
   const router = useRouter()
   const t = useTranslations("studio.grammar")
   const tc = useTranslations("studio.common")
+  // Visitors without the grammar scope read the page: the fields and the document are
+  // read-only and no save/delete is offered (the server would refuse them).
+  const canEdit = useStudioAccess().canWrite("write:grammar")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -58,19 +73,31 @@ export function GrammarEditor({
   const [title, setTitle] = useState(page?.title || "")
   const [slug, setSlug] = useState(page?.slug || "")
   const [imageUrl, setImageUrl] = useState<string | null>(page?.imageUrl || null)
+  // The stored revision this tab's draft is based on; adopted from every successful save.
+  const [revision, setRevision] = useState(() => toRevision(page?.updatedAt))
+  const [isConflict, setIsConflict] = useState(false)
 
-  const defaultContent: JSONContent = {
-    type: "doc",
-    content: [{ type: "paragraph" }],
-  }
-
-  const [content, setContent] = useState<JSONContent>(
-    (page?.content as JSONContent | null) ?? defaultContent
+  // The document lives in the editor and is read at save time, instead of being copied into
+  // state (re-rendering this form) on every keystroke.
+  const [initialContent] = useState<JSONContent>(
+    () => (page?.content as JSONContent | null) ?? defaultContent
   )
+  const editorRef = useRef<Editor | null>(null)
+  const readContent = (): JSONContent => editorRef.current?.getJSON() ?? initialContent
+
+  // Edits not saved yet: closing or reloading the tab asks first.
+  const [isDirty, setIsDirty] = useState(false)
+  useUnsavedChangesWarning(isDirty)
+  // Only real document edits count: TipTap also emits "update" when the editor is
+  // disabled and re-enabled around every save.
+  const markEdited = useCallback(({ transaction }: EditorEvents["update"]) => {
+    if (transaction.docChanged) setIsDirty(true)
+  }, [])
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value
     setTitle(newTitle)
+    setIsDirty(true)
     if (!page && (!slug || slug === generateSlug(title))) {
       setSlug(generateSlug(newTitle))
     }
@@ -78,35 +105,56 @@ export function GrammarEditor({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!canEdit) return
     setError(null)
 
     startTransition(async () => {
       if (page) {
-        // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
+        // JSON round-trip drops undefined keys; null is kept on purpose — it is how a removed
+        // cover image is cleared on the server.
         const sterilizedData = JSON.parse(JSON.stringify({
           id: String(page.id),
           title,
           slug,
-          content,
+          content: readContent(),
           languageId,
-          imageUrl: imageUrl || undefined,
+          imageUrl: imageUrl ?? null,
+          expectedUpdatedAt: revision,
         }))
 
         const result = await updateGrammarPage(sterilizedData)
 
         if ('error' in result) {
+          if (result.conflict) {
+            // Keep the draft on screen; saving again cannot succeed until a reload.
+            setIsConflict(true)
+            toast.error(tc("staleConflict"))
+            return
+          }
           setError(result.error ?? null)
           toast.error(result.error)
-        } else {
-          toast.success(t("updatedToast"))
-          router.refresh()
+          return
+        }
+
+        const saved = result.data
+        setRevision(toRevision(saved.updatedAt))
+        setTitle(saved.title)
+        setSlug(saved.slug)
+        setImageUrl(saved.imageUrl ?? null)
+        setIsConflict(false)
+        setIsDirty(false)
+        toast.success(t("updatedToast"))
+        // The action already revalidated (and re-rendered) this route, so no refresh. Only a slug
+        // change needs navigation: the old URL no longer resolves to this page.
+        if (saved.slug !== page.slug) {
+          router.replace(`/studio/lang/${languageSlug}/grammar/${saved.slug}`)
         }
       } else {
         // Use JSON.parse(JSON.stringify()) with undefined to ensure optional keys are omitted
         const sterilizedData = JSON.parse(JSON.stringify({
           title,
           slug,
-          content,
+          content: readContent(),
           order,
           languageId,
           imageUrl: imageUrl || undefined,
@@ -118,6 +166,7 @@ export function GrammarEditor({
           setError(result.error ?? null)
           toast.error(result.error)
         } else {
+          setIsDirty(false)
           toast.success(t("createdToast"))
           router.push(`/studio/lang/${languageSlug}/grammar`)
         }
@@ -135,6 +184,7 @@ export function GrammarEditor({
         setError(result.error ?? null)
         toast.error(result.error)
       } else {
+        setIsDirty(false)
         toast.success(t("deletedShortToast"))
         router.push(`/studio/lang/${languageSlug}/grammar`)
       }
@@ -158,6 +208,16 @@ export function GrammarEditor({
         </div>
       )}
 
+      {isConflict && page && (
+        <div role="alert" className="flex flex-col gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+          <p>{tc("staleConflict")}</p>
+          {/* A full document load: a client navigation would keep this editor's local draft. */}
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <a href={`/studio/lang/${languageSlug}/grammar/${page.slug}`}>{tc("reloadLatest")}</a>
+          </Button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6">
           <div className="space-y-4">
@@ -170,6 +230,7 @@ export function GrammarEditor({
                 placeholder={t("titlePlaceholder")}
                 required
                 disabled={isPending}
+                readOnly={!canEdit}
                 maxLength={200}
                 className="text-lg font-medium"
               />
@@ -180,38 +241,58 @@ export function GrammarEditor({
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                  setIsDirty(true)
+                }}
                 placeholder={t("slugPlaceholder")}
                 pattern="[a-z0-9\-]+"
                 required
                 disabled={isPending}
+                readOnly={!canEdit}
                 maxLength={200}
               />
-              <p className="text-xs text-muted-foreground">
-                {t("slugHint")}
-              </p>
+              {canEdit && (
+                <p className="text-xs text-muted-foreground">
+                  {t("slugHint")}
+                </p>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("coverImage")}</Label>
-              <FileUpload
-                type="image"
-                value={imageUrl || undefined}
-                onChange={(url) => setImageUrl(url)}
-                placeholder={t("coverImagePlaceholder")}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("coverImageHint")}
-              </p>
-            </div>
+            {canEdit ? (
+              <div className="space-y-2">
+                <Label>{t("coverImage")}</Label>
+                <FileUpload
+                  type="image"
+                  value={imageUrl || undefined}
+                  onChange={(url) => {
+                    setImageUrl(url)
+                    setIsDirty(true)
+                  }}
+                  placeholder={t("coverImagePlaceholder")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("coverImageHint")}
+                </p>
+              </div>
+            ) : imageUrl ? (
+              <div className="space-y-2">
+                <Label>{t("coverImage")}</Label>
+                {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded URL, as in FileUpload's preview */}
+                <img src={imageUrl} alt={t("coverImage")} className="aspect-video w-full max-w-xs rounded-xl border border-border/40 object-cover" />
+              </div>
+            ) : null}
           </div>
         </Card>
 
         <Card className="overflow-hidden">
           <RichTextEditor
-            content={content}
-            onChange={setContent}
-            disabled={isPending}
+            content={initialContent}
+            onEditorReady={(editor) => {
+              editorRef.current = editor
+              editor?.on("update", markEdited)
+            }}
+            disabled={isPending || !canEdit}
             withIGT
             withParadigm
             onParadigmClick={(editor) => {
@@ -226,27 +307,29 @@ export function GrammarEditor({
           />
         </Card>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {page ? (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => setIsDeleteOpen(true)}
-              disabled={isPending}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {t("deletePage")}
-            </Button>
-          ) : (
-            <div className="hidden sm:block" />
-          )}
+        {canEdit && (
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {page ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setIsDeleteOpen(true)}
+                disabled={isPending}
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t("deletePage")}
+              </Button>
+            ) : (
+              <div className="hidden sm:block" />
+            )}
 
-          <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-            <Save className="mr-2 h-4 w-4" />
-            {isPending ? tc("saving") : page ? t("updatePage") : t("createPage")}
-          </Button>
-        </div>
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
+              <Save className="mr-2 h-4 w-4" />
+              {isPending ? tc("saving") : page ? t("updatePage") : t("createPage")}
+            </Button>
+          </div>
+        )}
       </form>
 
       {/* Delete Confirmation Dialog */}

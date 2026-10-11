@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, RefreshCw, Home } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { isChunkLoadError, reloadOnceForChunkError } from "@/lib/chunk-recovery"
 
 export default function Error({
   error,
@@ -19,7 +20,17 @@ export default function Error({
 
   useEffect(() => {
     console.error(error)
+    if (isChunkLoadError(error)) reloadOnceForChunkError()
   }, [error])
+
+  const retry = () => {
+    // `reset()` would request the same missing chunk again.
+    if (isChunkLoadError(error)) {
+      window.location.reload()
+      return
+    }
+    reset()
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-secondary/30">
@@ -43,7 +54,7 @@ export default function Error({
             </p>
           )}
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={reset} variant="outline" size="sm">
+            <Button onClick={retry} variant="outline" size="sm">
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               {tCommon("tryAgain")}
             </Button>

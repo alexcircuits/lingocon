@@ -14,7 +14,7 @@ import { getUserBadges } from "@/app/actions/badge"
 import { ActivityFeed } from "@/components/activity-feed"
 import { Footer } from "@/components/footer"
 import { Navbar } from "@/components/navbar"
-import { BadgeGrid } from "@/components/badges"
+import { BadgeGrid } from "@/components/badges/badge-grid"
 
 // New Components
 import { ProfileCover } from "@/components/profile/profile-cover"
@@ -82,13 +82,24 @@ export async function generateMetadata({
   }
 }
 
+/**
+ * Only what the language cards render. This list is sent to the browser (the cards' search box
+ * filters it there); it used to carry every column of every language, metadata document included.
+ */
 async function getUserLanguages(userId: string) {
   const languages = await prisma.language.findMany({
     where: {
       ownerId: userId,
       visibility: "PUBLIC",
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      flagUrl: true,
+      category: true,
+      createdAt: true,
       owner: {
         select: {
           id: true,
@@ -103,8 +114,6 @@ async function getUserLanguages(userId: string) {
           dictionaryEntries: true,
         },
       },
-      scriptSymbols: { take: 0 }, // Hack to satisfy types if needed, or arguably just select all and letting Prismic infer
-      // actually LanguageCard needs specific fields. Let's just grab everything to be safe and simple since LanguageCard expects the full model
     },
     orderBy: {
       updatedAt: "desc",
@@ -126,11 +135,20 @@ export default async function UserProfilePage({
     notFound()
   }
 
-  const languages = await getUserLanguages(userId)
-  const followCounts = await getFollowCounts(userId)
-  const followersResult = await getFollowers(userId)
-  const followingResult = await getFollowing(userId)
-  const badges = await getUserBadges(userId)
+  // Independent reads, issued together rather than one after another.
+  const [languages, followCounts, followersResult, followingResult, badges, navUser] = await Promise.all([
+    getUserLanguages(userId),
+    getFollowCounts(userId),
+    getFollowers(userId),
+    getFollowing(userId),
+    getUserBadges(userId),
+    session?.user?.id
+      ? prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { id: true, name: true, email: true, image: true, isAdmin: true },
+        })
+      : Promise.resolve(null),
+  ])
   const earnedBadgesCount = badges.filter(b => b.isEarned).length
 
   const followers = followersResult.success ? followersResult.data : []
@@ -138,10 +156,6 @@ export default async function UserProfilePage({
   const isOwnProfile = session?.user?.id === userId
 
   const isDevMode = process.env.DEV_MODE === "true"
-  const navUser = session?.user?.id ? await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, name: true, email: true, image: true, isAdmin: true },
-  }) : null
 
   const stats = {
     languages: languages.length,

@@ -12,7 +12,11 @@ import { nextStreak } from "@/lib/streak"
 import { recordStudyForFriendStreaks } from "@/lib/services/friend-streak-service"
 import { State } from "ts-fsrs"
 import { revalidatePath } from "next/cache"
-import { checkLearnerBadges } from "@/app/actions/badge"
+import { checkLearnerBadges, checkDictionaryBadges } from "@/app/actions/badge"
+import { toActionError } from "@/lib/errors"
+import { createActivity } from "@/lib/utils/activity"
+import { revalidateDictionary } from "@/lib/utils/revalidation"
+import * as dictionaryService from "@/lib/services/dictionary-entry"
 
 // ─── Enrollment ───────────────────────────────────────────────────────────────
 
@@ -512,7 +516,19 @@ export async function awardPerfectSession(languageId: string) {
 
 // ─── Courses ──────────────────────────────────────────────────────────────────
 
+/**
+ * Learner-facing course data follows /learn/[slug]: any non-private language, or a
+ * private one the current user may view (owner, collaborator, admin).
+ */
+async function canReadLearnerContent(languageId: string): Promise<boolean> {
+  const language = await prisma.language.findUnique({ where: { id: languageId }, select: { visibility: true } })
+  if (!language) return false
+  if (language.visibility !== "PRIVATE") return true
+  return canViewLanguage(languageId, await getUserId())
+}
+
 export async function getCoursesForLanguage(languageId: string) {
+  if (!(await canReadLearnerContent(languageId))) return { data: [] }
   const courses = await prisma.course.findMany({
     where: { languageId, visibility: "PUBLISHED" },
     include: {
@@ -538,6 +554,7 @@ export async function getCourse(courseId: string) {
     },
   })
   if (!course) return { error: "Not found" }
+  if (!(await canReadLearnerContent(course.languageId))) return { error: "Not found" }
 
   // Drafts/archived courses are only visible to users who can edit the language.
   if (course.visibility !== "PUBLISHED") {
@@ -551,15 +568,108 @@ export async function getCourse(courseId: string) {
 
 // ─── Studio: Course Management ────────────────────────────────────────────────
 
-/** Resolve a course's languageId and confirm the caller may edit that language. */
-async function requireCourseEditAccess(courseId: string, userId: string) {
-  const course = await prisma.course.findUnique({
-    where: { id: courseId },
-    select: { id: true, languageId: true },
-  })
+/** Where a course lives: enough to authorize an edit and to invalidate the routes that render it. */
+interface CourseScope {
+  courseId: string
+  languageId: string
+  slug: string
+}
+
+const courseScopeSelect = {
+  id: true,
+  languageId: true,
+  language: { select: { slug: true } },
+} satisfies Prisma.CourseSelect
+
+type CourseScopeRow = Prisma.CourseGetPayload<{ select: typeof courseScopeSelect }>
+
+function toCourseScope(course: CourseScopeRow): CourseScope {
+  return { courseId: course.id, languageId: course.languageId, slug: course.language.slug }
+}
+
+/**
+ * Invalidate every route that renders a course: the studio list and editor and the public learn
+ * pages (plus the given lessons' player pages). Without this the client router cache hands back
+ * the pre-edit payload on Back or a quick return, and the editor reappears with the old course.
+ * A cache failure must never turn a committed edit into a reported failure.
+ */
+function revalidateCourseRoutes(scope: CourseScope, lessonIds: readonly string[] = []) {
+  try {
+    revalidatePath(`/studio/lang/${scope.slug}/courses`)
+    revalidatePath(`/studio/lang/${scope.slug}/courses/${scope.courseId}`)
+    revalidatePath(`/learn/${scope.slug}`)
+    revalidatePath(`/learn/${scope.slug}/courses/${scope.courseId}`)
+    for (const lessonId of lessonIds) revalidatePath(`/learn/${scope.slug}/lesson/${lessonId}`)
+  } catch (error) {
+    console.error("[learn] Course saved; cache invalidation failed:", error)
+  }
+}
+
+/** Course create/publish/delete also changes which languages the course catalog lists. */
+function revalidateCourseCatalog(scope: CourseScope) {
+  revalidateCourseRoutes(scope)
+  try {
+    revalidatePath("/learn/browse")
+  } catch (error) {
+    console.error("[learn] Course saved; cache invalidation failed:", error)
+  }
+}
+
+/** Dictionary pages plus the studio shell, whose sidebar counts include dictionary rows. */
+function revalidateDictionaryViews(slug: string) {
+  try {
+    revalidateDictionary(slug)
+    revalidatePath(`/studio/lang/${slug}`, "layout")
+  } catch (error) {
+    console.error("[learn] Dictionary saved; cache invalidation failed:", error)
+  }
+}
+
+/** Resolve a course's scope and confirm the caller may edit that language. */
+async function requireCourseEditAccess(courseId: string, userId: string): Promise<CourseScope | null> {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: courseScopeSelect })
   if (!course) return null
   if (!(await canEditLanguage(course.languageId, userId))) return null
-  return course
+  return toCourseScope(course)
+}
+
+/** Resolve a lesson's course scope and confirm the caller may edit that language. */
+async function requireLessonEditAccess(lessonId: string, userId: string): Promise<CourseScope | null> {
+  const lesson = await prisma.courseLesson.findUnique({
+    where: { id: lessonId },
+    select: { course: { select: courseScopeSelect } },
+  })
+  if (!lesson) return null
+  if (!(await canEditLanguage(lesson.course.languageId, userId))) return null
+  return toCourseScope(lesson.course)
+}
+
+/** Resolve a unit's course scope and confirm the caller may edit that language. */
+async function requireUnitEditAccess(unitId: string, userId: string): Promise<CourseScope | null> {
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+    select: { course: { select: courseScopeSelect } },
+  })
+  if (!unit) return null
+  if (!(await canEditLanguage(unit.course.languageId, userId))) return null
+  return toCourseScope(unit.course)
+}
+
+/** Reorder payloads come straight from the client: a bounded list of ids. */
+const orderedIdsSchema = z.array(z.string().min(1)).max(1000)
+
+/**
+ * Parse a client-supplied reorder list and require every id to be distinct and owned by the
+ * target (lesson, course). Returns null when any id is foreign, duplicated or malformed, so the
+ * caller rejects the whole request instead of writing a partial order.
+ */
+function ownedDistinctIds(ids: unknown, owned: readonly { id: string }[]): string[] | null {
+  const parsed = orderedIdsSchema.safeParse(ids)
+  if (!parsed.success) return null
+  const allowed = new Set(owned.map((row) => row.id))
+  const unique = new Set(parsed.data)
+  if (unique.size !== parsed.data.length || !parsed.data.every((id) => allowed.has(id))) return null
+  return parsed.data
 }
 
 export async function createCourse(languageId: string, title: string, description?: string) {
@@ -571,7 +681,7 @@ export async function createCourse(languageId: string, title: string, descriptio
   const course = await prisma.course.create({
     data: { title, description, languageId, authorId: userId },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseCatalog({ courseId: course.id, languageId, slug: await getSlugForLanguage(languageId) })
   return { data: course }
 }
 
@@ -597,7 +707,8 @@ export async function updateCourse(
   data: { title?: string; description?: string; visibility?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; coverImage?: string }
 ) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
 
   const parsed = courseUpdateSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid course" }
@@ -606,39 +717,56 @@ export async function updateCourse(
     where: { id: courseId },
     data: { ...rest, ...(coverImage !== undefined && { coverImage: coverImage || null }) },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseCatalog(scope)
   return { data: updated }
 }
 
 export async function updateLesson(lessonId: string, data: { title?: string; description?: string | null }) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
   const parsed = lessonUpdateSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid lesson" }
   const updated = await prisma.courseLesson.update({ where: { id: lessonId }, data: parsed.data })
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: updated }
 }
 
 export async function reorderLessonItems(lessonId: string, orderedIds: string[]) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
-  // Scoped to this lesson: item ids from other lessons (other languages) are ignored.
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
+
+  // Every id must be one of this lesson's items: a foreign or repeated id rejects the whole reorder.
+  const items = await prisma.lessonItem.findMany({ where: { lessonId }, select: { id: true } })
+  const ids = ownedDistinctIds(orderedIds, items)
+  if (!ids) return { error: "Invalid items" }
+
   await prisma.$transaction(
-    orderedIds.map((id, order) => prisma.lessonItem.updateMany({ where: { id, lessonId }, data: { order } }))
+    ids.map((id, order) => prisma.lessonItem.updateMany({ where: { id, lessonId }, data: { order } }))
   )
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: true }
 }
 
+// Mirrors the example-sentence editor's limits (app/actions/example-sentence.ts).
+const lessonSentenceSchema = z.object({
+  sentence: z.string().trim().min(1, "Sentence is required").max(500),
+  translation: z.string().trim().min(1, "Translation is required").max(500),
+  gloss: z.string().trim().max(500).optional(),
+})
+
+const lessonVocabSchema = z.object({
+  lemma: z.string().trim().min(1).max(200),
+  gloss: z.string().trim().min(1).max(500),
+  partOfSpeech: z.string().trim().max(50).optional(),
+})
+
+/**
+ * Write an example sentence under a word and add it to a lesson. The sentence is dictionary
+ * content, so this takes the same `write:dictionary` scope and limits as the example-sentence
+ * editor, not merely course edit access.
+ */
 export async function createAndAddSentence(
   lessonId: string,
   dictEntryId: string,
@@ -647,36 +775,53 @@ export async function createAndAddSentence(
   gloss?: string,
 ) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
+  if (!(await canEditScope(scope.languageId, userId, "write:dictionary"))) {
+    return { error: "You don't have permission to edit this language" }
+  }
+  const input = lessonSentenceSchema.safeParse({ sentence, translation, gloss })
+  if (!input.success) return { error: input.error.issues[0]?.message ?? "Invalid sentence" }
 
   const entry = await prisma.dictionaryEntry.findUnique({
     where: { id: dictEntryId },
     select: { languageId: true },
   })
-  if (!entry || entry.languageId !== lesson.course.languageId) {
+  if (!entry || entry.languageId !== scope.languageId) {
     return { error: "Word does not belong to this language" }
   }
 
-  const last = await prisma.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" } })
-
   const result = await prisma.$transaction(async (tx) => {
+    const [lastItem, lastExample] = await Promise.all([
+      tx.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" }, select: { order: true } }),
+      tx.exampleSentence.findFirst({ where: { dictionaryEntryId: dictEntryId }, orderBy: { order: "desc" }, select: { order: true } }),
+    ])
     const s = await tx.exampleSentence.create({
-      data: { sentence, translation, gloss: gloss || null, dictionaryEntryId: dictEntryId },
+      data: {
+        sentence: input.data.sentence,
+        translation: input.data.translation,
+        gloss: input.data.gloss || null,
+        dictionaryEntryId: dictEntryId,
+        order: (lastExample?.order ?? -1) + 1,
+      },
     })
     const i = await tx.lessonItem.create({
-      data: { lessonId, type: "SENTENCE", order: (last?.order ?? -1) + 1, sentenceId: s.id },
+      data: { lessonId, type: "SENTENCE", order: (lastItem?.order ?? -1) + 1, sentenceId: s.id },
     })
     return { item: i, sentence: { id: s.id, sentence: s.sentence, translation: s.translation } }
   })
 
+  // The sentence also appears under its word in the dictionary.
+  revalidateDictionaryViews(scope.slug)
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: result }
 }
 
+/**
+ * Create a word and add it to a lesson. The word goes through the dictionary write path
+ * (`write:dictionary`, entry validation, phonotactic policy, activity log) with the lesson item
+ * in the same transaction, so both commit together or not at all.
+ */
 export async function createAndAddVocab(
   lessonId: string,
   languageId: string,
@@ -685,40 +830,51 @@ export async function createAndAddVocab(
   partOfSpeech?: string,
 ) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (lesson.course.languageId !== languageId) return { error: "Language mismatch" }
-  // Creates a dictionary entry, so it needs the dictionary scope, not just "some write access".
-  if (!(await canEditScope(languageId, userId, "write:dictionary"))) return { error: "Not found" }
-  const vocab = z
-    .object({ lemma: z.string().trim().min(1).max(200), gloss: z.string().trim().min(1).max(500), partOfSpeech: z.string().max(50).optional() })
-    .safeParse({ lemma, gloss, partOfSpeech })
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
+  if (scope.languageId !== languageId) return { error: "Language mismatch" }
+  const vocab = lessonVocabSchema.safeParse({ lemma, gloss, partOfSpeech })
   if (!vocab.success) return { error: vocab.error.issues[0]?.message ?? "Invalid word" }
 
-  const last = await prisma.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" } })
+  try {
+    const { entry, attached: item } = await dictionaryService.createEntryWithAttachment(
+      { lemma: vocab.data.lemma, gloss: vocab.data.gloss, partOfSpeech: vocab.data.partOfSpeech || null, languageId },
+      userId,
+      async (tx, created) => {
+        const last = await tx.lessonItem.findFirst({ where: { lessonId }, orderBy: { order: "desc" }, select: { order: true } })
+        return tx.lessonItem.create({
+          data: { lessonId, type: "VOCAB", order: (last?.order ?? -1) + 1, dictEntryId: created.id },
+        })
+      },
+    )
 
-  const result = await prisma.$transaction(async (tx) => {
-    const e = await tx.dictionaryEntry.create({
-      data: { lemma: vocab.data.lemma, gloss: vocab.data.gloss, partOfSpeech: vocab.data.partOfSpeech || null, languageId },
+    await createActivity({
+      type: "CREATED",
+      entityType: "DICTIONARY_ENTRY",
+      entityId: entry.id,
+      languageId,
+      userId,
+      description: `Added dictionary entry "${entry.lemma}"`,
     })
-    const i = await tx.lessonItem.create({
-      data: { lessonId, type: "VOCAB", order: (last?.order ?? -1) + 1, dictEntryId: e.id },
-    })
+    checkDictionaryBadges(userId).catch(console.error)
+
+    revalidateDictionaryViews(scope.slug)
+    revalidateCourseRoutes(scope, [lessonId])
     return {
-      item: i,
-      dictEntry: { id: e.id, lemma: e.lemma, gloss: e.gloss, partOfSpeech: e.partOfSpeech },
+      data: {
+        item,
+        dictEntry: { id: entry.id, lemma: entry.lemma, gloss: entry.gloss, partOfSpeech: entry.partOfSpeech },
+      },
     }
-  })
-
-  return { data: result }
+  } catch (error) {
+    return { ...toActionError(error, "Failed to create word") }
+  }
 }
 
 export async function createLesson(courseId: string, title: string, description?: string, unitId?: string | null) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
 
   // A provided unit must belong to this course.
   if (unitId) {
@@ -734,7 +890,7 @@ export async function createLesson(courseId: string, title: string, description?
   const lesson = await prisma.courseLesson.create({
     data: { title, description, courseId, unitId: unitId ?? null, order: (lastLesson?.order ?? -1) + 1 },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: lesson }
 }
 
@@ -743,105 +899,100 @@ export async function createLesson(courseId: string, title: string, description?
 /** Create a lesson directly inside a unit (resolves the course from the unit). */
 export async function createLessonInUnit(unitId: string, title: string, description?: string) {
   const userId = await requireAuth()
-  const unit = await prisma.unit.findUnique({
-    where: { id: unitId },
-    select: { id: true, courseId: true, course: { select: { languageId: true } } },
-  })
-  if (!unit) return { error: "Not found" }
-  if (!(await canEditLanguage(unit.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireUnitEditAccess(unitId, userId)
+  if (!scope) return { error: "Not found" }
 
   const lastLesson = await prisma.courseLesson.findFirst({
-    where: { courseId: unit.courseId },
+    where: { courseId: scope.courseId },
     orderBy: { order: "desc" },
   })
 
   const lesson = await prisma.courseLesson.create({
-    data: { title, description, courseId: unit.courseId, unitId, order: (lastLesson?.order ?? -1) + 1 },
+    data: { title, description, courseId: scope.courseId, unitId, order: (lastLesson?.order ?? -1) + 1 },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: lesson }
 }
 
 /** Persist a new lesson order within a course (ids may be a single group). */
 export async function reorderLessons(courseId: string, orderedLessonIds: string[]) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
 
   const lessons = await prisma.courseLesson.findMany({ where: { courseId }, select: { id: true } })
-  const valid = new Set(lessons.map((l) => l.id))
-  if (!orderedLessonIds.every((id) => valid.has(id))) return { error: "Invalid lessons" }
+  const ids = ownedDistinctIds(orderedLessonIds, lessons)
+  if (!ids) return { error: "Invalid lessons" }
 
   await prisma.$transaction(
-    orderedLessonIds.map((id, i) =>
-      prisma.courseLesson.update({ where: { id }, data: { order: i } }),
-    ),
+    ids.map((id, order) => prisma.courseLesson.updateMany({ where: { id, courseId }, data: { order } })),
   )
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: true }
 }
 
 /** Persist a new unit order within a course. */
 export async function reorderUnits(courseId: string, orderedUnitIds: string[]) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
 
   const units = await prisma.unit.findMany({ where: { courseId }, select: { id: true } })
-  const valid = new Set(units.map((u) => u.id))
-  if (!orderedUnitIds.every((id) => valid.has(id))) return { error: "Invalid units" }
+  const ids = ownedDistinctIds(orderedUnitIds, units)
+  if (!ids) return { error: "Invalid units" }
 
   await prisma.$transaction(
-    orderedUnitIds.map((id, i) => prisma.unit.update({ where: { id }, data: { order: i } })),
+    ids.map((id, order) => prisma.unit.updateMany({ where: { id, courseId }, data: { order } })),
   )
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: true }
 }
 
 export async function createUnit(courseId: string, title: string, description?: string) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
 
   const last = await prisma.unit.findFirst({ where: { courseId }, orderBy: { order: "desc" } })
   const unit = await prisma.unit.create({
     data: { courseId, title, description, order: (last?.order ?? -1) + 1 },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: unit }
 }
 
 export async function updateUnit(unitId: string, data: { title?: string; description?: string }) {
   const userId = await requireAuth()
-  if (!(await requireUnitEditAccess(unitId, userId))) return { error: "Not found" }
+  const scope = await requireUnitEditAccess(unitId, userId)
+  if (!scope) return { error: "Not found" }
 
   const parsed = unitUpdateSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid unit" }
   const updated = await prisma.unit.update({ where: { id: unitId }, data: parsed.data })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: updated }
 }
 
 export async function deleteUnit(unitId: string) {
   const userId = await requireAuth()
-  if (!(await requireUnitEditAccess(unitId, userId))) return { error: "Not found" }
+  const scope = await requireUnitEditAccess(unitId, userId)
+  if (!scope) return { error: "Not found" }
 
   // Lessons keep existing; their unitId is set null via onDelete: SetNull.
   await prisma.unit.delete({ where: { id: unitId } })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope)
   return { data: true }
 }
 
 /** Assign (or unassign with null) a lesson to a unit within the same course. */
 export async function setLessonUnit(lessonId: string, unitId: string | null) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, courseId: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
 
   if (unitId) {
     const unit = await prisma.unit.findFirst({
-      where: { id: unitId, courseId: lesson.courseId },
+      where: { id: unitId, courseId: scope.courseId },
       select: { id: true },
     })
     if (!unit) return { error: "Invalid unit" }
@@ -851,18 +1002,8 @@ export async function setLessonUnit(lessonId: string, unitId: string | null) {
     where: { id: lessonId },
     data: { unitId },
   })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: updated }
-}
-
-async function requireUnitEditAccess(unitId: string, userId: string) {
-  const unit = await prisma.unit.findUnique({
-    where: { id: unitId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!unit) return null
-  if (!(await canEditLanguage(unit.course.languageId, userId))) return null
-  return unit
 }
 
 export async function addLessonItem(
@@ -871,18 +1012,12 @@ export async function addLessonItem(
   sourceId: string,
 ) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-
-  const languageId = lesson.course.languageId
-  if (!(await canEditLanguage(languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
 
   // The linked content must belong to the same language as the course.
   const sourceLanguageId = await getSourceLanguageId(type, sourceId)
-  if (!sourceLanguageId || sourceLanguageId !== languageId) {
+  if (!sourceLanguageId || sourceLanguageId !== scope.languageId) {
     return { error: "Invalid item: content does not belong to this language" }
   }
 
@@ -902,6 +1037,7 @@ export async function addLessonItem(
       sentenceId:    type === "SENTENCE" ? sourceId : null,
     },
   })
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: item }
 }
 
@@ -937,33 +1073,30 @@ async function getSourceLanguageId(
 
 export async function deleteLessonItem(itemId: string) {
   const userId = await requireAuth()
-  const item = await prisma.lessonItem.findUnique({
-    where: { id: itemId },
-    select: { id: true, lesson: { select: { course: { select: { languageId: true } } } } },
-  })
+  const item = await prisma.lessonItem.findUnique({ where: { id: itemId }, select: { lessonId: true } })
   if (!item) return { error: "Not found" }
-  if (!(await canEditLanguage(item.lesson.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(item.lessonId, userId)
+  if (!scope) return { error: "Not found" }
   await prisma.lessonItem.delete({ where: { id: itemId } })
+  revalidateCourseRoutes(scope, [item.lessonId])
   return { data: true }
 }
 
 export async function deleteLesson(lessonId: string) {
   const userId = await requireAuth()
-  const lesson = await prisma.courseLesson.findUnique({
-    where: { id: lessonId },
-    select: { id: true, course: { select: { languageId: true } } },
-  })
-  if (!lesson) return { error: "Not found" }
-  if (!(await canEditLanguage(lesson.course.languageId, userId))) return { error: "Not found" }
+  const scope = await requireLessonEditAccess(lessonId, userId)
+  if (!scope) return { error: "Not found" }
   await prisma.courseLesson.delete({ where: { id: lessonId } })
+  revalidateCourseRoutes(scope, [lessonId])
   return { data: true }
 }
 
 export async function deleteCourse(courseId: string) {
   const userId = await requireAuth()
-  if (!(await requireCourseEditAccess(courseId, userId))) return { error: "Not found" }
+  const scope = await requireCourseEditAccess(courseId, userId)
+  if (!scope) return { error: "Not found" }
   await prisma.course.delete({ where: { id: courseId } })
-  revalidatePath(`/studio/lang`)
+  revalidateCourseCatalog(scope)
   return { data: true }
 }
 

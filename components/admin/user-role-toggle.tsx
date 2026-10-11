@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { toggleUserAdmin } from "@/app/actions/admin-mutations"
+import { toggleUserAdmin } from "@/app/actions/admin-users"
 import { Loader2, Shield, ShieldAlert } from "lucide-react"
 import { useRouter } from "next/navigation"
 

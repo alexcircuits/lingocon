@@ -1,45 +1,9 @@
 import { test, expect, expectNoPageErrors } from "./fixtures"
 
 /**
- * Critical user journeys (DEV_MODE, seeded DB). Each creates its own data with a unique slug so
- * runs don't interfere with each other or with the smoke specs.
+ * Public reader journeys against the base seed (`npm run db:seed`, language "test-language").
+ * The authoring journey moved to e2e/studio/language-creation.spec.ts.
  */
-
-test.describe("authoring journey", () => {
-  test("create a public language, add a word, see it after reload and on the public page", async ({
-    page,
-    pageErrors,
-  }) => {
-    const stamp = Date.now().toString(36)
-    const name = `Ëlvish E2E ${stamp}`
-    // Unicode-aware slugs: "Ë" folds to "e" instead of being dropped.
-    const slug = `elvish-e2e-${stamp}`
-
-    await page.goto("/dashboard/new-language")
-    await page.locator("#name").fill(name)
-    await expect(page.locator("#slug")).toHaveValue(slug)
-    await page.locator("#visibility").click()
-    await page.getByRole("option", { name: "Public" }).click()
-    await page.getByRole("button", { name: /create language/i }).click()
-    await page.waitForURL("**/dashboard")
-
-    await page.goto(`/studio/lang/${slug}/dictionary`)
-    await page.getByRole("button", { name: "Add Entry" }).first().click()
-    await page.locator("#lemma").fill("karethō")
-    await page.locator("#gloss").fill("river")
-    await page.getByRole("dialog").getByRole("button", { name: "Add Entry" }).click()
-    await expect(page.getByRole("cell", { name: "karethō", exact: true }).filter({ visible: true })).toBeVisible()
-
-    await page.reload()
-    await expect(page.getByRole("cell", { name: "karethō", exact: true }).filter({ visible: true })).toBeVisible()
-
-    await page.goto(`/lang/${slug}/dictionary`)
-    await expect(page.getByRole("button", { name: "Show details for karethō" })).toBeVisible()
-    await page.getByRole("button", { name: "Show details for karethō" }).click()
-    await expect(page.getByRole("dialog")).toContainText("river")
-    expectNoPageErrors(pageErrors)
-  })
-})
 
 test.describe("public reader", () => {
   test("dictionary search runs on the server and is linkable", async ({ page, pageErrors }) => {

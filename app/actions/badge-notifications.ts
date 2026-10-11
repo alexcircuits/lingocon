@@ -6,10 +6,13 @@ import { revalidatePath } from "next/cache"
 import { BadgeWithProgress } from "./badge"
 
 /**
- * Get earned badges that haven't been notified to the user yet
+ * Get the signed-in user's earned badges that haven't been shown yet.
+ *
+ * Exported Server Actions are callable from any client with any arguments, so
+ * the user is always taken from the session, never from a parameter.
  */
-export async function getUnnotifiedBadges(userId?: string): Promise<BadgeWithProgress[]> {
-    const targetUserId = userId || (await getUserId())
+export async function getUnnotifiedBadges(): Promise<BadgeWithProgress[]> {
+    const targetUserId = await getUserId()
 
     if (!targetUserId) {
         return []

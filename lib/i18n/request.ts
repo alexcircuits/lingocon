@@ -4,7 +4,7 @@ import { defaultLocale, getIntlLocale, LOCALE_COOKIE, locales } from './config';
 import { getConlangMessages, mergeMessages } from './conlang-messages';
 
 export default getRequestConfig(async () => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const localeCookie = cookieStore.get(LOCALE_COOKIE)?.value || defaultLocale;
 
   let messages: Record<string, any>;
@@ -21,8 +21,14 @@ export default getRequestConfig(async () => {
   if (localeCookie.startsWith('conlang:')) {
     const languageId = localeCookie.split(':')[1];
     if (languageId) {
-      const conlangMessages = await getConlangMessages(languageId);
-      messages = mergeMessages(messages, conlangMessages);
+      // A database failure must degrade to English, not take down every page for
+      // this user (the root layout awaits this config).
+      try {
+        const conlangMessages = await getConlangMessages(languageId);
+        messages = mergeMessages(messages, conlangMessages);
+      } catch (error) {
+        console.error('Failed to load conlang interface messages', error);
+      }
     }
     // Conlang strings merged over English; formatting (plurals, numbers) follows English.
     return {

@@ -142,9 +142,10 @@ export async function getStudioNavInstalls(userId: string, languageId: string) {
       OR: [{ languageId }, { languageId: null }],
       module: { status: "PUBLISHED", type: { in: STUDIO_NAV_TYPES } },
     },
-    include: {
+    // Sidebar tabs need names and icons only; the module bundle (up to ~100 KB of
+    // code per install) is loaded by the module page itself.
+    select: {
       module: { select: { id: true, slug: true, name: true, icon: true, type: true } },
-      version: { select: { version: true, permissions: true, bundleCode: true } },
     },
     orderBy: { createdAt: "asc" },
   })

@@ -6,6 +6,7 @@ import { slugOrFallback } from "@/lib/utils/slug"
 import { z } from "zod"
 import { mediaUrlSchema } from "@/lib/validations/url"
 import { assertParadigmInLanguage } from "@/lib/services/language-scope"
+import { StaleRevisionError, nextRevision, parseExpectedRevision } from "@/lib/services/document-revision"
 
 // Server actions receive arbitrary objects at runtime, so fields are picked explicitly — spreading
 // the input let a caller set languageId/authorId and move an article into someone else's language.
@@ -97,18 +98,21 @@ export async function createArticle(
   return { article, langSlug }
 }
 
-export async function updateArticle(
-  id: string,
-  data: {
-    title?: string
-    excerpt?: string
-    content?: any
-    coverImage?: string
-    published?: boolean
-    paradigmId?: string | null
-  },
-  userId: string
-) {
+export interface UpdateArticleInput {
+  title?: string
+  excerpt?: string | null
+  content?: unknown
+  /** null (or "") clears the stored cover; undefined keeps it. */
+  coverImage?: string | null
+  published?: boolean
+  paradigmId?: string | null
+  /** The `updatedAt` the editor loaded (ISO). Omitted: no revision check. */
+  expectedUpdatedAt?: string | null
+}
+
+export async function updateArticle(id: string, data: UpdateArticleInput, userId: string) {
+  const { expectedUpdatedAt, ...input } = data
+  const expected = parseExpectedRevision(expectedUpdatedAt, "article")
   const article = await prisma.article.findUnique({
     where: { id },
     include: { language: { select: { ownerId: true, slug: true, id: true } } },
@@ -131,7 +135,7 @@ export async function updateArticle(
     throw new UnauthorizedError("You don't have permission to edit this article")
   }
 
-  const fields = articleUpdateSchema.parse(data)
+  const fields = articleUpdateSchema.parse(input)
   await assertParadigmInLanguage(fields.paradigmId, article.languageId)
 
   let slug = article.slug
@@ -144,21 +148,31 @@ export async function updateArticle(
     ? (fields.published ?? article.published)
     : article.published
 
-  const updated = await prisma.article.update({
-    where: { id },
-    data: {
-      ...(fields.title !== undefined && { title: fields.title }),
-      ...(fields.excerpt !== undefined && { excerpt: fields.excerpt }),
-      ...(fields.content !== undefined && { content: fields.content as Prisma.InputJsonValue }),
-      ...(fields.coverImage !== undefined && { coverImage: fields.coverImage || null }),
-      slug,
-      paradigmId: fields.paradigmId !== undefined ? fields.paradigmId || null : article.paradigmId,
-      published: publishedNext,
-      publishedAt: publishedNext && !article.published ? new Date() : article.publishedAt,
-    },
+  // One conditional UPDATE: with a revision, it matches only if nobody saved since the editor
+  // loaded the article. Reading the row back in the same transaction returns exactly this write.
+  const updated = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.article.updateMany({
+      where: { id, languageId: article.languageId, ...(expected && { updatedAt: expected }) },
+      data: {
+        ...(fields.title !== undefined && { title: fields.title }),
+        ...(fields.excerpt !== undefined && { excerpt: fields.excerpt }),
+        ...(fields.content !== undefined && { content: fields.content as Prisma.InputJsonValue }),
+        ...(fields.coverImage !== undefined && { coverImage: fields.coverImage || null }),
+        slug,
+        paradigmId: fields.paradigmId !== undefined ? fields.paradigmId || null : article.paradigmId,
+        published: publishedNext,
+        publishedAt: publishedNext && !article.published ? new Date() : article.publishedAt,
+        updatedAt: nextRevision(expected ?? article.updatedAt),
+      },
+    })
+    if (count === 0) {
+      if (expected && (await tx.article.count({ where: { id } })) > 0) throw new StaleRevisionError("article")
+      throw new NotFoundError("Article", id)
+    }
+    return tx.article.findUniqueOrThrow({ where: { id } })
   })
 
-  return { article: updated, langSlug: article.language.slug }
+  return { article: updated, langSlug: article.language.slug, previousSlug: article.slug }
 }
 
 export async function publishArticle(id: string, userId: string) {

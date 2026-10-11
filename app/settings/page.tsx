@@ -64,14 +64,14 @@ export default function SettingsPage() {
         },
     })
 
+    // Fill the form from the session when it loads or changes, but never over unsaved
+    // edits: useSession() refetches on window focus and used to wipe what was typed.
+    const sessionName = session?.user?.name
+    const sessionImage = session?.user?.image
     useEffect(() => {
-        if (session?.user) {
-            form.reset({
-                name: session.user.name || "",
-                image: session.user.image || "",
-            })
-        }
-    }, [session, form])
+        if (sessionName === undefined || form.formState.isDirty) return
+        form.reset({ name: sessionName || "", image: sessionImage || "" })
+    }, [sessionName, sessionImage, form])
 
     const onSubmit = async (values: UpdateUserInput) => {
         setLoading(true)
@@ -85,7 +85,10 @@ export default function SettingsPage() {
                 toast.error(result.error)
             } else {
                 toast.success("Profile updated successfully")
-                await update()
+                form.reset({ name: values.name, image: values.image || "" })
+                // With data, update() is a POST that runs the jwt "update" trigger, which
+                // re-reads name and image; without data it only re-fetched the old session.
+                await update({ name: values.name, image: values.image || "" })
                 router.refresh()
             }
         } catch (error) {

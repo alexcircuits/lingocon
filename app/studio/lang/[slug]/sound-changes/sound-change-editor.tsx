@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useTransition, useCallback } from "react"
+import { useState, useMemo, useTransition, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -48,13 +48,16 @@ import { useSoundChangeEngine } from "@/lib/linguistics/use-sound-change-engine"
 import { cn } from "@/lib/utils"
 import { updateLanguageMetadata } from "@/app/actions/language"
 import { applySoundChangesToDictionary } from "@/app/actions/apply-sound-changes"
+import { useStudioAccess } from "@/components/studio-access"
+import { inventorySets, type SoundChangeInventory } from "./sound-change-inputs"
 
 interface SoundChangeEditorProps {
   languageId: string
   languageName: string
   entries: { id: string; lemma: string; gloss: string; ipa: string | null }[]
   savedRules: string
-  phonology: Record<string, any>
+  /** The phonology classes the server applies with (see soundChangeInventory). */
+  phonology: SoundChangeInventory
 }
 
 const EXAMPLE_RULES = `// Grimm's Law (simplified)
@@ -81,12 +84,34 @@ export function SoundChangeEditor({
 }: SoundChangeEditorProps) {
   const router = useRouter()
   const t = useTranslations("studio.soundChanges")
+  // Saving rules writes language metadata under the phonology scope; applying them rewrites the
+  // lexicon and needs the dictionary scope. Anyone else reads the saved rules and still previews
+  // them on test words and the dictionary (nothing is written).
+  const { canWrite } = useStudioAccess()
+  const canSaveRules = canWrite("write:phonology")
+  const canApply = canWrite("write:dictionary")
   const [isPending, startTransition] = useTransition()
   const [isApplying, setIsApplying] = useState(false)
+  const applyInFlight = useRef(false)
 
   // Rule editor
   const [rulesText, setRulesText] = useState(savedRules || "")
   const [testWords, setTestWords] = useState("")
+
+  // "Apply to dictionary" runs the rules stored in language metadata, not the text in this editor.
+  // Track what is persisted, and allow applying only when the previewed text is exactly that.
+  const [lastSavedRules, setLastSavedRules] = useState(savedRules || "")
+  const hasUnsavedRules = rulesText !== lastSavedRules
+  const [conflict, setConflict] = useState<string | null>(null)
+
+  // Follow newer saved rules from the server (another tab, a collaborator, the re-render after a
+  // conflict) without clobbering an unsaved local draft.
+  const [serverRules, setServerRules] = useState(savedRules || "")
+  if ((savedRules || "") !== serverRules) {
+    setServerRules(savedRules || "")
+    setLastSavedRules(savedRules || "")
+    if (!hasUnsavedRules) setRulesText(savedRules || "")
+  }
 
   // Parse rules from text (used for the rule count + empty checks)
   const rules = useMemo(() => parseRules(rulesText), [rulesText])
@@ -94,20 +119,13 @@ export function SoundChangeEditor({
   // Sound-change engine: Go→WASM core when loaded, pure-TS fallback otherwise.
   const engine = useSoundChangeEngine()
 
-  // Build custom vowel/consonant sets from phonology if available
-  const vowels = useMemo(() => {
-    if (phonology?.vowels && Array.isArray(phonology.vowels)) {
-      return new Set<string>(phonology.vowels)
-    }
-    return undefined
-  }, [phonology])
-
-  const consonants = useMemo(() => {
-    if (phonology?.consonants && Array.isArray(phonology.consonants)) {
-      return new Set<string>(phonology.consonants)
-    }
-    return undefined
-  }, [phonology])
+  // The same phoneme classes the server applies with, so preview == apply.
+  const reviewedVowels = phonology.vowels ?? null
+  const reviewedConsonants = phonology.consonants ?? null
+  const { vowels, consonants } = useMemo(
+    () => inventorySets({ vowels: reviewedVowels, consonants: reviewedConsonants }),
+    [reviewedVowels, reviewedConsonants]
+  )
 
   // Preview results on test words
   const testResults = useMemo<SoundChangeResult[]>(() => {
@@ -143,6 +161,8 @@ export function SoundChangeEditor({
         toast.error(result.error || t("saveFailed"))
         return
       }
+      setLastSavedRules(rulesText)
+      setConflict(null)
       toast.success(t("rulesSaved"))
       startTransition(() => router.refresh())
     } catch {
@@ -162,11 +182,24 @@ export function SoundChangeEditor({
 
   // Apply rules to the actual dictionary (irreversible)
   const handleApplyToDictionary = useCallback(async () => {
+    // Irreversible: never run twice, and never for a preview of unsaved rules.
+    if (applyInFlight.current || hasUnsavedRules) return
+    applyInFlight.current = true
     setIsApplying(true)
+    setConflict(null)
     try {
-      const result = await applySoundChangesToDictionary(languageId)
-      if ("error" in result) {
-        toast.error(result.error)
+      // Exactly what the preview used; the server refuses anything else.
+      const result = await applySoundChangesToDictionary(languageId, {
+        rules: lastSavedRules,
+        vowels: reviewedVowels,
+        consonants: reviewedConsonants,
+      })
+      if (result.error !== undefined) {
+        const message = result.code === "RULES_CHANGED" ? t("rulesChangedConflict") : result.error
+        if (result.code) setConflict(message)
+        toast.error(message)
+        // Load the current saved rules and phonology; an unsaved draft is kept.
+        if (result.code) startTransition(() => router.refresh())
       } else {
         toast.success(t("appliedToast", { applied: result.data.applied, unchanged: result.data.unchanged }))
         startTransition(() => router.refresh())
@@ -174,9 +207,10 @@ export function SoundChangeEditor({
     } catch {
       toast.error(t("applyFailed"))
     } finally {
+      applyInFlight.current = false
       setIsApplying(false)
     }
-  }, [languageId, router, t])
+  }, [languageId, hasUnsavedRules, lastSavedRules, reviewedVowels, reviewedConsonants, router, t])
 
   // Export as TSV
   const handleExport = useCallback(() => {
@@ -207,26 +241,28 @@ export function SoundChangeEditor({
                 <Zap className="h-4 w-4 text-primary" />
                 {t("rules")}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setRulesText(EXAMPLE_RULES)}
-                  className="text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  {t("loadExample")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isPending}
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {t("save")}
-                </Button>
-              </div>
+              {canSaveRules && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRulesText(EXAMPLE_RULES)}
+                    className="text-xs"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    {t("loadExample")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isPending}
+                  >
+                    <Save className="h-3 w-3 mr-1" />
+                    {t("save")}
+                  </Button>
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -234,6 +270,8 @@ export function SoundChangeEditor({
               value={rulesText}
               onChange={(e) => setRulesText(e.target.value)}
               placeholder={t("rulesPlaceholder")}
+              readOnly={!canSaveRules}
+              aria-label={t("rules")}
               className="font-mono text-sm min-h-[200px] sm:min-h-[300px] resize-y"
               spellCheck={false}
             />
@@ -246,14 +284,14 @@ export function SoundChangeEditor({
                 <span>{t("legend")}</span>
               </div>
             </div>
-            {rules.length > 0 && (
+            {canApply && rules.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="default"
                     size="sm"
                     className="w-full gap-2"
-                    disabled={isApplying || changedCount === 0}
+                    disabled={isApplying || changedCount === 0 || hasUnsavedRules}
                   >
                     <Wand2 className="h-3.5 w-3.5" />
                     {isApplying ? t("applying") : t("applyToDict", { count: changedCount })}
@@ -278,6 +316,7 @@ export function SoundChangeEditor({
                     <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleApplyToDictionary}
+                      disabled={isApplying || hasUnsavedRules}
                       className="bg-amber-600 hover:bg-amber-700"
                     >
                       {t("applyChanges")}
@@ -285,6 +324,14 @@ export function SoundChangeEditor({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            )}
+
+            {conflict && (
+              <p role="alert" className="text-sm text-destructive">{conflict}</p>
+            )}
+
+            {canApply && rules.length > 0 && hasUnsavedRules && (
+              <p className="text-xs text-muted-foreground">{t("applyNeedsSave")}</p>
             )}
           </CardContent>
         </Card>

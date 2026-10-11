@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { BadgeData } from "./badge-card"
+import type { BadgeData } from "./badge-card"
 import { X, Trophy } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
+
+// The hook lives in its own module so importing it does not pull in the animation library.
+export { useAchievementToast } from "./use-achievement-toast"
 
 interface AchievementToastProps {
     badge: BadgeData | null
@@ -98,23 +101,4 @@ export function AchievementToast({ badge, onDismiss, duration = 5000 }: Achievem
             )}
         </AnimatePresence>
     )
-}
-
-// Hook to manage achievement notifications
-export function useAchievementToast() {
-    const [badge, setBadge] = useState<BadgeData | null>(null)
-
-    const showAchievement = (newBadge: BadgeData) => {
-        setBadge(newBadge)
-    }
-
-    const dismiss = () => {
-        setBadge(null)
-    }
-
-    return {
-        badge,
-        showAchievement,
-        dismiss,
-    }
 }

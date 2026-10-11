@@ -12,8 +12,8 @@ import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
 import { getLanguageSeoData } from "@/lib/seo-data"
 import { buildLanguageMetadata, truncate } from "@/lib/seo"
 
-// Public grammar pages are cached for 1 hour; revalidated on content update.
-export const revalidate = 3600
+// No `revalidate` export: this page reads cookies (session, locale), so it is
+// rendered per request; studio writes call revalidatePath for it.
 
 export async function generateMetadata({
   params,
@@ -22,13 +22,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, pageSlug } = await params
   const language = await getLanguageSeoData(slug)
-  if (!language) return { title: "Grammar Page Not Found", robots: { index: false, follow: false } }
+  // Decided here, before streaming starts, so a missing page is a real 404 (the page's
+  // own notFound() runs inside the loading boundary, after a 200 has been sent).
+  if (!language) notFound()
 
   const page = await prisma.grammarPage.findFirst({
     where: { language: { slug }, slug: pageSlug },
     select: { title: true, content: true },
   })
-  if (!page) return { title: "Grammar Page Not Found", robots: { index: false, follow: false } }
+  if (!page) notFound()
 
   const excerpt = documentToPlainText(page.content)
 

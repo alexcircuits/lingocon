@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUserId } from "@/lib/auth-helpers"
-import { renderToBuffer } from "@react-pdf/renderer"
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
 import React from "react"
 import { LanguagePDFDocument } from "@/lib/utils/pdf-generator-server"
 import { fetchLanguageForExport } from "@/lib/services/export-service"
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         grammarPages: sanitizedGrammarPages,
         dictionaryEntries: language.dictionaryEntries,
         paradigms: sanitizedParadigms,
-      }) as React.ReactElement
+      }) as unknown as React.ReactElement<DocumentProps> // its root is a react-pdf <Document>
 
       pdfBuffer = await renderToBuffer(pdfDocument)
     } catch (renderError) {

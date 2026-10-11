@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FollowButton } from "@/components/follow-button"
-import { BadgeShowcase } from "@/components/badges"
+import { BadgeShowcase } from "@/components/badges/badge-showcase"
 import { BadgeData } from "@/components/badges/badge-card"
 import { Separator } from "@/components/ui/separator"
 

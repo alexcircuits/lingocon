@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+import { requireAdmin } from "@/lib/admin"
 import { getAllSurveysForAdmin, getSurveyResults } from "@/app/actions/survey"
-import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ClipboardList, Users, MessageSquare, BarChart3 } from "lucide-react"
@@ -30,19 +28,9 @@ type SurveyResultData = {
     results: SurveyResultItem[]
 }
 
-async function isAdmin() {
-    const session = await auth()
-    if (!session?.user?.id) return false
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { isAdmin: true },
-    })
-    return user?.isAdmin === true
-}
-
 export default async function AdminSurveysPage() {
-    const admin = await isAdmin()
-    if (!admin) redirect("/")
+    // Shared check: unlike the local copy it replaced, it also refuses suspended admins.
+    await requireAdmin()
 
     const surveys = await getAllSurveysForAdmin()
 

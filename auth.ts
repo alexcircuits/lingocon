@@ -7,7 +7,7 @@
  *
  * Route surface: `app/api/auth/[...nextauth]/route.ts` re-exports `handlers`.
  */
-import NextAuth from "next-auth"
+import NextAuth, { CredentialsSignin } from "next-auth"
 import type { Session, User } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { PrismaAdapter } from "@auth/prisma-adapter"
@@ -20,6 +20,16 @@ import { getDevUserId } from "@/lib/dev-auth"
 import { PHASE_PRODUCTION_BUILD } from "next/constants"
 import { rateLimit } from "@/lib/rate-limit"
 import { clientIpFromHeaders, normalizeEmail } from "@/lib/request-ip"
+import { isUserSuspended } from "@/lib/suspension"
+
+/**
+ * Reaches the login form as `signIn(...).code`. Auth.js v5 reports any other thrown
+ * error as a generic "Configuration" failure, so a plain `Error("EMAIL_NOT_VERIFIED")`
+ * never told the form to send the user to /verify-email.
+ */
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified"
+}
 
 // `next build` sets NODE_ENV=production while still reading local `.env` (often with DEV_MODE). Skip
 // the guard only for that phase; `next start` / hosting must never run with DEV_MODE enabled.
@@ -69,7 +79,7 @@ async function devAuth() {
   }
 }
 
-const nextAuthConfig = {
+export const nextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" as const },
   // Auth.js refuses to serve `/api/auth/*` without a secret. DEV_MODE (never allowed in production,
@@ -117,8 +127,12 @@ const nextAuthConfig = {
 
         if (!isPasswordValid) return null
 
+        // Suspended accounts get no new session (getUserId also ignores existing ones).
+        // Checked after the password so suspension is not revealed to a guesser.
+        if (user.isSuspended) return null
+
         if (!user.emailVerified) {
-          throw new Error("EMAIL_NOT_VERIFIED")
+          throw new EmailNotVerifiedError()
         }
 
         return {
@@ -150,6 +164,8 @@ const nextAuthConfig = {
         if (dbUser) {
           token.name = dbUser.name
           token.image = dbUser.image
+          // Auth.js builds session.user.image from `picture` (set at sign-in): keep it in step.
+          token.picture = dbUser.image
         }
       }
       return token
@@ -166,18 +182,28 @@ const nextAuthConfig = {
       if (session.user && userId) {
         session.user.id = userId as string
         if (token.name) session.user.name = token.name as string
-        if (token.image) session.user.image = token.image as string
+        // A removed avatar is null and must clear the picture; tokens without `image` keep theirs.
+        if (token.image !== undefined) session.user.image = token.image as string | null
       }
       return session
     },
   },
 }
 
-export const { handlers, signIn, signOut, auth: nextAuth } = NextAuth(nextAuthConfig)
+// `unstable_update` re-issues the session cookie server-side (the jwt "update" trigger
+// re-reads name and image), e.g. right after a profile save.
+export const { handlers, signIn, signOut, auth: nextAuth, unstable_update } = NextAuth(nextAuthConfig)
 
+/**
+ * The session for server code. A suspended account's still-valid session cookie counts
+ * as signed out here, so every page, layout and action that reads `auth()` (not only
+ * those using `getUserId()`) stops serving it the moment the account is suspended.
+ */
 export async function auth() {
   if (isDevMode) {
     return await devAuth()
   }
-  return await nextAuth()
+  const session = await nextAuth()
+  if (session?.user?.id && (await isUserSuspended(session.user.id))) return null
+  return session
 }

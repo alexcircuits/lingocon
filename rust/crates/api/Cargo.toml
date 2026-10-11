@@ -1,0 +1,46 @@
+[package]
+name = "lingocon-api"
+version = "0.1.0"
+description = "LingoCon Axum platform service."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "lingocon-api"
+path = "src/main.rs"
+
+[dependencies]
+lingocon-core = { path = "../core" }
+aes.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+base64.workspace = true
+cbc.workspace = true
+deadpool-postgres.workspace = true
+dotenvy.workspace = true
+futures-util.workspace = true
+hkdf.workspace = true
+hmac.workspace = true
+percent-encoding.workspace = true
+rustls.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tokio-postgres.workspace = true
+tokio-postgres-rustls.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+webpki-roots.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true

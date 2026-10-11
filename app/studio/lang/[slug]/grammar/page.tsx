@@ -1,11 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { getTranslations } from "next-intl/server"
-import { GrammarPagesManager } from "./grammar-pages-manager"
+import { GrammarPagesManager, NewGrammarPageButton } from "./grammar-pages-manager"
 import { documentToPlainText } from "@/lib/utils/tiptap-text"
 
 async function getLanguage(slug: string, userId: string | null) {
@@ -20,6 +17,9 @@ async function getLanguage(slug: string, userId: string | null) {
         orderBy: {
           order: "asc",
         },
+        // `content` is read only to count words here on the server; the client list receives just
+        // the displayed fields (see `pages` below), not every page's full document.
+        select: { id: true, title: true, slug: true, updatedAt: true, content: true },
       },
     },
   })
@@ -93,19 +93,15 @@ export default async function GrammarPage({
               {t("wordCount", { count: totalWords })}
             </span>
           )}
-          <Link href={`/studio/lang/${slug}/grammar/new`}>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t("newPage")}
-            </Button>
-          </Link>
+          {/* Only for visitors who may create pages (write:grammar). */}
+          <NewGrammarPageButton languageSlug={slug} />
         </div>
       </div>
 
       <GrammarPagesManager
         languageId={language.id}
         languageSlug={slug}
-        pages={language.grammarPages}
+        pages={language.grammarPages.map(({ id, title, slug, updatedAt }) => ({ id, title, slug, updatedAt }))}
         wordCountsById={Object.fromEntries(wordCountsById)}
       />
     </div>

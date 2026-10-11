@@ -44,4 +44,12 @@ export function registerBuiltinHandlers() {
     const { runLeagueRollover } = await import("@/lib/services/league-service")
     await runLeagueRollover()
   })
+
+  // Hourly: roll finished days of anonymous visitor statistics up into daily
+  // totals, then apply the retention (raw views 90 days, presence 1 h, salts
+  // of past days). Idempotent.
+  registerHandler("stats_rollup", async () => {
+    const { rollupAndPrune } = await import("@/lib/stats/store")
+    await rollupAndPrune()
+  })
 }

@@ -115,9 +115,9 @@ export async function generateMetadata({
   const userId = session?.user?.id || null
   const result = await getTextData(slug, textSlug, userId)
 
-  if (!result) {
-    return { title: "Text Not Found", robots: { index: false, follow: false } }
-  }
+  // Decided here, before streaming starts, so a missing page is a real 404 (the page's
+  // own notFound() runs inside the loading boundary, after a 200 has been sent).
+  if (!result) notFound()
 
   const { language, text } = result
   const isUnlisted = language.visibility === "UNLISTED"

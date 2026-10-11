@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 import { canEditScope } from "@/lib/auth-helpers"
 import { UnauthorizedError, NotFoundError, ValidationError } from "@/lib/errors"
 import {
@@ -308,4 +309,69 @@ export async function deleteAllEntries(languageId: string, userId: string) {
   })
 
   return { count: result.count, slug: language?.slug }
+}
+
+/**
+ * `createEntry` for callers that must commit a dependent row together with the new word (a lesson
+ * adding a word it just wrote). Same input validation, `write:dictionary` check, paradigm scoping,
+ * phonotactic policy and reciprocal links as `createEntry`; `attach` runs inside the same
+ * transaction, so if it throws neither the entry nor the attachment is written. Activity logging
+ * and cache invalidation stay with the calling action, as for `createEntry`.
+ */
+export async function createEntryWithAttachment<T>(
+  input: CreateDictionaryEntryInput,
+  userId: string,
+  attach: (tx: Prisma.TransactionClient, entry: { id: string; languageId: string; lemma: string }) => Promise<T>
+) {
+  const validated = createDictionaryEntrySchema.parse(JSON.parse(JSON.stringify(input)))
+
+  if (!(await canEditScope(validated.languageId, userId, "write:dictionary"))) {
+    throw new UnauthorizedError("You don't have permission to edit this language")
+  }
+  await assertParadigmInLanguage(validated.paradigmId, validated.languageId)
+
+  const language = await prisma.language.findUnique({
+    where: { id: validated.languageId },
+    select: { metadata: true },
+  })
+  const policy = language?.metadata as { syllableStructure?: string; consonants?: string[]; vowels?: string[] } | null
+  const word = validated.ipa || validated.lemma
+  if (
+    policy?.syllableStructure && policy.consonants && policy.vowels &&
+    !validatePhonotactics(word, policy.syllableStructure, policy.consonants, policy.vowels)
+  ) {
+    throw new ValidationError(`"${word}" does not match the language's syllable structure (${policy.syllableStructure})`)
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const entry = await tx.dictionaryEntry.create({
+      data: {
+        lemma: validated.lemma,
+        gloss: validated.gloss,
+        ipa: validated.ipa || null,
+        audioUrl: validated.audioUrl || null,
+        partOfSpeech: validated.partOfSpeech || null,
+        etymology: validated.etymology || null,
+        relatedWords: validated.relatedWords ?? Prisma.DbNull,
+        notes: validated.notes || null,
+        tags: validated.tags ?? Prisma.DbNull,
+        paradigmId: validated.paradigmId || null,
+        languageId: validated.languageId,
+      },
+      include: { language: { select: { slug: true } } },
+    })
+    if (validated.linkBack && validated.relatedWords?.length) {
+      await syncReciprocalLinks(tx, {
+        languageId: validated.languageId,
+        entryId: entry.id,
+        lemma: entry.lemma,
+        before: [],
+        after: validated.relatedWords,
+      })
+    }
+    return { entry, attached: await attach(tx, entry) }
+  })
+
+  if (result.entry.paradigmId) regenerateEntryForms(result.entry.id).catch(() => {})
+  return result
 }

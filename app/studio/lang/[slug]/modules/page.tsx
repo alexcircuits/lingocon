@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { getUserId, canEditLanguage } from "@/lib/auth-helpers"
+import { getUserId, canEditLanguage, canEditScope } from "@/lib/auth-helpers"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { Blocks } from "lucide-react"
@@ -46,7 +46,12 @@ export default async function StudioModulesPage({
   })
   if (!language) notFound()
 
-  const canEdit = await canEditLanguage(language.id, userId)
+  // Adding a module to this language needs manage:modules (addModule); an editor without it
+  // still sees and can remove the modules they added themselves (removeModule is per-user).
+  const [canEdit, canManage] = await Promise.all([
+    canEditLanguage(language.id, userId),
+    canEditScope(language.id, userId, "manage:modules"),
+  ])
   if (!canEdit) notFound()
 
   const [rawInstalls, officialMods] = await Promise.all([
@@ -115,11 +120,13 @@ export default async function StudioModulesPage({
 
       <ModuleHowItWorks languageSlug={language.slug} />
 
-      <StudioRecommendedModules
-        languageId={language.id}
-        languageName={language.name}
-        modules={recommended}
-      />
+      {canManage && (
+        <StudioRecommendedModules
+          languageId={language.id}
+          languageName={language.name}
+          modules={recommended}
+        />
+      )}
 
       <div>
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">

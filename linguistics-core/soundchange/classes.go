@@ -30,9 +30,11 @@ func Parse(text string) Program {
 
 // parseClassLine parses a single `class NAME = m1 m2 m3` definition line.
 // Returns ok=false for anything else (including malformed class lines), so
-// callers can fall through to ParseRule.
+// callers can fall through to ParseRule. Whitespace is JavaScript's (trim and
+// \s, see parse.go) and members are de-duplicated in first-seen order, like
+// the TypeScript engine's `new Set(members)`.
 func parseClassLine(line string) (name string, members []string, ok bool) {
-	trimmed := strings.TrimSpace(line)
+	trimmed := jsTrim(line)
 	if trimmed == "" {
 		return "", nil, false
 	}
@@ -48,7 +50,7 @@ func parseClassLine(line string) (name string, members []string, ok bool) {
 		return "", nil, false
 	}
 
-	rawName := strings.TrimSpace(rest[:eq])
+	rawName := jsTrim(rest[:eq])
 	if rawName == "" || !isIdentifier(rawName) {
 		return "", nil, false
 	}
@@ -61,12 +63,25 @@ func parseClassLine(line string) (name string, members []string, ok bool) {
 		return "", nil, false
 	}
 
-	members = strings.Fields(rest[eq+1:])
+	members = uniqueStrings(jsFields(rest[eq+1:]))
 	if len(members) == 0 {
 		return "", nil, false
 	}
 
 	return rawName, members, true
+}
+
+// uniqueStrings drops repeated strings, keeping first occurrences in order.
+func uniqueStrings(items []string) []string {
+	seen := make(map[string]bool, len(items))
+	out := make([]string, 0, len(items))
+	for _, item := range items {
+		if !seen[item] {
+			seen[item] = true
+			out = append(out, item)
+		}
+	}
+	return out
 }
 
 // isIdentifier reports whether s is a non-empty run of letters (no

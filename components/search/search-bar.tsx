@@ -27,7 +27,7 @@ export function SearchBar() {
     <Button
       asChild
       variant="outline"
-      className="relative h-9 w-9 p-0 xl:h-9 xl:w-56 xl:justify-start xl:gap-2 xl:px-3 bg-muted/40 hover:bg-muted/70 border-border/50 shadow-sm transition-all duration-200"
+      className="relative h-9 w-9 p-0 xl:h-9 xl:w-full xl:min-w-0 xl:max-w-56 xl:justify-start xl:gap-2 xl:px-3 bg-muted/40 hover:bg-muted/70 border-border/50 shadow-sm transition-all duration-200"
     >
       {/* The link is the control (no <button> nested in <a>); labelled for the icon-only widths. */}
       <Link href="/search" aria-label={t("search")}>

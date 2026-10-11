@@ -4,16 +4,20 @@ import { getUserId } from "@/lib/auth-helpers"
 import { toActionError } from "@/lib/errors"
 import { revalidatePath } from "next/cache"
 import { checkGrammarBadges } from "@/app/actions/badge"
-import type { CreateGrammarPageInput, UpdateGrammarPageInput } from "@/lib/validations/grammar-page"
+import type { CreateGrammarPageInput } from "@/lib/validations/grammar-page"
 import * as grammarService from "@/lib/services/grammar-page"
+import { toDocumentSaveError } from "@/lib/services/document-revision"
 
 // Shared mapping: user-facing messages for validation/domain errors, a generic fallback otherwise.
 const handleError = toActionError
 
-function revalidateGrammarPaths(langSlug: string, pageSlug?: string) {
+/** Revalidates the lists plus every given page URL — after a slug change both the previous and
+ * the new slug, so neither keeps serving a cached copy. */
+function revalidateGrammarPaths(langSlug: string, ...pageSlugs: (string | undefined)[]) {
   revalidatePath(`/studio/lang/${langSlug}/grammar`)
   revalidatePath(`/lang/${langSlug}/grammar`)
-  if (pageSlug) {
+  for (const pageSlug of new Set(pageSlugs)) {
+    if (!pageSlug) continue
     revalidatePath(`/studio/lang/${langSlug}/grammar/${pageSlug}`)
     revalidatePath(`/lang/${langSlug}/grammar/${pageSlug}`)
   }
@@ -33,16 +37,21 @@ export async function createGrammarPage(input: CreateGrammarPageInput) {
   }
 }
 
-export async function updateGrammarPage(input: UpdateGrammarPageInput) {
+/**
+ * Saves a grammar page. Returns the saved record — its `updatedAt` is the revision to send as
+ * `expectedUpdatedAt` on the next save. A save against an older revision returns
+ * `{ error, conflict: true }` and writes nothing.
+ */
+export async function updateGrammarPage(input: grammarService.UpdateGrammarPageCommand) {
   const userId = await getUserId()
   if (!userId) return { error: "Unauthorized" }
 
   try {
-    const page = await grammarService.updatePage(input, userId)
-    revalidateGrammarPaths(page.language.slug, page.slug)
+    const { page, previousSlug } = await grammarService.updatePage(input, userId)
+    revalidateGrammarPaths(page.language.slug, page.slug, previousSlug)
     return { success: true as const, data: page }
   } catch (error) {
-    return handleError(error, "Failed to update grammar page")
+    return { ...toDocumentSaveError(error, "Failed to update grammar page") }
   }
 }
 

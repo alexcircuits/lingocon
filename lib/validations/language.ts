@@ -32,6 +32,39 @@ export const languageMetadataSchema = z.object({
 
 export type LanguageMetadata = z.infer<typeof languageMetadataSchema>
 
+/** At most this many invalid top-level fields are dropped before giving up. */
+const MAX_DROPPED_METADATA_FIELDS = 32
+
+/**
+ * Read stored metadata for display without ever throwing.
+ *
+ * Stored metadata is a free-form JSON column written by several generations of
+ * the app. `languageMetadataSchema.parse()` throws on a single legacy value (an
+ * explicit null, a string where a list is expected), and during rendering that
+ * makes the whole page — the dictionary, the public alphabet — unavailable.
+ * This keeps every valid field and drops only the top-level fields that fail
+ * validation. Use the strict schema for validating writes.
+ */
+export function parseLanguageMetadata(raw: unknown): LanguageMetadata {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {}
+  let candidate: Record<string, unknown> = { ...(raw as Record<string, unknown>) }
+  const dropped: string[] = []
+  for (let attempt = 0; attempt <= MAX_DROPPED_METADATA_FIELDS; attempt++) {
+    const result = languageMetadataSchema.safeParse(candidate)
+    if (result.success) {
+      if (dropped.length > 0) console.warn("Ignoring invalid language metadata fields", dropped)
+      return result.data
+    }
+    const invalid = new Set(result.error.issues.map((issue) => String(issue.path[0] ?? "")))
+    invalid.delete("")
+    if (invalid.size === 0) break
+    candidate = Object.fromEntries(Object.entries(candidate).filter(([key]) => !invalid.has(key)))
+    dropped.push(...invalid)
+  }
+  console.warn("Ignoring unreadable language metadata", dropped)
+  return {}
+}
+
 export const createLanguageSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   slug: z

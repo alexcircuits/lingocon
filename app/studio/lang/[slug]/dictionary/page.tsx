@@ -15,7 +15,7 @@ import {
 } from "@/lib/services/dictionary-query"
 import { Suspense } from "react"
 import { EnhancedLoadingSkeleton } from "@/components/enhanced-loading-skeleton"
-import { languageMetadataSchema } from "@/lib/validations/language"
+import { parseLanguageMetadata, type LanguageMetadata } from "@/lib/validations/language"
 
 const ITEMS_PER_PAGE = 20
 
@@ -111,6 +111,17 @@ export default async function DictionaryPage({
 
   const isAudioEnabled = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION)
 
+  // Tolerant: one legacy metadata value must not make the dictionary unavailable.
+  const metadata = parseLanguageMetadata(language.metadata)
+  // The word list's dialogs read only the phonology keys (entry validation, word generator);
+  // the rest of the document (sound-change and allophony rules, typology…) stays on the server.
+  const dictionaryMetadata: LanguageMetadata = {
+    syllableStructure: metadata.syllableStructure,
+    consonants: metadata.consonants,
+    vowels: metadata.vowels,
+    phonologyOverride: metadata.phonologyOverride,
+  }
+
   return (
     <div className="space-y-8">
       <div className="pb-6 border-b border-border/40">
@@ -132,9 +143,9 @@ export default async function DictionaryPage({
           initialField={field ?? ""}
           initialSort={sort}
           enableAudio={isAudioEnabled}
-          ttsSettings={languageMetadataSchema.parse(language.metadata ?? {}).tts}
+          ttsSettings={metadata.tts}
           allowsDiacritics={language.allowsDiacritics}
-          metadata={languageMetadataSchema.parse(language.metadata ?? {})}
+          metadata={dictionaryMetadata}
           languageName={language.name}
         />
       </Suspense>

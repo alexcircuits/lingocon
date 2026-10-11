@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { FollowButton } from "@/components/follow-button"
-import { BadgeShowcase } from "@/components/badges"
+import { BadgeShowcase } from "@/components/badges/badge-showcase"
 import { BadgeData } from "@/components/badges/badge-card"
 
 interface ProfileHeaderProps {

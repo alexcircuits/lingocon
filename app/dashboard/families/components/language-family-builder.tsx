@@ -174,6 +174,39 @@ function getInitialNodesAndEdges(languages: LanguageData[], currentUserId: strin
   return { nodes, edges }
 }
 
+interface GraphState {
+  nodes: Node[]
+  edges: Edge[]
+}
+
+/** Node data fields that describe lineage topology rather than the language itself. */
+const TOPOLOGY_DATA_KEYS = new Set(["isRoot", "hasChildren"])
+
+/**
+ * Merge a freshly computed layout (from refreshed server props) into a graph the user may have
+ * rearranged. Language data (name, word count, ownership) always comes from the server; positions
+ * the user arranged are kept. Topology (edges, root/children markers) comes from the server unless
+ * `keepLocalTopology` is set, i.e. while unsaved connection edits exist: then local edges stay,
+ * minus those touching languages that no longer exist, plus the server edges of new languages.
+ */
+function mergeRefreshedGraph(current: GraphState, fresh: GraphState, keepLocalTopology: boolean): GraphState {
+  const currentById = new Map(current.nodes.map((n) => [n.id, n]))
+  const nodes = fresh.nodes.map((freshNode) => {
+    const existing = currentById.get(freshNode.id)
+    if (!existing) return freshNode
+    const data = keepLocalTopology
+      ? Object.fromEntries(Object.entries(freshNode.data).filter(([key]) => !TOPOLOGY_DATA_KEYS.has(key)))
+      : freshNode.data
+    return { ...existing, draggable: freshNode.draggable, data: { ...existing.data, ...data } }
+  })
+  if (!keepLocalTopology) return { nodes, edges: fresh.edges }
+
+  const freshIds = new Set(fresh.nodes.map((n) => n.id))
+  const keptEdges = current.edges.filter((e) => freshIds.has(e.source) && freshIds.has(e.target))
+  const addedEdges = fresh.edges.filter((e) => !currentById.has(e.target) && !keptEdges.some((k) => k.target === e.target))
+  return { nodes, edges: [...keptEdges, ...addedEdges] }
+}
+
 function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPendingChangesChange }: LanguageFamilyBuilderProps) {
   const router = useRouter()
   const reactFlowInstance = useReactFlow()
@@ -219,9 +252,13 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
   const edgesRef = useRef(edges)
   edgesRef.current = edges
 
+  // The props the graph on screen was last built or patched from.
+  const syncedLanguagesRef = useRef(initialLanguages)
+
   // Sync nodes/edges when layout becomes ready
   useEffect(() => {
     if (isReady) {
+      syncedLanguagesRef.current = initialLanguages
       const { nodes: n, edges: e } = getInitialNodesAndEdges(initialLanguages, currentUserId)
       setNodes(n)
       setEdges(e)
@@ -315,6 +352,27 @@ function LanguageFamilyBuilderInner({ initialLanguages, currentUserId, onPending
     setCanUndo(true)
     setCanRedo(redoStack.current.length > 0)
   }, [edges, nodes, pendingChanges, setEdges, setNodes])
+
+  // Refreshed props (router.refresh() after deriving words, saving the tree or joining a family)
+  // patch the graph in place: fresh counts and names, with the user's arrangement and any unsaved
+  // connection edits kept. Undo/redo snapshots get the same data so they never bring back stale counts.
+  const pendingChangesRef = useRef(pendingChanges)
+  pendingChangesRef.current = pendingChanges
+  useEffect(() => {
+    if (!isReady || syncedLanguagesRef.current === initialLanguages) return
+    syncedLanguagesRef.current = initialLanguages
+    const fresh = getInitialNodesAndEdges(initialLanguages, currentUserId)
+    const merged = mergeRefreshedGraph(
+      { nodes: nodesRef.current, edges: edgesRef.current },
+      fresh,
+      pendingChangesRef.current.length > 0,
+    )
+    setNodes(merged.nodes)
+    setEdges(merged.edges)
+    const refreshSnapshot = (s: Snapshot): Snapshot => ({ ...s, ...mergeRefreshedGraph(s, fresh, true) })
+    undoStack.current = undoStack.current.map(refreshSnapshot)
+    redoStack.current = redoStack.current.map(refreshSnapshot)
+  }, [isReady, initialLanguages, currentUserId, setNodes, setEdges])
 
   // Notify parent about pending changes count
   useEffect(() => {

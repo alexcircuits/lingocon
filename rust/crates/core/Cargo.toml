@@ -1,0 +1,22 @@
+[package]
+name = "lingocon-core"
+version = "0.1.0"
+description = "Pure LingoCon language logic shared by the Axum service (no I/O)."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+# Unicode data for the TypeScript-parity lexicon analysis (see src/analysis.rs):
+# NFC/NFD (String.prototype.normalize), extended grapheme clusters
+# (Intl.Segmenter "grapheme") and General_Category (\p{M}, \p{P}, \p{S}).
+# All three are unicode-rs crates generated from the UCD on the same cadence.
+unicode-normalization = "0.1.25"
+unicode-segmentation = "1.13.3"
+unicode-properties = { version = "0.1.4", default-features = false, features = ["general-category"] }
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

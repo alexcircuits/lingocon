@@ -96,28 +96,114 @@ function escapeRegex(str: string): string {
 }
 
 /**
- * Build a `(?:…|…)` alternation for a phoneme class, longest-first so multi-char
- * phonemes (e.g. "aː", "tʃ") match before their single-char prefixes.
- *
- * Cached per Set: these alternations are ~50 entries each and were previously
- * rebuilt on every rule application — a hot path during `batchApply`.
+ * One position of a rule: literal alternatives in preference order, or any
+ * single UTF-16 unit except a line terminator (the regex `.` these replace).
  */
-const classAlternationCache = new WeakMap<Set<string>, string>()
+type Segment = Alternatives | "any"
 
-function classAlternation(set: Set<string>): string {
-  const cached = classAlternationCache.get(set)
+interface Alternatives {
+  /** Alternatives grouped by first UTF-16 unit; each group keeps preference order. */
+  byFirstUnit: Map<number, string[]>
+  /** A class with no non-empty member matches the empty string, like `(?:)` did. */
+  matchesEmpty: boolean
+}
+
+function groupByFirstUnit(alternatives: string[]): Map<number, string[]> {
+  const groups = new Map<number, string[]>()
+  for (const alternative of alternatives) {
+    const unit = alternative.charCodeAt(0)
+    groups.set(unit, [...(groups.get(unit) ?? []), alternative])
+  }
+  return groups
+}
+
+function literalSegment(text: string): Alternatives {
+  return { byFirstUnit: groupByFirstUnit([text]), matchesEmpty: text.length === 0 }
+}
+
+/**
+ * The alternatives of a phoneme class, longest-first so multi-char phonemes
+ * (e.g. "aː", "tʃ") match before their single-char prefixes.
+ *
+ * Cached per Set: classes are ~50 entries each and were previously rebuilt on
+ * every rule application — a hot path during `batchApply`.
+ */
+const classSegmentCache = new WeakMap<Set<string>, Alternatives>()
+
+function classSegment(set: Set<string>): Alternatives {
+  const cached = classSegmentCache.get(set)
   if (cached) return cached
-  // Drop empty members: an empty alternation branch matches the empty string,
-  // which would insert the replacement between every character. The Go engine
+  // Drop empty members: an empty alternative matches the empty string, which
+  // would insert the replacement between every character. The Go engine
   // filters these at construction; mirror it here so both engines agree.
-  const alt = Array.from(set)
+  const members = Array.from(set)
     .filter(m => m.length > 0)
     .sort((a, b) => b.length - a.length)
-    .map(escapeRegex)
-    .join("|")
-  const pattern = `(?:${alt})`
-  classAlternationCache.set(set, pattern)
-  return pattern
+  const segment = { byFirstUnit: groupByFirstUnit(members), matchesEmpty: members.length === 0 }
+  classSegmentCache.set(set, segment)
+  return segment
+}
+
+function isLineTerminator(unit: number): boolean {
+  return unit === 0x0a || unit === 0x0d || unit === 0x2028 || unit === 0x2029
+}
+
+/** Calls `visit` with every position where `segment` can end when it starts at `position`. */
+function forEachEnd(word: string, segment: Segment, position: number, visit: (end: number) => void): void {
+  if (segment === "any") {
+    if (position < word.length && !isLineTerminator(word.charCodeAt(position))) visit(position + 1)
+    return
+  }
+  if (segment.matchesEmpty) {
+    visit(position)
+    return
+  }
+  for (const alternative of segment.byFirstUnit.get(word.charCodeAt(position)) ?? []) {
+    if (word.startsWith(alternative, position)) visit(position + alternative.length)
+  }
+}
+
+/** Marks every position the left context can end at (anchored to the start for `#`). */
+function leftContextEnds(word: string, { segments, boundary }: EnvSegments): Uint8Array {
+  let reach = new Uint8Array(word.length + 1)
+  if (boundary) reach[0] = 1
+  else reach.fill(1)
+  for (const segment of segments) {
+    const next = new Uint8Array(word.length + 1)
+    for (let position = 0; position <= word.length; position++) {
+      if (reach[position]) forEachEnd(word, segment, position, end => { next[end] = 1 })
+    }
+    reach = next
+  }
+  return reach
+}
+
+/** Marks every position the right context can start at (anchored to the end for `#`). */
+function rightContextStarts(word: string, { segments, boundary }: EnvSegments): Uint8Array {
+  let ok = new Uint8Array(word.length + 1)
+  if (boundary) ok[word.length] = 1
+  else ok.fill(1)
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const previous = new Uint8Array(word.length + 1)
+    for (let position = 0; position <= word.length; position++) {
+      forEachEnd(word, segments[i], position, end => { if (ok[end]) previous[position] = 1 })
+    }
+    ok = previous
+  }
+  return ok
+}
+
+/**
+ * The replacement text for the match `word[start, end)`, with `$&`, `` $` ``,
+ * `$'` and `$$` expanded exactly as `String#replace` expanded them for the old
+ * regex (which had no capture groups, so `$1` and `$<x>` stay literal).
+ */
+function substitute(word: string, start: number, end: number, replacement: string): string {
+  if (!replacement.includes("$")) return replacement
+  const once = new RegExp(escapeRegex(word.slice(start, end)), "y")
+  once.lastIndex = start
+  const replaced = word.replace(once, replacement)
+  return replaced.slice(start, replaced.length - (word.length - end))
 }
 
 /** True if the class has at least one non-empty member (i.e. it can match). */
@@ -126,17 +212,17 @@ function hasNonEmptyMember(set: Set<string>): boolean {
   return false
 }
 
-interface EnvPattern {
-  /** Regex source for the environment's characters (no boundary anchor). */
-  pattern: string
+interface EnvSegments {
+  /** The environment's positions, in order (no boundary anchor). */
+  segments: Segment[]
   /** Whether the environment requires a word boundary (#) at the word edge. */
   boundary: boolean
 }
 
 /**
  * Cache of user-class-name lists sorted longest-first, keyed by the Map
- * instance. Mirrors `classAlternationCache`: names are recomputed once per
- * distinct classes Map rather than on every `envToPattern` call.
+ * instance. Mirrors `classSegmentCache`: names are recomputed once per
+ * distinct classes Map rather than on every `envToSegments` call.
  */
 const sortedClassNamesCache = new WeakMap<Map<string, Set<string>>, string[]>()
 
@@ -149,7 +235,7 @@ function sortedClassNames(classes: Map<string, Set<string>>): string[] {
 }
 
 /**
- * Convert an environment string to a regex source plus a boundary flag.
+ * Convert an environment string to its positions plus a boundary flag.
  * Handles: V (vowel), C (consonant), # (boundary), . (any), user-defined
  * named classes, literal characters.
  *
@@ -160,16 +246,17 @@ function sortedClassNames(classes: Map<string, Set<string>>): string[] {
  * a class named "KW" is consumed as one token rather than "K" + literal "W"
  * when both "K" and "KW" are defined.
  *
- * The boundary position (start vs end) is applied by the caller so the
- * result can be used as a zero-width lookbehind (left) or lookahead (right).
+ * The boundary position (start vs end) is applied by the caller, which reads
+ * the result as a left context (ending where the target starts) or a right
+ * context (starting where it ends).
  */
-function envToPattern(
+function envToSegments(
   env: string,
   vowels: Set<string>,
   consonants: Set<string>,
   classes?: Map<string, Set<string>>
-): EnvPattern {
-  if (!env || env === "_") return { pattern: "", boundary: false }
+): EnvSegments {
+  if (!env || env === "_") return { segments: [], boundary: false }
 
   // Only treat a name as a class if it has ≥1 non-empty member; an all-empty
   // class falls through to literal matching, matching the Go engine (which
@@ -179,13 +266,13 @@ function envToPattern(
       ? sortedClassNames(classes).filter(n => hasNonEmptyMember(classes.get(n)!))
       : []
 
-  let pattern = ""
+  const segments: Segment[] = []
   let boundary = false
   let i = 0
   outer: while (i < env.length) {
     for (const name of names) {
       if (env.startsWith(name, i)) {
-        pattern += classAlternation(classes!.get(name)!)
+        segments.push(classSegment(classes!.get(name)!))
         i += name.length
         continue outer
       }
@@ -195,17 +282,17 @@ function envToPattern(
     if (ch === "#") {
       boundary = true
     } else if (ch === "V") {
-      pattern += classAlternation(vowels)
+      segments.push(classSegment(vowels))
     } else if (ch === "C") {
-      pattern += classAlternation(consonants)
+      segments.push(classSegment(consonants))
     } else if (ch === ".") {
-      pattern += "."
+      segments.push("any")
     } else {
-      pattern += escapeRegex(ch)
+      segments.push(literalSegment(ch))
     }
     i += 1
   }
-  return { pattern, boundary }
+  return { segments, boundary }
 }
 
 /**
@@ -278,42 +365,54 @@ export function applyRule(
 ): string {
   if (!rule.enabled || !rule.target) return word
 
-  const left = envToPattern(rule.leftEnv, vowels, consonants, classes)
-  const right = envToPattern(rule.rightEnv, vowels, consonants, classes)
+  const left = envToSegments(rule.leftEnv, vowels, consonants, classes)
+  const right = envToSegments(rule.rightEnv, vowels, consonants, classes)
   const targetClass = classes?.get(rule.target)
   // An all-empty class can't match; treat the target literally instead (parity
   // with the Go engine, and avoids a zero-width match inserting the replacement
   // between every character).
   const target =
     targetClass && hasNonEmptyMember(targetClass)
-      ? classAlternation(targetClass)
-      : `(?:${escapeRegex(rule.target)})`
+      ? classSegment(targetClass)
+      : literalSegment(rule.target)
 
-  // Environments are expressed as ZERO-WIDTH assertions — a lookbehind for the
-  // left context and a lookahead for the right — so only the target segment is
-  // consumed. This is what makes adjacent/overlapping contexts work: a rule like
-  // `s → ∅ / V_V` over "asasa" must delete BOTH intervocalic consonants, but a
-  // regex that *consumes* the shared vowel can only match every other target.
-  // `#` anchors to the word start (left) or end (right).
-  const lookbehind =
-    left.boundary && !left.pattern ? "^"
-    : left.boundary ? `(?<=^${left.pattern})`
-    : left.pattern ? `(?<=${left.pattern})`
-    : ""
-
-  const lookahead =
-    right.boundary && !right.pattern ? "$"
-    : right.boundary ? `(?=${right.pattern}$)`
-    : right.pattern ? `(?=${right.pattern})`
-    : ""
-
-  try {
-    const regex = new RegExp(`${lookbehind}${target}${lookahead}`, "g")
-    return word.replace(regex, rule.replacement)
-  } catch {
-    // Invalid regex — return unchanged
-    return word
+  // Environments are ZERO-WIDTH conditions — the left context must end where the
+  // target starts and the right context must start where it ends — so only the
+  // target segment is consumed. This is what makes adjacent/overlapping contexts
+  // work: a rule like `s → ∅ / V_V` over "asasa" must delete BOTH intervocalic
+  // consonants. `#` anchors to the word start (left) or end (right).
+  //
+  // This used to be one regex, `(?<=left)(?:target)(?=right)`. Environments
+  // whose class members share prefixes ("a", "aa") made it backtrack
+  // exponentially (≈1.9 s for 24 vowel slots on a 52-letter word, on the server
+  // for every entry). The contexts are now computed once per word as position
+  // sets, and the scan below keeps the regex's leftmost, first-alternative,
+  // non-overlapping semantics exactly.
+  let leftOk: Uint8Array | undefined
+  let rightOk: Uint8Array | undefined
+  let result = ""
+  let copiedTo = 0
+  for (let position = 0; position < word.length; ) {
+    let end = -1
+    for (const alternative of target.byFirstUnit.get(word.charCodeAt(position)) ?? []) {
+      if (!word.startsWith(alternative, position)) continue
+      leftOk ??= leftContextEnds(word, left)
+      if (!leftOk[position]) break
+      rightOk ??= rightContextStarts(word, right)
+      if (rightOk[position + alternative.length]) {
+        end = position + alternative.length
+        break
+      }
+    }
+    if (end < 0) {
+      position++
+      continue
+    }
+    result += word.slice(copiedTo, position) + substitute(word, position, end, rule.replacement)
+    copiedTo = end
+    position = end
   }
+  return copiedTo === 0 ? word : result + word.slice(copiedTo)
 }
 
 /**

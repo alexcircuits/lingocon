@@ -14,7 +14,8 @@ import {
     ArrowLeft,
     ShieldAlert,
     ClipboardList,
-    Blocks
+    Blocks,
+    Radio
 } from "lucide-react"
 
 const navItems = [
@@ -32,6 +33,11 @@ const navItems = [
         title: "Languages",
         href: "/admin/languages",
         icon: Languages
+    },
+    {
+        title: "Traffic",
+        href: "/admin/traffic",
+        icon: Radio
     },
     {
         title: "Analytics",

@@ -1,12 +1,8 @@
-"use client"
-
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function WizardEntry() {
-  const router = useRouter()
-
   return (
     <Card>
       <CardHeader>
@@ -17,14 +13,11 @@ export function WizardEntry() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button
-          onClick={() => router.push("/dashboard/new-language?wizard=true")}
-          className="w-full"
-        >
-          Use Guided Setup
+        {/* A link, not a router.push button: it works before the page's JavaScript has loaded. */}
+        <Button asChild className="w-full">
+          <Link href="/dashboard/new-language?wizard=true">Use Guided Setup</Link>
         </Button>
       </CardContent>
     </Card>
   )
 }
-

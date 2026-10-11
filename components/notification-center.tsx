@@ -1,12 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { useTranslations } from "next-intl"
-import { getPlatformUpdates } from "@/app/actions/platform-update"
-import { getRecentAchievements } from "@/app/actions/badge"
 import {
-    getNotifications,
-    getUnreadNotificationCount,
     markNotificationsRead,
 } from "@/app/actions/notification"
 import {
@@ -58,22 +55,67 @@ type NotificationItem = {
     data?: any
 }
 
+interface BellData {
+    updates: any[]
+    achievements: any[]
+    notifications: any[]
+    unreadCount: number
+}
+
+/**
+ * The navbar remounts on most navigations. Share one response across mounts for a
+ * short window so moving between pages doesn't re-query four tables each time;
+ * opening the bell always refreshes stale data. Keyed by the signed-in user:
+ * signing out or switching accounts does not reload the document, so module state
+ * must never show one account's notifications to another.
+ */
+const BELL_TTL_MS = 60_000
+let bellCache: { userId: string | null; at: number; data: BellData } | null = null
+let bellInFlight: { userId: string | null; promise: Promise<BellData> } | null = null
+
+function isBellDataStale(userId: string | null): boolean {
+    return !bellCache || bellCache.userId !== userId || Date.now() - bellCache.at > BELL_TTL_MS
+}
+
+async function loadBellData(userId: string | null, force = false): Promise<BellData> {
+    if (!force && bellCache && !isBellDataStale(userId)) return bellCache.data
+    if (bellInFlight && bellInFlight.userId === userId) return bellInFlight.promise
+    const promise = (async () => {
+        const response = await fetch("/api/me/notifications", { cache: "no-store" })
+        if (!response.ok) throw new Error(`Notifications request failed: ${response.status}`)
+        const body = (await response.json()) as Partial<BellData>
+        const data: BellData = {
+            updates: Array.isArray(body.updates) ? body.updates : [],
+            achievements: Array.isArray(body.achievements) ? body.achievements : [],
+            notifications: Array.isArray(body.notifications) ? body.notifications : [],
+            unreadCount: typeof body.unreadCount === "number" ? body.unreadCount : 0,
+        }
+        bellCache = { userId, at: Date.now(), data }
+        return data
+    })().finally(() => {
+        if (bellInFlight?.promise === promise) bellInFlight = null
+    })
+    bellInFlight = { userId, promise }
+    return promise
+}
+
 export function NotificationCenter() {
     const t = useTranslations("notifications")
+    const { data: session, status: sessionStatus } = useSession()
+    const userId = session?.user?.id ?? null
     const [notifications, setNotifications] = useState<NotificationItem[]>([])
     const [loading, setLoading] = useState(true)
     const [isOpen, setIsOpen] = useState(false)
     const [hasNew, setHasNew] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
 
-    const fetchData = async () => {
+    const fetchData = async (options: { force?: boolean } = {}) => {
         try {
-            const [updatesResult, achievements, personalResult, unreadResult] = await Promise.all([
-                getPlatformUpdates(5),
-                getRecentAchievements(undefined, 48), // check last 48 hours
-                getNotifications(15),
-                getUnreadNotificationCount(),
-            ])
+            const bell = await loadBellData(userId, options.force)
+            const updatesResult = { success: true, data: bell.updates }
+            const achievements = bell.achievements
+            const personalResult = { data: bell.notifications }
+            const unreadResult = { count: bell.unreadCount }
 
             let allItems: NotificationItem[] = []
 
@@ -164,27 +206,32 @@ export function NotificationCenter() {
     }
 
     useEffect(() => {
+        // Wait until the session is known so the cache is keyed by the right account.
+        if (sessionStatus === "loading") return
         fetchData()
-        // Load once on mount; later refreshes are explicit (opening the popover).
+        // Load on mount and when the account changes; other refreshes are explicit
+        // (opening the popover).
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [sessionStatus, userId])
 
     return (
         <Popover open={isOpen} onOpenChange={(open) => {
             setIsOpen(open)
             if (open) {
+                void fetchData({ force: isBellDataStale(userId) })
                 setHasNew(false)
                 if (notifications.length > 0) {
                     localStorage.setItem("lingocon_last_seen_notification", notifications[0].id)
                 }
                 if (unreadCount > 0) {
                     setUnreadCount(0)
+                    if (bellCache) bellCache = { ...bellCache, data: { ...bellCache.data, unreadCount: 0 } }
                     markNotificationsRead().catch((e) => console.error("Failed to mark notifications read:", e))
                 }
             }
         }}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full hover:bg-muted/50 transition-colors">
+                <Button variant="ghost" size="icon" aria-label={t("title")} className="relative h-9 w-9 rounded-full hover:bg-muted/50 transition-colors">
                     <Bell className="h-5 w-5 text-muted-foreground" />
                     {hasNew && (
                         <span className="absolute top-2 right-2 flex h-2 w-2">

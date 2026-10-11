@@ -3,6 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { AlertCircle, RefreshCw } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
+import { useEffect, useTransition } from "react"
+import { isChunkLoadError, reloadOnceForChunkError } from "@/lib/chunk-recovery"
 
 interface SectionErrorProps {
   error: Error & { digest?: string }
@@ -14,12 +17,31 @@ interface SectionErrorProps {
  *
  * Unlike the full-screen root `app/error.tsx`, this renders within the section
  * layout so the user keeps their navigation/sidebar context. Next.js logs the
- * underlying error server-side via `error.digest`, so this component only owns
- * the recovery UX and does not re-log to the console.
+ * underlying error server-side via `error.digest`.
  */
 export function SectionError({ error, reset }: SectionErrorProps) {
   const t = useTranslations("errors")
   const tCommon = useTranslations("common")
+  const router = useRouter()
+  const [retrying, startTransition] = useTransition()
+
+  useEffect(() => {
+    // This section's UI is already gone, so reloading loses nothing; a chunk
+    // deleted by a deployment cannot be fixed by re-rendering.
+    if (isChunkLoadError(error)) reloadOnceForChunkError()
+  }, [error])
+
+  const retry = () => {
+    if (isChunkLoadError(error)) {
+      window.location.reload()
+      return
+    }
+    // `reset()` alone re-renders the failed server payload; refetch it first.
+    startTransition(() => {
+      router.refresh()
+      reset()
+    })
+  }
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center px-4">
@@ -34,7 +56,7 @@ export function SectionError({ error, reset }: SectionErrorProps) {
             {error.message}
           </p>
         )}
-        <Button onClick={reset} variant="outline" size="sm" className="mt-4">
+        <Button onClick={retry} disabled={retrying} variant="outline" size="sm" className="mt-4">
           <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
           {tCommon("tryAgain")}
         </Button>

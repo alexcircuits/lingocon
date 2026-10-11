@@ -9,25 +9,39 @@ import { useRouter, useSearchParams } from "next/navigation"
 export function BrowseSearch() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const initialQuery = searchParams.get("q") || ""
-  
-  const [value, setValue] = useState(initialQuery)
+  const urlQuery = searchParams.get("q") || ""
+
+  const [value, setValue] = useState(urlQuery)
+  // The last query this field put in the URL: when that navigation lands, the person may
+  // have typed on, and their text must not be replaced by it.
+  const [pushedQuery, setPushedQuery] = useState<string | null>(null)
+  // Back/forward or a link changed the query: show it (adjusting state while rendering).
+  const [shownUrlQuery, setShownUrlQuery] = useState(urlQuery)
+  if (urlQuery !== shownUrlQuery) {
+    setShownUrlQuery(urlQuery)
+    // Our own navigation landed: done with it (a later back/forward to it is followed).
+    if (urlQuery === pushedQuery) setPushedQuery(null)
+    else setValue(urlQuery)
+  }
   const debouncedValue = useDebounce(value, 300)
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams)
+    // Navigate only for a settled query the URL does not hold yet. This used to push on every
+    // load (an extra navigation and history entry per visit, racing other router updates) and
+    // pushed a stale query back after back/forward.
+    // (Also skip a query whose navigation is still in flight.)
+    if (debouncedValue !== value || debouncedValue === urlQuery || debouncedValue === pushedQuery) return
+    const params = new URLSearchParams(searchParams.toString())
     if (debouncedValue) {
       params.set("q", debouncedValue)
     } else {
       params.delete("q")
     }
-    // Reset page when searching
-    if (debouncedValue !== initialQuery) {
-      params.delete("page")
-    }
-    
+    // A new query starts again on page one.
+    params.delete("page")
+    setPushedQuery(debouncedValue)
     router.push(`/browse?${params.toString()}`)
-  }, [debouncedValue, router, searchParams, initialQuery])
+  }, [debouncedValue, value, urlQuery, pushedQuery, router, searchParams])
 
   return (
     <div className="relative w-full md:w-80">
@@ -41,4 +55,3 @@ export function BrowseSearch() {
     </div>
   )
 }
-

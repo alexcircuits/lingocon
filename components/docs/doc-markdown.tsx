@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -32,7 +30,9 @@ const markdownComponents: Components = {
 }
 
 /**
- * Renders repo markdown on the client so tables, GFM, and links work without pulling MDX into the build.
+ * Renders markdown (GFM tables, links) without pulling MDX into the build. A server component:
+ * it has no client behaviour, so the parser and its plugins never ship to the browser (they
+ * were ~43 kB of first-load JS on module and doc pages). Raw HTML stays disabled, as before.
  */
 export function DocMarkdown({ content }: DocMarkdownProps) {
   return (

@@ -281,7 +281,15 @@ export function PublicDictionary({
 
       {/* Entry details */}
       <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent className="overflow-y-auto">
+        <SheetContent
+          className="overflow-y-auto"
+          // Focus the panel, not its first control: focusing the pronunciation button opened
+          // its tooltip over the Close button. Keyboard users still get it by tabbing there.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault()
+            ;(event.currentTarget as HTMLElement | null)?.focus()
+          }}
+        >
           {selected && (
             <>
               <SheetHeader className="space-y-4 pb-4 border-b">

@@ -1,98 +1,90 @@
 import { prisma } from "@/lib/prisma"
-import { getUserId, isLanguageOwner, canEditLanguage } from "@/lib/auth-helpers"
+import { getUserId, canViewLanguage } from "@/lib/auth-helpers"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { LanguageSettings } from "./language-settings"
 import { Collaborators, TransferOwnershipCard } from "./collaborators"
 import { ParentLanguageCard } from "./parent-language-card"
 import { getLanguageFamilyTree } from "@/app/actions/language-family"
-import { getDescendantIds } from "@/lib/utils/family-graph"
-import { getUserFamilies } from "@/app/actions/language-family"
 
-async function getLanguage(slug: string, userId: string | null) {
-  const [language, dictionaryEntries] = await Promise.all([
-    prisma.language.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        visibility: true,
-        category: true,
-        flagUrl: true,
-        fontUrl: true,
-        fontFamily: true,
-        fontScale: true,
-        allowsDiacritics: true,
-        allowForking: true,
-        acceptRomanizedAnswers: true,
-        discordUrl: true,
-        telegramUrl: true,
-        websiteUrl: true,
-        ownerId: true,
-        metadata: true,
-        parentLanguageId: true,
-        parentLanguage: {
-          select: {
-            id: true,
-            name: true,
-            owner: { select: { name: true } }
-          }
-        },
-        externalAncestry: true,
-        familyId: true,
-        family: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-          }
-        },
+async function findLanguage(slug: string) {
+  return prisma.language.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      visibility: true,
+      category: true,
+      flagUrl: true,
+      fontUrl: true,
+      fontFamily: true,
+      fontScale: true,
+      allowsDiacritics: true,
+      allowForking: true,
+      acceptRomanizedAnswers: true,
+      discordUrl: true,
+      telegramUrl: true,
+      websiteUrl: true,
+      ownerId: true,
+      metadata: true,
+      parentLanguageId: true,
+      parentLanguage: {
+        select: {
+          id: true,
+          name: true,
+          owner: { select: { name: true } }
+        }
       },
-    }),
-    prisma.dictionaryEntry.findMany({
-      where: { language: { slug } },
-      select: {
-        id: true,
-        lemma: true,
-        ipa: true,
+      familyId: true,
+      family: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        }
       },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-  ])
+    },
+  })
+}
 
-  if (!language) {
+/** Non-fatal: the page renders without the family tree. */
+async function loadFamilyTree(languageId: string) {
+  try {
+    return await getLanguageFamilyTree(languageId)
+  } catch (error) {
+    console.error("Failed to load language family tree:", error)
+    return null
+  }
+}
+
+/** The settings form owns only `metadata.tts`; the rest of the metadata is not sent to it. */
+function ttsMetadata(metadata: unknown): { tts?: unknown } {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return {}
+  const tts = (metadata as Record<string, unknown>).tts
+  return tts === undefined ? {} : { tts }
+}
+
+/**
+ * Fetch the language, authorize, then load everything else in parallel. This used to be a long
+ * sequential waterfall, and it read 50 recent dictionary entries (filtered by `language.slug`,
+ * which misses the languageId index) that the client never used — before authorizing. It also
+ * read the user's other languages, families and this language's descendants for props the
+ * family card no longer uses (its pickers search through server actions).
+ */
+async function getSettingsData(slug: string, userId: string | null) {
+  const language = await findLanguage(slug)
+  if (!language) return null
+
+  // Allow access if user is owner or collaborator (skip in dev mode)
+  if (process.env.DEV_MODE !== "true" && userId && !(await canViewLanguage(language.id, userId))) {
     return null
   }
 
-  // Allow access if user is owner or collaborator (skip in dev mode)
-  if (process.env.DEV_MODE !== "true" && userId) {
-    const { canViewLanguage } = await import("@/lib/auth-helpers")
-    const canView = await canViewLanguage(language.id, userId)
-    if (!canView) {
-      return null
-    }
-  }
+  const familyTree = await loadFamilyTree(language.id)
 
-  // Get user's other languages for parent selector
-  const userLanguages = userId ? await prisma.language.findMany({
-    where: {
-      ownerId: userId,
-      id: { not: language.id },
-    },
-    select: { id: true, name: true, slug: true },
-    orderBy: { name: "asc" },
-  }) : []
-
-  // Single CTE query to collect all descendant IDs (replaces BFS loop)
-  const descendantIdList = await getDescendantIds(language.id)
-
-  // Get user's families for family selector
-  const families = userId ? await getUserFamilies() : []
-
-  return { language, dictionaryEntries, userLanguages, descendantIds: descendantIdList, families }
+  return { language, familyTree }
 }
 
 export default async function SettingsPage({
@@ -108,30 +100,38 @@ export default async function SettingsPage({
   }
 
   const { slug } = await params
-  const data = await getLanguage(slug, userId)
+  const [data, t] = await Promise.all([
+    getSettingsData(slug, userId),
+    getTranslations("studio.settings"),
+  ])
 
   if (!data) {
     notFound()
   }
 
-  const { language, dictionaryEntries, userLanguages, descendantIds, families } = data
-  const [owner, canEdit] = userId
-    ? await Promise.all([
-        isLanguageOwner(language.id, userId),
-        canEditLanguage(language.id, userId),
-      ])
-    : [false, false]
-  
-  // Get family tree if language has a parent or children
-  let familyTree = null
-  try {
-    familyTree = await getLanguageFamilyTree(language.id)
-  } catch (error) {
-    // Non-fatal: the page renders without the family tree.
-    console.error("Failed to load language family tree:", error)
+  const { language, familyTree } = data
+  const owner = !!userId && language.ownerId === userId
+  // Only what the form renders: not the owner, parent/family relations or the whole metadata
+  // document (sound-change rules, phonology…), which used to ride along in the page payload.
+  const settingsLanguage = {
+    id: language.id,
+    name: language.name,
+    slug: language.slug,
+    description: language.description,
+    visibility: language.visibility,
+    category: language.category,
+    flagUrl: language.flagUrl,
+    fontUrl: language.fontUrl,
+    fontFamily: language.fontFamily,
+    fontScale: language.fontScale,
+    allowsDiacritics: language.allowsDiacritics,
+    allowForking: language.allowForking,
+    acceptRomanizedAnswers: language.acceptRomanizedAnswers,
+    discordUrl: language.discordUrl,
+    telegramUrl: language.telegramUrl,
+    websiteUrl: language.websiteUrl,
+    metadata: ttsMetadata(language.metadata),
   }
-
-  const t = await getTranslations("studio.settings")
 
   return (
     <div className="space-y-8">
@@ -142,20 +142,18 @@ export default async function SettingsPage({
         </p>
       </div>
 
-      <LanguageSettings language={language} languageSlug={slug} dictionaryEntries={dictionaryEntries} isOwner={owner} />
+      <LanguageSettings language={settingsLanguage} languageSlug={slug} isOwner={owner} />
       <ParentLanguageCard
         languageId={language.id}
         currentParentId={language.parentLanguageId || null}
         initialParent={language.parentLanguage}
-        initialExternalAncestry={language.externalAncestry}
         initialFamilyId={language.familyId ?? null}
         initialFamily={language.family ?? null}
-        families={families}
-        userLanguages={userLanguages}
-        descendantIds={descendantIds}
         familyTree={familyTree}
         currentSlug={slug}
-        isOwner={canEdit}
+        // Setting the parent or family and syncing from the parent are owner-only on the server
+        // (the family service checks ownerId); other editors would only be offered refused pickers.
+        isOwner={owner}
       />
       <Collaborators languageId={language.id} languageSlug={slug} isOwner={owner} />
       {owner && <TransferOwnershipCard languageId={language.id} languageSlug={slug} />}

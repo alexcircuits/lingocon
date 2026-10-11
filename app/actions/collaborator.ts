@@ -1,7 +1,9 @@
 "use server"
 
+import { revalidatePath, revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { toActionError } from "@/lib/errors"
+import { revalidateBrowse, revalidateFamilies, revalidateStudio } from "@/lib/utils/revalidation"
 import { getUserId, isLanguageOwner } from "@/lib/auth-helpers"
 import { ZodError } from "zod"
 import {
@@ -287,7 +289,7 @@ export async function transferLanguageOwnership(input: {
   if (!newOwner) return { error: "User not found" }
 
   try {
-    await prisma.$transaction(async (tx) => {
+    const { slug } = await prisma.$transaction(async (tx) => {
       // Remove new owner from collaborators if they were one
       await tx.languageCollaborator.deleteMany({
         where: { languageId: input.languageId, userId: input.newOwnerId },
@@ -299,11 +301,20 @@ export async function transferLanguageOwnership(input: {
         create: { languageId: input.languageId, userId, role: "EDITOR" },
       })
       // Transfer ownership
-      await tx.language.update({
+      return tx.language.update({
         where: { id: input.languageId },
         data: { ownerId: input.newOwnerId },
+        select: { slug: true },
       })
     })
+    // Both owners' dashboards and studio lists, public listings showing the owner, and the
+    // project's own routes (owner-only controls) must not be served from a cached payload.
+    revalidateStudio()
+    revalidateBrowse()
+    revalidateFamilies()
+    revalidatePath(`/studio/lang/${slug}`, "layout")
+    revalidatePath(`/lang/${slug}`, "layout")
+    revalidateTag("languages")
     return { success: true }
   } catch (error) {
     return { ...toActionError(error, "Failed to transfer ownership") }
@@ -325,23 +336,28 @@ export async function getCollaborators(languageId: string) {
     return { error: "Unauthorized" }
   }
 
-  const collaborators = await prisma.languageCollaborator.findMany({
-    where: { languageId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
+  try {
+    const collaborators = await prisma.languageCollaborator.findMany({
+      where: { languageId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "asc" },
-  })
+      orderBy: { createdAt: "asc" },
+    })
 
-  return {
-    success: true,
-    data: collaborators,
+    return {
+      success: true,
+      data: collaborators,
+    }
+  } catch (error) {
+    // A failed read is reported, never turned into an empty list by the caller.
+    return { ...toActionError(error, "Failed to load collaborators") }
   }
 }
 

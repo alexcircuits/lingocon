@@ -16,7 +16,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const language = await getLanguageSeoData(slug)
-  if (!language) return { title: "Paradigms Not Found", robots: { index: false, follow: false } }
+  // Decided here, before streaming starts, so a missing page is a real 404 (the page's
+  // own notFound() runs inside the loading boundary, after a 200 has been sent).
+  if (!language) notFound()
 
   return buildLanguageMetadata(language, {
     section: "paradigms",

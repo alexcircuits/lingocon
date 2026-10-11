@@ -6,7 +6,8 @@ import { stringify } from "csv-stringify/sync"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(request: NextRequest, { params }: { params: { languageId: string } }) {
+export async function GET(request: NextRequest, { params: paramsPromise }: { params: Promise<{ languageId: string }> }) {
+  const params = await paramsPromise
   try {
     const userId = await getUserId()
     if (!userId) {

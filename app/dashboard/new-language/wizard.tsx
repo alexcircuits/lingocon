@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createLanguage } from "@/app/actions/language"
 import { createLatinAlphabet, createGrammarScaffold } from "@/app/actions/wizard"
 import { generateSlug } from "@/lib/utils/slug"
+import { useAdoptTypedValue } from "@/lib/hooks/use-adopt-typed-value"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -65,14 +66,23 @@ export function LanguageWizard() {
     createGrammarPages: false,
   })
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
+  const applyName = (newName: string) => {
     setData((prev) => ({
       ...prev,
       name: newName,
-      slug: prev.slug || generateSlug(newName),
+      // Follow the name while the slug is still the generated one; keep a hand-edited slug.
+      slug: !prev.slug || prev.slug === generateSlug(prev.name) ? generateSlug(newName) : prev.slug,
     }))
   }
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => applyName(e.target.value)
+
+  // Keep anything typed into step 1 before the wizard hydrated (slow devices).
+  const nameRef = useRef<HTMLInputElement>(null)
+  const slugRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  useAdoptTypedValue(nameRef, data.name, applyName)
+  useAdoptTypedValue(slugRef, data.slug, (slug) => setData((prev) => ({ ...prev, slug })))
+  useAdoptTypedValue(descriptionRef, data.description, (description) => setData((prev) => ({ ...prev, description })))
 
   const handleNext = () => {
     if (step < 5) {
@@ -159,6 +169,7 @@ export function LanguageWizard() {
               <Label htmlFor="wizard-name">{t("nameLabel")}</Label>
               <Input
                 id="wizard-name"
+                ref={nameRef}
                 value={data.name}
                 onChange={handleNameChange}
                 placeholder={t("namePlaceholder")}
@@ -171,6 +182,7 @@ export function LanguageWizard() {
               <Label htmlFor="wizard-slug">{t("slugLabel")}</Label>
               <Input
                 id="wizard-slug"
+                ref={slugRef}
                 value={data.slug}
                 onChange={(e) => setData((prev) => ({ ...prev, slug: e.target.value }))}
                 placeholder={t("slugPlaceholder")}
@@ -185,6 +197,7 @@ export function LanguageWizard() {
               <Label htmlFor="wizard-description">{t("descriptionLabel")}</Label>
               <Textarea
                 id="wizard-description"
+                ref={descriptionRef}
                 value={data.description}
                 onChange={(e) => setData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder={t("descriptionPlaceholder")}

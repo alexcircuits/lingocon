@@ -104,8 +104,10 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
           <span className="text-lg font-semibold tracking-tight hidden sm:block">LingoCon</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1 mx-4">
+        {/* Desktop Navigation: icons with tooltips until 2xl, where the labels fit too. The
+            signed-in bar (seven links, search, create, settings, notifications, account)
+            used to push the account menu off-screen below ~1700px. */}
+        <nav className="hidden md:flex items-center gap-1 mx-2 lg:mx-4 shrink-0">
           {mainNavItems.map((item) => {
             if (item.requiresAuth && !isAuthenticated) return null
             const Icon = item.icon
@@ -120,15 +122,20 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "gap-2 font-medium",
+                  "gap-2 px-2.5 font-medium 2xl:px-3",
                   isActive
                     ? "bg-primary/10 text-primary hover:bg-primary/15"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={tNav(item.key)}
+                  title={tNav(item.key)}
+                >
                   <Icon className="h-4 w-4" aria-hidden="true" />
-                  {tNav(item.key)}
+                  <span className="hidden 2xl:inline">{tNav(item.key)}</span>
                 </Link>
               </Button>
             )
@@ -136,18 +143,18 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
         </nav>
 
         {/* Search */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-4">
+        <div className="hidden lg:flex flex-1 min-w-0 max-w-md mx-2 xl:mx-4">
           <SearchBar />
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        {/* Actions: never squeezed, so the account menu is always on screen */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {/* Create button - desktop */}
           {isAuthenticated && (
             <Button asChild size="sm" className="hidden gap-1.5 sm:inline-flex">
               <Link href="/dashboard/new-language" aria-label={tNav("create")}>
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden lg:inline">{tNav("create")}</span>
+                <span className="hidden 2xl:inline">{tNav("create")}</span>
               </Link>
             </Button>
           )}
@@ -175,7 +182,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
                       {user?.name?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:block max-w-[100px] truncate text-sm">
+                  <span className="sr-only">
                     {user?.name || tNav("userFallback")}
                   </span>
                   {isDevMode && !user && (

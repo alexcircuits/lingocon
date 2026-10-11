@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { getFlashcardPool } from "@/lib/services/flashcard-pool"
 import { getUserId } from "@/lib/auth-helpers"
 import { getTranslations } from "next-intl/server"
 import { redirect, notFound } from "next/navigation"
@@ -32,24 +33,18 @@ export default async function FlashcardsPage({ params }: { params: Promise<{ slu
       name: true,
       slug: true,
       ownerId: true,
-      dictionaryEntries: {
-        select: {
-          id: true,
-          lemma: true,
-          gloss: true,
-          ipa: true,
-          partOfSpeech: true,
-        },
-      },
     },
   })
 
   if (!language) notFound()
 
+  // A bounded sample, not the whole dictionary (see getFlashcardPool).
+  const entries = await getFlashcardPool(language.id)
+
   return (
     <div className="mx-auto max-w-3xl">
       <FlashcardSession
-        entries={language.dictionaryEntries}
+        entries={entries}
         languageName={language.name}
         languageSlug={language.slug}
       />

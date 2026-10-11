@@ -14,8 +14,11 @@ import {
     TrendAreaChart,
     GroupedBarChart,
     CategoryDonutChart,
-} from "@/components/admin/charts"
+} from "@/components/admin/lazy-charts"
 import { CHART_COLORS } from "@/components/admin/chart-colors"
+import { LiveTraffic } from "@/components/admin/live-traffic"
+import { getLiveStats } from "@/lib/stats/store"
+import { requireAdmin } from "@/lib/admin"
 import {
     getPlatformOverview,
     getRecentSignups,
@@ -64,6 +67,10 @@ async function DashboardStats() {
             />
         </div>
     )
+}
+
+async function LiveVisitors() {
+    return <LiveTraffic initial={await getLiveStats()} compact />
 }
 
 async function RecentSignups() {
@@ -262,7 +269,10 @@ function LoadingSkeleton() {
     )
 }
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+    // The layout checks too, but a client-side navigation can render this page without it.
+    await requireAdmin()
+
     return (
         <div className="p-4 md:p-8 space-y-8">
             {/* Header */}
@@ -296,9 +306,14 @@ export default function AdminDashboardPage() {
                 <Suspense fallback={<div className="h-64 bg-muted rounded-xl animate-pulse lg:col-span-2" />}>
                     <TopLanguagesTable />
                 </Suspense>
-                <Suspense fallback={<div className="h-64 bg-muted rounded-xl animate-pulse" />}>
-                    <RecentSignups />
-                </Suspense>
+                <div className="space-y-6">
+                    <Suspense fallback={<div className="h-40 bg-muted rounded-xl animate-pulse" />}>
+                        <LiveVisitors />
+                    </Suspense>
+                    <Suspense fallback={<div className="h-64 bg-muted rounded-xl animate-pulse" />}>
+                        <RecentSignups />
+                    </Suspense>
+                </div>
             </div>
         </div>
     )

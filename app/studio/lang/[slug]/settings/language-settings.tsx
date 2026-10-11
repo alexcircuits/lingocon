@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
+import dynamic from "next/dynamic"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { languageMetadataSchema } from "@/lib/validations/language"
 import {
   Select,
   SelectContent,
@@ -29,10 +29,21 @@ import { Card } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
 import { Flag, Globe, Palette, MessageCircle, MessageSquare, Type, Volume2, Keyboard } from "lucide-react"
 import { IPASpeaker } from "@/components/ipa-speaker"
-import { FlagGenerator } from "@/components/flag-generator"
 import { ExportDataCard } from "./export-data-card"
 import { DeleteLanguageCard } from "./delete-language-card"
 import { TTS_VOICES } from "@/lib/constants/tts"
+import { useStudioAccess } from "@/components/studio-access"
+
+// The flag designer's code loads after the page is interactive (it renders on the server as its
+// trigger button); a client-side navigation shows the same button, inert, until it arrives.
+const FlagGenerator = dynamic(() => import("@/components/flag-generator").then((m) => m.FlagGenerator), {
+  loading: () => (
+    <Button type="button" variant="outline" size="sm" className="gap-2" disabled>
+      <Palette className="h-4 w-4" />
+      Design Flag
+    </Button>
+  ),
+})
 
 type LanguageCategoryValue =
   | "CONLANG"
@@ -65,25 +76,43 @@ interface LanguageSettingsProps {
     metadata?: unknown
   }
   languageSlug: string
-  dictionaryEntries: {
-    id: string
-    lemma: string
-    ipa: string | null
-  }[]
   isOwner?: boolean
 }
 
 const availableVoices = TTS_VOICES
 
-export function LanguageSettings({ language, languageSlug, dictionaryEntries, isOwner = false }: LanguageSettingsProps) {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value)
+}
+
+/**
+ * The settings form owns only `metadata.tts`; everything else belongs to other editors. Read
+ * without the metadata schema: `tts` is free-form there (catchall), so the field checks below
+ * are the whole validation, and the schema library stays out of this page's bundle.
+ */
+function savedTts(metadata: unknown): { voiceId?: string; speed?: string } {
+  const tts = isPlainObject(metadata) ? metadata.tts : undefined
+  if (!isPlainObject(tts)) return {}
+  const { voiceId, speed } = tts as Record<string, unknown>
+  return {
+    voiceId: typeof voiceId === "string" ? voiceId : undefined,
+    speed: typeof speed === "string" ? speed : undefined,
+  }
+}
+
+export function LanguageSettings({ language, isOwner = false }: LanguageSettingsProps) {
   const t = useTranslations("studio.settings")
   const router = useRouter()
+  // Saving the form needs the settings scope (owner-only fields keep their isOwner gate).
+  // Without it the settings are shown read-only; the font and voice previews still work.
+  const canEdit = useStudioAccess().canWrite("write:settings")
   const [isPending, startTransition] = useTransition()
+  const locked = isPending || !canEdit
   const [error, setError] = useState<string | null>(null)
   const [previewIpa, setPreviewIpa] = useState("")
 
-
-  const parsedMetadata = languageMetadataSchema.parse(language.metadata ?? {})
+  // Read once: tolerant of legacy invalid fields, which must not take the page down.
+  const [initialTts] = useState(() => savedTts(language.metadata))
 
   const [formData, setFormData] = useState({
     name: language.name,
@@ -101,12 +130,13 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
     allowsDiacritics: language.allowsDiacritics ?? false,
     allowForking: language.allowForking ?? false,
     acceptRomanizedAnswers: language.acceptRomanizedAnswers ?? false,
-    ttsVoice: parsedMetadata.tts?.voiceId ?? "Joanna",
-    ttsSpeed: parsedMetadata.tts?.speed ?? "slow",
+    ttsVoice: initialTts.voiceId ?? "Joanna",
+    ttsSpeed: initialTts.speed ?? "slow",
   })
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!canEdit) return
     setError(null)
 
     startTransition(async () => {
@@ -128,8 +158,9 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         allowsDiacritics: Boolean(formData.allowsDiacritics),
         allowForking: Boolean(formData.allowForking),
         acceptRomanizedAnswers: Boolean(formData.acceptRomanizedAnswers),
+        // A patch of the keys this form owns. Sending the whole snapshot from page load put back
+        // older values of keys saved elsewhere since (sound-change rules, phonology).
         metadata: {
-          ...parsedMetadata,
           tts: {
             voiceId: formData.ttsVoice,
             speed: formData.ttsSpeed,
@@ -174,7 +205,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              disabled={isPending}
+              disabled={locked}
               maxLength={100}
             />
           </div>
@@ -185,7 +216,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="slug"
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-              disabled={!isOwner || isPending}
+              disabled={!isOwner || locked}
               required
               maxLength={100}
             />
@@ -203,7 +234,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder={t("descriptionPlaceholder")}
-              disabled={isPending}
+              disabled={locked}
               rows={4}
               maxLength={1000}
             />
@@ -222,7 +253,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="allowsDiacritics"
               checked={formData.allowsDiacritics}
               onCheckedChange={(checked) => setFormData({ ...formData, allowsDiacritics: checked })}
-              disabled={isPending}
+              disabled={locked}
             />
           </div>
 
@@ -239,7 +270,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="allowForking"
               checked={formData.allowForking}
               onCheckedChange={(checked) => setFormData({ ...formData, allowForking: checked })}
-              disabled={isPending}
+              disabled={locked}
             />
           </div>
 
@@ -256,7 +287,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               id="acceptRomanizedAnswers"
               checked={formData.acceptRomanizedAnswers}
               onCheckedChange={(checked) => setFormData({ ...formData, acceptRomanizedAnswers: checked })}
-              disabled={isPending}
+              disabled={locked}
             />
           </div>
 
@@ -266,21 +297,29 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 <Flag className="h-4 w-4" />
                 {t("flagLabel")}
               </Label>
-              <FlagGenerator
-                languageName={language.name}
-                onSave={(url) => setFormData({ ...formData, flagUrl: url })}
-              />
+              {canEdit && (
+                <FlagGenerator
+                  languageName={language.name}
+                  onSave={(url) => setFormData({ ...formData, flagUrl: url })}
+                />
+              )}
             </div>
-            <FileUpload
-              type="flag"
-              value={formData.flagUrl}
-              onChange={(url) => setFormData({ ...formData, flagUrl: url || "" })}
-              placeholder={t("flagPlaceholder")}
-              maxSize={2 * 1024 * 1024}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("flagHint")}
-            </p>
+            {canEdit ? (
+              <>
+                <FileUpload
+                  type="flag"
+                  value={formData.flagUrl}
+                  onChange={(url) => setFormData({ ...formData, flagUrl: url || "" })}
+                  placeholder={t("flagPlaceholder")}
+                  maxSize={2 * 1024 * 1024}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("flagHint")}
+                </p>
+              </>
+            ) : (
+              <StoredFile url={formData.flagUrl} label={t("flagLabel")} image />
+            )}
           </div>
 
           <div className="space-y-4 pt-4 border-t border-border/40">
@@ -297,13 +336,17 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fontUpload">{t("fontFileLabel")}</Label>
-                <FileUpload
-                  type="font"
-                  value={formData.fontUrl}
-                  onChange={(url) => setFormData({ ...formData, fontUrl: url || "" })}
-                  placeholder={t("fontFilePlaceholder")}
-                  maxSize={15 * 1024 * 1024} // 15MB
-                />
+                {canEdit ? (
+                  <FileUpload
+                    type="font"
+                    value={formData.fontUrl}
+                    onChange={(url) => setFormData({ ...formData, fontUrl: url || "" })}
+                    placeholder={t("fontFilePlaceholder")}
+                    maxSize={15 * 1024 * 1024} // 15MB
+                  />
+                ) : (
+                  <StoredFile url={formData.fontUrl} label={t("fontFileLabel")} />
+                )}
               </div>
 
               <div className="space-y-4">
@@ -314,7 +357,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                     value={formData.fontFamily}
                     onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
                     placeholder={t("fontFamilyPlaceholder")}
-                    disabled={isPending}
+                    disabled={locked}
                   />
                 </div>
 
@@ -331,7 +374,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                       step={0.1}
                       value={[formData.fontScale]}
                       onValueChange={(vals) => setFormData({ ...formData, fontScale: vals[0] })}
-                      disabled={isPending}
+                      disabled={locked}
                       className="flex-1"
                     />
                     <Input
@@ -346,6 +389,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                           setFormData({ ...formData, fontScale: val })
                         }
                       }}
+                      disabled={!canEdit}
                       className="w-20"
                     />
                   </div>
@@ -395,7 +439,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 <Select
                   value={formData.ttsVoice}
                   onValueChange={(value) => setFormData({ ...formData, ttsVoice: value })}
-                  disabled={isPending}
+                  disabled={locked}
                 >
                   <SelectTrigger id="ttsVoice">
                     <SelectValue />
@@ -439,7 +483,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                         }
                       })()]}
                       onValueChange={(vals) => setFormData({ ...formData, ttsSpeed: `${Math.round(vals[0] * 100)}%` })}
-                      disabled={isPending}
+                      disabled={locked}
                       className="flex-1"
                     />
                     <Input
@@ -464,6 +508,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                           setFormData({ ...formData, ttsSpeed: `${Math.round(val * 100)}%` })
                         }
                       }}
+                      disabled={!canEdit}
                       className="w-20"
                     />
                   </div>
@@ -524,7 +569,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               onValueChange={(value) =>
                 setFormData({ ...formData, category: value as LanguageCategoryValue })
               }
-              disabled={isPending}
+              disabled={locked}
             >
               <SelectTrigger id="category">
                 <SelectValue />
@@ -552,7 +597,8 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               onValueChange={(value: "PRIVATE" | "UNLISTED" | "PUBLIC") =>
                 setFormData({ ...formData, visibility: value })
               }
-              disabled={isPending}
+              // Publishing or hiding the project is the owner's call (enforced on the server).
+              disabled={!isOwner || locked}
             >
               <SelectTrigger id="visibility">
                 <SelectValue />
@@ -564,7 +610,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {t("visibilityHint")}
+              {isOwner ? t("visibilityHint") : t("visibilityOwnerOnly")}
             </p>
           </div>
 
@@ -579,7 +625,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 value={formData.discordUrl}
                 onChange={(e) => setFormData({ ...formData, discordUrl: e.target.value })}
                 placeholder="https://discord.gg/..."
-                disabled={isPending}
+                disabled={locked}
                 type="url"
               />
             </div>
@@ -594,7 +640,7 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 value={formData.telegramUrl}
                 onChange={(e) => setFormData({ ...formData, telegramUrl: e.target.value })}
                 placeholder="https://t.me/..."
-                disabled={isPending}
+                disabled={locked}
                 type="url"
               />
             </div>
@@ -609,16 +655,18 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
                 value={formData.websiteUrl}
                 onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
                 placeholder={t("websitePlaceholder")}
-                disabled={isPending}
+                disabled={locked}
               />
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
-              {isPending ? t("saving") : t("save")}
-            </Button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isPending}>
+                {isPending ? t("saving") : t("save")}
+              </Button>
+            </div>
+          )}
         </form>
       </Card>
 
@@ -628,6 +676,22 @@ export function LanguageSettings({ language, languageSlug, dictionaryEntries, is
         <DeleteLanguageCard languageId={language.id} languageName={language.name} />
       )}
     </div>
+  )
+}
+
+/** A read-only visitor sees the stored flag or font file instead of an upload field. */
+function StoredFile({ url, label, image = false }: { url: string; label: string; image?: boolean }) {
+  if (!url) return <p className="text-sm text-muted-foreground">—</p>
+  if (image) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- user-uploaded URL, as in FileUpload's preview
+      <img src={url} alt={label} className="aspect-video w-full max-w-xs border border-border/40 bg-secondary/30 object-cover" />
+    )
+  }
+  return (
+    <p className="truncate rounded-xl border border-border/40 bg-secondary/30 p-4 text-sm font-medium">
+      {url.split("/").pop()}
+    </p>
   )
 }
 
