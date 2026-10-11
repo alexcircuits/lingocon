@@ -1,7 +1,7 @@
 import { test, expect, expectNoPageErrors, unique } from "../fixtures"
 import { E2E_CONTENT, E2E_LANGUAGES } from "../data"
 import { db, userId } from "../db"
-import { EN, expectNotFoundPage } from "./helpers"
+import { EN, EN_COOKIES, expectNotFoundPage } from "./helpers"
 
 /**
  * Every public route renders for a signed-out visitor: 200, its key content, and no
@@ -15,6 +15,7 @@ test.describe("public routes (signed out)", () => {
     { path: "/modules", heading: "Modules" },
     { path: "/modules/docs", heading: "Building Modules", navbar: false },
     { path: "/contact", heading: EN.contact.headline },
+    { path: "/cookies", heading: EN_COOKIES.page.title },
     { path: "/learn/browse", heading: "Learn a language" },
     { path: "/login", heading: EN.auth.signInTitle },
     { path: "/register", heading: EN.auth.registerTitle },

@@ -1,7 +1,7 @@
 import { request as playwrightRequest, type Browser, type Locator, type Page } from "@playwright/test"
 import type { Prisma } from "@prisma/client"
 import { createScratchLanguage, db, type ScratchLanguage } from "../db"
-import { expect, expectNoPageErrors } from "../fixtures"
+import { dismissCookieNotice, expect, expectNoPageErrors } from "../fixtures"
 
 /**
  * Helpers for the studio content-authoring specs (grammar, articles, texts, courses,
@@ -90,6 +90,7 @@ export function collectPageErrors(page: Page): string[] {
  * raise client errors meanwhile. */
 export async function asAnonymous<T>(browser: Browser, baseURL: string, fn: (page: Page) => Promise<T>): Promise<T> {
   const context = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } })
+  await dismissCookieNotice(context)
   try {
     const page = await context.newPage()
     const errors = collectPageErrors(page)

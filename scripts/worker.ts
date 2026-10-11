@@ -64,6 +64,11 @@ async function main() {
     void enqueueJob("heartbeat")
   })
 
+  // Anonymous visitor statistics: daily totals and retention, 10 past each hour.
+  cron.schedule("10 * * * *", () => {
+    void enqueueJob("stats_rollup")
+  }, { timezone: "UTC" })
+
   // Weekly league rollover — Monday 00:05 UTC, just after the week boundary.
   // The handler is idempotent, so an occasional double-fire is harmless.
   cron.schedule("5 0 * * 1", () => {

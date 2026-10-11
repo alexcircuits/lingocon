@@ -1,5 +1,5 @@
 import { createHash } from "crypto"
-import { test, expect, expectNoPageErrors, signedInAs, type Page } from "../fixtures"
+import { dismissCookieNotice, test, expect, expectNoPageErrors, signedInAs, type Page } from "../fixtures"
 import { db } from "../db"
 import {
   cleanupScratch,
@@ -105,6 +105,7 @@ test("password: reset through the emailed link, then only the new password signs
   expect(await db().verificationToken.count({ where: { token: token.token } })).toBe(0)
 
   const context = await browser.newContext()
+  await dismissCookieNotice(context)
   try {
     const fresh = await context.newPage()
     await submitLogin(fresh, user.email, user.password)

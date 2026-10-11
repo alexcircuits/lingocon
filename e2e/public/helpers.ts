@@ -11,6 +11,8 @@ export function readMessages(locale: string): Messages {
 }
 
 export const EN = readMessages("en")
+/** The `cookies` namespace is one level deeper than `Messages` describes. */
+export const EN_COOKIES = EN.cookies as unknown as { notice: Record<string, string>; page: Record<string, string> }
 
 /**
  * The app's not-found UI (app/not-found.tsx). Pages below a `loading.tsx` boundary
