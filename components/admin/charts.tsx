@@ -17,6 +17,7 @@ import {
 } from "recharts"
 
 import { CHART_COLORS } from "@/components/admin/chart-colors"
+import { yAxisWidth } from "@/components/admin/chart-axis"
 
 export { CHART_COLORS }
 
@@ -124,7 +125,7 @@ export function TrendAreaChart({
                         stroke="hsl(var(--border))"
                     />
                     <XAxis dataKey={xKey} {...AXIS_PROPS} minTickGap={24} />
-                    <YAxis {...AXIS_PROPS} allowDecimals={false} width={36} />
+                    <YAxis {...AXIS_PROPS} allowDecimals={false} width={yAxisWidth(data, [dataKey])} />
                     <Tooltip
                         content={<ChartTooltip />}
                         cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
@@ -178,7 +179,7 @@ export function GroupedBarChart({
                         stroke="hsl(var(--border))"
                     />
                     <XAxis dataKey={xKey} {...AXIS_PROPS} minTickGap={24} />
-                    <YAxis {...AXIS_PROPS} allowDecimals={false} width={36} />
+                    <YAxis {...AXIS_PROPS} allowDecimals={false} width={yAxisWidth(data, series.map((s) => s.key))} />
                     <Tooltip
                         content={<ChartTooltip />}
                         cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}

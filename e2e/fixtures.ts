@@ -1,5 +1,20 @@
-import { test as base, expect, type Page } from "@playwright/test"
-import { authFile, type E2eRole } from "./data"
+import { test as base, expect, type BrowserContext, type Page } from "@playwright/test"
+import { authFile, COOKIE_NOTICE_KEY, type E2eRole } from "./data"
+
+/**
+ * Mark the cookie notice as read in every page of `target`: it is fixed to the bottom of the
+ * screen and would cover whatever a test clicks there. e2e/public/cookie-notice.spec.ts tests the
+ * notice itself in a context without this.
+ */
+export async function dismissCookieNotice(target: Pick<BrowserContext, "addInitScript">): Promise<void> {
+  await target.addInitScript((key) => {
+    try {
+      window.localStorage.setItem(key, "1")
+    } catch {
+      // Storage unavailable (opaque origin): nothing to dismiss.
+    }
+  }, COOKIE_NOTICE_KEY)
+}
 
 /**
  * Test fixture that records uncaught client-side errors. Any page that throws a
@@ -7,6 +22,10 @@ import { authFile, type E2eRole } from "./data"
  * assertion in `expectNoPageErrors`.
  */
 export const test = base.extend<{ pageErrors: string[] }>({
+  context: async ({ context }, use) => {
+    await dismissCookieNotice(context)
+    await use(context)
+  },
   pageErrors: async ({ page }, use) => {
     const errors: string[] = []
     page.on("pageerror", (err) => errors.push(err.message))

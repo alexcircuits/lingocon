@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Blocks, Flag } from "lucide-react"
@@ -15,6 +16,9 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function AdminModulesPage() {
+  // The layout checks too, but a client-side navigation can render this page without it.
+  await requireAdmin()
+
   const [modules, openReports] = await Promise.all([
     prisma.module.findMany({
       orderBy: { updatedAt: "desc" },

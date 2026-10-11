@@ -1,4 +1,4 @@
-import { test, expect, expectNoPageErrors, signedInAs, unique, type Page } from "../fixtures"
+import { dismissCookieNotice, test, expect, expectNoPageErrors, signedInAs, unique, type Page } from "../fixtures"
 import { authFile } from "../data"
 import { db, userId } from "../db"
 import {
@@ -29,6 +29,7 @@ const ADMIN_PAGES = [
   { path: "/admin/modules", heading: "Modules" },
   { path: "/admin/surveys", heading: "Survey Results" },
   { path: "/admin/system", heading: "System" },
+  { path: "/admin/traffic", heading: "Traffic" },
   { path: "/admin/users", heading: "Users" },
 ] as const
 
@@ -60,6 +61,49 @@ test.describe("admin", () => {
     })
   }
 
+  test("a guest's visit shows up on the Traffic page, counted anonymously", async ({ page, browser, baseURL, pageErrors }) => {
+    // A visitor of its own: a unique browser and address (nginx sets X-Real-IP in production),
+    // so the rest of the suite neither shares its visitor key nor its rate-limit bucket.
+    const marker = `e2e-traffic-${unique()}`
+    const visitorContext = await browser.newContext({
+      baseURL,
+      userAgent: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 ${marker}`,
+      extraHTTPHeaders: { "x-real-ip": `198.51.100.${Math.floor(Math.random() * 250) + 1}` },
+    })
+    await dismissCookieNotice(visitorContext)
+    // Page views are stored with the hour only.
+    const recent = { createdAt: { gte: new Date(Date.now() - 2 * 3_600_000) } }
+    const viewsBefore = await db().statsPageView.count({ where: { path: "/families", ...recent } })
+    try {
+      const visitor = await visitorContext.newPage()
+      const beacon = visitor.waitForRequest((request) => request.url().endsWith("/api/stats") && request.method() === "POST")
+      await visitor.goto("/families?from=e2e-secret-query")
+      const sent = await beacon
+      expect(JSON.parse(sent.postData() ?? "{}")).toMatchObject({ type: "pageview", path: "/families" })
+      expect(sent.postData()).not.toContain("e2e-secret-query")
+
+      await expect.poll(async () => db().statsPageView.count({ where: { path: "/families", ...recent } })).toBeGreaterThan(viewsBefore)
+
+      await page.goto("/admin/traffic")
+      await expect(page.getByRole("heading", { level: 1, name: "Traffic", exact: true })).toBeVisible()
+      const pagesOpen = page.getByRole("list", { name: "Pages open right now" })
+      await expect(pagesOpen.getByText("/families", { exact: true })).toBeVisible()
+      expect(Number(await page.getByTestId("live-online").textContent())).toBeGreaterThan(0)
+
+      // Nothing that identifies the visitor reached the database.
+      const stored = JSON.stringify([
+        await db().statsPageView.findMany({ where: recent }),
+        await db().statsPresence.findMany(),
+      ])
+      expect(stored).not.toContain(marker)
+      expect(stored).not.toContain("198.51.100.")
+      expect(stored).not.toContain("e2e-secret-query")
+    } finally {
+      await visitorContext.close()
+    }
+    expectNoPageErrors(pageErrors)
+  })
+
   test("language detail renders for a fixture language", async ({ page, pageErrors }) => {
     await page.goto(`/admin/languages/${await publicLanguageId()}`)
     await expect(page.getByRole("heading", { level: 1, name: "E2E Public Tongue" })).toBeVisible()
@@ -85,6 +129,7 @@ test.describe("admin", () => {
     const reason = `E2E suspension ${unique()}`
 
     const userContext = await browser.newContext()
+    await dismissCookieNotice(userContext)
     try {
       const userPage = await userContext.newPage()
       await signInThroughForm(userPage, target)
@@ -179,8 +224,11 @@ test.describe("stranger (not an admin)", () => {
     await page.goto(`/admin/languages/${await publicLanguageId()}`)
     await page.waitForURL("**/dashboard")
     const exported = await page.request.get("/api/admin/export/users", { maxRedirects: 0 })
-    expect(exported.status()).not.toBe(200)
+    expect(exported.status()).toBe(403)
     expect(await exported.text()).not.toContain("owner@e2e.test")
+    const live = await page.request.get("/api/admin/stats/live", { maxRedirects: 0 })
+    expect(live.status()).toBe(403)
+    expect(await live.json()).toEqual({ error: "Forbidden" })
     expectNoPageErrors(pageErrors)
   })
 })

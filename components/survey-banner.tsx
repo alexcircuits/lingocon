@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { X, ClipboardList, ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
+import { COOKIE_NOTICE_DISMISSED_EVENT, isCookieNoticeDismissed } from "@/components/cookie-notice"
 
 const DISMISS_KEY = "lingocon-survey-banner-dismissed"
 
@@ -13,10 +14,22 @@ export function SurveyBanner() {
     useEffect(() => {
         const dismissed = localStorage.getItem(DISMISS_KEY)
         const completed = localStorage.getItem("lingocon-survey-completed")
-        if (!dismissed && !completed) {
-            // Small delay for a nicer entrance on page load
-            const timer = setTimeout(() => setIsVisible(true), 1500)
+        if (dismissed || completed) return
+
+        // Small delay for a nicer entrance. Both banners sit at the bottom of the screen, so wait
+        // until the cookie notice is closed.
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const show = () => {
+            timer = setTimeout(() => setIsVisible(true), 1500)
+        }
+        if (isCookieNoticeDismissed()) {
+            show()
             return () => clearTimeout(timer)
+        }
+        window.addEventListener(COOKIE_NOTICE_DISMISSED_EVENT, show, { once: true })
+        return () => {
+            window.removeEventListener(COOKIE_NOTICE_DISMISSED_EVENT, show)
+            clearTimeout(timer)
         }
     }, [])
 

@@ -1,4 +1,4 @@
-import { test, expect, expectNoPageErrors, signedInAs, type Page } from "../fixtures"
+import { dismissCookieNotice, test, expect, expectNoPageErrors, signedInAs, type Page } from "../fixtures"
 import { authFile, E2E_LANGUAGES, E2E_USERS } from "../data"
 import { db, userId } from "../db"
 import {
@@ -112,6 +112,7 @@ test.describe("language settings (owner)", () => {
     await expect(page.getByRole("button", { name: "kala", exact: true })).toBeVisible()
 
     const visitorContext = await browser.newContext()
+    await dismissCookieNotice(visitorContext)
     const visitor = await visitorContext.newPage()
     await visitor.goto(`/lang/${language.slug}/dictionary`)
     await expect(visitor).toHaveURL(new RegExp(`/lang/${newSlug}/dictionary$`))
@@ -198,6 +199,7 @@ test.describe("language settings (owner)", () => {
   }) => {
     const language = await scratchLanguage({ visibility: "PRIVATE" })
     const visitorContext = await browser.newContext()
+    await dismissCookieNotice(visitorContext)
     const visitor = await visitorContext.newPage()
     const publicUrl = `/lang/${language.slug}`
 

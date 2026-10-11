@@ -2,7 +2,44 @@
 
 How to ship this codebase to the production VPS safely, what it changes there, and how
 to roll back. Based on a read-only audit of the server and a full deploy rehearsal in a
-container that mirrors it (2026-10-10).
+container that mirrors it (2026-10-10), re-checked on 2026-10-11 for the anonymous
+statistics update (below).
+
+## Re-check before the first deploy (read-only, 2026-10-11)
+
+- **Still live:** GitHub `main` @ `b3309af`. The deploy repo's index is from that
+  checkout, so `git push vps main` fast-forwards, and the checkout deletes the 6 files the
+  update removes. Those are code only; all 7 git-tracked files under `public/uploads` are
+  kept. Server-side edits since then are mode changes only, plus an `npm install`
+  rewrite of `package-lock.json`, which the checkout replaces.
+- **Host:** 3.5 GB RAM available, 2.7 GB swap free, 52 GB disk free, load ~0.3. Node
+  22.22.0 and npm 10.9.4, PM2 6.0.14 with `pm2-root` enabled at boot, cargo 1.88.0 in
+  `/root/.cargo`. Nothing listens on 3040.
+- **Database:** 667 MB, server time zone UTC, 38 of 100 connections in use.
+  - `_prisma_migrations` has 56 rows. Three are January attempts that failed, were
+    marked rolled back, and were then applied again successfully. Prisma treats them as
+    resolved and does not block `migrate deploy`.
+  - Pre-existing cosmetic drift: lower-case FK and index names on `slug_reservations`.
+    Harmless.
+- **`.env`:** has `LINGOCON_API_TOKEN`, `LINGOCON_API_DB_POOL` **and
+  `LINGOCON_API_URL=http://127.0.0.1:3040`**, added with the Rust setup on 2026-10-10.
+  So this deploy starts `lingocon-api` *and* routes the studio overview to it at once (see
+  below). It also has three `NEXT_PUBLIC_*PLAUSIBLE*`/analytics variables that no code
+  reads since Plausible was removed (`fd2ac34`); the live pages load no analytics script.
+- **nginx (live config):**
+  - `/api/` is proxied uncached with `Host` and `X-Real-IP`, which is what the
+    statistics beacon's origin check and rate limits need.
+  - The 30 s anonymous cache only stores cookie-less GETs.
+  - There is no `client_max_body_size`, so the default 1 MB applies and CSV imports over
+    1 MB get a 413 (pre-existing).
+- **Rehearsal on a copy of the 2026-10-10 production dump:**
+  - `migrate status` lists only `20261011120000_add_anonymous_visitor_stats`, and
+    `migrate deploy` applies it cleanly.
+  - The production build served all 59 smoke requests with 200 and logged no errors
+    (home, browse, search, families, learn, docs, modules, `/cookies`, the three
+    most-favourited public languages' reader and learn pages, a profile).
+  - Beacons stored a public language's slug, dropped a private one's, kept only the
+    referrer domain, stored no IP, and refused a cross-site POST with 403.
 
 ## The server today (read-only audit, 2026-10-10)
 
@@ -32,7 +69,13 @@ Pre-existing risks found (not changed by deploying):
 
 ## What a deploy of this branch changes
 
-- **No database change**: `prisma migrate deploy` has nothing to apply.
+- **One additive migration**: `20261011120000_add_anonymous_visitor_stats` creates four
+  new `stats_*` tables (anonymous visitor statistics) and touches nothing else. Rolling
+  the code back leaves them in place, unused and harmless.
+- **New on the site:**
+  - Anonymous visitor statistics: a beacon to `/api/stats`, an admin Traffic page, and
+    an hourly `stats_rollup` worker job at :10 UTC.
+  - A cookie notice, and a `/cookies` page.
 - **Framework upgrade (security)**: Next 14.2.35 (end of life; critical advisories incl.
   RCE in the image optimizer, which this site uses) → **Next 15.5.27 + React 19**, plus
   patched Auth.js, sharp (re-encodes uploads), Tiptap/ProseMirror. `npm audit --omit=dev`
@@ -64,8 +107,13 @@ Pre-existing risks found (not changed by deploying):
   and, if the build succeeds, makes it the served build again (a failed build leaves the
   running release in place).
 - `lingocon-worker` now exits promptly on reload instead of being killed after 30 s.
-- The Rust service stays off (no binary, `LINGOCON_API_URL` unset); every page uses the
-  TypeScript implementations.
+- **The Rust service starts with this deploy.** The toolchain and binary were prepared on
+  2026-10-10 and `.env` has `LINGOCON_API_TOKEN`, so `deploy.sh` rebuilds it
+  incrementally, and `ecosystem.config.js` registers `lingocon-api` on 127.0.0.1:3040.
+  Because `LINGOCON_API_URL` is also set, the studio overview uses it immediately. When
+  the service is down, Next falls back to the TypeScript implementation. To ship the Next
+  upgrade on its own first, comment `LINGOCON_API_URL` out of `.env` before pushing, and
+  put it back later followed by `pm2 reload lingocon`.
 
 ## Rehearsal results (container: Ubuntu 24.04, 2 CPUs, 4 GB, Node 22.22, PM2 6.0.14)
 
@@ -107,14 +155,29 @@ All commands on the VPS run in `/var/www/lingocon` as root, as today.
    itself. (Equivalent by hand: `git archive <commit> | ssh vps 'tar -x -C
    /var/www/lingocon'`, then `bash deploy.sh` there. Never copy `rust/target`, `.next*`
    or `node_modules` from a laptop.)
+   Optional, any time (it limits a route only the new code has):
+   - Rate-limit the statistics beacon in nginx. Create
+     `/etc/nginx/conf.d/lingocon-ratelimit.conf` with the `limit_req_zone` line from
+     `nginx.conf.example`.
+   - Add its `location = /api/stats { … }` block to `/etc/nginx/sites-available/lingocon`
+     inside the 443 server, before `location /api/`.
+   - Then `nginx -t && systemctl reload nginx`.
 4. **Verify**:
    ```bash
-   ss -ltnp | grep ':3000'                       # 127.0.0.1:3000 only
+   ss -ltnp | grep -E ':(3000|3040)\b'           # 127.0.0.1:3000 and 127.0.0.1:3040 only
    curl -s https://lingocon.com/sw.js | grep -o 'lingocon-static-v2'
-   curl -s -o /dev/null -w '%{http_code}\n' https://lingocon.com/donate   # 200, page renders
-   pm2 status
+   curl -s -o /dev/null -w '%{http_code}\n' https://lingocon.com/donate    # 200, page renders
+   curl -s -o /dev/null -w '%{http_code}\n' https://lingocon.com/cookies   # 200
+   curl -s -o /dev/null -w '%{http_code}\n' -X POST https://lingocon.com/api/stats -H 'sec-fetch-site: cross-site' --data '{}'   # 403
+   pm2 status                                    # lingocon ×2, lingocon-worker, lingocon-api online
+   su - postgres -c "psql -d lingocon -Atc 'select count(*) from stats_presence'"   # > 0 once people browse
    ```
-   Then sign in, open a studio dictionary, add a word (it appears without reloading).
+   Then:
+   - Sign in, open a studio dictionary and add a word. It should appear without reloading.
+   - Open `/admin/traffic`. "Online now" should count a visit you make in a private window
+     within about 25 s.
+   - After the next :10 past the hour, `pm2 logs lingocon-worker --lines 50` should show
+     `[worker] completed stats_rollup`.
 5. **Roll back** if needed:
    - Build only: `echo .next > .next-release && pm2 reload lingocon` (the first deploy's
      previous build is `.next`; later ones are listed in `.next-releases/`).

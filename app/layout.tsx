@@ -9,6 +9,8 @@ import { getSiteUrl } from "@/lib/seo";
 import { Toaster } from "@/components/ui/sonner";
 import { AchievementListener } from "@/components/achievement-listener";
 import { ChunkErrorListener } from "@/components/chunk-error-listener"
+import { VisitStats } from "@/components/visit-stats";
+import { CookieNotice } from "@/components/cookie-notice";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionConfigProvider } from "@/components/motion-config-provider";
@@ -219,6 +221,8 @@ export default async function RootLayout({
               {children}
               <AchievementListener />
                 <ChunkErrorListener />
+                <VisitStats />
+                <CookieNotice />
               <Toaster
                 position="bottom-right"
                 toastOptions={{

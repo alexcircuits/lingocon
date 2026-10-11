@@ -5,17 +5,13 @@ import { requireAdmin } from "@/lib/admin"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { httpUrlOrPathSchema } from "@/lib/validations/url"
+import { logAdminAction } from "@/lib/admin-audit"
 
 const createPlatformUpdateSchema = z.object({
     title: z.string().min(2, "Title must be at least 2 characters").max(200),
     description: z.string().min(2, "Description must be at least 2 characters").max(2000),
     icon: z.string().max(100).optional(),
     link: httpUrlOrPathSchema.optional().or(z.literal("")),
-})
-
-const toggleUserAdminSchema = z.object({
-    userId: z.string().min(1, "User ID is required"),
-    isAdmin: z.boolean(),
 })
 
 /**
@@ -40,6 +36,12 @@ export async function createPlatformUpdate(data: {
         }
     })
 
+    await logAdminAction({
+        action: "CREATE_PLATFORM_UPDATE",
+        resource: "PLATFORM_UPDATE",
+        resourceId: update.id,
+        details: { title: update.title }
+    })
     revalidatePath("/admin/system")
     return { success: true, data: update }
 }
@@ -54,32 +56,19 @@ export async function deletePlatformUpdate(id: string) {
         throw new Error("Invalid update ID")
     }
 
-    await prisma.platformUpdate.delete({
-        where: { id }
+    const deleted = await prisma.platformUpdate.delete({
+        where: { id },
+        select: { id: true, title: true }
     })
 
+    await logAdminAction({
+        action: "DELETE_PLATFORM_UPDATE",
+        resource: "PLATFORM_UPDATE",
+        resourceId: deleted.id,
+        details: { title: deleted.title }
+    })
     revalidatePath("/admin/system")
     return { success: true }
-}
-
-/**
- * Toggle user admin status
- */
-export async function toggleUserAdmin(userId: string, isAdmin: boolean) {
-    await requireAdmin()
-
-    const validated = toggleUserAdminSchema.parse({ userId, isAdmin })
-
-    const user = await prisma.user.update({
-        where: { id: validated.userId },
-        data: { isAdmin: validated.isAdmin },
-        // Never return the whole row: it includes the password hash.
-        select: { id: true, name: true, email: true, isAdmin: true },
-    })
-
-    revalidatePath(`/admin/users/${validated.userId}`)
-    revalidatePath("/admin/users")
-    return { success: true, data: user }
 }
 
 /**
@@ -98,6 +87,12 @@ export async function pruneSessions() {
             where: { expires: { lt: now } }
         })
     ])
+
+    await logAdminAction({
+        action: "PRUNE_SESSIONS",
+        resource: "SYSTEM",
+        details: { sessions: sessions.count, tokens: tokens.count }
+    })
 
     return {
         success: true,

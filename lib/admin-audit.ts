@@ -13,15 +13,19 @@ interface LogActionParams {
     details?: unknown
 }
 
+/**
+ * Records an admin action. Never throws, so a logging failure does not undo the action itself;
+ * returns whether the record was written, for callers that must not proceed unaudited.
+ */
 export async function logAdminAction({
     action,
     resource,
     resourceId,
     details
-}: LogActionParams) {
+}: LogActionParams): Promise<boolean> {
     try {
         const session = await auth()
-        if (!session?.user?.id) return
+        if (!session?.user?.id) return false
         const serialized = details === undefined ? undefined : JSON.stringify(details)
         // Bound the row size; details are diagnostic, not a data store.
         const boundedDetails =
@@ -36,9 +40,11 @@ export async function logAdminAction({
                 adminId: session.user.id
             }
         })
+        return true
     } catch (error) {
         console.error("Failed to log admin action:", error)
         // Don't throw, we don't want to break the main action if logging fails
+        return false
     }
 }
 

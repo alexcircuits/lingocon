@@ -38,6 +38,9 @@ export const E2E_CONTENT = {
   text: { slug: "the-river", title: "The River" },
 } as const
 
+/** components/cookie-notice.tsx COOKIE_NOTICE_KEY (e2e/public/cookie-notice.spec.ts checks they match). */
+export const COOKIE_NOTICE_KEY = "lingocon-cookie-notice-dismissed"
+
 export function authFile(role: E2eRole): string {
   return `e2e/.auth/${role}.json`
 }

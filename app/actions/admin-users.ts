@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin"
 import { revalidatePath } from "next/cache"
 import { logAdminAction } from "@/lib/admin-audit"
 import { ActionResult } from "@/lib/types/action-result"
+import { z } from "zod"
 
 
 // Never return the whole row: it includes the password hash.
@@ -83,6 +84,8 @@ export async function updateAdminNotes(userId: string, notes: string): Promise<A
  */
 export async function toggleUserAdmin(userId: string, isAdmin: boolean): Promise<ActionResult<AdminUserSummary>> {
     await requireAdmin()
+    // Server actions are public endpoints: never trust the arguments' types.
+    z.object({ userId: z.string().min(1), isAdmin: z.boolean() }).parse({ userId, isAdmin })
 
     const user = await prisma.user.update({
         where: { id: userId },

@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/admin"
+import { isAdmin } from "@/lib/admin"
+import { logAdminAction } from "@/lib/admin-audit"
 import { format } from "date-fns"
 import { sanitizeCsvCell } from "@/lib/export/csv-safe"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
-    try {
-        await requireAdmin()
+const NO_STORE = { "Cache-Control": "private, no-store" }
 
+export async function GET() {
+    // isAdmin, not requireAdmin: a redirect thrown inside the try below turned a refusal into a 500.
+    if (!(await isAdmin())) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: NO_STORE })
+    }
+
+    try {
         const users = await prisma.user.findMany({
             include: {
                 _count: {
@@ -61,15 +67,21 @@ export async function GET() {
             ...rows.map(row => row.map(csvCell).join(","))
         ].join("\n")
 
+        // Every user's email address leaves the system: no export without a record of who took it.
+        if (!(await logAdminAction({ action: "EXPORT_USERS", resource: "USER", details: { count: users.length } }))) {
+            return NextResponse.json({ error: "Export failed: it could not be recorded in the audit log" }, { status: 500, headers: NO_STORE })
+        }
+
         return new NextResponse(csvContent, {
             status: 200,
             headers: {
+                ...NO_STORE,
                 "Content-Type": "text/csv",
                 "Content-Disposition": `attachment; filename="users-export-${format(new Date(), "yyyy-MM-dd")}.csv"`
             }
         })
     } catch (error) {
         console.error("Export error:", error)
-        return NextResponse.json({ error: "Export failed" }, { status: 500 })
+        return NextResponse.json({ error: "Export failed" }, { status: 500, headers: NO_STORE })
     }
 }

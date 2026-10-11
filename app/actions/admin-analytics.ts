@@ -2,7 +2,9 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin"
-import { subDays, startOfDay, format } from "date-fns"
+import { Prisma } from "@prisma/client"
+import { subDays } from "date-fns"
+import { lastUtcDays, utcDayLabel } from "@/lib/utils/utc-days"
 
 /**
  * Get platform overview statistics
@@ -63,48 +65,39 @@ export async function getPlatformOverview() {
     }
 }
 
+type DayCount = { day: Date; count: number }
+
+const MAX_GROWTH_DAYS = 366
+
+/**
+ * The last `days` UTC days and the SQL bound of the first one. Counting happens in the database
+ * (the charts used to load every row of the period) and by UTC day, so the buckets and their
+ * labels no longer depend on the server's time zone.
+ */
+function growthWindow(days: number) {
+    const span = Math.min(Math.max(Math.trunc(days) || 1, 1), MAX_GROWTH_DAYS)
+    const keys = lastUtcDays(span)
+    // Timestamps are stored as UTC wall-clock time: compare against the day's UTC midnight as text.
+    return { keys, since: Prisma.sql`${keys[0]}::timestamp` }
+}
+
+const countsByDay = (rows: DayCount[]) => new Map(rows.map((row) => [row.day.toISOString().slice(0, 10), row.count]))
+
 /**
  * Get user signups over time
  */
 export async function getUserGrowth(days: number = 30) {
     await requireAdmin()
 
-    const startDate = startOfDay(subDays(new Date(), days))
+    const { keys, since } = growthWindow(days)
+    const signups = countsByDay(await prisma.$queryRaw<DayCount[]>`
+        SELECT "createdAt"::date AS day, count(*)::int AS count
+        FROM users WHERE "createdAt" >= ${since} GROUP BY 1`)
 
-    const users = await prisma.user.findMany({
-        where: {
-            createdAt: { gte: startDate }
-        },
-        select: {
-            createdAt: true
-        },
-        orderBy: {
-            createdAt: "asc"
-        }
-    })
-
-    // Group by date
-    const dateMap = new Map<string, number>()
-
-    // Initialize all days with 0
-    for (let i = 0; i < days; i++) {
-        const date = format(subDays(new Date(), days - i - 1), "yyyy-MM-dd")
-        dateMap.set(date, 0)
-    }
-
-    // Count users per day
-    users.forEach(user => {
-        const date = format(user.createdAt, "yyyy-MM-dd")
-        if (dateMap.has(date)) {
-            dateMap.set(date, dateMap.get(date)! + 1)
-        }
-    })
-
-    // Convert to array for charts
-    return Array.from(dateMap.entries()).map(([date, count]) => ({
-        date: format(new Date(date), "MMM d"),
+    return keys.map((date) => ({
+        date: utcDayLabel(date),
         fullDate: date,
-        signups: count
+        signups: signups.get(date) ?? 0
     }))
 }
 
@@ -114,47 +107,23 @@ export async function getUserGrowth(days: number = 30) {
 export async function getContentGrowth(days: number = 30) {
     await requireAdmin()
 
-    const startDate = startOfDay(subDays(new Date(), days))
-
-    const [languages, entries] = await Promise.all([
-        prisma.language.findMany({
-            where: { createdAt: { gte: startDate } },
-            select: { createdAt: true }
-        }),
-        prisma.dictionaryEntry.findMany({
-            where: { createdAt: { gte: startDate } },
-            select: { createdAt: true }
-        })
+    const { keys, since } = growthWindow(days)
+    const [languageRows, entryRows] = await Promise.all([
+        prisma.$queryRaw<DayCount[]>`
+            SELECT "createdAt"::date AS day, count(*)::int AS count
+            FROM languages WHERE "createdAt" >= ${since} GROUP BY 1`,
+        prisma.$queryRaw<DayCount[]>`
+            SELECT "createdAt"::date AS day, count(*)::int AS count
+            FROM dictionary_entries WHERE "createdAt" >= ${since} GROUP BY 1`,
     ])
+    const languages = countsByDay(languageRows)
+    const entries = countsByDay(entryRows)
 
-    // Group by date
-    const dateMap = new Map<string, { languages: number; entries: number }>()
-
-    for (let i = 0; i < days; i++) {
-        const date = format(subDays(new Date(), days - i - 1), "yyyy-MM-dd")
-        dateMap.set(date, { languages: 0, entries: 0 })
-    }
-
-    languages.forEach(lang => {
-        const date = format(lang.createdAt, "yyyy-MM-dd")
-        if (dateMap.has(date)) {
-            const current = dateMap.get(date)!
-            dateMap.set(date, { ...current, languages: current.languages + 1 })
-        }
-    })
-
-    entries.forEach(entry => {
-        const date = format(entry.createdAt, "yyyy-MM-dd")
-        if (dateMap.has(date)) {
-            const current = dateMap.get(date)!
-            dateMap.set(date, { ...current, entries: current.entries + 1 })
-        }
-    })
-
-    return Array.from(dateMap.entries()).map(([date, counts]) => ({
-        date: format(new Date(date), "MMM d"),
+    return keys.map((date) => ({
+        date: utcDayLabel(date),
         fullDate: date,
-        ...counts
+        languages: languages.get(date) ?? 0,
+        entries: entries.get(date) ?? 0
     }))
 }
 
@@ -206,7 +175,8 @@ export async function getTopLanguages(limit: number = 10) {
 export async function getActivityBreakdown(days: number = 30) {
     await requireAdmin()
 
-    const startDate = startOfDay(subDays(new Date(), days))
+    // The same UTC days as the growth charts next to it.
+    const startDate = new Date(`${growthWindow(days).keys[0]}T00:00:00Z`)
 
     const activities = await prisma.activity.groupBy({
         by: ["type", "entityType"],

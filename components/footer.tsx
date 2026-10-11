@@ -28,6 +28,7 @@ export function Footer() {
     const legalLinks = [
         { name: t("contact"), href: "/contact" },
         { name: t("donate"), href: "/donate" },
+        { name: t("cookies"), href: "/cookies" },
         { name: t("github"), href: "https://github.com/alexcircuits/lingocon", external: true },
     ]
 
