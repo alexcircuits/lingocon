@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Search, Focus, ZoomIn, ZoomOut, Maximize } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { mapFlagThumbnail } from "@/lib/utils/map-flag-thumbnail"
 import { AuroraBackground } from "@/components/landing/aurora-background"
 import {
   buildFamilyGraph,
@@ -192,17 +193,78 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
 
   // ── Flag image cache ───────────────────────────────────────────────────────
   const flagCache = useRef(new Map<string, HTMLImageElement>())
+  const [flagImages, setFlagImages] = useState(new Map<string, HTMLImageElement>())
   useEffect(() => {
-    nodes.forEach((node) => {
-      if (node.flagUrl && !flagCache.current.has(node.flagUrl)) {
-        const img = new Image()
-        img.crossOrigin = "anonymous"
-        img.src = node.flagUrl
-        img.onload = () => fgRef.current?.refresh?.()
-        flagCache.current.set(node.flagUrl, img)
+    let cancelled = false
+    const cache = flagCache.current
+    const pending = [...new Set(nodes.flatMap((node) => node.flagUrl ? [node.flagUrl] : []))]
+      .map((url) => ({ url, thumbnail: mapFlagThumbnail(url) }))
+      .filter((entry): entry is { url: string; thumbnail: string } => entry.thumbnail !== null)
+    let next = 0
+    const loadNext = () => {
+      if (cancelled || next >= pending.length) return
+      const { url, thumbnail } = pending[next++]
+      const img = new Image()
+      img.decoding = "async"
+      img.onload = () => {
+        if (cancelled) return
+        setFlagImages(new Map(cache))
+        loadNext()
       }
-    })
+      img.onerror = () => {
+        img.onload = null
+        img.onerror = null
+        img.removeAttribute("src")
+        cache.delete(url)
+        loadNext()
+      }
+      cache.set(url, img)
+      img.src = thumbnail
+    }
+    // Avoid sending hundreds of simultaneous image-optimization requests.
+    for (let i = 0; i < Math.min(4, pending.length); i++) loadNext()
+    return () => {
+      cancelled = true
+      cache.forEach((img) => {
+        img.onload = null
+        img.onerror = null
+        img.removeAttribute("src")
+      })
+      cache.clear()
+    }
   }, [nodes])
+
+  // Pause both canvas rendering and force simulation outside the viewport.
+  const renderActive = useRef(false)
+  const setGraphRef = useCallback((graph: any) => {
+    fgRef.current = graph
+    if (graph) {
+      if (renderActive.current) graph.resumeAnimation()
+      else graph.pauseAnimation()
+    }
+  }, [])
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    let onScreen = false
+    const sync = () => {
+      renderActive.current = onScreen && document.visibilityState === "visible"
+      if (renderActive.current) fgRef.current?.resumeAnimation()
+      else fgRef.current?.pauseAnimation()
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting
+      sync()
+    })
+    observer.observe(el)
+    document.addEventListener("visibilitychange", sync)
+    sync()
+    return () => {
+      observer.disconnect()
+      document.removeEventListener("visibilitychange", sync)
+      fgRef.current?.pauseAnimation()
+    }
+  }, [])
 
   // ── Resize observer → drive the canvas pixel size ─────────────────────────
   useEffect(() => {
@@ -265,7 +327,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
 
         // Flag, clipped to the circle
         if (node.flagUrl) {
-          const img = flagCache.current.get(node.flagUrl)
+          const img = flagImages.get(node.flagUrl)
           if (img && img.complete && img.naturalWidth > 0) {
             ctx.save()
             ctx.beginPath()
@@ -302,7 +364,9 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
 
       ctx.globalAlpha = 1
     },
-    []
+    // A new painter invalidates force-graph's canvas after late image loads,
+    // including after its physics simulation has already cooled down.
+    [flagImages]
   )
 
   const paintPointerArea = useCallback(
@@ -383,7 +447,7 @@ export function LingoConUniverseMap({ languages }: { languages: LanguageData[] }
 
       {dimensions.width > 0 && (
         <ForceGraph2D
-          ref={fgRef}
+          ref={setGraphRef}
           width={dimensions.width}
           height={dimensions.height}
           graphData={graphData}

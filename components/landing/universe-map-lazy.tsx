@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Loader2, GitBranch, Globe, ArrowRight } from "lucide-react"
@@ -79,44 +79,33 @@ function UniverseMapMobileFallback({ count }: { count: number }) {
 }
 
 export function UniverseMapLazy({ languages }: { languages: UniverseLanguage[] }) {
-    const ref = useRef<HTMLDivElement>(null)
-    const [visible, setVisible] = useState(false)
+    const [enabled, setEnabled] = useState(false)
     const isMobile = useIsMobile()
-
-    useEffect(() => {
-        // Don't bother wiring up the observer on mobile — the graph never mounts.
-        if (isMobile !== false) return
-        const el = ref.current
-        if (!el) return
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0]?.isIntersecting) {
-                    setVisible(true)
-                    observer.disconnect()
-                }
-            },
-            { rootMargin: "300px" }
-        )
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [isMobile])
 
     // While detecting (undefined) or on mobile, render the lightweight fallback.
     // This guarantees the crash-prone force-graph bundle never loads on phones.
     if (isMobile !== false) {
         return (
-            <div ref={ref} className="h-[440px] w-full sm:h-[520px]">
+            <div className="h-[440px] w-full sm:h-[520px]">
                 <UniverseMapMobileFallback count={languages.length} />
             </div>
         )
     }
 
     return (
-        <div ref={ref} className="h-[600px] w-full">
-            {visible ? (
+        <div className="h-[600px] w-full">
+            {enabled ? (
                 <LingoConUniverseMap languages={languages} />
             ) : (
-                <div className="h-full w-full rounded-[36px] aurora-glass" />
+                <div className="flex h-full w-full flex-col items-center justify-center gap-4 rounded-[36px] aurora-glass px-6 text-center">
+                    <p>{languages.length} languages connected by family trees</p>
+                    <p className="max-w-md text-sm text-muted-foreground">
+                        Load the interactive map to explore. It uses additional memory and graphics resources.
+                    </p>
+                    <Button type="button" onClick={() => setEnabled(true)}>
+                        Load interactive map
+                    </Button>
+                </div>
             )}
         </div>
     )
