@@ -67,7 +67,7 @@ export default function ContributionsPage() {
                                 </Button>
                             </Link>
                             <Link href="/docs">
-                                <Button size="lg" variant="outline" className="gap-2 h-12 px-6 rounded-full border-border/60">
+                                <Button size="lg" variant="outline" className="gap-2 h-12 px-6 rounded-full border-border/60 text-foreground">
                                     <FileText className="w-5 h-5" />
                                     Developer documentation
                                 </Button>
@@ -91,7 +91,7 @@ export default function ContributionsPage() {
                                 It&apos;s better than an empty page.
                             </p>
                             <p>
-                                <strong>Messy is okay.</strong> Your code is ugly but fixes the bug? Open the PR.
+                                <strong>Messy is okay.</strong> Your code is ugly, but fixes the bug? Open the PR.
                                 We can refactor later.
                             </p>
                             <p>
