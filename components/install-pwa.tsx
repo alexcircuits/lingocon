@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, X, Share } from "lucide-react"
+import { LogoMark } from "@/components/brand/logo-mark"
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>
@@ -88,9 +89,7 @@ export function InstallPWA() {
         return (
             <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card border-t border-border/60 shadow-lg animate-in slide-in-from-bottom duration-300">
                 <div className="container mx-auto flex items-center gap-3 max-w-lg">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg">
-                        L
-                    </div>
+                    <LogoMark className="h-10 w-10 shrink-0" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">Install LingoCon</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">

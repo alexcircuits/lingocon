@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  Languages,
   Globe,
   Heart,
   LayoutDashboard,
@@ -32,6 +31,7 @@ import {
   Newspaper,
 } from "lucide-react"
 import { SearchBar } from "@/components/search/search-bar"
+import { LogoMark } from "@/components/brand/logo-mark"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -98,9 +98,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:scale-105">
-            <Languages className="h-4 w-4" />
-          </div>
+          <LogoMark className="h-8 w-8 transition-transform group-hover:scale-105" />
           <span className="text-lg font-semibold tracking-tight hidden sm:block">LingoCon</span>
         </Link>
 
@@ -275,7 +273,7 @@ export function Navbar({ user, isDevMode = false }: NavbarProps) {
             <SheetContent side="right" className="w-[280px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Languages className="h-5 w-5 text-primary" />
+                  <LogoMark className="h-5 w-5" />
                   {tNav("navigation")}
                 </SheetTitle>
               </SheetHeader>

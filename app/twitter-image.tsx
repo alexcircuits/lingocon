@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og"
 
+import { LOGO_C_PATH, LOGO_COLORS, LOGO_L_PATH } from "@/lib/brand/logo"
+
 export const runtime = "edge"
 export const alt = "LingoCon — The connected workspace for constructed languages"
 export const size = { width: 1200, height: 630 }
@@ -28,22 +30,10 @@ export default function OpengraphImage() {
             gap: "16px",
           }}
         >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              background: "#000000",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "24px",
-              fontWeight: 700,
-              borderRadius: "4px",
-            }}
-          >
-            L
-          </div>
+          <svg width="72" height="72" viewBox="6 6 52 52" xmlns="http://www.w3.org/2000/svg">
+            <path d={LOGO_L_PATH} fill={LOGO_COLORS.violet} />
+            <path d={LOGO_C_PATH} fill={LOGO_COLORS.magenta} />
+          </svg>
         </div>
 
         <div

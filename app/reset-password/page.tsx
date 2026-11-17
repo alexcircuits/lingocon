@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Languages, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { LogoMark } from "@/components/brand/logo-mark"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { Navbar } from "@/components/navbar"
@@ -23,9 +24,7 @@ export default async function ResetPasswordPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm space-y-8 relative z-10">
           <div className="text-center space-y-2">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 mb-4">
-              <Languages className="h-6 w-6" />
-            </div>
+            <LogoMark className="inline-block h-12 w-12 mb-4" />
             <h1 className="text-2xl font-semibold tracking-tight">{t("resetTitle")}</h1>
             <p className="text-muted-foreground">
               {t("resetSubtitle")}

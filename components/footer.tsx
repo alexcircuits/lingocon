@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Languages, Github, Heart } from "lucide-react"
+import { Github, Heart } from "lucide-react"
+import { LogoMark } from "@/components/brand/logo-mark"
 import { useTranslations } from "next-intl"
 
 const DiscordIcon = ({ className }: { className?: string }) => (
@@ -47,9 +48,7 @@ export function Footer() {
                     {/* Brand Column */}
                     <div className="lg:col-span-1">
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                <Languages className="h-4 w-4" />
-                            </div>
+                            <LogoMark className="h-8 w-8" />
                             <span className="font-bold text-lg tracking-tight">LingoCon</span>
                         </div>
                         <p className="text-sm text-background/60 leading-relaxed mb-6 max-w-xs">
