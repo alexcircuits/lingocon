@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+const SESSION_REFRESH_ATTEMPTS = 3
+const SESSION_REFRESH_RETRY_MS = 4_000
+
 const PROVIDER_NAMES: Record<string, string> = { google: "Google", github: "GitHub" }
 
 function providerList(providers: string[]): string {
@@ -41,8 +44,11 @@ export function ChangeEmailSection({ sessionEmail, onSessionOutOfDate }: ChangeE
     const emailId = useId()
     const passwordId = useId()
 
-    // The address the session was last asked to catch up with, so it is asked once per change.
-    const refreshedFor = useRef<string | null | undefined>(undefined)
+    // Latest callback, so the retry timer below does not restart on every render.
+    const refreshSession = useRef(onSessionOutOfDate)
+    useEffect(() => {
+        refreshSession.current = onSessionOutOfDate
+    }, [onSessionOutOfDate])
 
     useEffect(() => {
         let cancelled = false
@@ -59,15 +65,26 @@ export function ChangeEmailSection({ sessionEmail, onSessionOutOfDate }: ChangeE
         }
     }, [])
 
-    // The session may load after the settings (or the other way round): compare once both are known.
+    // The session may load after the settings (or the other way round): compare once both are
+    // known. A refresh can be dropped (the session client ignores one while it is busy, or the
+    // request fails), so ask again a few times for as long as the two still differ.
     const accountEmail = settings ? settings.email : undefined
     useEffect(() => {
         if (accountEmail === undefined || sessionEmail === undefined) return
         if ((sessionEmail ?? null) === accountEmail) return
-        if (refreshedFor.current === accountEmail) return
-        refreshedFor.current = accountEmail
-        onSessionOutOfDate?.()
-    }, [accountEmail, sessionEmail, onSessionOutOfDate])
+
+        let attempts = 1
+        refreshSession.current?.()
+        const timer = setInterval(() => {
+            if (attempts >= SESSION_REFRESH_ATTEMPTS) {
+                clearInterval(timer)
+                return
+            }
+            attempts += 1
+            refreshSession.current?.()
+        }, SESSION_REFRESH_RETRY_MS)
+        return () => clearInterval(timer)
+    }, [accountEmail, sessionEmail])
 
     const email = settings ? settings.email : sessionEmail
     const signsInWithProviderOnly = settings !== null && !settings.hasPassword && settings.providers.length > 0

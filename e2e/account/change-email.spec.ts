@@ -164,6 +164,7 @@ test("change email: the link works in a browser that is not signed in", async ({
   await page.goto("/settings")
   await page.getByRole("tab", { name: "Account" }).click()
   await expect(page.getByText(newEmail)).toBeVisible()
-  await expect.poll(() => sessionEmail(page)).toBe(newEmail)
+  // Settings asks the session to refresh, and asks again after 4 s if that was dropped.
+  await expect.poll(() => sessionEmail(page), { timeout: 20_000 }).toBe(newEmail)
   expectNoPageErrors(pageErrors)
 })

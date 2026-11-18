@@ -99,6 +99,41 @@ describe("ChangeEmailSection", () => {
     expect(onSessionOutOfDate).toHaveBeenCalledTimes(1)
   })
 
+  it("asks again while the session still shows the old address, and stops once it catches up", async () => {
+    // A refresh can be dropped (the session client ignores one while busy, or the request fails).
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const onSessionOutOfDate = vi.fn()
+      actions.getEmailSettings.mockResolvedValue(settings({ email: "new@example.test" }))
+      const { rerender } = render(<ChangeEmailSection sessionEmail="old@example.test" onSessionOutOfDate={onSessionOutOfDate} />)
+      await waitFor(() => expect(onSessionOutOfDate).toHaveBeenCalledTimes(1))
+
+      await vi.advanceTimersByTimeAsync(4_000)
+      expect(onSessionOutOfDate).toHaveBeenCalledTimes(2)
+
+      rerender(<ChangeEmailSection sessionEmail="new@example.test" onSessionOutOfDate={onSessionOutOfDate} />)
+      await vi.advanceTimersByTimeAsync(20_000)
+      expect(onSessionOutOfDate).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("gives up after three attempts instead of asking forever", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const onSessionOutOfDate = vi.fn()
+      actions.getEmailSettings.mockResolvedValue(settings({ email: "new@example.test" }))
+      render(<ChangeEmailSection sessionEmail="old@example.test" onSessionOutOfDate={onSessionOutOfDate} />)
+      await waitFor(() => expect(onSessionOutOfDate).toHaveBeenCalledTimes(1))
+
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(onSessionOutOfDate).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("leaves the session alone when it already matches", async () => {
     const onSessionOutOfDate = vi.fn()
     await renderLoaded({}, { onSessionOutOfDate })
