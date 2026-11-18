@@ -12,9 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
-import { Loader2, ArrowLeft, User, Mail, Shield, Bell, Trash2 } from "lucide-react"
+import { Loader2, ArrowLeft, User, Shield, Bell, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PaletteSwitcher } from "@/components/palette-switcher"
+import { ChangeEmailSection } from "@/components/settings/change-email-section"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useTranslations } from "next-intl"
@@ -244,19 +245,15 @@ export default function SettingsPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Account Details</CardTitle>
-                                <CardDescription>View your account information.</CardDescription>
+                                <CardDescription>View your account information and change your email address.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email Address</label>
-                                    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
-                                        <Mail className="mr-2 h-4 w-4" />
-                                        {session?.user?.email}
-                                    </div>
-                                    <p className="text-[0.8rem] text-muted-foreground">
-                                        Managed by your authentication provider.
-                                    </p>
-                                </div>
+                                <ChangeEmailSection
+                                    sessionEmail={session ? (session.user?.email ?? null) : undefined}
+                                    // With data, `update` re-issues the session token (the jwt "update"
+                                    // trigger re-reads the email); without, it would only re-fetch it.
+                                    onSessionOutOfDate={() => void update({})}
+                                />
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium leading-none">Account ID</label>
                                     <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono text-muted-foreground">
