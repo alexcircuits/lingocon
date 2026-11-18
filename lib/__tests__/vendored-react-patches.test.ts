@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * The App Router runs on the React that Next vendors (next/dist/compiled/react-dom), not on the
- * react-dom package. patches/next+15.5.27.patch backports two React fixes into it; this checks
+ * react-dom package. patches/next+15.5.29.patch backports two React fixes into it; this checks
  * they are in place (a Next bump or a skipped postinstall would silently ship without them).
  */
 import { readFileSync } from "node:fs"

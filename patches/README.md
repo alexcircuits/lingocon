@@ -7,9 +7,9 @@ building. `deploy.sh` also drops the reused webpack cache when `patches/` change
 assumes `node_modules` never changes in place). `lib/__tests__/vendored-react-patches.test.ts`
 checks that the fixes are present.
 
-## `next+15.5.27.patch`
+## `next+15.5.29.patch`
 
-Backports two React fixes into the React 19.2 canary that Next 15.5.27 vendors
+Backports two React fixes into the React 19.2 canary that Next 15.5.29 vendors
 (`next/dist/compiled/react-dom`, the copy the App Router uses — not the `react-dom` package).
 Both are upstream code that ships in `react-dom` 19.3 and in the React that Next 16 vendors;
 the patch adds only those lines, to the four stable client builds.
