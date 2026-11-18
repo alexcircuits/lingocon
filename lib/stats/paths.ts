@@ -21,6 +21,7 @@ export const PAGE_ROUTES = [
   "/admin/users",
   "/admin/users/[id]",
   "/browse",
+  "/confirm-email",
   "/contact",
   "/contributions",
   "/cookies",

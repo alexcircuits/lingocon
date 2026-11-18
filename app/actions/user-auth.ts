@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { signOut } from "@/auth"
-import { generateVerificationToken, generatePasswordResetToken, consumeVerificationToken, consumePasswordResetToken } from "@/lib/tokens"
+import { generateVerificationToken, generatePasswordResetToken, consumeVerificationToken, consumePasswordResetToken, cancelEmailChange } from "@/lib/tokens"
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email"
 import { headers } from "next/headers"
 import { rateLimit } from "@/lib/rate-limit"
@@ -156,10 +156,19 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
-        await prisma.user.update({
+        const user = await prisma.user.update({
             where: { email },
             data: { password: hashedPassword },
+            select: { id: true },
         })
+
+        // A pending email change was requested with the old password. The owner resetting it
+        // through their mailbox is how they stop a change they did not ask for.
+        try {
+            await cancelEmailChange(user.id)
+        } catch (error) {
+            console.error("[resetPassword] cancelling a pending email change failed", error)
+        }
 
         return { success: true }
     } catch (error) {

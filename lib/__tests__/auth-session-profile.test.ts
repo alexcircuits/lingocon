@@ -45,6 +45,18 @@ describe("session profile after an update", () => {
     expect(result.user).toMatchObject({ id: "u1", name: "Ana B", image: "new.png" })
   })
 
+  it("carries a changed email into the session token", async () => {
+    // Auth.js builds session.user.email from token.email, which was only set at sign-in:
+    // after a confirmed email change the navbar and settings kept showing the old address.
+    const token = await jwt({ token: { email: "old@example.test" } as JWT, user: { id: "u1", name: "Ana", image: null } })
+    findUnique.mockResolvedValue({ name: "Ana", image: null, email: "new@example.test" })
+    const updated = await jwt({ token, trigger: "update" })
+    expect(updated.email).toBe("new@example.test")
+    expect(findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ email: true }) }),
+    )
+  })
+
   it("keeps the picture of a token issued before `image` was tracked", async () => {
     const token = { id: "u1", name: "Ana", picture: "old.png" } as JWT
     const result = await session({ session: baseSession(token), token })

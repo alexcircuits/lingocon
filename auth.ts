@@ -85,6 +85,9 @@ export const nextAuthConfig = {
   // Auth.js refuses to serve `/api/auth/*` without a secret. DEV_MODE (never allowed in production,
   // see the guard above) falls back to a fixed local-only value so a fresh `.env.example` works.
   secret: process.env.AUTH_SECRET ?? (isDevMode ? "lingocon-dev-mode-local-only-secret" : undefined),
+  // Do not set `allowDangerousEmailAccountLinking` on a provider. OAuth sign-ins are matched by
+  // provider account, never by email, and changing an account's email (app/actions/email-change.ts)
+  // relies on that: otherwise whoever controls a mailbox could sign in to the account using it.
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID,
@@ -159,11 +162,14 @@ export const nextAuthConfig = {
       if (trigger === "update" && token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { name: true, image: true },
+          select: { name: true, image: true, email: true },
         })
         if (dbUser) {
           token.name = dbUser.name
           token.image = dbUser.image
+          // Auth.js builds session.user.email from `token.email` (set at sign-in): keep it in
+          // step after a confirmed email change.
+          token.email = dbUser.email
           // Auth.js builds session.user.image from `picture` (set at sign-in): keep it in step.
           token.picture = dbUser.image
         }
@@ -191,7 +197,7 @@ export const nextAuthConfig = {
 }
 
 // `unstable_update` re-issues the session cookie server-side (the jwt "update" trigger
-// re-reads name and image), e.g. right after a profile save.
+// re-reads name, image and email), e.g. right after a profile save or an email change.
 export const { handlers, signIn, signOut, auth: nextAuth, unstable_update } = NextAuth(nextAuthConfig)
 
 /**
