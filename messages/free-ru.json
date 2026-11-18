@@ -1571,7 +1571,14 @@
     "developmentDesc": "Питает бесчисленные часы и кофе, которые нужны, чтобы создавать и улучшать приложение.",
     "ocHeading": "Мы на OpenCollective",
     "ocDesc": "Все финансовые операции прозрачны и открыты. Вы видите, как именно расходуются средства на поддержку проекта.",
-    "ocCta": "Поддержать через OpenCollective"
+    "ocCta": "Поддержать через OpenCollective",
+    "backersHeading": "Больше всех поддержали проект",
+    "backersDesc": "Люди и организации, которые больше всех помогли LingoCon оставаться бесплатным и открытым. Спасибо.",
+    "backersAnonymous": "Анонимный донор",
+    "backersSeeAll": "Весь список на OpenCollective",
+    "backersEmptyTitle": "Станьте первым, кто поддержит проект",
+    "backersEmptyDesc": "LingoCon на OpenCollective пока никто не поддержал. Ваше имя может стать здесь первым.",
+    "backersEmptyCta": "Поддержать проект"
   },
   "contact": {
     "metaTitle": "Контакты | LingoCon",
