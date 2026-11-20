@@ -1,8 +1,11 @@
+import { Suspense } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { HeroBackground } from "@/components/hero-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { TopBackersSection } from "@/components/donate/top-backers-section"
+import { OPEN_COLLECTIVE_URL } from "@/lib/open-collective/constants"
 import { Heart, Coffee, Users, Globe2, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/auth"
@@ -101,13 +104,18 @@ export default async function DonatePage() {
                             </p>
 
                             <Button asChild size="lg" className="rounded-full px-8 text-base h-14 group">
-                                <Link href="https://opencollective.com/lingocon" target="_blank" rel="noopener noreferrer">
+                                <Link href={OPEN_COLLECTIVE_URL} target="_blank" rel="noopener noreferrer">
                                     {t("ocCta")}
                                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </Button>
                         </div>
                     </div>
+
+                    {/* Streams in separately: a slow Open Collective lookup must not delay the page. */}
+                    <Suspense fallback={null}>
+                        <TopBackersSection />
+                    </Suspense>
                 </div>
             </section>
 

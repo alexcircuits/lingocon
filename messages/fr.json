@@ -1571,7 +1571,14 @@
     "developmentDesc": "Alimente les innombrables heures et cafés nécessaires pour créer et améliorer l'application.",
     "ocHeading": "Nous sommes sur OpenCollective",
     "ocDesc": "Toutes les transactions financières sont transparentes et publiques. Vous pouvez voir exactement comment les fonds sont utilisés pour soutenir le projet.",
-    "ocCta": "Faire un don via OpenCollective"
+    "ocCta": "Faire un don via OpenCollective",
+    "backersHeading": "Nos principaux donateurs",
+    "backersDesc": "Les personnes et organisations qui ont le plus donné pour que LingoCon reste gratuit et ouvert. Merci.",
+    "backersAnonymous": "Donateur anonyme",
+    "backersSeeAll": "Voir tous les donateurs sur OpenCollective",
+    "backersEmptyTitle": "Soyez le premier donateur",
+    "backersEmptyDesc": "Personne n'a encore soutenu LingoCon sur OpenCollective. Votre nom pourrait être le premier ici.",
+    "backersEmptyCta": "Devenir donateur"
   },
   "contact": {
     "metaTitle": "Nous contacter | LingoCon",
