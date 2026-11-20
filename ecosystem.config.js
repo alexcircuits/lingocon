@@ -32,7 +32,11 @@ const apps = [
         max_memory_restart: '1G',
         env: {
             NODE_ENV: 'production',
-            PORT: 3000
+            PORT: 3000,
+            // 2026-11-20: after a burst of requests each worker's JS heap went back to normal,
+            // but glibc kept ~120 MB of freed native memory in ~26 malloc arenas, so RSS
+            // ratcheted up to 3 GB+ over a day and a half. Two arenas fragment far less.
+            MALLOC_ARENA_MAX: '2'
         }
     },
     {

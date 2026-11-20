@@ -11,6 +11,14 @@ export type { LexiconAnalysis }
 /** Warnings are rendered client-side; a large lexicon could produce thousands. */
 export const MAX_WARNINGS_SHOWN = 50
 
+/**
+ * The Node fallback loads the whole lexicon into the web worker, so it is skipped above
+ * this many entries and the overview then leaves the analysis out. On 2026-11-20 it ran
+ * for a bulk-imported lexicon the Rust service had refused as too large, minutes before
+ * the VPS ran out of memory. The Rust service streams rows and handles far more.
+ */
+export const MAX_FALLBACK_ENTRIES = 50_000
+
 /** The whole-lexicon analysis in Node: what the Rust service computes, used when it is off. */
 async function computeLexiconAnalysis(languageId: string, allowsDiacritics: boolean): Promise<LexiconAnalysis> {
   const [symbols, entries, paradigms] = await Promise.all([
@@ -44,12 +52,17 @@ async function canViewAnalysis(languageId: string): Promise<boolean> {
  * Validation warnings (first 50 + total) and Swadesh coverage for the studio
  * overview. Served by the Rust service when it is configured
  * (docs/RUST_SERVICE.md), otherwise — or when it is unavailable — computed here.
- * `null` when the current user may not view the language.
+ * `null` when the current user may not view the language, or when the service did
+ * not answer and the lexicon is too large to analyse in the web worker.
  */
 export const getOverviewLexiconAnalysis = requestCache(async function getOverviewLexiconAnalysis(
   languageId: string,
   allowsDiacritics: boolean
 ): Promise<LexiconAnalysis | null> {
   if (!(await canViewAnalysis(languageId))) return null
-  return (await getLexiconAnalysisFromService(languageId)) ?? computeLexiconAnalysis(languageId, allowsDiacritics)
+  const fromService = await getLexiconAnalysisFromService(languageId)
+  if (fromService) return fromService
+  const entryCount = await prisma.dictionaryEntry.count({ where: { languageId } })
+  if (entryCount > MAX_FALLBACK_ENTRIES) return null
+  return computeLexiconAnalysis(languageId, allowsDiacritics)
 })
