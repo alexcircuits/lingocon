@@ -11,6 +11,7 @@ describe("slug-reservation middleware", () => {
   afterEach(() => {
     fetchMock.mockReset()
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   // What middleware really receives: Next (14.2, 15.5) strips the RSC, router-state and
@@ -76,5 +77,37 @@ describe("slug-reservation middleware", () => {
     vi.stubGlobal("fetch", fetchMock)
     const response = await middleware(request("/lang/some-slug", { headers: { "sec-fetch-dest": "document", accept: "text/html" } }))
     expect(response.headers.get("location")).toBeNull()
+  })
+
+  // Next's edge sandbox keeps every setTimeout id in a per-worker list until clearTimeout runs
+  // (next/dist/server/web/sandbox/resource-managers.js). A lookup that timed out or failed never
+  // cleared its 2 s timer, so each one left an id behind for the life of the worker.
+  // Distinct slugs: a later change to what is cached must not make a case skip the lookup.
+  it.each([
+    ["the lookup times out", "timer-timeout", () => fetchMock.mockRejectedValue(new DOMException("This operation was aborted", "AbortError"))],
+    ["the lookup cannot connect", "timer-offline", () => fetchMock.mockRejectedValue(new TypeError("fetch failed"))],
+    ["the lookup answers with an error status", "timer-error-status", () => fetchMock.mockResolvedValue(new Response("unavailable", { status: 503 }))],
+    ["the lookup finds nothing", "timer-not-found", () => fetchMock.mockResolvedValue(new Response(JSON.stringify({ found: false }), { status: 200 }))],
+  ])("clears its timeout when %s", async (_label, slug, arrange) => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout")
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout")
+    arrange()
+    vi.stubGlobal("fetch", fetchMock)
+    await middleware(request(`/lang/${slug}`, { headers: browserDocument }))
+    const lookupTimers = setTimeoutSpy.mock.calls
+      .map((args, i) => ({ ms: args[1], id: setTimeoutSpy.mock.results[i]?.value }))
+      .filter((timer) => timer.ms === 2000)
+    expect(lookupTimers).toHaveLength(1)
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(lookupTimers[0].id)
+  })
+
+  it("releases an error response's body instead of leaving the loopback connection open", async () => {
+    const failed = new Response("unavailable", { status: 503 })
+    fetchMock.mockResolvedValue(failed)
+    vi.stubGlobal("fetch", fetchMock)
+    const response = await middleware(request("/lang/error-body", { headers: browserDocument }))
+    expect(response.headers.get("location")).toBeNull()
+    expect(failed.bodyUsed).toBe(true)
   })
 })

@@ -112,18 +112,25 @@ export async function middleware(request: NextRequest) {
     // Add a short timeout so we don't hang requests if the DB is slow
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 2000)
-    
-    const res = await fetch(url.toString(), {
-      signal: controller.signal,
-      headers: {
-        // Pass an internal header if needed
-        'x-internal-auth': process.env.INTERNAL_API_KEY || 'dev-key'
-      }
-    })
-    
-    // Read the body inside the timeout window too.
-    const data = res.ok ? await res.json().finally(() => clearTimeout(timeoutId)) : null
-    clearTimeout(timeoutId)
+    let data: { found?: boolean; newSlug?: unknown } | null = null
+    try {
+      const res = await fetch(url.toString(), {
+        signal: controller.signal,
+        headers: {
+          // Pass an internal header if needed
+          'x-internal-auth': process.env.INTERNAL_API_KEY || 'dev-key'
+        }
+      })
+      // Read the body inside the timeout window too. An error body is cancelled
+      // rather than left unread, so the loopback connection is released at once.
+      if (res.ok) data = await res.json()
+      else await res.body?.cancel()
+    } finally {
+      // Always clear, also when the lookup times out or fails: Next's edge sandbox keeps
+      // every timer id until clearTimeout runs, for the life of the worker
+      // (next/dist/server/web/sandbox/resource-managers.js).
+      clearTimeout(timeoutId)
+    }
 
     if (data) {
       const newSlug = data.found && typeof data.newSlug === 'string' ? data.newSlug : null

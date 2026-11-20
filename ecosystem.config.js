@@ -27,6 +27,9 @@ const apps = [
         args: 'start -H 127.0.0.1',
         instances: 'max',
         exec_mode: 'cluster',
+        // 2026-11-20: a worker grew to 3.4 GB in 35 h and froze the VPS (OOM 17:47 UTC).
+        // pm2 checks every 30 s and reloads only that worker; the other keeps serving.
+        max_memory_restart: '1G',
         env: {
             NODE_ENV: 'production',
             PORT: 3000
