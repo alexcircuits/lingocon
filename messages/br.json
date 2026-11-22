@@ -1571,7 +1571,14 @@
     "developmentDesc": "Bonnañ an eurvezhioù dienep hag ar c'hafe ret evit sevel ha gwellaat an arload.",
     "ocHeading": "Emaomp war OpenCollective",
     "ocDesc": "An holl droadennoù arc'hant a zo splann ha foran. Gallout a rit gwelet e-keit-se penaos e vez implijet an arc'hant evit skoazellañ ar raktres.",
-    "ocCta": "Reiñ dre OpenCollective"
+    "ocCta": "Reiñ dre OpenCollective",
+    "backersHeading": "Hor brasañ skoazellerien",
+    "backersDesc": "An dud hag an aozadurioù o deus roet ar muiañ evit derc'hel LingoCon digoust ha digor. Trugarez deoc'h.",
+    "backersAnonymous": "Skoazeller dizanv",
+    "backersSeeAll": "Gwelet an holl skoazellerien war OpenCollective",
+    "backersEmptyTitle": "Bezit ar c'hentañ skoazeller",
+    "backersEmptyDesc": "Den n'en deus skoazellet LingoCon war OpenCollective c'hoazh. Hoc'h anv a c'hallfe bezañ ar c'hentañ amañ.",
+    "backersEmptyCta": "Dont da vezañ skoazeller"
   },
   "contact": {
     "metaTitle": "Darempred | LingoCon",

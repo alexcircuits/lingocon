@@ -1571,7 +1571,14 @@
     "developmentDesc": "Fuels the countless hours and coffee needed to build and improve the app.",
     "ocHeading": "We are on OpenCollective",
     "ocDesc": "All financial transactions are transparent and public. You can see exactly how the funds are used to support the project.",
-    "ocCta": "Donate via OpenCollective"
+    "ocCta": "Donate via OpenCollective",
+    "backersHeading": "Top backers",
+    "backersDesc": "The people and organizations who have given the most to keep LingoCon free and open. Thank you.",
+    "backersAnonymous": "Anonymous backer",
+    "backersSeeAll": "See all backers on OpenCollective",
+    "backersEmptyTitle": "Be the first backer",
+    "backersEmptyDesc": "No one has backed LingoCon on OpenCollective yet. Yours could be the first name here.",
+    "backersEmptyCta": "Become a backer"
   },
   "contact": {
     "metaTitle": "Contact Us | LingoCon",
