@@ -29,7 +29,9 @@ import {
  *
  * Accounts that only sign in with Google or GitHub have no password to ask for. Their
  * sign-in is tied to the provider account, not to this address, so the change does not
- * affect how they sign in, and the password-reset flow ignores accounts without a password.
+ * affect how they sign in. The password-reset flow lets them set a first password only once
+ * the new address has been confirmed for a few days (see `requestPasswordReset`), so a
+ * borrowed session that moves the account cannot also take it over with a password.
  */
 
 const HOUR_MS = 60 * 60_000

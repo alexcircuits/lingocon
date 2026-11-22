@@ -68,6 +68,13 @@ export async function generatePasswordResetToken(email: string): Promise<TokenRe
   return { token, isNew: true }
 }
 
+/** Drops an unsent reset link, so the next request sends a new one instead of reusing it. */
+export async function cancelPasswordReset(email: string): Promise<void> {
+  await prisma.verificationToken.deleteMany({
+    where: { identifier: `pwd-reset:${email}` },
+  })
+}
+
 export async function consumeVerificationToken(token: string) {
   const existing = await prisma.verificationToken.findUnique({
     where: { token },

@@ -71,7 +71,8 @@ export async function sendVerificationEmail(email: string, token: string) {
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${SITE_URL}/reset-password?token=${token}`
 
-  await send({
+  // A refused send must surface: the caller drops the link so asking again sends a new one.
+  await sendOrThrow({
     from: FROM_EMAIL,
     to: email,
     subject: "Reset your password - LingoCon",
