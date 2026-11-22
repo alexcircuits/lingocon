@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { signOut } from "@/auth"
-import { generateVerificationToken, generatePasswordResetToken, consumeVerificationToken, consumePasswordResetToken, cancelEmailChange } from "@/lib/tokens"
+import { generateVerificationToken, generatePasswordResetToken, consumeVerificationToken, consumePasswordResetToken, cancelEmailChange, cancelPasswordReset } from "@/lib/tokens"
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email"
 import { headers } from "next/headers"
 import { rateLimit } from "@/lib/rate-limit"
@@ -116,20 +116,48 @@ export async function resendVerificationEmail(rawEmail: string): Promise<AuthAct
     }
 }
 
+/**
+ * Accounts that sign in only with Google or GitHub have no password, and once that sign-in
+ * is lost the mailbox is the only way back in. A reset link lets them set a first password,
+ * but only for an address confirmed (a confirmed email change sets `emailVerified`) at least
+ * this long ago. Moving such an account to another mailbox needs no password, so without the
+ * wait a borrowed session could do that and at once give itself a lasting password. Within
+ * it, the owner (told at the old address) can sign in with the provider and move it back,
+ * which also voids reset links for the other address. Once a password exists that move-back
+ * needs it, so the wait is the owner's only window: it narrows that risk, it does not remove it.
+ */
+const FIRST_PASSWORD_DELAY_MS = 72 * 60 * 60_000
+
+function canSetFirstPassword(emailVerified: Date | null): boolean {
+    return emailVerified !== null && Date.now() - emailVerified.getTime() >= FIRST_PASSWORD_DELAY_MS
+}
+
 export async function requestPasswordReset(rawEmail: string): Promise<AuthActionResult> {
     try {
         const email = normalizeEmail(String(rawEmail ?? ""))
         if (await throttled("password-reset", email, 10, 3, 60 * 60_000)) return TOO_MANY
         const user = await findUserByEmail(email)
 
-        // Don't reveal whether the user exists
-        if (!user || !user.password) {
+        // Don't reveal whether the user exists.
+        if (!user || !user.email || (!user.password && !canSetFirstPassword(user.emailVerified))) {
             return { success: true }
         }
 
-        const { token, isNew } = await generatePasswordResetToken(user.email!)
+        const { token, isNew } = await generatePasswordResetToken(user.email)
         if (isNew) {
-            await sendPasswordResetEmail(user.email!, token)
+            try {
+                await sendPasswordResetEmail(user.email, token)
+            } catch (error) {
+                // Same answer as for an unknown address (no account enumeration), but the
+                // unsent link must go: kept, it would stop a retry from sending a new one.
+                console.error("[requestPasswordReset] reset email failed", error)
+                try {
+                    await cancelPasswordReset(user.email)
+                } catch (cleanupError) {
+                    // Still the unknown-address answer: an error here would reveal the account.
+                    console.error("[requestPasswordReset] dropping the unsent link failed", cleanupError)
+                }
+            }
         }
 
         return { success: true }
